@@ -91,14 +91,14 @@ public class ResourceManagerTestSuite {
 
             BulkRequestBuilder bulkRequest = client.prepareBulk();
             for (Tag tag : initialTags) {
-                IndexRequest indexRequest = new IndexRequest(ologTagIndex, "tag");
+                IndexRequest indexRequest = new IndexRequest(ologTagIndex, "tag", tag.getName());
                 indexRequest.source(mapper.writeValueAsBytes(tag), XContentType.JSON);
                 
                 bulkRequest.add(indexRequest);
             }
             for (Logbook logbook : initialLogbooks) {
 
-                IndexRequest indexRequest = new IndexRequest("olog_logbooks", "logbook");
+                IndexRequest indexRequest = new IndexRequest("olog_logbooks", "logbook", logbook.getName());
                 indexRequest.source(mapper.writeValueAsBytes(logbook), XContentType.JSON);
                 
                 bulkRequest.add(indexRequest);
