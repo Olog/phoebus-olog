@@ -1,0 +1,14 @@
+
+sudo: required
+
+jdk:
+  - oraclejdk8
+
+services:
+  - elasticsearch
+  
+install:
+  - mvn clean verify
+
+after_script:
+  - sudo /etc/init.d/elasticsearch stop
