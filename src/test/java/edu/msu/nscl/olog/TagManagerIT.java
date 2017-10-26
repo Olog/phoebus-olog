@@ -16,7 +16,7 @@ public class TagManagerIT {
     @Test
     public void findAllTag() {
         List<Tag> result = TagManager.list();
-        assertTrue("Failed to list all tags ", result.containsAll(ResourceManagerTests.initialTags));
+        assertTrue("Failed to list all tags ", result.containsAll(ResourceManagerTestSuite.initialTags));
     }
     
 
@@ -25,7 +25,7 @@ public class TagManagerIT {
         List<Tag> result = TagManager.listActive();
         assertTrue("Failed to list all active tags ", 
                 result.containsAll(
-                        ResourceManagerTests.initialTags
+                        ResourceManagerTestSuite.initialTags
                         .stream()
                         .filter(t -> t.getState().equals(State.Active))
                         .collect(Collectors.toList())));

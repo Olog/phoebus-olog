@@ -29,7 +29,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({ TagManagerIT.class })
-public class ResourceManagerTests {
+public class ResourceManagerTestSuite {
 
     // instance a json mapper
     static ObjectMapper mapper = new ObjectMapper();

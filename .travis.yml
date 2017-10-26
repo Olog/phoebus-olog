@@ -9,6 +9,3 @@ services:
   
 install:
   - mvn clean verify
-
-after_script:
-  - sudo /etc/init.d/elasticsearch stop
