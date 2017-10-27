@@ -27,7 +27,7 @@ public class Logbook implements Serializable {
 
     private String name = null;
     private String owner = null;
-    private State state;
+    private State state = State.Active;
     // private List<Log> logs = new Logs();
 
     /**

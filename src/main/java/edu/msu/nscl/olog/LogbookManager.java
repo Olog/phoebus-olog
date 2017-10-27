@@ -4,7 +4,6 @@ import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
 import java.io.IOException;
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -29,32 +28,33 @@ import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
- * A manager class for handling tag operations
+ * A Manager class for handling logbook operations
+ * 
  * @author kunalshroff
  *
  */
-public class TagManager {
+public class LogbookManager {
 
+    public static final String ologLogbookIndex = "olog_logbooks";
     // instance a json mapper
     private static final ObjectMapper mapper = new ObjectMapper();
 
-    public static final Logger log = Logger.getLogger(TagManager.class.getName());
-    public static final String ologTagIndex = "olog_tags";
+    private static final Logger log = Logger.getLogger(LogbookManager.class.getName());
 
     /**
-     * List all the tags
+     * List all {@link Logbook}s including both active and inactive ones.
      * 
-     * @return List tags
+     * @return {@link List} of all active and inactive {@link Logbook}s
      */
-    public static List<Tag> list() {
+    public static List<Logbook> list() {
         try (TransportClient client = new PreBuiltTransportClient(Settings.EMPTY)
                 .addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName("localhost"), 9300))) {
-            SearchResponse response = client.search(new SearchRequest(ologTagIndex)).get();
-            List<Tag> result = new ArrayList<Tag>();
+            SearchResponse response = client.search(new SearchRequest(ologLogbookIndex)).get();
+            List<Logbook> result = new ArrayList<Logbook>();
             response.getHits().forEach(h -> {
                 BytesReference b = h.getSourceRef();
                 try {
-                    result.add(mapper.readValue(b.streamInput(), Tag.class));
+                    result.add(mapper.readValue(b.streamInput(), Logbook.class));
                 } catch (IOException e) {
                     log.log(Level.SEVERE, e.getMessage(), e);
                 }
@@ -67,20 +67,20 @@ public class TagManager {
     }
 
     /**
-     * List all {@link State#Active} tags
+     * List all the currently active {@link Logbook}
      * 
-     * @return a list of all active tags
+     * @return List of all the active {@link Logbook}s
      */
-    public static List<Tag> listActive() {
+    public static List<Logbook> listActive() {
         try (TransportClient client = new PreBuiltTransportClient(Settings.EMPTY)
                 .addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName("localhost"), 9300))) {
-            SearchResponse response = client.prepareSearch(ologTagIndex).setTypes("tag")
+            SearchResponse response = client.prepareSearch(ologLogbookIndex).setTypes("logbook")
                     .setQuery(QueryBuilders.termQuery("state", State.Active.toString())).get();
-            List<Tag> result = new ArrayList<Tag>();
+            List<Logbook> result = new ArrayList<Logbook>();
             response.getHits().forEach(h -> {
                 BytesReference b = h.getSourceRef();
                 try {
-                    result.add(mapper.readValue(b.streamInput(), Tag.class));
+                    result.add(mapper.readValue(b.streamInput(), Logbook.class));
                 } catch (IOException e) {
                     log.log(Level.SEVERE, e.getMessage(), e);
                 }
@@ -93,23 +93,22 @@ public class TagManager {
     }
 
     /**
-     * Create a new tag
+     * Create a simple logbook
      * 
-     * @param tag
+     * @param logbook
      * @return
      */
-    public static Optional<Tag> createTag(Tag tag) {
+    public static Optional<Logbook> createLogbook(Logbook logbook) {
         try (TransportClient client = new PreBuiltTransportClient(Settings.EMPTY)
                 .addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName("localhost"), 9300))) {
-            IndexResponse response = client.prepareIndex(ologTagIndex, "tag", tag.getName())
-                    .setSource(mapper.writeValueAsBytes(tag), XContentType.JSON).get();
+            IndexResponse response = client.prepareIndex(ologLogbookIndex, "logbook", logbook.getName())
+                    .setSource(mapper.writeValueAsBytes(logbook), XContentType.JSON).get();
 
             if (response.getResult().equals(Result.CREATED)) {
-                BytesReference ref = client.prepareGet(ologTagIndex, "tag", response.getId()).get()
+                BytesReference ref = client.prepareGet(ologLogbookIndex, "logbook", response.getId()).get()
                         .getSourceAsBytesRef();
-                Tag createdTag = mapper.readValue(ref.streamInput(), Tag.class);
-                createdTag.setId(response.getId());
-                return Optional.of(createdTag);
+                Logbook createdLogbook = mapper.readValue(ref.streamInput(), Logbook.class);
+                return Optional.of(createdLogbook);
             }
         } catch (Exception e) {
             log.log(Level.SEVERE, e.getMessage(), e);
@@ -118,27 +117,26 @@ public class TagManager {
     }
 
     /**
-     * Delete the given tag
+     * Delete the logbook
      * 
-     * @param tag
+     * @param logbook
      * @return
      */
-    public static Optional<Tag> deleteTag(Tag tag) {
+    public static Optional<Logbook> deleteLogbook(Logbook logbook) {
         try (TransportClient client = new PreBuiltTransportClient(Settings.EMPTY)
                 .addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName("localhost"), 9300))) {
 
-            UpdateResponse response = client.prepareUpdate(ologTagIndex, "tag", tag.getName())
+            UpdateResponse response = client.prepareUpdate(ologLogbookIndex, "logbook", logbook.getName())
                     .setDoc(jsonBuilder().startObject().field("state", State.Inactive).endObject()).get();
 
             if (response.getResult().equals(Result.UPDATED)) {
-                BytesReference ref = client.prepareGet(ologTagIndex, "tag", response.getId()).get()
+                BytesReference ref = client.prepareGet(ologLogbookIndex, "logbook", response.getId()).get()
                         .getSourceAsBytesRef();
-                Tag deletedTag = mapper.readValue(ref.streamInput(), Tag.class);
-                deletedTag.setId(response.getId());
-                return Optional.of(deletedTag);
+                Logbook deletedLogbook = mapper.readValue(ref.streamInput(), Logbook.class);
+                return Optional.of(deletedLogbook);
             }
         } catch (DocumentMissingException e) {
-            log.log(Level.SEVERE, tag.getName() + " Does not exist and thus cannot be deleted");
+            log.log(Level.SEVERE, logbook.getName() + " Does not exist and thus cannot be deleted");
         } catch (Exception e) {
             log.log(Level.SEVERE, e.getMessage(), e);
         }
@@ -146,17 +144,16 @@ public class TagManager {
     }
 
     /**
-     * Find the
+     * Search for a single logbook based on the logbook name
      * 
-     * @param tag
+     * @param name
      * @return
      */
-    public static Optional<Tag> findTag(String tagName) {
+    public static Optional<Logbook> findLogbook(String logbookName) {
         try (TransportClient client = new PreBuiltTransportClient(Settings.EMPTY)
                 .addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName("localhost"), 9300))) {
-            return Optional.of(mapper.readValue(
-                    client.prepareGet(ologTagIndex, "tag", tagName).get().getSourceAsBytesRef().streamInput(),
-                    Tag.class));
+            return Optional.of(mapper.readValue(client.prepareGet(ologLogbookIndex, "logbook", logbookName).get()
+                    .getSourceAsBytesRef().streamInput(), Logbook.class));
         } catch (Exception e) {
             e.printStackTrace();
         }

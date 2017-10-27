@@ -28,7 +28,10 @@ import org.junit.runners.Suite;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @RunWith(Suite.class)
-@Suite.SuiteClasses({ TagManagerIT.class })
+@Suite.SuiteClasses({ 
+    TagManagerIT.class,
+    LogbookManagerIT.class
+                    })
 public class ResourceManagerTestSuite {
 
     // instance a json mapper
