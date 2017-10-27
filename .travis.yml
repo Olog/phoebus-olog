@@ -6,8 +6,6 @@ jdk:
 
 before_install:
   - curl -O https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-5.6.3.deb && sudo dpkg -i --force-confnew elasticsearch-5.6.3.deb
-  
-before_script:
   - sleep 30
   - sudo /etc/init.d/elasticsearch start
   - echo "started"
