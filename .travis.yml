@@ -1,24 +1,13 @@
 
 sudo: required
 
+language: java
+
 jdk:
   - oraclejdk8
 
-before_install:
-  - curl -O https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-5.6.3.deb && sudo dpkg -i --force-confnew elasticsearch-5.6.3.deb
-
-install:
-  - sudo apt-get update
-  - sudo apt-get install python-nose
-  
-before_script:
-  - sleep 10
-  - sudo /etc/init.d/elasticsearch start
-  - sleep 25
-  - curl -XGET 'http://localhost:9200/_cluster/health?pretty'
-
-after_script:
-  - sudo /etc/init.d/elasticsearch stop
+services:
+  - elasticsearch
   
 install:
   - mvn clean verify
