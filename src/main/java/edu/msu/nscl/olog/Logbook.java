@@ -16,8 +16,8 @@ import javax.xml.bind.annotation.XmlType;
  *
  * @author Eric Berryman taken from Ralph Lange <Ralph.Lange@bessy.de>
  */
-@XmlType(propOrder = { "name", "owner", "state" })
 @XmlRootElement(name = "logbook")
+@XmlType(propOrder = { "name", "owner", "state" })
 public class Logbook implements Serializable {
 
     /**

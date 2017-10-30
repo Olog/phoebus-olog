@@ -7,7 +7,6 @@ package edu.msu.nscl.olog;
 import java.io.Serializable;
 
 import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
@@ -24,7 +23,6 @@ public class Tag implements Serializable {
      */
     private static final long serialVersionUID = 1L;
 
-    private String id = null;
     private String name = null;
     private State state;
 
@@ -43,31 +41,6 @@ public class Tag implements Serializable {
     public Tag(String name, State state) {
         this.name = name;
         this.state = state;
-    }
-
-    public Tag(String name, State state, String id) {
-        this.id = id;
-        this.name = name;
-        this.state = state;
-    }
-
-    /**
-     * Getter for tag id.
-     *
-     * @return id tag id
-     */
-    @XmlElement
-    public Object getId() {
-        return id;
-    }
-
-    /**
-     * Setter for tag id.
-     *
-     * @param id tag id
-     */
-    public void setId(String id) {
-        this.id = id;
     }
 
     /**

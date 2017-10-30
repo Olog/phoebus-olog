@@ -30,6 +30,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * A manager class for handling tag operations
+ * 
  * @author kunalshroff
  *
  */
@@ -108,7 +109,6 @@ public class TagManager {
                 BytesReference ref = client.prepareGet(ologTagIndex, "tag", response.getId()).get()
                         .getSourceAsBytesRef();
                 Tag createdTag = mapper.readValue(ref.streamInput(), Tag.class);
-                createdTag.setId(response.getId());
                 return Optional.of(createdTag);
             }
         } catch (Exception e) {
@@ -134,7 +134,6 @@ public class TagManager {
                 BytesReference ref = client.prepareGet(ologTagIndex, "tag", response.getId()).get()
                         .getSourceAsBytesRef();
                 Tag deletedTag = mapper.readValue(ref.streamInput(), Tag.class);
-                deletedTag.setId(response.getId());
                 return Optional.of(deletedTag);
             }
         } catch (DocumentMissingException e) {

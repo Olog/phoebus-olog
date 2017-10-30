@@ -35,7 +35,7 @@ public class TagManagerIT {
         Optional<Tag> result = TagManager.createTag(tag);
         if (result.isPresent()) {
             assertEquals("Failed to created a new tag ", tag, result.get());
-            assertNotNull("Failed to create a valid tag - no id detected", result.get().getId());
+            assertNotNull("Failed to create a valid tag - no id detected", TagManager.listActive().contains(tag));
         } else {
             fail("Failed to create a valid tag");
         }
@@ -51,7 +51,7 @@ public class TagManagerIT {
         TagManager.createTag(tag);
 
         Optional<Tag> deletedTag = TagManager.deleteTag(tag);
-
+        assertTrue("Failed to properly delete tag 'delete-test-tag1' ", tag.equals(deletedTag.get()));
         assertTrue("Failed to properly delete tag 'delete-test-tag1' ", !TagManager.listActive().contains(tag));
         assertTrue("Failed to properly delete tag 'delete-test-tag1' ", TagManager.list().contains(tag));
     }
