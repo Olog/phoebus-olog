@@ -32,7 +32,7 @@ public class Property implements Serializable {
     private String name;
     private State state = State.Active;
 
-    private List<Attribute> attributes = new ArrayList<Attribute>();
+    private Set<Attribute> attributes = new HashSet<Attribute>();
 
     /**
      * Creates a new instance of Property.
@@ -57,7 +57,7 @@ public class Property implements Serializable {
      * @param state
      * @param attributes
      */
-    public Property(String name, State state, List<Attribute> attributes) {
+    public Property(String name, State state, Set<Attribute> attributes) {
         this.name = name;
         this.state = state;
         this.attributes = attributes;
@@ -66,7 +66,7 @@ public class Property implements Serializable {
      * @param name
      * @param attributes
      */
-    public Property(String name, List<Attribute> attributes) {
+    public Property(String name, Set<Attribute> attributes) {
         this.name = name;
         this.attributes = attributes;
     }
@@ -102,14 +102,14 @@ public class Property implements Serializable {
     /**
      * @return the attributes
      */
-    public List<Attribute> getAttributes() {
+    public Set<Attribute> getAttributes() {
         return attributes;
     }
 
     /**
      * @param attributes the attributes to set
      */
-    public void setAttributes(List<Attribute> attributes) {
+    public void setAttributes(Set<Attribute> attributes) {
         this.attributes = attributes;
     }
 

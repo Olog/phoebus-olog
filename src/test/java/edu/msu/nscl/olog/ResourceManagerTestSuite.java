@@ -7,6 +7,7 @@ import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
 import java.net.InetAddress;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
@@ -53,11 +54,11 @@ public class ResourceManagerTestSuite {
 
     public static final List<Property> initialProperties = Arrays.asList(
             new Property("integration-test-property1",
-                    Arrays.asList(new Attribute("attr1", "val1"), new Attribute("attr2", "val2"))),
+                    new HashSet<Attribute>(Arrays.asList(new Attribute("attr1", "val1"), new Attribute("attr2", "val2")))),
             new Property("integration-test-property2",
-                    Arrays.asList(new Attribute("attr1", "val1"))),
+                    new HashSet<Attribute>(Arrays.asList(new Attribute("attr1", "val1")))),
             new Property("integration-test-property3", State.Inactive,
-                    Arrays.asList(new Attribute("attr1", "val1"))));
+                    new HashSet<Attribute>(Arrays.asList(new Attribute("attr1", "val1")))));
 
     @SuppressWarnings("unused")
     @BeforeClass
@@ -65,6 +66,9 @@ public class ResourceManagerTestSuite {
         try (TransportClient client = new PreBuiltTransportClient(Settings.EMPTY)
                 .addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName("localhost"), 9300))) {
 
+            // Initialize the client via its context listener
+            new ElasticSearchClient().contextInitialized(null);
+                    
             // Clean up the old indices and create brand new ones
             AdminClient adminClient = client.admin();
             if (adminClient.indices().exists(new IndicesExistsRequest(ologTagIndex)).get().isExists()) {
@@ -161,7 +165,8 @@ public class ResourceManagerTestSuite {
 
             AdminClient adminClient = client.admin();
             if (adminClient.indices().exists(new IndicesExistsRequest(ologTagIndex)).get().isExists()) {
-                DeleteIndexResponse response = adminClient.indices().delete(new DeleteIndexRequest(ologTagIndex)).get();
+                DeleteIndexResponse response = adminClient.indices().delete(new DeleteIndexRequest(ologTagIndex))
+                        .get();
             }
             if (adminClient.indices().exists(new IndicesExistsRequest(ologLogbookIndex)).get().isExists()) {
                 DeleteIndexResponse response = adminClient.indices().delete(new DeleteIndexRequest(ologLogbookIndex))
@@ -174,6 +179,9 @@ public class ResourceManagerTestSuite {
             if (adminClient.indices().exists(new IndicesExistsRequest("olog_logs")).get().isExists()) {
                 DeleteIndexResponse response = adminClient.indices().delete(new DeleteIndexRequest("olog_logs")).get();
             }
+
+            // cleanup  the client via its context listener
+            new ElasticSearchClient().contextDestroyed(null);
         } catch (Exception e) {
             e.printStackTrace();
         }

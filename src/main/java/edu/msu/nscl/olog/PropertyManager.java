@@ -1,7 +1,8 @@
 package edu.msu.nscl.olog;
 
+import static edu.msu.nscl.olog.ElasticSearchClient.getSearchClient;
+
 import java.io.IOException;
-import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -10,12 +11,8 @@ import java.util.logging.Logger;
 
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.bytes.BytesReference;
-import org.elasticsearch.common.settings.Settings;
-import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.transport.client.PreBuiltTransportClient;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -27,9 +24,8 @@ public class PropertyManager {
     private static final Logger log = Logger.getLogger(PropertyManager.class.getName());
 
     public static List<Property> list() {
-        try (TransportClient client = new PreBuiltTransportClient(Settings.EMPTY)
-                .addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName("localhost"), 9300))) {
-            SearchResponse response = client.search(new SearchRequest(ologPropertyIndex)).get();
+        try {
+            SearchResponse response = getSearchClient().search(new SearchRequest(ologPropertyIndex)).get();
             List<Property> result = new ArrayList<Property>();
             response.getHits().forEach(h -> {
                 BytesReference b = h.getSourceRef();
@@ -52,9 +48,8 @@ public class PropertyManager {
      * @return List of all the active {@link Property}s
      */
     public static List<Property> listActive() {
-        try (TransportClient client = new PreBuiltTransportClient(Settings.EMPTY)
-                .addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName("localhost"), 9300))) {
-            SearchResponse response = client.prepareSearch(ologPropertyIndex).setTypes("property")
+        try {
+            SearchResponse response = getSearchClient().prepareSearch(ologPropertyIndex).setTypes("property")
                     .setQuery(QueryBuilders.termQuery("state", State.Active.toString())).get();
             List<Property> result = new ArrayList<Property>();
             response.getHits().forEach(h -> {
