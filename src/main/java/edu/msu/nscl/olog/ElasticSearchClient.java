@@ -35,7 +35,7 @@ import org.elasticsearch.transport.client.PreBuiltTransportClient;
  */
 public class ElasticSearchClient implements ServletContextListener {
 
-    private static Logger log = Logger.getLogger(ElasticSearchClient.class.getCanonicalName());
+    private static Logger log = Logger.getLogger(ElasticSearchClient.class.getName());
 
     private static Settings settings;
 
