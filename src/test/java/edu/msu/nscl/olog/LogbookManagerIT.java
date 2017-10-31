@@ -51,7 +51,8 @@ public class LogbookManagerIT {
         LogbookManager.createLogbook(logbook);
 
         Optional<Logbook> deletedLogbook = LogbookManager.deleteLogbook(logbook);
-
+        
+        assertTrue("Failed to properly delete tag 'delete-test-logbook1' ", deletedLogbook.isPresent());
         assertTrue("Failed to properly delete tag 'delete-test-logbook1' ", !LogbookManager.listActive().contains(logbook));
         assertTrue("Failed to properly delete tag 'delete-test-logbook1' ", LogbookManager.list().contains(logbook));
     }

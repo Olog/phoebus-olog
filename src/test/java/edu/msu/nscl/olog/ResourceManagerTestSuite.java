@@ -54,11 +54,11 @@ public class ResourceManagerTestSuite {
 
     public static final List<Property> initialProperties = Arrays.asList(
             new Property("integration-test-property1",
-                    new HashSet<Attribute>(Arrays.asList(new Attribute("attr1", "val1"), new Attribute("attr2", "val2")))),
+                    new HashSet<Attribute>(Arrays.asList(new Attribute("attr1"), new Attribute("attr2")))),
             new Property("integration-test-property2",
-                    new HashSet<Attribute>(Arrays.asList(new Attribute("attr1", "val1")))),
+                    new HashSet<Attribute>(Arrays.asList(new Attribute("attr1")))),
             new Property("integration-test-property3", State.Inactive,
-                    new HashSet<Attribute>(Arrays.asList(new Attribute("attr1", "val1")))));
+                    new HashSet<Attribute>(Arrays.asList(new Attribute("attr1")))));
 
     @SuppressWarnings("unused")
     @BeforeClass
@@ -122,7 +122,7 @@ public class ResourceManagerTestSuite {
                                         .startObject("attributes").field("type", "nested").field("include_in_parent","true")
                                             .startObject("properties")
                                             .startObject("name").field("type", "string").field("analyzer","whitespace").endObject()
-                                            .startObject("state").field("value", "string").field("analyzer","whitespace").endObject()
+                                            .startObject("value").field("value", "string").field("analyzer","whitespace").endObject()
                                             .startObject("state").field("type", "string").field("analyzer","whitespace").endObject()
                                             .endObject()
                                         .endObject()
