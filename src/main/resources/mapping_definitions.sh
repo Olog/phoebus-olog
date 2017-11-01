@@ -16,7 +16,6 @@
 #Create the Index
 curl -XPUT 'http://localhost:9200/olog_tags'
 #Set the mapping
-
 curl -XPUT 'http://localhost:9200/olog_tags/_mapping/tag' -d'
 {
   "tag" : {
@@ -65,6 +64,7 @@ curl -XPUT 'http://localhost:9200/olog_properties/_mapping/property' -d'
 
 #Create the Index
 curl -XPUT 'http://localhost:9200/olog_sequence'
+#Set the mappings
 curl -XPUT 'http://localhost:9200/olog_sequence/?pretty=1'  -d '
 {
    "settings" : {
@@ -72,9 +72,9 @@ curl -XPUT 'http://localhost:9200/olog_sequence/?pretty=1'  -d '
       "auto_expand_replicas" : "0-all"
    },
    "mappings" : {
-      "sequence" : {
-         "_source" : { "enabled" : 0 },
-         "_all"    : { "enabled" : 0 },
+      "olog_sequence" : {
+         "_source" : { "enabled" : false },
+         "_all"    : { "enabled" : false },
          "_type"   : { "index" : "no" },
          "enabled" : 0
       }

@@ -148,7 +148,7 @@ public class TagManager {
                     getSearchClient().prepareGet(ologTagIndex, "tag", tagName).get().getSourceAsBytesRef().streamInput(),
                     Tag.class));
         } catch (Exception e) {
-            e.printStackTrace();
+            log.log(Level.SEVERE, e.getMessage(), e);
         }
         return Optional.empty();
     }

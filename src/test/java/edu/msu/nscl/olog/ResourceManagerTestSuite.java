@@ -5,6 +5,7 @@ import static edu.msu.nscl.olog.PropertyManager.ologPropertyIndex;
 import static edu.msu.nscl.olog.TagManager.ologTagIndex;
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
+import java.io.IOException;
 import java.net.InetAddress;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -31,18 +32,13 @@ import org.junit.runners.Suite;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @RunWith(Suite.class)
-@Suite.SuiteClasses({ 
-    TagManagerIT.class,
-    LogbookManagerIT.class,
-    PropertyManagerIT.class
-                    })
+@Suite.SuiteClasses({ TagManagerIT.class, LogbookManagerIT.class, PropertyManagerIT.class, LogSequenceIT.class })
 public class ResourceManagerTestSuite {
 
     // instance a json mapper
     static ObjectMapper mapper = new ObjectMapper();
 
-    public static final List<Tag> initialTags = Arrays.asList(
-            new Tag("integration-test-tag1", State.Active),
+    public static final List<Tag> initialTags = Arrays.asList(new Tag("integration-test-tag1", State.Active),
             new Tag("integration-test-tag2", State.Inactive));
 
     public static final List<Logbook> initialLogbooks = Arrays.asList(
@@ -55,8 +51,7 @@ public class ResourceManagerTestSuite {
     public static final List<Property> initialProperties = Arrays.asList(
             new Property("integration-test-property1",
                     new HashSet<Attribute>(Arrays.asList(new Attribute("attr1"), new Attribute("attr2")))),
-            new Property("integration-test-property2",
-                    new HashSet<Attribute>(Arrays.asList(new Attribute("attr1")))),
+            new Property("integration-test-property2", new HashSet<Attribute>(Arrays.asList(new Attribute("attr1")))),
             new Property("integration-test-property3", State.Inactive,
                     new HashSet<Attribute>(Arrays.asList(new Attribute("attr1")))));
 
@@ -68,7 +63,7 @@ public class ResourceManagerTestSuite {
 
             // Initialize the client via its context listener
             new ElasticSearchClient().contextInitialized(null);
-                    
+
             // Clean up the old indices and create brand new ones
             AdminClient adminClient = client.admin();
             if (adminClient.indices().exists(new IndicesExistsRequest(ologTagIndex)).get().isExists()) {
@@ -82,74 +77,63 @@ public class ResourceManagerTestSuite {
                 DeleteIndexResponse response = adminClient.indices().delete(new DeleteIndexRequest(ologPropertyIndex))
                         .get();
             }
+            if (adminClient.indices().exists(new IndicesExistsRequest("olog_sequence")).get().isExists()) {
+                DeleteIndexResponse response = adminClient.indices().delete(new DeleteIndexRequest("olog_sequence"))
+                        .get();
+            }
             if (adminClient.indices().exists(new IndicesExistsRequest("olog_logs")).get().isExists()) {
                 DeleteIndexResponse response = adminClient.indices().delete(new DeleteIndexRequest("olog_logs")).get();
             }
             adminClient.indices().create(new CreateIndexRequest(ologTagIndex)).actionGet();
             adminClient.indices().preparePutMapping(ologTagIndex).setType("tag")
-                    .setSource(jsonBuilder()
-                            .startObject()
-                                .startObject("tag")
-                                    .startObject("properties")
-                                        .startObject("name").field("type", "string").field("analyzer","whitespace").endObject()
-                                        .startObject("state").field("type", "string").field("analyzer","whitespace").endObject()
-                                    .endObject()
-                                .endObject()
-                            .endObject())
+                    .setSource(jsonBuilder().startObject().startObject("tag").startObject("properties")
+                            .startObject("name").field("type", "string").field("analyzer", "whitespace").endObject()
+                            .startObject("state").field("type", "string").field("analyzer", "whitespace").endObject()
+                            .endObject().endObject().endObject())
                     .get();
 
             adminClient.indices().create(new CreateIndexRequest(ologLogbookIndex)).actionGet();
             adminClient.indices().preparePutMapping(ologLogbookIndex).setType("logbook")
-                    .setSource(jsonBuilder()
-                            .startObject()
-                                .startObject("logbook")
-                                    .startObject("properties")
-                                        .startObject("name").field("type", "string").field("analyzer","whitespace").endObject()
-                                        .startObject("state").field("type", "string").field("analyzer","whitespace").endObject()
-                                    .endObject()
-                                .endObject()
-                            .endObject())
+                    .setSource(jsonBuilder().startObject().startObject("logbook").startObject("properties")
+                            .startObject("name").field("type", "string").field("analyzer", "whitespace").endObject()
+                            .startObject("state").field("type", "string").field("analyzer", "whitespace").endObject()
+                            .endObject().endObject().endObject())
                     .get();
-            
+
             adminClient.indices().create(new CreateIndexRequest(ologPropertyIndex)).actionGet();
             adminClient.indices().preparePutMapping(ologPropertyIndex).setType("property")
-                    .setSource(jsonBuilder()
-                            .startObject()
-                                .startObject("property")
-                                    .startObject("properties")
-                                        .startObject("name").field("type", "string").field("analyzer","whitespace").endObject()
-                                        .startObject("state").field("type", "string").field("analyzer","whitespace").endObject()
-                                        .startObject("attributes").field("type", "nested").field("include_in_parent","true")
-                                            .startObject("properties")
-                                            .startObject("name").field("type", "string").field("analyzer","whitespace").endObject()
-                                            .startObject("value").field("value", "string").field("analyzer","whitespace").endObject()
-                                            .startObject("state").field("type", "string").field("analyzer","whitespace").endObject()
-                                            .endObject()
-                                        .endObject()
-                                    .endObject()
-                                .endObject()
+                    .setSource(jsonBuilder().startObject().startObject("property").startObject("properties")
+                            .startObject("name").field("type", "string").field("analyzer", "whitespace").endObject()
+                            .startObject("state").field("type", "string").field("analyzer", "whitespace").endObject()
+                            .startObject("attributes").field("type", "nested").field("include_in_parent", "true")
+                            .startObject("properties").startObject("name").field("type", "string")
+                            .field("analyzer", "whitespace").endObject().startObject("value").field("type", "string")
+                            .field("analyzer", "whitespace").endObject().startObject("state").field("type", "string")
+                            .field("analyzer", "whitespace").endObject().endObject().endObject().endObject().endObject()
                             .endObject())
                     .get();
+
+//            adminClient.indices().create(new CreateIndexRequest("olog_sequence")).actionGet();
 
             BulkRequestBuilder bulkRequest = client.prepareBulk();
             for (Tag tag : initialTags) {
                 IndexRequest indexRequest = new IndexRequest(ologTagIndex, "tag", tag.getName());
                 indexRequest.source(mapper.writeValueAsBytes(tag), XContentType.JSON);
-                
+
                 bulkRequest.add(indexRequest);
             }
             for (Logbook logbook : initialLogbooks) {
 
                 IndexRequest indexRequest = new IndexRequest(ologLogbookIndex, "logbook", logbook.getName());
                 indexRequest.source(mapper.writeValueAsBytes(logbook), XContentType.JSON);
-                
+
                 bulkRequest.add(indexRequest);
             }
             for (Property property : initialProperties) {
 
                 IndexRequest indexRequest = new IndexRequest(ologPropertyIndex, "property", property.getName());
                 indexRequest.source(mapper.writeValueAsBytes(property), XContentType.JSON);
-                
+
                 bulkRequest.add(indexRequest);
             }
             BulkResponse bulkResponse = bulkRequest.get();
@@ -165,8 +149,7 @@ public class ResourceManagerTestSuite {
 
             AdminClient adminClient = client.admin();
             if (adminClient.indices().exists(new IndicesExistsRequest(ologTagIndex)).get().isExists()) {
-                DeleteIndexResponse response = adminClient.indices().delete(new DeleteIndexRequest(ologTagIndex))
-                        .get();
+                DeleteIndexResponse response = adminClient.indices().delete(new DeleteIndexRequest(ologTagIndex)).get();
             }
             if (adminClient.indices().exists(new IndicesExistsRequest(ologLogbookIndex)).get().isExists()) {
                 DeleteIndexResponse response = adminClient.indices().delete(new DeleteIndexRequest(ologLogbookIndex))
@@ -176,11 +159,15 @@ public class ResourceManagerTestSuite {
                 DeleteIndexResponse response = adminClient.indices().delete(new DeleteIndexRequest(ologPropertyIndex))
                         .get();
             }
+            if (adminClient.indices().exists(new IndicesExistsRequest("olog_sequence")).get().isExists()) {
+                DeleteIndexResponse response = adminClient.indices().delete(new DeleteIndexRequest("olog_sequence"))
+                        .get();
+            }
             if (adminClient.indices().exists(new IndicesExistsRequest("olog_logs")).get().isExists()) {
                 DeleteIndexResponse response = adminClient.indices().delete(new DeleteIndexRequest("olog_logs")).get();
             }
 
-            // cleanup  the client via its context listener
+            // cleanup the client via its context listener
             new ElasticSearchClient().contextDestroyed(null);
         } catch (Exception e) {
             e.printStackTrace();
