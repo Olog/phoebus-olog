@@ -1,11 +1,12 @@
 package edu.msu.nscl.olog;
 
+import static edu.msu.nscl.olog.LogManager.ologLogIndex;
 import static edu.msu.nscl.olog.LogbookManager.ologLogbookIndex;
 import static edu.msu.nscl.olog.PropertyManager.ologPropertyIndex;
+import static edu.msu.nscl.olog.SequenceGenerator.seqIndex;
 import static edu.msu.nscl.olog.TagManager.ologTagIndex;
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
-import java.io.IOException;
 import java.net.InetAddress;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -31,14 +32,22 @@ import org.junit.runners.Suite;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import edu.msu.nscl.olog.Log.LogBuilder;
+
 @RunWith(Suite.class)
-@Suite.SuiteClasses({ TagManagerIT.class, LogbookManagerIT.class, PropertyManagerIT.class, LogSequenceIT.class })
+@Suite.SuiteClasses({ 
+    TagManagerIT.class,
+    LogbookManagerIT.class,
+    PropertyManagerIT.class,
+    LogSequenceIT.class,
+    LogManagerIT.class })
 public class ResourceManagerTestSuite {
 
     // instance a json mapper
     static ObjectMapper mapper = new ObjectMapper();
 
-    public static final List<Tag> initialTags = Arrays.asList(new Tag("integration-test-tag1", State.Active),
+    public static final List<Tag> initialTags = Arrays.asList(
+            new Tag("integration-test-tag1", State.Active),
             new Tag("integration-test-tag2", State.Inactive));
 
     public static final List<Logbook> initialLogbooks = Arrays.asList(
@@ -51,10 +60,14 @@ public class ResourceManagerTestSuite {
     public static final List<Property> initialProperties = Arrays.asList(
             new Property("integration-test-property1",
                     new HashSet<Attribute>(Arrays.asList(new Attribute("attr1"), new Attribute("attr2")))),
-            new Property("integration-test-property2", new HashSet<Attribute>(Arrays.asList(new Attribute("attr1")))),
+            new Property("integration-test-property2",
+                    new HashSet<Attribute>(Arrays.asList(new Attribute("attr1")))),
             new Property("integration-test-property3", State.Inactive,
                     new HashSet<Attribute>(Arrays.asList(new Attribute("attr1")))));
 
+    public static final List<Log> initialLogs = Arrays.asList(
+            LogBuilder.createLog("The first test log").owner("test").withLogbook(initialLogbooks.get(0)).build());
+    
     @SuppressWarnings("unused")
     @BeforeClass
     public static void setup() {
@@ -77,16 +90,17 @@ public class ResourceManagerTestSuite {
                 DeleteIndexResponse response = adminClient.indices().delete(new DeleteIndexRequest(ologPropertyIndex))
                         .get();
             }
-            if (adminClient.indices().exists(new IndicesExistsRequest("olog_sequence")).get().isExists()) {
-                DeleteIndexResponse response = adminClient.indices().delete(new DeleteIndexRequest("olog_sequence"))
+            if (adminClient.indices().exists(new IndicesExistsRequest(seqIndex)).get().isExists()) {
+                DeleteIndexResponse response = adminClient.indices().delete(new DeleteIndexRequest(seqIndex))
                         .get();
             }
-            if (adminClient.indices().exists(new IndicesExistsRequest("olog_logs")).get().isExists()) {
-                DeleteIndexResponse response = adminClient.indices().delete(new DeleteIndexRequest("olog_logs")).get();
+            if (adminClient.indices().exists(new IndicesExistsRequest(ologLogIndex)).get().isExists()) {
+                DeleteIndexResponse response = adminClient.indices().delete(new DeleteIndexRequest(ologLogIndex)).get();
             }
             adminClient.indices().create(new CreateIndexRequest(ologTagIndex)).actionGet();
             adminClient.indices().preparePutMapping(ologTagIndex).setType("tag")
-                    .setSource(jsonBuilder().startObject().startObject("tag").startObject("properties")
+                    .setSource(jsonBuilder()
+                            .startObject().startObject("tag").startObject("properties")
                             .startObject("name").field("type", "string").field("analyzer", "whitespace").endObject()
                             .startObject("state").field("type", "string").field("analyzer", "whitespace").endObject()
                             .endObject().endObject().endObject())
@@ -94,7 +108,8 @@ public class ResourceManagerTestSuite {
 
             adminClient.indices().create(new CreateIndexRequest(ologLogbookIndex)).actionGet();
             adminClient.indices().preparePutMapping(ologLogbookIndex).setType("logbook")
-                    .setSource(jsonBuilder().startObject().startObject("logbook").startObject("properties")
+                    .setSource(jsonBuilder()
+                            .startObject().startObject("logbook").startObject("properties")
                             .startObject("name").field("type", "string").field("analyzer", "whitespace").endObject()
                             .startObject("state").field("type", "string").field("analyzer", "whitespace").endObject()
                             .endObject().endObject().endObject())
@@ -102,16 +117,22 @@ public class ResourceManagerTestSuite {
 
             adminClient.indices().create(new CreateIndexRequest(ologPropertyIndex)).actionGet();
             adminClient.indices().preparePutMapping(ologPropertyIndex).setType("property")
-                    .setSource(jsonBuilder().startObject().startObject("property").startObject("properties")
+                    .setSource(jsonBuilder()
+                            .startObject().startObject("property").startObject("properties")
                             .startObject("name").field("type", "string").field("analyzer", "whitespace").endObject()
                             .startObject("state").field("type", "string").field("analyzer", "whitespace").endObject()
                             .startObject("attributes").field("type", "nested").field("include_in_parent", "true")
-                            .startObject("properties").startObject("name").field("type", "string")
-                            .field("analyzer", "whitespace").endObject().startObject("value").field("type", "string")
-                            .field("analyzer", "whitespace").endObject().startObject("state").field("type", "string")
-                            .field("analyzer", "whitespace").endObject().endObject().endObject().endObject().endObject()
-                            .endObject())
+                                .startObject("properties")
+                                    .startObject("name").field("type", "string").field("analyzer", "whitespace").endObject()
+                                    .startObject("value").field("type", "string").field("analyzer", "whitespace").endObject()
+                                    .startObject("state").field("type", "string").field("analyzer", "whitespace").endObject()
+                                .endObject()
+                            .endObject()
+                            .endObject().endObject().endObject())
                     .get();
+
+
+            adminClient.indices().create(new CreateIndexRequest(ologLogIndex)).actionGet();
 
 //            adminClient.indices().create(new CreateIndexRequest("olog_sequence")).actionGet();
 
@@ -134,6 +155,13 @@ public class ResourceManagerTestSuite {
                 IndexRequest indexRequest = new IndexRequest(ologPropertyIndex, "property", property.getName());
                 indexRequest.source(mapper.writeValueAsBytes(property), XContentType.JSON);
 
+                bulkRequest.add(indexRequest);
+            }
+            for (Log log : initialLogs) {
+                long id = SequenceGenerator.getID();
+                log.setId(id);
+                IndexRequest indexRequest = new IndexRequest(ologLogIndex, "log", String.valueOf(id));
+                indexRequest.source(mapper.writeValueAsBytes(log), XContentType.JSON);
                 bulkRequest.add(indexRequest);
             }
             BulkResponse bulkResponse = bulkRequest.get();
@@ -159,12 +187,12 @@ public class ResourceManagerTestSuite {
                 DeleteIndexResponse response = adminClient.indices().delete(new DeleteIndexRequest(ologPropertyIndex))
                         .get();
             }
-            if (adminClient.indices().exists(new IndicesExistsRequest("olog_sequence")).get().isExists()) {
-                DeleteIndexResponse response = adminClient.indices().delete(new DeleteIndexRequest("olog_sequence"))
+            if (adminClient.indices().exists(new IndicesExistsRequest(seqIndex)).get().isExists()) {
+                DeleteIndexResponse response = adminClient.indices().delete(new DeleteIndexRequest(seqIndex))
                         .get();
             }
-            if (adminClient.indices().exists(new IndicesExistsRequest("olog_logs")).get().isExists()) {
-                DeleteIndexResponse response = adminClient.indices().delete(new DeleteIndexRequest("olog_logs")).get();
+            if (adminClient.indices().exists(new IndicesExistsRequest(ologLogIndex)).get().isExists()) {
+                DeleteIndexResponse response = adminClient.indices().delete(new DeleteIndexRequest(ologLogIndex)).get();
             }
 
             // cleanup the client via its context listener

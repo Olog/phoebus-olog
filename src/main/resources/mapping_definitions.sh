@@ -14,19 +14,6 @@
 # The mapping definition for the Indexes associated with the olog v2
 
 #Create the Index
-curl -XPUT 'http://localhost:9200/olog_tags'
-#Set the mapping
-curl -XPUT 'http://localhost:9200/olog_tags/_mapping/tag' -d'
-{
-  "tag" : {
-    "properties" : {
-      "name"  : {"type" : "string", analyzer" : "whitespace"},
-      "owner" : {"type" : "string", "analyzer" : "whitespace"},
-      "state" : {"type" : "string", "analyzer" : "whitespace"}
-    }
-}'
-
-#Create the Index
 curl -XPUT 'http://localhost:9200/olog_logbooks'
 #Set the mapping
 curl -XPUT 'http://localhost:9200/olog_logbooks/_mapping/logbook' -d'
@@ -35,6 +22,19 @@ curl -XPUT 'http://localhost:9200/olog_logbooks/_mapping/logbook' -d'
     "properties" : {
       "name"  : {"type" : "string", "analyzer" : "whitespace"},
       "owner" : {"type" : "string", "analyzer" : "whitespace"},
+      "state" : {"type" : "string", "analyzer" : "whitespace"}
+    }
+  }
+}'
+
+#Create the Index
+curl -XPUT 'http://localhost:9200/olog_tags'
+#Set the mapping
+curl -XPUT 'http://localhost:9200/olog_tags/_mapping/tag' -d'
+{
+  "tag" : {
+    "properties" : {
+      "name"  : {"type" : "string", "analyzer" : "whitespace"},
       "state" : {"type" : "string", "analyzer" : "whitespace"}
     }
   }
@@ -81,3 +81,15 @@ curl -XPUT 'http://localhost:9200/olog_sequence/?pretty=1'  -d '
    }
 }
 '
+
+
+#Create the Index
+curl -XPUT 'http://localhost:9200/olog_logs'
+#Set the mapping
+curl -XPUT 'http://localhost:9200/olog_logs/_mapping/log' -d'
+{
+  "log" : {
+    "properties" : {
+    }
+  }
+}'
