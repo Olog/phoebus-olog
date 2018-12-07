@@ -1,4 +1,4 @@
-package edu.msu.nscl.olog;
+package edu.msu.nscl.olog.entity;
 
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;

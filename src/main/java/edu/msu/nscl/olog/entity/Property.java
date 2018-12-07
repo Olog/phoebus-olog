@@ -3,7 +3,7 @@
  * Copyright (c) 2010-2011 Helmholtz-Zentrum Berlin für Materialien und Energie GmbH
  * All rights reserved. Use is subject to license terms and conditions.
  */
-package edu.msu.nscl.olog;
+package edu.msu.nscl.olog.entity;
 
 import java.io.Serializable;
 import java.util.ArrayList;

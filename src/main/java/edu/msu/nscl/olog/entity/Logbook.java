@@ -1,8 +1,9 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright (c) 2010 Brookhaven National Laboratory
+ * Copyright (c) 2010 Helmholtz-Zentrum Berlin für Materialien und Energie GmbH
+ * Subject to license terms and conditions.
  */
-package edu.msu.nscl.olog;
+package edu.msu.nscl.olog.entity;
 
 import java.io.Serializable;
 
@@ -11,12 +12,13 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
 /**
+ * Logbook object that can be represented as XML/JSON in payload data.
  *
- * @author berryman, shroffk
+ * @author Eric Berryman taken from Ralph Lange <Ralph.Lange@bessy.de>
  */
-@XmlType(propOrder = { "id", "name", "logs" })
-@XmlRootElement(name = "tag")
-public class Tag implements Serializable {
+@XmlRootElement(name = "logbook")
+@XmlType(propOrder = { "name", "owner", "state" })
+public class Logbook implements Serializable {
 
     /**
      * 
@@ -24,23 +26,58 @@ public class Tag implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private String name = null;
-    private State state;
+    private String owner = null;
+    private State state = State.Active;
+    // private List<Log> logs = new Logs();
 
-    public Tag() {
+    /**
+     * Creates a new instance of Logbook.
+     *
+     */
+    public Logbook() {
     }
 
     /**
-     * Creates a new instance of Tag.
+     * Creates a new instance of Logbook.
      *
      * @param name
+     * @param owner
      */
-    public Tag(String name) {
+    public Logbook(String name, String owner) {
+        this.owner = owner;
         this.name = name;
     }
 
-    public Tag(String name, State state) {
+    /**
+     * Creates a new instance of Logbook.
+     *
+     * @param name
+     * @param owner
+     */
+    public Logbook(String name, String owner, State state) {
+        this.owner = owner;
         this.name = name;
         this.state = state;
+    }
+
+    /**
+     * Getter for logbook owner.
+     *
+     * @return owner logbook owner
+     */
+    @XmlAttribute
+    public String getOwner() {
+        return owner;
+    }
+
+    /**
+     * Setter for logbook owner.
+     *
+     * @param owner
+     *            logbook owner
+     */
+    public void setOwner(String owner) {
+        this.owner = owner;
     }
 
     /**
@@ -85,8 +122,8 @@ public class Tag implements Serializable {
      *            the Label to log
      * @return string representation for log
      */
-    public static String toLogger(Tag data) {
-        return data.getName();
+    public static String toLogger(Logbook data) {
+        return data.getName() + "(" + data.getOwner() + ")";
     }
 
     @Override
@@ -94,6 +131,7 @@ public class Tag implements Serializable {
         final int prime = 31;
         int result = 1;
         result = prime * result + ((name == null) ? 0 : name.hashCode());
+        result = prime * result + ((owner == null) ? 0 : owner.hashCode());
         return result;
     }
 
@@ -108,12 +146,19 @@ public class Tag implements Serializable {
         if (getClass() != obj.getClass()) {
             return false;
         }
-        Tag other = (Tag) obj;
+        Logbook other = (Logbook) obj;
         if (name == null) {
             if (other.name != null) {
                 return false;
             }
         } else if (!name.equals(other.name)) {
+            return false;
+        }
+        if (owner == null) {
+            if (other.owner != null) {
+                return false;
+            }
+        } else if (!owner.equals(other.owner)) {
             return false;
         }
         return true;

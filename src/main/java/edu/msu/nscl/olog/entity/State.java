@@ -2,12 +2,13 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package edu.msu.nscl.olog;
+package edu.msu.nscl.olog.entity;
 
 /**
  *
- * @author berryman
+ * @author berryman, shroffk
  */
-public enum Level {
-    Info, Problem, Request, Suggestion, Urgent
+public enum State {
+    Active,
+    Inactive
 }

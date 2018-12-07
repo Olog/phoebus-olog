@@ -5,39 +5,49 @@
  */
 package edu.msu.nscl.olog;
 
-import java.io.IOException;
 import java.util.logging.Logger;
-import javax.ws.rs.Produces;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.GET;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.SecurityContext;
-import javax.ws.rs.core.UriInfo;
+
+import org.elasticsearch.client.Client;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import edu.msu.nscl.olog.entity.Tag;
 
 /**
  * Top level Jersey HTTP methods for the .../tags URL
  *
  * @author Eric Berryman taken from Ralph Lange <Ralph.Lange@bessy.de>
  */
-@Path("/tags/")
+@RestController
+@RequestMapping("/tags")
 public class TagsResource {
-    @Context
-    private UriInfo uriInfo;
-    @Context
-    private SecurityContext securityContext;
 
-    private Logger audit = Logger.getLogger(this.getClass().getPackage().getName() + ".audit");
-    private Logger log = Logger.getLogger(this.getClass().getName());
+	@Autowired
+	private TagRepository tagRepository;
 
-    /** Creates a new instance of TagsResource */
-    public TagsResource() {
-    }
+	private Logger audit = Logger.getLogger(this.getClass().getPackage().getName() + ".audit");
+	private Logger log = Logger.getLogger(this.getClass().getName());
+
+	/** Creates a new instance of TagsResource */
+	public TagsResource() {
+	}
+
+	@GetMapping
+	public Iterable findAll() {
+		return tagRepository.findAll();
+	}
+
+	@GetMapping("/{tagName}")
+	public Tag findByTitle(@PathVariable String tagName) {
+		Client client = tagRepository.getClient();
+//		client.
+
+		System.out.println(client);
+		return tagRepository.findById(tagName).orElseGet(null);
+	}
 
 //    /**
 //     * GET method for retrieving the list of tags in the database.

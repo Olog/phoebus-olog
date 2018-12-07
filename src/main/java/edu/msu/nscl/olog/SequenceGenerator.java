@@ -3,8 +3,6 @@
  */
 package edu.msu.nscl.olog;
 
-import static edu.msu.nscl.olog.ElasticSearchClient.getSearchClient;
-
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.common.xcontent.XContentType;
 
@@ -22,9 +20,10 @@ public class SequenceGenerator {
      * @return
      */
     public static long getID() {
-        IndexResponse response = getSearchClient().prepareIndex("olog_sequence", "olog_sequence", "id")
-                .setSource(0, XContentType.class).get();
-        return response.getVersion();
+//        IndexResponse response = getSearchClient().prepareIndex("olog_sequence", "olog_sequence", "id")
+//                .setSource(0, XContentType.class).get();
+//        return response.getVersion();
+    	return 0;
     }
 
 }
