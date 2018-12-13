@@ -5,7 +5,7 @@
  */
 package edu.msu.nscl.olog;
 
-import static edu.msu.nscl.olog.OlogResourceDescriptors.TAG_RESOURCE_URI;
+import static edu.msu.nscl.olog.OlogResourceDescriptors.LOGBOOK_RESOURCE_URI;
 
 import java.util.List;
 import java.util.logging.Logger;
@@ -23,67 +23,67 @@ import org.springframework.web.bind.annotation.RestController;
 import edu.msu.nscl.olog.entity.Tag;
 
 /**
- * Top level Jersey HTTP methods for the .../tags URL
+ * Top level Jersey HTTP methods for the .../logbooks URL
  *
  * @author Eric Berryman taken from Ralph Lange <Ralph.Lange@bessy.de>
  */
 @RestController
-@RequestMapping(TAG_RESOURCE_URI)
-public class TagsResource {
+@RequestMapping(LOGBOOK_RESOURCE_URI)
+public class LogbooksResource {
 
     @Autowired
-    private TagRepository tagRepository;
+    private TagRepository logbookRepository;
 
-    private static Logger audit = Logger.getLogger(TagsResource.class.getName() + ".audit");
-    static Logger log = Logger.getLogger(TagsResource.class.getName());
+    private static Logger audit = Logger.getLogger(LogbooksResource.class.getName() + ".audit");
+    static Logger log = Logger.getLogger(LogbooksResource.class.getName());
 
-    /** Creates a new instance of TagsResource */
-    public TagsResource() {
+    /** Creates a new instance of LogbooksResource */
+    public LogbooksResource() {
     }
 
     @GetMapping
-    public Iterable findAll() {
-        return tagRepository.findAll();
+    public Iterable<Tag> findAll() {
+        return logbookRepository.findAll();
     }
 
     @PostMapping
-    public Iterable<Tag> updateTag(@RequestBody final List<Tag> tags) {
+    public Iterable<Tag> updateTag(@RequestBody final List<Tag> logbooks) {
         // TODO Check permissions
         // TODO Validate
-        // TODO Create a tag
-        return tagRepository.saveAll(tags);
+        // TODO Create a logbook
+        return logbookRepository.saveAll(logbooks);
     }
 
-    @GetMapping("/{tagName}")
-    public Tag findByTitle(@PathVariable String tagName) {
-        return tagRepository.findById(tagName).orElseGet(null);
+    @GetMapping("/{logbookName}")
+    public Tag findByTitle(@PathVariable String logbookName) {
+        return logbookRepository.findById(logbookName).orElseGet(null);
     }
 
-    @PutMapping("/{tagName}")
-    public Tag createTag(@PathVariable String tagName, @RequestBody final Tag tag) {
+    @PutMapping("/{logbookName}")
+    public Tag createTag(@PathVariable String logbookName, @RequestBody final Tag logbook) {
         // TODO Check permissions
         // TODO Validate
-        // TODO Create a tag
-        return tagRepository.index(tag);
+        // TODO Create a logbook
+        return logbookRepository.index(logbook);
     }
 
-    @PostMapping("/{tagName}")
-    public Tag updateTag(@PathVariable String tagName, @RequestBody final Tag tag) {
+    @PostMapping("/{logbookName}")
+    public Tag updateTag(@PathVariable String logbookName, @RequestBody final Tag logbook) {
         // TODO Check permissions
         // TODO Validate
-        // TODO Create a tag
-        return tagRepository.save(tag);
+        // TODO Create a logbook
+        return logbookRepository.save(logbook);
     }
 
-    @DeleteMapping("/{tagName}")
-    public void deleteTag (@PathVariable String tagName) {
-        tagRepository.deleteById(tagName);
+    @DeleteMapping("/{logbookName}")
+    public void deleteTag (@PathVariable String logbookName) {
+        logbookRepository.deleteById(logbookName);
     }
 
 //    /**
-//     * GET method for retrieving the list of tags in the database.
+//     * GET method for retrieving the list of logbooks in the database.
 //     *
-//     * @return list of logs with their logbooks and tags that match
+//     * @return list of logs with their logbooks and logbooks that match
 //     */
 //
 //    @GET
@@ -96,7 +96,7 @@ public class TagsResource {
 //            result = cm.listTags();
 //            Response r = Response.ok(result).build();
 //            log.fine(user + "|" + uriInfo.getPath() + "|GET|OK|" + r.getStatus()
-//                    + "|returns " + result.getTags().size() + " tags");
+//                    + "|returns " + result.getTags().size() + " logbooks");
 //            return r;
 //        } catch (OlogException e) {
 //            log.warning(user + "|" + uriInfo.getPath() + "|GET|ERROR|"
@@ -106,7 +106,7 @@ public class TagsResource {
 //    }
 //
 //    /**
-//     * POST method for creating multiple tags.
+//     * POST method for creating multiple logbooks.
 //     *
 //     * @param data Tags data (from payload)
 //     * @return HTTP Response
@@ -134,21 +134,21 @@ public class TagsResource {
 //    }
 //
 //    /**
-//     * GET method for retrieving the tag with the
-//     * path parameter <tt>tagName</tt> and its logs.
+//     * GET method for retrieving the logbook with the
+//     * path parameter <tt>logbookName</tt> and its logs.
 //     *
-//     * @param tag URI path parameter: tag name to search for
-//     * @return list of logs with their logbooks and tags that match
+//     * @param logbook URI path parameter: logbook name to search for
+//     * @return list of logs with their logbooks and logbooks that match
 //     */
 //    @GET
-//    @Path("{tagName}")
+//    @Path("{logbookName}")
 //    @Produces({"application/xml", "application/json"})
-//    public Response read(@PathParam("tagName") String tag) {
+//    public Response read(@PathParam("logbookName") String logbook) {
 //        OlogImpl cm = OlogImpl.getInstance();
 //        String user = securityContext.getUserPrincipal() != null ? securityContext.getUserPrincipal().getName() : "";
 //        Tag result = null;
 //        try {
-//            result = cm.findTagByName(tag);
+//            result = cm.findTagByName(logbook);
 //            Response r;
 //            if (result == null) {
 //                r = Response.status(Response.Status.NOT_FOUND).build();
@@ -165,27 +165,27 @@ public class TagsResource {
 //    }
 //
 //    /**
-//     * PUT method to create and <b>exclusively</b> update the tag identified by the
+//     * PUT method to create and <b>exclusively</b> update the logbook identified by the
 //     * path parameter <tt>name</tt> to all logs identified in the payload
 //     * structure <tt>data</tt>.
 //     * Setting the owner attribute in the XML root element is mandatory.
 //     *
-//     * @param tag URI path parameter: tag name
-//     * @param data Tag structure containing the list of logs to be tagged
+//     * @param logbook URI path parameter: logbook name
+//     * @param data Tag structure containing the list of logs to be logbookged
 //     * @return HTTP Response
 //     */
 //    @PUT
-//    @Path("{tagName}")
+//    @Path("{logbookName}")
 //    @Consumes({"application/xml", "application/json"})
-//    public Response create(@PathParam("tagName") String tag, Tag data) {
+//    public Response create(@PathParam("logbookName") String logbook, Tag data) {
 //        OlogImpl cm = OlogImpl.getInstance();
 //        UserManager um = UserManager.getInstance();
 //        um.setUser(securityContext.getUserPrincipal(), securityContext.isUserInRole("Administrator"));
 //        Tag result = null;
 //        try {
 //            cm.checkValidNameAndOwner(data);
-//            cm.checkNameMatchesPayload(tag, data);
-//            result = cm.createOrReplaceTag(tag, data);
+//            cm.checkNameMatchesPayload(logbook, data);
+//            result = cm.createOrReplaceTag(logbook, data);
 //            Response r = Response.ok(result).build();
 //            audit.info(um.getUserName() + "|" + uriInfo.getPath() + "|PUT|OK|" + r.getStatus()
 //                    + "|data=" + Tag.toLogger(data));
@@ -198,25 +198,25 @@ public class TagsResource {
 //    }
 //
 //    /**
-//     * POST method to update the the tag identified by the path parameter <tt>name</tt>,
+//     * POST method to update the the logbook identified by the path parameter <tt>name</tt>,
 //     * adding it to all logs identified by the logs inside the payload
 //     * structure <tt>data</tt>.
 //     * Setting the owner attribute in the XML root element is mandatory.
 //     *
-//     * @param tag URI path parameter: tag name
-//     * @param data list of logs to addSingle the tag <tt>name</tt> to
+//     * @param logbook URI path parameter: logbook name
+//     * @param data list of logs to addSingle the logbook <tt>name</tt> to
 //     * @return HTTP Response
 //     */
 //    @POST
-//    @Path("{tagName}")
+//    @Path("{logbookName}")
 //    @Consumes({"application/xml", "application/json"})
-//    public Response update(@PathParam("tagName") String tag, Tag data) {
+//    public Response update(@PathParam("logbookName") String logbook, Tag data) {
 //        OlogImpl cm = OlogImpl.getInstance();
 //        UserManager um = UserManager.getInstance();
 //        um.setUser(securityContext.getUserPrincipal(), securityContext.isUserInRole("Administrator"));
 //        Tag result = null;
 //        try {
-//            result = cm.updateTag(tag, data);
+//            result = cm.updateTag(logbook, data);
 //            Response r = Response.ok(result).build();
 //            audit.info(um.getUserName() + "|" + uriInfo.getPath() + "|POST|OK|" + r.getStatus()
 //                    + "|data=" + Tag.toLogger(data));
@@ -229,20 +229,20 @@ public class TagsResource {
 //    }
 //
 //    /**
-//     * DELETE method for deleting the tag identified by the path parameter <tt>name</tt>
+//     * DELETE method for deleting the logbook identified by the path parameter <tt>name</tt>
 //     * from all logs.
 //     *
-//     * @param tag URI path parameter: tag name to remove
+//     * @param logbook URI path parameter: logbook name to remove
 //     * @return HTTP Response
 //     */
 //    @DELETE
-//    @Path("{tagName}")
-//    public Response remove(@PathParam("tagName") String tag) {
+//    @Path("{logbookName}")
+//    public Response remove(@PathParam("logbookName") String logbook) {
 //        OlogImpl cm = OlogImpl.getInstance();
 //        UserManager um = UserManager.getInstance();
 //        um.setUser(securityContext.getUserPrincipal(), securityContext.isUserInRole("Administrator"));
 //        try {
-//            cm.removeExistingTag(tag);
+//            cm.removeExistingTag(logbook);
 //            Response r = Response.ok().build();
 //            audit.info(um.getUserName() + "|" + uriInfo.getPath() + "|DELETE|OK|" + r.getStatus());
 //            return r;
@@ -254,24 +254,24 @@ public class TagsResource {
 //    }
 //
 //    /**
-//     * PUT method for adding the tag identified by <tt>tag</tt> to the single log
+//     * PUT method for adding the logbook identified by <tt>logbook</tt> to the single log
 //     * <tt>id</tt> (both path parameters).
 //     *
-//     * @param tag URI path parameter: tag name
-//     * @param logId URI path parameter: log to update <tt>tag</tt> to
-//     * @param data tag data (ignored)
+//     * @param logbook URI path parameter: logbook name
+//     * @param logId URI path parameter: log to update <tt>logbook</tt> to
+//     * @param data logbook data (ignored)
 //     * @return HTTP Response
 //     */
 //    @PUT
-//    @Path("{tagName}/{logId}")
+//    @Path("{logbookName}/{logId}")
 //    @Consumes({"application/xml", "application/json"})
-//    public Response addSingle(@PathParam("tagName") String tag, @PathParam("logId")Long logId) {
+//    public Response addSingle(@PathParam("logbookName") String logbook, @PathParam("logId")Long logId) {
 //        OlogImpl cm = OlogImpl.getInstance();
 //        UserManager um = UserManager.getInstance();
 //        um.setUser(securityContext.getUserPrincipal(), securityContext.isUserInRole("Administrator"));
 //        Tag result = null;
 //        try {
-//            result = cm.addSingleTag(tag, logId);
+//            result = cm.addSingleTag(logbook, logId);
 //            Response r = Response.ok(result).build();
 //            audit.info(um.getUserName() + "|" + uriInfo.getPath() + "|PUT|OK|" + r.getStatus());
 //            return r;
@@ -283,21 +283,21 @@ public class TagsResource {
 //    }
 //
 //    /**
-//     * DELETE method for deleting the tag identified by <tt>tag</tt> from the log
+//     * DELETE method for deleting the logbook identified by <tt>logbook</tt> from the log
 //     * <tt>id</tt> (both path parameters).
 //     *
-//     * @param tag URI path parameter: tag name to remove
-//     * @param logId URI path parameter: log to remove <tt>tag</tt> from
+//     * @param logbook URI path parameter: logbook name to remove
+//     * @param logId URI path parameter: log to remove <tt>logbook</tt> from
 //     * @return HTTP Response
 //     */
 //    @DELETE
-//    @Path("{tagName}/{logId}")
-//    public Response removeSingle(@PathParam("tagName") String tag, @PathParam("logId")Long logId) {
+//    @Path("{logbookName}/{logId}")
+//    public Response removeSingle(@PathParam("logbookName") String logbook, @PathParam("logId")Long logId) {
 //        OlogImpl cm = OlogImpl.getInstance();
 //        UserManager um = UserManager.getInstance();
 //        um.setUser(securityContext.getUserPrincipal(), securityContext.isUserInRole("Administrator"));
 //        try {
-//            cm.removeSingleTag(tag, logId);
+//            cm.removeSingleTag(logbook, logId);
 //            Response r = Response.ok().build();
 //            audit.info(um.getUserName() + "|" + uriInfo.getPath() + "|DELETE|OK|" + r.getStatus());
 //            return r;

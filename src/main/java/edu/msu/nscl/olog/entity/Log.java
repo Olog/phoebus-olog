@@ -229,7 +229,7 @@ public class Log implements Serializable {
 		sb.append(this.getState());
 		sb.append(")");
 		for (Logbook logbook : logbooks) {
-			sb.append(Logbook.toLogger(logbook));
+			sb.append(logbook.toLogger());
 		}
 		for (Tag tag : tags) {
 			sb.append(tag.toLogger());

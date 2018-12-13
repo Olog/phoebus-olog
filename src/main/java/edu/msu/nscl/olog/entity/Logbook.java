@@ -11,13 +11,16 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
+import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.Mapping;
+
 /**
  * Logbook object that can be represented as XML/JSON in payload data.
  *
  * @author Eric Berryman taken from Ralph Lange <Ralph.Lange@bessy.de>
  */
-@XmlRootElement(name = "logbook")
-@XmlType(propOrder = { "name", "owner", "state" })
+@Document(indexName = "olog_logbooks", type = "olog_logbook")
+@Mapping(mappingPath = "/logbook_mapping.json")
 public class Logbook implements Serializable {
 
     /**
@@ -28,7 +31,6 @@ public class Logbook implements Serializable {
     private String name = null;
     private String owner = null;
     private State state = State.Active;
-    // private List<Log> logs = new Logs();
 
     /**
      * Creates a new instance of Logbook.
@@ -118,12 +120,11 @@ public class Logbook implements Serializable {
     /**
      * Creates a compact string representation for the log.
      *
-     * @param data
-     *            the Label to log
+     * @param data the Label to log
      * @return string representation for log
      */
-    public static String toLogger(Logbook data) {
-        return data.getName() + "(" + data.getOwner() + ")";
+    public String toLogger() {
+        return this.getName() + "(" + this.getOwner() + ")";
     }
 
     @Override
