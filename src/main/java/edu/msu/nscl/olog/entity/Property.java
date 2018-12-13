@@ -6,13 +6,8 @@
 package edu.msu.nscl.olog.entity;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
-
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
 /**
  * Property object that can be represented as XML/JSON in payload data.
@@ -20,8 +15,6 @@ import javax.xml.bind.annotation.XmlType;
  * @author Eric Berryman taken from Ralph Lange
  *         <Ralph.Lange@helmholtz-berlin.de>
  */
-@XmlRootElement(name = "property")
-@XmlType(propOrder = { "name", "state", "attributes" })
 public class Property implements Serializable {
 
     /**
@@ -30,6 +23,7 @@ public class Property implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private String name;
+    private String owner;
     private State state = State.Active;
 
     private Set<Attribute> attributes = new HashSet<Attribute>();
@@ -57,8 +51,9 @@ public class Property implements Serializable {
      * @param state
      * @param attributes
      */
-    public Property(String name, State state, Set<Attribute> attributes) {
+    public Property(String name, String owner, State state, Set<Attribute> attributes) {
         this.name = name;
+        this.owner = owner;
         this.state = state;
         this.attributes = attributes;
     }
@@ -120,11 +115,11 @@ public class Property implements Serializable {
      *            the Property to log
      * @return string representation for log
      */
-    public static String toLogger(Property data) {
-        if (data.attributes == null) {
-            return data.getName();
+    public String toLogger() {
+        if (this.attributes == null) {
+            return this.getName();
         } else {
-            return data.getName() + "(" + data.getAttributes().toString() + ")";
+            return this.getName() + "(" + this.getAttributes().toString() + ")";
         }
     }
 

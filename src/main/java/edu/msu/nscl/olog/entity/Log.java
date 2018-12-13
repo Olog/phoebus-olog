@@ -235,7 +235,7 @@ public class Log implements Serializable {
 			sb.append(tag.toLogger());
 		}
 		for (Property property : properties) {
-			sb.append(Property.toLogger(property));
+			sb.append(property.toLogger());
 		}
 		return sb.toString();
 	}
