@@ -5,12 +5,12 @@
  */
 package edu.msu.nscl.olog.entity;
 
+import static edu.msu.nscl.olog.OlogResourceDescriptors.*;
 import java.io.Serializable;
 
 import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
+import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Mapping;
 
@@ -19,7 +19,7 @@ import org.springframework.data.elasticsearch.annotations.Mapping;
  *
  * @author Eric Berryman taken from Ralph Lange <Ralph.Lange@bessy.de>
  */
-@Document(indexName = "olog_logbooks", type = "olog_logbook")
+@Document(indexName = ES_LOGBOOK_INDEX, type = ES_LOGBOOK_TYPE)
 @Mapping(mappingPath = "/logbook_mapping.json")
 public class Logbook implements Serializable {
 
@@ -27,7 +27,7 @@ public class Logbook implements Serializable {
      * 
      */
     private static final long serialVersionUID = 1L;
-
+    @Id
     private String name = null;
     private String owner = null;
     private State state = State.Active;

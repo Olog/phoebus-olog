@@ -4,6 +4,9 @@
  */
 package edu.msu.nscl.olog.entity;
 
+import static edu.msu.nscl.olog.OlogResourceDescriptors.ES_TAG_INDEX;
+import static edu.msu.nscl.olog.OlogResourceDescriptors.ES_TAG_TYPE;
+
 import java.io.Serializable;
 
 import org.springframework.data.annotation.Id;
@@ -14,7 +17,7 @@ import org.springframework.data.elasticsearch.annotations.Mapping;
  *
  * @author berryman, shroffk
  */
-@Document(indexName = "olog_tags", type = "olog_tag")
+@Document(indexName = ES_TAG_INDEX, type = ES_TAG_TYPE)
 @Mapping(mappingPath = "/tag_mapping.json")
 public class Tag implements Serializable {
 
@@ -22,6 +25,7 @@ public class Tag implements Serializable {
      * 
      */
     private static final long serialVersionUID = 1L;
+    @Id
     private String name;
     private State state;
 

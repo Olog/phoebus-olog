@@ -98,7 +98,7 @@ public class PropertyRepositoryIT
      * create a set of propertys
      */
     @Test
-    public void createPropertys()
+    public void createProperties()
     {
         Set<Attribute> attributes = new HashSet<Attribute>();
         attributes.add(new Attribute("test-attribute-1"));

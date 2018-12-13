@@ -5,9 +5,17 @@
  */
 package edu.msu.nscl.olog.entity;
 
+import static edu.msu.nscl.olog.OlogResourceDescriptors.*;
+
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
+
+import org.springframework.data.annotation.Id;
+import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldType;
+import org.springframework.data.elasticsearch.annotations.Mapping;
 
 /**
  * Property object that can be represented as XML/JSON in payload data.
@@ -15,17 +23,20 @@ import java.util.Set;
  * @author Eric Berryman taken from Ralph Lange
  *         <Ralph.Lange@helmholtz-berlin.de>
  */
+@Document(indexName = ES_PROPERTY_INDEX, type = ES_PROPERTY_TYPE)
+@Mapping(mappingPath = "/property_mapping.json")
 public class Property implements Serializable {
 
     /**
      * 
      */
     private static final long serialVersionUID = 1L;
-
+    @Id
     private String name;
     private String owner;
     private State state = State.Active;
 
+    @Field(type = FieldType.Nested, includeInParent = true)
     private Set<Attribute> attributes = new HashSet<Attribute>();
 
     /**
@@ -53,7 +64,7 @@ public class Property implements Serializable {
      */
     public Property(String name, String owner, State state, Set<Attribute> attributes) {
         this.name = name;
-        this.owner = owner;
+        this.setOwner(owner);
         this.state = state;
         this.attributes = attributes;
     }
@@ -83,6 +94,16 @@ public class Property implements Serializable {
      */
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getOwner()
+    {
+        return owner;
+    }
+
+    public void setOwner(String owner)
+    {
+        this.owner = owner;
     }
 
     public State getState() {

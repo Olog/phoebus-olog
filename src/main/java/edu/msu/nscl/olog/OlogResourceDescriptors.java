@@ -9,12 +9,15 @@ public class OlogResourceDescriptors
     static final String PROPERTY_RESOURCE_URI = OLOG_SERVICE + "/properties";
     static final String LOG_RESOURCE_URI = OLOG_SERVICE + "/logs";
 
-    static final String ES_TAG_INDEX = "olog_tags";
-    static final String ES_TAG_TYPE = "olog_tag";
+    public static final String ES_TAG_INDEX = "olog_tags";
+    public static final String ES_TAG_TYPE = "olog_tag";
 
-    static final String ES_LOGBOOK_INDEX = "olog_logbooks";
-    static final String ES_LOGBOOK_TYPE = "olog_logbook";
+    public static final String ES_LOGBOOK_INDEX = "olog_logbooks";
+    public static final String ES_LOGBOOK_TYPE = "olog_logbook";
 
-    static final String ES_PROPERTY_INDEX = "olog_properties";
-    static final String ES_PROPERTY_TYPE = "olog_property";
+    public static final String ES_PROPERTY_INDEX = "olog_properties";
+    public static final String ES_PROPERTY_TYPE = "olog_property";
+
+    public static final String ES_SEQ_INDEX = "olog_sequence";
+    public static final String ES_SEQ_TYPE = "olog_sequence";
 }

@@ -1,8 +1,5 @@
 package edu.msu.nscl.olog.entity;
 
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
-
 /**
  * A representation of an attribute associated with a property. Simply put it is
  * a key value pair with a state.
@@ -10,8 +7,6 @@ import javax.xml.bind.annotation.XmlType;
  * @author Kunal Shroff
  *
  */
-@XmlRootElement(name = "attribute")
-@XmlType(propOrder = { "name", "value", "state" })
 public class Attribute {
     private String name;
     private String value;

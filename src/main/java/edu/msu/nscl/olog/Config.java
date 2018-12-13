@@ -6,6 +6,8 @@ import static edu.msu.nscl.olog.OlogResourceDescriptors.ES_TAG_INDEX;
 import static edu.msu.nscl.olog.OlogResourceDescriptors.ES_TAG_TYPE;
 import static edu.msu.nscl.olog.OlogResourceDescriptors.ES_PROPERTY_INDEX;
 import static edu.msu.nscl.olog.OlogResourceDescriptors.ES_PROPERTY_TYPE;
+import static edu.msu.nscl.olog.OlogResourceDescriptors.ES_SEQ_INDEX;
+import static edu.msu.nscl.olog.OlogResourceDescriptors.ES_SEQ_TYPE;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -99,6 +101,20 @@ public class Config {
                 request.setType(ES_PROPERTY_TYPE).setSource(jsonMap).get("5s");
             } catch (IOException e) {
                 logger.log(Level.WARNING, "Failed to create index " + ES_PROPERTY_INDEX, e);
+            }
+        }
+
+        // Create/migrate the property index
+        if (!client.admin().indices().prepareExists(ES_SEQ_INDEX).get("5s").isExists()) {
+            client.admin().indices().prepareCreate(ES_SEQ_INDEX).get();
+            PutMappingRequestBuilder request = client.admin().indices().preparePutMapping(ES_SEQ_INDEX);
+            ObjectMapper mapper = new ObjectMapper();
+            InputStream is = Config.class.getResourceAsStream("/seq_mapping.json");
+            try {
+                Map<String, String> jsonMap = mapper.readValue(is, Map.class);
+                request.setType(ES_SEQ_TYPE).setSource(jsonMap).get("5s");
+            } catch (IOException e) {
+                logger.log(Level.WARNING, "Failed to create index " + ES_SEQ_INDEX, e);
             }
         }
     }

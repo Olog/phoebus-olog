@@ -27,23 +27,25 @@ curl -XPUT 'http://localhost:9200/olog_logbooks/_mapping/logbook' -d'
   }
 }'
 
+curl -XDELETE 'http://130.199.219.217:9200/olog_tags'
 #Create the Index
-curl -XPUT 'http://localhost:9200/olog_tags'
 #Set the mapping
-curl -XPUT 'http://localhost:9200/olog_tags/_mapping/tag' -d'
+curl -H 'Content-Type: application/json' -XPUT 'http://130.199.219.217:9200/olog_tags' -d'
 {
-  "tag" : {
+  "mappings" : {
+  "olog_tag" : {
     "properties" : {
-      "name"  : {"type" : "string", "analyzer" : "whitespace"},
-      "state" : {"type" : "string", "analyzer" : "whitespace"}
+      "name"  : {"type" : "keyword"},
+      "state" : {"type" : "keyword"}
     }
+  }
   }
 }'
 
 #Create the Index
-curl -XPUT 'http://localhost:9200/olog_properties'
+curl -XPUT 'http://130.199.219.217:9200/olog_properties'
 #Set the mapping
-curl -XPUT 'http://localhost:9200/olog_properties/_mapping/property' -d'
+curl -H 'Content-Type: application/json' -XPUT 'http://localhost:9200/olog_properties' -d'
 {
   "property" : {
     "properties" : {
