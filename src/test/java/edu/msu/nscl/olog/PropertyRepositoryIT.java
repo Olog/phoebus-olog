@@ -10,6 +10,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.junit.AfterClass;
@@ -95,7 +96,38 @@ public class PropertyRepositoryIT
     }
 
     /**
-     * create a set of propertys
+     * Test the deletion of a test property
+     */
+    @Test
+    public void deletePropertyAttribute()
+    {
+        Set<Attribute> attributes = new HashSet<Attribute>();
+        attributes.add(new Attribute("test-attribute-1"));
+        attributes.add(new Attribute("test-attribute-2"));
+        Property testProperty = new Property("test-property-2", testOwner, State.Active, attributes);
+        propertyRepository.index(testProperty);
+        Optional<Property> result = propertyRepository.findById(testProperty.getName());
+        assertThat("Failed to create Property " + testProperty,
+                result.isPresent() && result.get().equals(testProperty));
+
+        propertyRepository.deleteAttribute(testProperty.getName(), "test-attribute-1");
+        result = propertyRepository.findById(testProperty.getName());
+        testProperty.setAttributes(testProperty.getAttributes().stream().map(p -> {
+            if (p.getName().equals("test-attribute-1"))
+            {
+                p.setState(State.Inactive);
+            }
+            return p;
+        }).collect(Collectors.toSet()));
+        assertThat("Failed to delete Property", result.isPresent() && result.get().equals(testProperty));
+
+        // Manual cleanup since Olog does not delete things
+        elasticsearchTemplate.getClient().prepareDelete(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, testProperty.getName())
+                .get("10s");
+    }
+
+    /**
+     * create a set of properties
      */
     @Test
     public void createProperties()

@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 import org.elasticsearch.action.DocWriteResponse.Result;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
@@ -87,7 +88,8 @@ public class PropertyRepository implements ElasticsearchRepository<Property, Str
             bulkResponse.forEach(response -> {
                 if (response.getFailure() != null)
                 {
-                    PropertiesResource.log.log(Level.SEVERE, response.getFailureMessage(), response.getFailure().getCause());
+                    PropertiesResource.log.log(Level.SEVERE, response.getFailureMessage(),
+                            response.getFailure().getCause());
                 }
                 ;
             });
@@ -179,6 +181,41 @@ public class PropertyRepository implements ElasticsearchRepository<Property, Str
                         .getSourceAsBytesRef();
                 Property deletedProperty = mapper.readValue(ref.streamInput(), Property.class);
                 PropertiesResource.log.log(Level.INFO, "Deleted property " + deletedProperty.toLogger());
+            }
+        } catch (DocumentMissingException e)
+        {
+            PropertiesResource.log.log(Level.SEVERE, propertyName + " Does not exist and thus cannot be deleted");
+        } catch (Exception e)
+        {
+            PropertiesResource.log.log(Level.SEVERE, e.getMessage(), e);
+        }
+    }
+
+    public void deleteAttribute(String propertyName, String attributeName)
+    {
+        try
+        {
+            Property property = findById(propertyName).get();
+            if (property != null)
+            {
+                property.setAttributes(property.getAttributes().stream().map(p -> {
+                    if (p.getName().equals(attributeName))
+                    {
+                        p.setState(State.Inactive);
+                    }
+                    return p;
+                }).collect(Collectors.toSet()));
+            }
+
+            UpdateResponse response = client.prepareUpdate(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, propertyName)
+                    .setDoc(mapper.writeValueAsBytes(property), XContentType.JSON).get();
+
+            if (response.getResult().equals(Result.UPDATED))
+            {
+                BytesReference ref = client.prepareGet(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, response.getId()).get()
+                        .getSourceAsBytesRef();
+                Property deletedProperty = mapper.readValue(ref.streamInput(), Property.class);
+                PropertiesResource.log.log(Level.INFO, "Deleted property attribute" + deletedProperty.toLogger());
             }
         } catch (DocumentMissingException e)
         {

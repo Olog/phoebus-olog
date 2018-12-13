@@ -54,27 +54,20 @@ public class Attribute {
         this.state = state;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.lang.Object#hashCode()
-     */
     @Override
-    public int hashCode() {
+    public int hashCode()
+    {
         final int prime = 31;
         int result = 1;
         result = prime * result + ((name == null) ? 0 : name.hashCode());
+        result = prime * result + ((state == null) ? 0 : state.hashCode());
         result = prime * result + ((value == null) ? 0 : value.hashCode());
         return result;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.lang.Object#equals(java.lang.Object)
-     */
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(Object obj)
+    {
         if (this == obj)
             return true;
         if (obj == null)
@@ -82,12 +75,16 @@ public class Attribute {
         if (getClass() != obj.getClass())
             return false;
         Attribute other = (Attribute) obj;
-        if (name == null) {
+        if (name == null)
+        {
             if (other.name != null)
                 return false;
         } else if (!name.equals(other.name))
             return false;
-        if (value == null) {
+        if (state != other.state)
+            return false;
+        if (value == null)
+        {
             if (other.value != null)
                 return false;
         } else if (!value.equals(other.value))
