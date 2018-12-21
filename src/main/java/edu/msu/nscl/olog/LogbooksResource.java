@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import edu.msu.nscl.olog.entity.Tag;
+import edu.msu.nscl.olog.entity.Logbook;
 
 /**
  * Top level Jersey HTTP methods for the .../logbooks URL
@@ -32,7 +32,7 @@ import edu.msu.nscl.olog.entity.Tag;
 public class LogbooksResource {
 
     @Autowired
-    private TagRepository logbookRepository;
+    private LogbookRepository logbookRepository;
 
     private static Logger audit = Logger.getLogger(LogbooksResource.class.getName() + ".audit");
     static Logger log = Logger.getLogger(LogbooksResource.class.getName());
@@ -42,12 +42,12 @@ public class LogbooksResource {
     }
 
     @GetMapping
-    public Iterable<Tag> findAll() {
+    public Iterable<Logbook> findAll() {
         return logbookRepository.findAll();
     }
 
     @PostMapping
-    public Iterable<Tag> updateTag(@RequestBody final List<Tag> logbooks) {
+    public Iterable<Logbook> updateLogbooks(@RequestBody final List<Logbook> logbooks) {
         // TODO Check permissions
         // TODO Validate
         // TODO Create a logbook
@@ -55,12 +55,12 @@ public class LogbooksResource {
     }
 
     @GetMapping("/{logbookName}")
-    public Tag findByTitle(@PathVariable String logbookName) {
+    public Logbook findByTitle(@PathVariable String logbookName) {
         return logbookRepository.findById(logbookName).orElseGet(null);
     }
 
     @PutMapping("/{logbookName}")
-    public Tag createTag(@PathVariable String logbookName, @RequestBody final Tag logbook) {
+    public Logbook createLogbook(@PathVariable String logbookName, @RequestBody final Logbook logbook) {
         // TODO Check permissions
         // TODO Validate
         // TODO Create a logbook
@@ -68,7 +68,7 @@ public class LogbooksResource {
     }
 
     @PostMapping("/{logbookName}")
-    public Tag updateTag(@PathVariable String logbookName, @RequestBody final Tag logbook) {
+    public Logbook updateLogbook(@PathVariable String logbookName, @RequestBody final Logbook logbook) {
         // TODO Check permissions
         // TODO Validate
         // TODO Create a logbook
@@ -76,7 +76,7 @@ public class LogbooksResource {
     }
 
     @DeleteMapping("/{logbookName}")
-    public void deleteTag (@PathVariable String logbookName) {
+    public void deleteLogbook (@PathVariable String logbookName) {
         logbookRepository.deleteById(logbookName);
     }
 
