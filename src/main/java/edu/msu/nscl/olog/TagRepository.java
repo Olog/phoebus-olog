@@ -2,6 +2,7 @@ package edu.msu.nscl.olog;
 
 import static edu.msu.nscl.olog.OlogResourceDescriptors.ES_TAG_INDEX;
 import static edu.msu.nscl.olog.OlogResourceDescriptors.ES_TAG_TYPE;
+import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -14,7 +15,6 @@ import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexResponse;
-import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.Client;
@@ -23,7 +23,6 @@ import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.engine.DocumentMissingException;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.index.query.TermQueryBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -37,8 +36,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import edu.msu.nscl.olog.entity.State;
 import edu.msu.nscl.olog.entity.Tag;
-
-import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
 @Repository
 public class TagRepository implements ElasticsearchRepository<Tag, String> {

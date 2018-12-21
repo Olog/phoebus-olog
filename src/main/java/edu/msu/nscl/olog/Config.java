@@ -1,5 +1,7 @@
 package edu.msu.nscl.olog;
 
+import static edu.msu.nscl.olog.OlogResourceDescriptors.ES_LOG_INDEX;
+import static edu.msu.nscl.olog.OlogResourceDescriptors.ES_LOG_TYPE;
 import static edu.msu.nscl.olog.OlogResourceDescriptors.ES_LOGBOOK_INDEX;
 import static edu.msu.nscl.olog.OlogResourceDescriptors.ES_LOGBOOK_TYPE;
 import static edu.msu.nscl.olog.OlogResourceDescriptors.ES_TAG_INDEX;
@@ -14,15 +16,19 @@ import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequestBuilder;
+import org.elasticsearch.action.admin.indices.template.put.PutIndexTemplateRequestBuilder;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.TransportAddress;
+import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -104,9 +110,11 @@ public class Config {
             }
         }
 
-        // Create/migrate the property index
+        // Create/migrate the sequence index
         if (!client.admin().indices().prepareExists(ES_SEQ_INDEX).get("5s").isExists()) {
-            client.admin().indices().prepareCreate(ES_SEQ_INDEX).get();
+            client.admin().indices().prepareCreate(ES_SEQ_INDEX).setSettings(Settings.builder() 
+                    .put("index.number_of_shards", 1)
+                    .put("auto_expand_replicas", "0-all")).get();
             PutMappingRequestBuilder request = client.admin().indices().preparePutMapping(ES_SEQ_INDEX);
             ObjectMapper mapper = new ObjectMapper();
             InputStream is = Config.class.getResourceAsStream("/seq_mapping.json");
@@ -116,6 +124,20 @@ public class Config {
             } catch (IOException e) {
                 logger.log(Level.WARNING, "Failed to create index " + ES_SEQ_INDEX, e);
             }
+        }
+
+        // create/migrate log template
+        PutIndexTemplateRequestBuilder templateRequest = client.admin().indices().preparePutTemplate(ES_LOG_INDEX);
+        templateRequest.setPatterns(Arrays.asList(ES_LOG_INDEX));
+        ObjectMapper mapper = new ObjectMapper();
+        InputStream is = Config.class.getResourceAsStream("/log_template_mapping.json");
+        try {
+            Map<String, String> jsonMap = mapper.readValue(is, Map.class);
+            templateRequest.addMapping(ES_LOG_TYPE, XContentFactory.jsonBuilder().map(jsonMap)).get();
+//            templateRequest.setSource(jsonMap);
+//            templateRequest.addMapping(ES_LOG_TYPE, jsonMap).get("5s");
+        } catch (IOException e) {
+            logger.log(Level.WARNING, "Failed to create index " + ES_SEQ_INDEX, e);
         }
     }
 

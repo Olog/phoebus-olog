@@ -18,6 +18,9 @@ public class OlogResourceDescriptors
     public static final String ES_PROPERTY_INDEX = "olog_properties";
     public static final String ES_PROPERTY_TYPE = "olog_property";
 
+    public static final String ES_LOG_INDEX = "olog_logs";
+    public static final String ES_LOG_TYPE = "olog_log";
+    
     public static final String ES_SEQ_INDEX = "olog_sequence";
     public static final String ES_SEQ_TYPE = "olog_sequence";
 }
