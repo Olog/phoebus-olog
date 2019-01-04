@@ -4,7 +4,9 @@ import static edu.msu.nscl.olog.OlogResourceDescriptors.ES_LOG_INDEX;
 import static edu.msu.nscl.olog.OlogResourceDescriptors.ES_LOG_TYPE;
 
 import java.time.Instant;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 import java.util.logging.Level;
 
 import org.elasticsearch.action.DocWriteResponse.Result;
@@ -24,11 +26,9 @@ import org.springframework.stereotype.Repository;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import edu.msu.nscl.olog.entity.Attachment;
 import edu.msu.nscl.olog.entity.Log;
 import edu.msu.nscl.olog.entity.Log.LogBuilder;
-
-import static edu.msu.nscl.olog.entity.Log.LogBuilder.*;
-import edu.msu.nscl.olog.entity.Tag;
 
 @Repository
 public class LogRepository implements ElasticsearchRepository<Log, String>
@@ -36,6 +36,9 @@ public class LogRepository implements ElasticsearchRepository<Log, String>
 
     @Autowired
     Client client;
+    @Autowired
+    AttachmentRepository attachmentRepository;
+
     private static final ObjectMapper mapper = new ObjectMapper();
 
     @Override
@@ -177,16 +180,22 @@ public class LogRepository implements ElasticsearchRepository<Log, String>
         try
         {
             Long id = SequenceGenerator.getID();
-            Log validatedLog = LogBuilder.createLog(log).id(id).createDate(Instant.now()).build();
-            byte[] bytes = mapper.writeValueAsBytes(validatedLog);
+            LogBuilder validatedLog = LogBuilder.createLog(log).id(id).createDate(Instant.now());
+            if(log.getAttachments() != null && !log.getAttachments().isEmpty()) {
+                Set<Attachment> createdAttachments = new HashSet<Attachment>(); 
+                log.getAttachments().forEach(attachment -> {
+                    createdAttachments.add(attachmentRepository.save(attachment));
+                });
+                validatedLog = validatedLog.setAttachments(createdAttachments);
+            }
+
             IndexRequestBuilder request = client.prepareIndex(ES_LOG_INDEX, ES_LOG_TYPE, String.valueOf(id))
-                    .setSource(mapper.writeValueAsBytes(validatedLog), XContentType.JSON);
+                    .setSource(mapper.writeValueAsBytes(validatedLog.build()), XContentType.JSON);
             IndexResponse response = request.get();
 
             if (response.getResult().equals(Result.CREATED))
             {
-                BytesReference ref = client.prepareGet(ES_LOG_INDEX, ES_LOG_TYPE, response.getId()).get()
-                        .getSourceAsBytesRef();
+                BytesReference ref = client.prepareGet(ES_LOG_INDEX, ES_LOG_TYPE, response.getId()).get().getSourceAsBytesRef();
                 Log createdLog = mapper.readValue(ref.streamInput(), Log.class);
                 return (S) createdLog;
             }

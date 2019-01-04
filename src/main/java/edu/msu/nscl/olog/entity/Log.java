@@ -60,7 +60,8 @@ public class Log implements Serializable
     @Field(type = FieldType.Nested, includeInParent = true)
     private Set<Tag> tags = new HashSet<Tag>();
 
-    // TODO add support for attachments
+    @Field(type = FieldType.Nested, includeInParent = true)
+    private Set<Attachment> attachments = new HashSet<Attachment>();
 
     private Log()
     {
@@ -171,7 +172,14 @@ public class Log implements Serializable
     {
         this.tags = tags;
     }
-
+    
+    /**
+     * @param attachments the attachments to set
+     */
+    private void setAttachments(Set<Attachment> attachments)
+    {
+        this.attachments = attachments;
+    }
     /**
      * @return the serialversionuid
      */
@@ -260,6 +268,11 @@ public class Log implements Serializable
         return tags;
     }
 
+    public Set<Attachment> getAttachments()
+    {
+        return attachments;
+    }
+
     /**
      * 
      * @return A string representation of the log entry
@@ -312,6 +325,7 @@ public class Log implements Serializable
         private Set<Property> properties = new HashSet<Property>();
         private Set<Logbook> logbooks = new HashSet<Logbook>();
         private Set<Tag> tags = new HashSet<Tag>();
+        private Set<Attachment> attachments = new HashSet<Attachment>();
 
         public LogBuilder()
         {
@@ -330,6 +344,8 @@ public class Log implements Serializable
             this.properties = log.getProperties();
             this.logbooks = log.getLogbooks();
             this.tags = log.getTags();
+
+            this.attachments = log.getAttachments();
         }
 
         public LogBuilder(String source)
@@ -471,6 +487,18 @@ public class Log implements Serializable
             return this;
         }
 
+        public LogBuilder withAttachment(Attachment attachment)
+        {
+            this.attachments.add(attachment);
+            return this;
+        }
+
+        public LogBuilder setAttachments(Set<Attachment> attachments)
+        {
+            this.attachments = attachments;
+            return this;
+        }
+
         public Log build()
         {
             Log log = new Log();
@@ -487,8 +515,10 @@ public class Log implements Serializable
             log.setLogbooks(logbooks);
             log.setTags(tags);
             log.setProperties(properties);
+            log.setAttachments(attachments);
             return log;
         }
+
 
     }
 

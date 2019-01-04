@@ -33,6 +33,12 @@
       <groupId>org.springframework.data</groupId>
       <artifactId>spring-data-elasticsearch</artifactId>
     </dependency>
+    <!-- https://mvnrepository.com/artifact/org.springframework.data/spring-data-mongodb-parent -->
+    <dependency>
+      <groupId>org.springframework.data</groupId>
+      <artifactId>spring-data-mongodb</artifactId>
+    </dependency>
+
     <!-- https://mvnrepository.com/artifact/javax.servlet/servlet-api -->
     <dependency>
       <groupId>javax.servlet</groupId>
@@ -51,7 +57,13 @@
       <artifactId>spring-test</artifactId>
       <scope>test</scope>
     </dependency>
-
+    <!-- https://mvnrepository.com/artifact/junit-addons/junit-addons -->
+    <dependency>
+      <groupId>junit-addons</groupId>
+      <artifactId>junit-addons</artifactId>
+      <version>1.4</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
   <build>
     <plugins>
