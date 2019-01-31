@@ -16,6 +16,7 @@ import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexResponse;
+import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.Client;
@@ -130,10 +131,19 @@ public class PropertyRepository implements ElasticsearchRepository<Property, Str
     @Override
     public Iterable<Property> findAll()
     {
+        return findAll(false);
+    }
+
+    public Iterable<Property> findAll(boolean includeInactive)
+    {
         try
-        {
-            SearchResponse response = client.prepareSearch(ES_PROPERTY_INDEX).setTypes(ES_PROPERTY_TYPE)
-                    .setQuery(QueryBuilders.termQuery("state", State.Active.toString())).get("10s");
+        { 
+            SearchRequestBuilder search = client.prepareSearch(ES_PROPERTY_INDEX).setTypes(ES_PROPERTY_TYPE);
+            if (!includeInactive)
+            {
+                search = search.setQuery(QueryBuilders.termQuery("state", State.Active.toString()));
+            }
+            SearchResponse response = search.get("10s");
             List<Property> result = new ArrayList<Property>();
             response.getHits().forEach(h -> {
                 BytesReference b = h.getSourceRef();
@@ -152,7 +162,7 @@ public class PropertyRepository implements ElasticsearchRepository<Property, Str
         }
         return null;
     }
-
+    
     @Override
     public Iterable<Property> findAllById(Iterable<String> ids)
     {

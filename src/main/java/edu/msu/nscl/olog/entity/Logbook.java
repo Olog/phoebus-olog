@@ -8,8 +8,6 @@ package edu.msu.nscl.olog.entity;
 import static edu.msu.nscl.olog.OlogResourceDescriptors.*;
 import java.io.Serializable;
 
-import javax.xml.bind.annotation.XmlAttribute;
-
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Mapping;
@@ -67,7 +65,6 @@ public class Logbook implements Serializable {
      *
      * @return owner logbook owner
      */
-    @XmlAttribute
     public String getOwner() {
         return owner;
     }
@@ -87,7 +84,6 @@ public class Logbook implements Serializable {
      *
      * @return name tag name
      */
-    @XmlAttribute
     public String getName() {
         return name;
     }
@@ -105,7 +101,6 @@ public class Logbook implements Serializable {
     /**
      * @return the status
      */
-    @XmlAttribute
     public State getState() {
         return state;
     }

@@ -3,6 +3,7 @@ package edu.msu.nscl.olog;
 import static edu.msu.nscl.olog.OlogResourceDescriptors.ES_LOG_INDEX;
 import static edu.msu.nscl.olog.OlogResourceDescriptors.ES_LOG_TYPE;
 
+import java.io.IOException;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.Optional;
@@ -10,6 +11,7 @@ import java.util.Set;
 import java.util.logging.Level;
 
 import org.elasticsearch.action.DocWriteResponse.Result;
+import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.client.Client;
@@ -22,7 +24,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Repository;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -72,8 +76,17 @@ public class LogRepository implements ElasticsearchRepository<Log, String>
     @Override
     public Optional<Log> findById(String id)
     {
-        // TODO Auto-generated method stub
-        return null;
+        try
+        {
+            GetResponse result = client.prepareGet(ES_LOG_INDEX, ES_LOG_TYPE, id).get();
+            Log createdLog = mapper.readValue(result.getSourceAsBytesRef().streamInput(), Log.class);
+            return Optional.of(createdLog);
+        } catch (IOException e)
+        {
+            // TODO improve the exception handling based on
+            // https://www.baeldung.com/exception-handling-for-rest-with-spring#controlleradvice
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to retrieve log with id " + id, e);
+        }
     }
 
     @Override

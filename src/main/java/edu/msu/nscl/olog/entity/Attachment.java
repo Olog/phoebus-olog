@@ -1,21 +1,21 @@
 package edu.msu.nscl.olog.entity;
 
-import org.springframework.web.multipart.MultipartFile;
+import org.springframework.core.io.InputStreamSource;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public class Attachment
 {
     private String id;
-    @JsonIgnore
-    private MultipartFile attachment;
     private String filename;
     private String fileMetadataDescription;
+    @JsonIgnore
+    private InputStreamSource attachment;
 
     public Attachment() {
         
     }
-    public Attachment(MultipartFile attachment, String filename, String fileMetadataDescription)
+    public Attachment(InputStreamSource attachment, String filename, String fileMetadataDescription)
     {
         this.attachment = attachment;
         this.filename = filename;
@@ -32,12 +32,12 @@ public class Attachment
         this.id = id;
     }
 
-    public MultipartFile getAttachment()
+    public InputStreamSource getAttachment()
     {
         return attachment;
     }
 
-    public void setAttachment(MultipartFile attachment)
+    public void setAttachment(InputStreamSource attachment)
     {
         this.attachment = attachment;
     }

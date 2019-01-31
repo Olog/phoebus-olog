@@ -12,19 +12,13 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 
-import org.apache.tomcat.util.http.fileupload.FileItemFactory;
-import org.bson.types.ObjectId;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -34,15 +28,11 @@ import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.gridfs.GridFsOperations;
-import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.springframework.web.multipart.commons.CommonsMultipartFile;
 
-import com.mongodb.client.gridfs.GridFSFindIterable;
 import com.mongodb.client.gridfs.model.GridFSFile;
-import com.mongodb.gridfs.GridFSDBFile;
 
 import edu.msu.nscl.olog.entity.Attachment;
 import edu.msu.nscl.olog.entity.Attribute;
@@ -65,8 +55,6 @@ public class LogRepositoryIT
     private TagRepository tagRepository;
     @Autowired
     private PropertyRepository propertyRepository;
-    @Autowired
-    private GridFsTemplate gridFsTemplate;
     @Autowired
     private GridFsOperations gridOperation;
 
@@ -161,7 +149,7 @@ public class LogRepositoryIT
 
         try
         {
-            File testFile = new File("src/main/resources/Tulips.jpg");
+            File testFile = new File("src/test/resources/Tulips.jpg");
 
             MockMultipartFile mock = new MockMultipartFile(testFile.getName(), new FileInputStream(testFile));
             Attachment testAttachment = new Attachment(mock, "Tulips.jpg", "");
@@ -207,8 +195,7 @@ public class LogRepositoryIT
             assertTrue(createdLog.getProperties().contains(testProperty));
 
             // Manual cleanup since Olog does not delete things
-            elasticsearchTemplate.getClient().prepareDelete(ES_LOG_INDEX, ES_LOG_TYPE, createdLog.getId().toString())
-                    .get("10s");
+            elasticsearchTemplate.getClient().prepareDelete(ES_LOG_INDEX, ES_LOG_TYPE, createdLog.getId().toString()).get("10s");
         } catch ( IOException e)
         {
             // TODO Auto-generated catch block
@@ -216,15 +203,13 @@ public class LogRepositoryIT
         } finally
         {
             // Manual cleanup since Olog does not delete things
-            elasticsearchTemplate.getClient().prepareDelete(ES_LOGBOOK_INDEX, ES_LOGBOOK_TYPE, testLogbook.getName())
-                    .get("10s");
+            elasticsearchTemplate.getClient().prepareDelete(ES_LOGBOOK_INDEX, ES_LOGBOOK_TYPE, testLogbook.getName()).get("10s");
 
             // Manual cleanup since Olog does not del`ete things
             elasticsearchTemplate.getClient().prepareDelete(ES_TAG_INDEX, ES_TAG_TYPE, testTag.getName()).get("10s");
 
             // Manual cleanup since Olog does not delete things
-            elasticsearchTemplate.getClient().prepareDelete(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, testProperty.getName())
-                    .get("10s");
+            elasticsearchTemplate.getClient().prepareDelete(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, testProperty.getName()).get("10s");
 
         }
 

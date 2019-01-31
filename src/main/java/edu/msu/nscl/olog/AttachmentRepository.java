@@ -2,14 +2,21 @@ package edu.msu.nscl.olog;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Optional;
 
+import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.gridfs.GridFsOperations;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
+
+import com.mongodb.client.gridfs.model.GridFSFile;
 
 import edu.msu.nscl.olog.entity.Attachment;
 
@@ -27,7 +34,11 @@ public class AttachmentRepository implements CrudRepository<Attachment, String>
     {
         try
         {
-            ObjectId id = gridFsTemplate.store(entity.getAttachment().getInputStream(), entity.getFilename());
+            Document document = new Document();
+            document.put("meta-data", entity.getFileMetadataDescription());
+            ObjectId id = gridFsTemplate.store(entity.getAttachment().getInputStream(),
+                                               entity.getFilename(),
+                                               document);
             entity.setId(id.toString());
             return entity;
         } catch (IOException e)
@@ -47,8 +58,13 @@ public class AttachmentRepository implements CrudRepository<Attachment, String>
     @Override
     public Optional<Attachment> findById(String id)
     {
-        // TODO Auto-generated method stub
-        return null;
+        Attachment attachment = new Attachment();
+        GridFSFile found = gridOperation.find(new Query(Criteria.where("_id").is(id))).first();
+        attachment.setId(id);
+        attachment.setAttachment(gridOperation.getResource(found));
+        attachment.setFilename(found.getFilename());
+        attachment.setFileMetadataDescription(found.getMetadata().getString("meta-data"));
+        return Optional.of(attachment);
     }
 
     @Override

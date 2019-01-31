@@ -1,15 +1,15 @@
 package edu.msu.nscl.olog;
 
-import static edu.msu.nscl.olog.OlogResourceDescriptors.ES_LOG_INDEX;
-import static edu.msu.nscl.olog.OlogResourceDescriptors.ES_LOG_TYPE;
 import static edu.msu.nscl.olog.OlogResourceDescriptors.ES_LOGBOOK_INDEX;
 import static edu.msu.nscl.olog.OlogResourceDescriptors.ES_LOGBOOK_TYPE;
-import static edu.msu.nscl.olog.OlogResourceDescriptors.ES_TAG_INDEX;
-import static edu.msu.nscl.olog.OlogResourceDescriptors.ES_TAG_TYPE;
+import static edu.msu.nscl.olog.OlogResourceDescriptors.ES_LOG_INDEX;
+import static edu.msu.nscl.olog.OlogResourceDescriptors.ES_LOG_TYPE;
 import static edu.msu.nscl.olog.OlogResourceDescriptors.ES_PROPERTY_INDEX;
 import static edu.msu.nscl.olog.OlogResourceDescriptors.ES_PROPERTY_TYPE;
 import static edu.msu.nscl.olog.OlogResourceDescriptors.ES_SEQ_INDEX;
 import static edu.msu.nscl.olog.OlogResourceDescriptors.ES_SEQ_TYPE;
+import static edu.msu.nscl.olog.OlogResourceDescriptors.ES_TAG_INDEX;
+import static edu.msu.nscl.olog.OlogResourceDescriptors.ES_TAG_TYPE;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,7 +27,6 @@ import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.TransportAddress;
-import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.springframework.beans.factory.annotation.Value;
@@ -49,6 +48,11 @@ public class Config {
 
     @Value("${elasticsearch.cluster.name:elasticsearch}")
     private String clusterName;
+
+    @Bean
+    public ElasticsearchOperations elasticsearchTemplate() {
+        return new ElasticsearchTemplate(client());
+    }
 
     @Bean
     public Client client() {
@@ -141,8 +145,5 @@ public class Config {
         }
     }
 
-    @Bean
-    public ElasticsearchOperations elasticsearchTemplate() {
-        return new ElasticsearchTemplate(client());
-    }
+
 }
