@@ -12,13 +12,13 @@ Olog
   * gridfs
 
 
- **Download the requirements**   
+ **Download links for the prerequisites**   
  Download and install elasticsearch (verision 6.3) from [elastic.com](https://www.elastic.co/downloads/past-releases/elasticsearch-6-3-1)    
  Download and install mongodb from [mongodb](https://www.mongodb.com/download-center/community)    
   
   
- **Configure the service**   
- The configuration files for olog-es are present under `olog-es/tree/master/src/main/resources` 
+* Configure the service   
+The configuration files for olog-es are present under `olog-es/tree/master/src/main/resources` 
 
 
 * Build 
