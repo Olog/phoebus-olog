@@ -9,13 +9,15 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
 
 @SpringBootApplication
-@SuppressWarnings("unused")
-@EnableElasticsearchRepositories(basePackages = "edu.msu.nscl.olog")
-@ComponentScan(basePackages = { "edu.msu.nscl.olog" })
+@EnableElasticsearchRepositories(basePackages = "gov.bnl.olog")
+@ComponentScan(basePackages = { "gov.bnl.olog" })
 public class Application {
     private static final Logger logger = Logger.getLogger("Olog");
 
-    public static void main(String[] args) {
+    public static void main(String[] args)
+    {
+        logger.info("Starting Olog Service");
         ConfigurableApplicationContext olog = SpringApplication.run(Application.class, args);
+        logger.info(olog.getApplicationName() + " : " + olog.getId());
     }
 }
