@@ -34,11 +34,6 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.mongodb.client.gridfs.model.GridFSFile;
 
-import gov.bnl.olog.Config;
-import gov.bnl.olog.LogRepository;
-import gov.bnl.olog.LogbookRepository;
-import gov.bnl.olog.PropertyRepository;
-import gov.bnl.olog.TagRepository;
 import gov.bnl.olog.entity.Attachment;
 import gov.bnl.olog.entity.Attribute;
 import gov.bnl.olog.entity.Log;
@@ -49,7 +44,7 @@ import gov.bnl.olog.entity.Tag;
 import junitx.framework.FileAssert;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = Config.class)
+@ContextConfiguration(classes = ElasticConfig.class)
 public class LogRepositoryIT
 {
     @Autowired

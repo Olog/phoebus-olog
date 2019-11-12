@@ -19,13 +19,11 @@ import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import gov.bnl.olog.Config;
-import gov.bnl.olog.LogbookRepository;
 import gov.bnl.olog.entity.Logbook;
 import gov.bnl.olog.entity.State;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = Config.class)
+@ContextConfiguration(classes = ElasticConfig.class)
 public class LogbookRepositoryIT {
 
     @Autowired

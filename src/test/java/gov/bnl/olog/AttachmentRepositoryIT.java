@@ -1,23 +1,10 @@
 package gov.bnl.olog;
 
-import static gov.bnl.olog.OlogResourceDescriptors.ES_LOGBOOK_INDEX;
-import static gov.bnl.olog.OlogResourceDescriptors.ES_LOGBOOK_TYPE;
-import static gov.bnl.olog.OlogResourceDescriptors.ES_LOG_INDEX;
-import static gov.bnl.olog.OlogResourceDescriptors.ES_LOG_TYPE;
-import static gov.bnl.olog.OlogResourceDescriptors.ES_PROPERTY_INDEX;
-import static gov.bnl.olog.OlogResourceDescriptors.ES_PROPERTY_TYPE;
-import static gov.bnl.olog.OlogResourceDescriptors.ES_TAG_INDEX;
-import static gov.bnl.olog.OlogResourceDescriptors.ES_TAG_TYPE;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.function.Consumer;
 
 import org.junit.AfterClass;
@@ -25,7 +12,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.gridfs.GridFsOperations;
@@ -36,25 +22,14 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.mongodb.client.gridfs.model.GridFSFile;
 
-import gov.bnl.olog.AttachmentRepository;
-import gov.bnl.olog.Config;
-import gov.bnl.olog.LogRepository;
 import gov.bnl.olog.entity.Attachment;
-import gov.bnl.olog.entity.Attribute;
-import gov.bnl.olog.entity.Log;
-import gov.bnl.olog.entity.Logbook;
-import gov.bnl.olog.entity.Property;
-import gov.bnl.olog.entity.State;
-import gov.bnl.olog.entity.Tag;
 import junitx.framework.FileAssert;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = Config.class)
+@ContextConfiguration(classes = ElasticConfig.class)
+@SuppressWarnings("unused")
 public class AttachmentRepositoryIT
 {
-    @Autowired
-    private ElasticsearchTemplate elasticsearchTemplate;
-
     @Autowired
     private GridFsTemplate gridFsTemplate;
     @Autowired
