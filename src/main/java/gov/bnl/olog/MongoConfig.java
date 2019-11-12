@@ -1,23 +1,29 @@
 package gov.bnl.olog;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
-import org.springframework.core.env.Environment;
 import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
-import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 
 import com.mongodb.MongoClient;
 
 @Configuration
-@EnableMongoRepositories(basePackages = "edu.msu.nscl.olog")
-@PropertySource("classpath:mongodb.properties")
+@PropertySource("classpath:application.properties")
 public class MongoConfig extends AbstractMongoConfiguration
 {
-    @Autowired
-    private Environment config;
+    private static final Logger log = Logger.getAnonymousLogger(MongoConfig.class.getName());
+    
+    @Value("${mongo.database:ologAttachments}")
+    private String mongoDbName;
+    @Value("${mongo.host:localhost}")
+    private String mongoHost;
+    @Value("${mongo.port:27017}")
+    private int mongoPort;
 
     @Bean
     public GridFsTemplate gridFsTemplate() throws Exception
@@ -28,14 +34,20 @@ public class MongoConfig extends AbstractMongoConfiguration
     @Override
     protected String getDatabaseName()
     {
-
-        return config.getProperty("mongo.database");
+        return mongoDbName;
     }
 
     @Override
     @Bean
     public MongoClient mongoClient()
     {
-        return new MongoClient(config.getProperty("mongo.host"), Integer.parseInt(config.getProperty("mongo.port")));
+        try
+        {
+            return new MongoClient(mongoHost, Integer.valueOf(mongoPort));
+        } catch (Exception e)
+        {
+            log.log(Level.SEVERE, "Failed to create mongo gridFS client for attachments " , e);
+            return null;
+        }
     }
 }
