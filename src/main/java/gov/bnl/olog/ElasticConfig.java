@@ -87,21 +87,12 @@ public class ElasticConfig
         return indexClient;
     }
 
-    @SuppressWarnings("resource")
-    public RestHighLevelClient getNewClient()
-    {
-        try
-        {
-            RestHighLevelClient client = new RestHighLevelClient(RestClient.builder(new HttpHost(host, port, "http")));
-            return client;
-        } catch (ElasticsearchException e)
-        {
-            logger.log(Level.SEVERE, "failed to create elastic client", e.getDetailedMessage());
-            return null;
-        }
-    }
-    
-
+    /**
+     * Checks for the existance of the elastic indices needed for Olog and creates
+     * them with the appropirate mapping is they are missing.
+     * 
+     * @param indexClient the elastic client instance used to validate and create olog indices
+     */
     private static synchronized void elasticIndexValidation(RestHighLevelClient indexClient) {
         // Create/migrate the tag index
 
