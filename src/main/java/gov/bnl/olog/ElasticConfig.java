@@ -21,129 +21,181 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.http.HttpHost;
+import org.elasticsearch.ElasticsearchException;
+import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
+import org.elasticsearch.action.admin.indices.get.GetIndexRequest;
+import org.elasticsearch.action.admin.indices.get.GetIndexRequestBuilder;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequestBuilder;
+import org.elasticsearch.action.admin.indices.template.put.PutIndexTemplateAction;
+import org.elasticsearch.action.admin.indices.template.put.PutIndexTemplateRequest;
 import org.elasticsearch.action.admin.indices.template.put.PutIndexTemplateRequestBuilder;
+import org.elasticsearch.action.admin.indices.template.put.PutIndexTemplateResponse;
 import org.elasticsearch.client.Client;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.TransportAddress;
 import org.elasticsearch.common.xcontent.XContentFactory;
-import org.elasticsearch.transport.client.PreBuiltTransportClient;
+import org.elasticsearch.index.query.ExistsQueryBuilder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
-import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
-import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
+import org.springframework.context.annotation.PropertySource;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Configuration
-@EnableElasticsearchRepositories(basePackages = "edu.msu.nscl.olog")
-@ComponentScan(basePackages = { "edu.msu.nscl.olog" })
-public class Config {
+@ComponentScan(basePackages = { "gov.bnl.olog" })
+@PropertySource("classpath:application.properties")
+public class ElasticConfig
+{
 
-    private static final Logger logger = Logger.getLogger(Config.class.getName());
+    private static final Logger logger = Logger.getLogger(ElasticConfig.class.getName());
 
     @Value("${elasticsearch.cluster.name:elasticsearch}")
     private String clusterName;
+    @Value("${elasticsearch.network.host:localhost}")
+    private String host;
+    @Value("${elasticsearch.http.port:9200}")
+    private int port;
+
+    private RestHighLevelClient searchClient;
+    private RestHighLevelClient indexClient;
 
     @Bean
-    public ElasticsearchOperations elasticsearchTemplate() {
-        return new ElasticsearchTemplate(client());
-    }
-
-    @Bean
-    public Client client() {
-        Settings elasticsearchSettings = Settings.builder().put("client.transport.sniff", true)
-                .put("cluster.name", clusterName).build();
-        TransportClient client = new PreBuiltTransportClient(elasticsearchSettings);
-        try {
-            client.addTransportAddress(
-                    new TransportAddress(new InetSocketAddress(InetAddress.getByName("130.199.219.217"), 9300)));
-            client.connectedNodes().forEach(System.out::println);
-            // Validate the indexes
-
-            ElasticIndexValidation(client);
-        } catch (UnknownHostException e) {
-            logger.log(Level.WARNING, "Failed to create client", e);
+    public RestHighLevelClient getSearchClient()
+    {
+        if (searchClient == null)
+        {
+            searchClient = new RestHighLevelClient(RestClient.builder(new HttpHost(host, port, "http")));
         }
-        return client;
+        return searchClient;
     }
 
-    private void ElasticIndexValidation(TransportClient client) {
+    @Bean
+    public RestHighLevelClient getIndexClient()
+    {
+        if (indexClient == null)
+        {
+            indexClient = new RestHighLevelClient(RestClient.builder(new HttpHost(host, port, "http")));
+            elasticIndexValidation(indexClient);
+        }
+        return indexClient;
+    }
+
+    @SuppressWarnings("resource")
+    public RestHighLevelClient getNewClient()
+    {
+        try
+        {
+            RestHighLevelClient client = new RestHighLevelClient(RestClient.builder(new HttpHost(host, port, "http")));
+            return client;
+        } catch (ElasticsearchException e)
+        {
+            logger.log(Level.SEVERE, "failed to create elastic client", e.getDetailedMessage());
+            return null;
+        }
+    }
+    
+
+    private static synchronized void elasticIndexValidation(RestHighLevelClient indexClient) {
         // Create/migrate the tag index
-        if (!client.admin().indices().prepareExists(ES_TAG_INDEX).get("5s").isExists()) {
-            client.admin().indices().prepareCreate(ES_TAG_INDEX).get();
-            PutMappingRequestBuilder request = client.admin().indices().preparePutMapping(ES_TAG_INDEX);
-            ObjectMapper mapper = new ObjectMapper();
-            InputStream is = Config.class.getResourceAsStream("/tag_mapping.json");
-            try {
+
+        try
+        {
+            if (!indexClient.indices().exists(new GetIndexRequest().indices(ES_TAG_INDEX), RequestOptions.DEFAULT))
+            {
+                CreateIndexRequest createRequest = new CreateIndexRequest(ES_TAG_INDEX);
+                ObjectMapper mapper = new ObjectMapper();
+                InputStream is = ElasticConfig.class.getResourceAsStream("/tag_mapping.json");
                 Map<String, String> jsonMap = mapper.readValue(is, Map.class);
-                request.setType(ES_TAG_TYPE).setSource(jsonMap).get("5s");
-            } catch (IOException e) {
-                logger.log(Level.WARNING, "Failed to create index " + ES_TAG_INDEX, e);
+                createRequest.mapping(ES_TAG_TYPE, jsonMap);
+
+                indexClient.indices().create(createRequest, RequestOptions.DEFAULT);
             }
+        } catch (IOException e)
+        {
+            logger.log(Level.WARNING, "Failed to create index " + ES_TAG_INDEX, e);
         }
         // Create/migrate the logbook index
-        if (!client.admin().indices().prepareExists(ES_LOGBOOK_INDEX).get("5s").isExists()) {
-            client.admin().indices().prepareCreate(ES_LOGBOOK_INDEX).get();
-            PutMappingRequestBuilder request = client.admin().indices().preparePutMapping(ES_LOGBOOK_INDEX);
-            ObjectMapper mapper = new ObjectMapper();
-            InputStream is = Config.class.getResourceAsStream("/logbook_mapping.json");
-            try {
+        try
+        {
+            if (!indexClient.indices().exists(new GetIndexRequest().indices(ES_LOGBOOK_INDEX), RequestOptions.DEFAULT))
+            {
+                CreateIndexRequest createRequest = new CreateIndexRequest(ES_LOGBOOK_INDEX);
+                ObjectMapper mapper = new ObjectMapper();
+                InputStream is = ElasticConfig.class.getResourceAsStream("/logbook_mapping.json");
                 Map<String, String> jsonMap = mapper.readValue(is, Map.class);
-                request.setType(ES_LOGBOOK_TYPE).setSource(jsonMap).get("5s");
-            } catch (IOException e) {
-                logger.log(Level.WARNING, "Failed to create index " + ES_LOGBOOK_INDEX, e);
-            }
-        }
+                createRequest.mapping(ES_LOGBOOK_TYPE, jsonMap);
 
-        // Create/migrate the property index
-        if (!client.admin().indices().prepareExists(ES_PROPERTY_INDEX).get("5s").isExists()) {
-            client.admin().indices().prepareCreate(ES_PROPERTY_INDEX).get();
-            PutMappingRequestBuilder request = client.admin().indices().preparePutMapping(ES_PROPERTY_INDEX);
-            ObjectMapper mapper = new ObjectMapper();
-            InputStream is = Config.class.getResourceAsStream("/property_mapping.json");
-            try {
-                Map<String, String> jsonMap = mapper.readValue(is, Map.class);
-                request.setType(ES_PROPERTY_TYPE).setSource(jsonMap).get("5s");
-            } catch (IOException e) {
-                logger.log(Level.WARNING, "Failed to create index " + ES_PROPERTY_INDEX, e);
+                indexClient.indices().create(createRequest, RequestOptions.DEFAULT);
             }
+        } catch (IOException e)
+        {
+            logger.log(Level.WARNING, "Failed to create index " + ES_LOGBOOK_INDEX, e);
+        }
+        // Create/migrate the property index
+        try
+        {
+            if (!indexClient.indices().exists(new GetIndexRequest().indices(ES_PROPERTY_INDEX), RequestOptions.DEFAULT))
+            {
+                CreateIndexRequest createRequest = new CreateIndexRequest(ES_PROPERTY_INDEX);
+                ObjectMapper mapper = new ObjectMapper();
+                InputStream is = ElasticConfig.class.getResourceAsStream("/property_mapping.json");
+
+                Map<String, String> jsonMap = mapper.readValue(is, Map.class);
+                createRequest.mapping(ES_PROPERTY_TYPE, jsonMap);
+
+                indexClient.indices().create(createRequest, RequestOptions.DEFAULT);
+            }
+        } catch (IOException e)
+        {
+            logger.log(Level.WARNING, "Failed to create index " + ES_PROPERTY_INDEX, e);
         }
 
         // Create/migrate the sequence index
-        if (!client.admin().indices().prepareExists(ES_SEQ_INDEX).get("5s").isExists()) {
-            client.admin().indices().prepareCreate(ES_SEQ_INDEX).setSettings(Settings.builder() 
-                    .put("index.number_of_shards", 1)
-                    .put("auto_expand_replicas", "0-all")).get();
-            PutMappingRequestBuilder request = client.admin().indices().preparePutMapping(ES_SEQ_INDEX);
-            ObjectMapper mapper = new ObjectMapper();
-            InputStream is = Config.class.getResourceAsStream("/seq_mapping.json");
-            try {
+        try
+        {
+            if (!indexClient.indices().exists(new GetIndexRequest().indices(ES_SEQ_INDEX), RequestOptions.DEFAULT))
+            {
+                CreateIndexRequest createRequest = new CreateIndexRequest(ES_SEQ_INDEX);
+                createRequest.settings(
+                        Settings.builder().put("index.number_of_shards", 1).put("auto_expand_replicas", "0-all"));
+                ObjectMapper mapper = new ObjectMapper();
+                InputStream is = ElasticConfig.class.getResourceAsStream("/seq_mapping.json");
                 Map<String, String> jsonMap = mapper.readValue(is, Map.class);
-                request.setType(ES_SEQ_TYPE).setSource(jsonMap).get("5s");
-            } catch (IOException e) {
-                logger.log(Level.WARNING, "Failed to create index " + ES_SEQ_INDEX, e);
+                createRequest.mapping(ES_SEQ_TYPE, jsonMap);
+
             }
+        } catch (IOException e)
+        {
+            logger.log(Level.WARNING, "Failed to create index " + ES_SEQ_INDEX, e);
         }
 
         // create/migrate log template
-        PutIndexTemplateRequestBuilder templateRequest = client.admin().indices().preparePutTemplate(ES_LOG_INDEX);
-        templateRequest.setPatterns(Arrays.asList(ES_LOG_INDEX));
-        ObjectMapper mapper = new ObjectMapper();
-        InputStream is = Config.class.getResourceAsStream("/log_template_mapping.json");
-        try {
-            Map<String, String> jsonMap = mapper.readValue(is, Map.class);
-            templateRequest.addMapping(ES_LOG_TYPE, XContentFactory.jsonBuilder().map(jsonMap)).get();
-//            templateRequest.setSource(jsonMap);
-//            templateRequest.addMapping(ES_LOG_TYPE, jsonMap).get("5s");
-        } catch (IOException e) {
-            logger.log(Level.WARNING, "Failed to create index " + ES_SEQ_INDEX, e);
-        }
-    }
 
+        try
+        {
+            PutIndexTemplateRequest templateRequest = new PutIndexTemplateRequest(ES_LOG_INDEX + "_template");
+            templateRequest.patterns(Arrays.asList(ES_LOG_INDEX));
+
+            ObjectMapper mapper = new ObjectMapper();
+            InputStream is = ElasticConfig.class.getResourceAsStream("/log _template_mapping.json");
+            Map<String, String> jsonMap = mapper.readValue(is, Map.class);
+            templateRequest.mapping(ES_LOG_TYPE, XContentFactory.jsonBuilder().map(jsonMap));
+            templateRequest.create(true);
+
+            PutIndexTemplateResponse putTemplateResponse = indexClient.indices().putTemplate(templateRequest,
+                    RequestOptions.DEFAULT);
+        } catch (IOException e)
+        {
+            logger.log(Level.WARNING, "Failed to create template for index " + ES_LOG_TYPE, e);
+        }
+
+    }
 
 }
