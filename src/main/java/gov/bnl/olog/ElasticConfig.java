@@ -163,7 +163,8 @@ public class ElasticConfig
             templateRequest.patterns(Arrays.asList(ES_LOG_INDEX));
 
             ObjectMapper mapper = new ObjectMapper();
-            InputStream is = ElasticConfig.class.getResourceAsStream("/log _template_mapping.json");
+            InputStream is = ElasticConfig.class.getResourceAsStream("/log_template_mapping.json");
+
             Map<String, String> jsonMap = mapper.readValue(is, Map.class);
             templateRequest.mapping(ES_LOG_TYPE, XContentFactory.jsonBuilder().map(jsonMap));
             templateRequest.create(true);
