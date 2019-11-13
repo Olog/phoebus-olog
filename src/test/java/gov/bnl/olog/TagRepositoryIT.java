@@ -4,18 +4,20 @@ import static gov.bnl.olog.OlogResourceDescriptors.ES_TAG_INDEX;
 import static gov.bnl.olog.OlogResourceDescriptors.ES_TAG_TYPE;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import org.elasticsearch.action.bulk.BulkRequestBuilder;
+import org.elasticsearch.action.bulk.BulkRequest;
+import org.elasticsearch.action.delete.DeleteRequest;
+import org.elasticsearch.client.RequestOptions;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -27,7 +29,7 @@ import gov.bnl.olog.entity.Tag;
 public class TagRepositoryIT {
 
     @Autowired
-    private ElasticsearchTemplate elasticsearchTemplate;
+    ElasticConfig elasticConfig;
     @Autowired
     private TagRepository tagRepository;
 
@@ -43,23 +45,25 @@ public class TagRepositoryIT {
 
     /**
      * Test the creation of a test tag
+     * @throws IOException 
      */
     @Test
-    public void createTag() {
+    public void createTag() throws IOException {
         Tag testTag = new Tag("test-tag-1", State.Active);
         tagRepository.index(testTag);
         Optional<Tag> result = tagRepository.findById(testTag.getName());
         assertThat("Failed to create Tag " + testTag, result.isPresent() && result.get().equals(testTag));
 
         // Manual cleanup since Olog does not delete things
-        elasticsearchTemplate.getClient().prepareDelete(ES_TAG_INDEX, ES_TAG_TYPE, testTag.getName()).get("10s");
+        elasticConfig.getIndexClient().delete(new DeleteRequest(ES_TAG_INDEX, ES_TAG_TYPE, testTag.getName()), RequestOptions.DEFAULT);
     }
 
     /**
      * Test the deletion of a test tag
+     * @throws IOException 
      */
     @Test
-    public void deleteTag() {
+    public void deleteTag() throws IOException {
         Tag testTag = new Tag("test-tag-2", State.Active);
         tagRepository.index(testTag);
         Optional<Tag> result = tagRepository.findById(testTag.getName());
@@ -71,14 +75,15 @@ public class TagRepositoryIT {
         assertThat("Failed to delete Tag", result.isPresent() && result.get().equals(testTag));
 
         // Manual cleanup since Olog does not delete things
-        elasticsearchTemplate.getClient().prepareDelete(ES_TAG_INDEX, ES_TAG_TYPE, testTag.getName()).get("10s");
+        elasticConfig.getIndexClient().delete(new DeleteRequest(ES_TAG_INDEX, ES_TAG_TYPE, testTag.getName()), RequestOptions.DEFAULT);
     }
 
     /**
      * create a set of tags
+     * @throws IOException 
      */
     @Test
-    public void createTags() {
+    public void createTags() throws IOException {
         Tag testTag1 = new Tag("test-tag-1", State.Active);
         Tag testTag2 = new Tag("test-tag-2", State.Active);
         Tag testTag3 = new Tag("test-tag-3", State.Active);
@@ -103,11 +108,11 @@ public class TagRepositoryIT {
         assertThat("Failed to list all tags", findAll.containsAll(tags));
 
         // Manual cleanup since Olog does not delete things
-        BulkRequestBuilder bulk = elasticsearchTemplate.getClient().prepareBulk();
+        BulkRequest bulk = new BulkRequest();
         tags.forEach(tag -> {
-            bulk.add(elasticsearchTemplate.getClient().prepareDelete(ES_TAG_INDEX, ES_TAG_TYPE, tag.getName()));
+            bulk.add(new DeleteRequest(ES_TAG_INDEX, ES_TAG_TYPE, tag.getName()));
         });
-        bulk.get("10s");
+        elasticConfig.getIndexClient().bulk(bulk, RequestOptions.DEFAULT);
     }
 
 }

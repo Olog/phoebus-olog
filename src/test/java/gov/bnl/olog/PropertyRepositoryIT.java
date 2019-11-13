@@ -4,6 +4,7 @@ import static gov.bnl.olog.OlogResourceDescriptors.ES_PROPERTY_INDEX;
 import static gov.bnl.olog.OlogResourceDescriptors.ES_PROPERTY_TYPE;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -12,13 +13,16 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.elasticsearch.action.bulk.BulkRequestBuilder;
+import org.elasticsearch.action.bulk.BulkRequest;
+import org.elasticsearch.action.delete.DeleteRequest;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -32,7 +36,9 @@ public class PropertyRepositoryIT
 {
 
     @Autowired
-    private ElasticsearchTemplate elasticsearchTemplate;
+    @Qualifier("indexClient")
+    RestHighLevelClient client;
+
     @Autowired
     private PropertyRepository propertyRepository;
 
@@ -52,9 +58,10 @@ public class PropertyRepositoryIT
 
     /**
      * Test the creation of a test property
+     * @throws IOException 
      */
     @Test
-    public void createProperty()
+    public void createProperty() throws IOException
     {
         Set<Attribute> attributes = new HashSet<Attribute>();
         attributes.add(new Attribute("test-attribute-1"));
@@ -66,15 +73,16 @@ public class PropertyRepositoryIT
                 result.isPresent() && result.get().equals(testProperty));
 
         // Manual cleanup since Olog does not delete things
-        elasticsearchTemplate.getClient().prepareDelete(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, testProperty.getName())
-                .get("10s");
+        client.delete(new DeleteRequest(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, testProperty.getName()),
+                RequestOptions.DEFAULT);
     }
 
     /**
      * Test the deletion of a test property
+     * @throws IOException 
      */
     @Test
-    public void deleteProperty()
+    public void deleteProperty() throws IOException
     {
         Set<Attribute> attributes = new HashSet<Attribute>();
         attributes.add(new Attribute("test-attribute-1"));
@@ -91,15 +99,16 @@ public class PropertyRepositoryIT
         assertThat("Failed to delete Property", result.isPresent() && result.get().equals(testProperty));
 
         // Manual cleanup since Olog does not delete things
-        elasticsearchTemplate.getClient().prepareDelete(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, testProperty.getName())
-                .get("10s");
+        client.delete(new DeleteRequest(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, testProperty.getName()),
+                RequestOptions.DEFAULT);
     }
 
     /**
      * Test the deletion of a test property
+     * @throws IOException 
      */
     @Test
-    public void deletePropertyAttribute()
+    public void deletePropertyAttribute() throws IOException
     {
         Set<Attribute> attributes = new HashSet<Attribute>();
         attributes.add(new Attribute("test-attribute-1"));
@@ -122,15 +131,16 @@ public class PropertyRepositoryIT
         assertThat("Failed to delete Property", result.isPresent() && result.get().equals(testProperty));
 
         // Manual cleanup since Olog does not delete things
-        elasticsearchTemplate.getClient().prepareDelete(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, testProperty.getName())
-                .get("10s");
+        client.delete(new DeleteRequest(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, testProperty.getName()),
+                RequestOptions.DEFAULT);
     }
 
     /**
      * create a set of properties
+     * @throws IOException 
      */
     @Test
-    public void createProperties()
+    public void createProperties() throws IOException
     {
         Set<Attribute> attributes = new HashSet<Attribute>();
         attributes.add(new Attribute("test-attribute-1"));
@@ -139,12 +149,12 @@ public class PropertyRepositoryIT
         Property testProperty2 = new Property("test-property-2", testOwner, State.Active, attributes);
         Property testProperty3 = new Property("test-property-3", testOwner, State.Active, attributes);
         Property testProperty4 = new Property("test-property-4", testOwner, State.Active, attributes);
-        List<Property> propertys = Arrays.asList(testProperty1, testProperty2, testProperty3, testProperty4);
+        List<Property> properties = Arrays.asList(testProperty1, testProperty2, testProperty3, testProperty4);
         List<Property> result = new ArrayList<Property>();
-        propertyRepository.saveAll(propertys).forEach(property -> {
+        propertyRepository.saveAll(properties).forEach(property -> {
             result.add(property);
         });
-        assertThat("Failed to create all properties", result.containsAll(propertys));
+        assertThat("Failed to create all properties", result.containsAll(properties));
 
         try
         {
@@ -157,15 +167,16 @@ public class PropertyRepositoryIT
         propertyRepository.findAll().forEach(property -> {
             findAll.add(property);
         });
-        assertThat("Failed to list all properties", findAll.containsAll(propertys));
+        assertThat("Failed to list all properties", findAll.containsAll(properties));
 
         // Manual cleanup since Olog does not delete things
-        BulkRequestBuilder bulk = elasticsearchTemplate.getClient().prepareBulk();
-        propertys.forEach(property -> {
-            bulk.add(elasticsearchTemplate.getClient().prepareDelete(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE,
+
+        BulkRequest bulk = new BulkRequest();
+        properties.forEach(property -> {
+            bulk.add(new DeleteRequest(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE,
                     property.getName()));
         });
-        bulk.get("10s");
+        client.bulk(bulk, RequestOptions.DEFAULT);
     }
 
 }

@@ -19,11 +19,15 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Consumer;
 
+import org.elasticsearch.action.delete.DeleteRequest;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -48,7 +52,9 @@ import junitx.framework.FileAssert;
 public class LogRepositoryIT
 {
     @Autowired
-    private ElasticsearchTemplate elasticsearchTemplate;
+    @Qualifier("indexClient")
+    RestHighLevelClient client;
+
     @Autowired
     private LogbookRepository logbookRepository;
     @Autowired
@@ -80,9 +86,10 @@ public class LogRepositoryIT
 
     /**
      * Test the creation of a simple test log
+     * @throws IOException 
      */
     @Test
-    public void createLog()
+    public void createLog() throws IOException
     {
         testLogbook = new Logbook("test-logbook-1", testOwner, State.Active);
         logbookRepository.index(testLogbook);
@@ -117,23 +124,25 @@ public class LogRepositoryIT
         assertTrue(createdLog3.getProperties().contains(testProperty));
 
         // Manual cleanup since Olog does not delete things
-        elasticsearchTemplate.getClient().prepareDelete(ES_LOGBOOK_INDEX, ES_LOGBOOK_TYPE, testLogbook.getName())
-                .get("10s");
+        client.delete(new DeleteRequest(ES_LOGBOOK_INDEX, ES_LOGBOOK_TYPE, testLogbook.getName()),
+                RequestOptions.DEFAULT);
 
         // Manual cleanup since Olog does not delete things
-        elasticsearchTemplate.getClient().prepareDelete(ES_TAG_INDEX, ES_TAG_TYPE, testTag.getName()).get("10s");
+        client.delete(new DeleteRequest(ES_TAG_INDEX, ES_TAG_TYPE, testTag.getName()),
+                RequestOptions.DEFAULT);
 
         // Manual cleanup since Olog does not delete things
-        elasticsearchTemplate.getClient().prepareDelete(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, testProperty.getName())
-                .get("10s");
+        client.delete(new DeleteRequest(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, testProperty.getName()),
+                RequestOptions.DEFAULT);
 
     }
 
     /**
      * Test the creation of a simple test log
+     * @throws IOException 
      */
     @Test
-    public void createLogWithAttachment()
+    public void createLogWithAttachment() throws IOException
     {
         testLogbook = new Logbook("test-logbook-1", testOwner, State.Active);
         logbookRepository.index(testLogbook);
@@ -195,7 +204,8 @@ public class LogRepositoryIT
             assertTrue(createdLog.getProperties().contains(testProperty));
 
             // Manual cleanup since Olog does not delete things
-            elasticsearchTemplate.getClient().prepareDelete(ES_LOG_INDEX, ES_LOG_TYPE, createdLog.getId().toString()).get("10s");
+            client.delete(new DeleteRequest(ES_LOG_INDEX, ES_LOG_TYPE, createdLog.getId().toString()),
+            RequestOptions.DEFAULT);
         } catch ( IOException e)
         {
             // TODO Auto-generated catch block
@@ -203,13 +213,16 @@ public class LogRepositoryIT
         } finally
         {
             // Manual cleanup since Olog does not delete things
-            elasticsearchTemplate.getClient().prepareDelete(ES_LOGBOOK_INDEX, ES_LOGBOOK_TYPE, testLogbook.getName()).get("10s");
+            client.delete(new DeleteRequest(ES_LOGBOOK_INDEX, ES_LOGBOOK_TYPE, testLogbook.getName()),
+            RequestOptions.DEFAULT);
 
             // Manual cleanup since Olog does not del`ete things
-            elasticsearchTemplate.getClient().prepareDelete(ES_TAG_INDEX, ES_TAG_TYPE, testTag.getName()).get("10s");
+            client.delete(new DeleteRequest(ES_TAG_INDEX, ES_TAG_TYPE, testTag.getName()),
+            RequestOptions.DEFAULT);
 
             // Manual cleanup since Olog does not delete things
-            elasticsearchTemplate.getClient().prepareDelete(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, testProperty.getName()).get("10s");
+            client.delete(new DeleteRequest(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, testProperty.getName()),
+            RequestOptions.DEFAULT);
 
         }
 

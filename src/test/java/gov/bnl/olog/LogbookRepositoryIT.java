@@ -2,19 +2,27 @@ package gov.bnl.olog;
 
 import static gov.bnl.olog.OlogResourceDescriptors.ES_LOGBOOK_INDEX;
 import static gov.bnl.olog.OlogResourceDescriptors.ES_LOGBOOK_TYPE;
+import static gov.bnl.olog.OlogResourceDescriptors.ES_PROPERTY_INDEX;
+import static gov.bnl.olog.OlogResourceDescriptors.ES_PROPERTY_TYPE;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
+import org.elasticsearch.action.delete.DeleteRequest;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -27,7 +35,9 @@ import gov.bnl.olog.entity.State;
 public class LogbookRepositoryIT {
 
     @Autowired
-    private ElasticsearchTemplate elasticsearchTemplate;
+    @Qualifier("indexClient")
+    RestHighLevelClient client;
+
     @Autowired
     private LogbookRepository logbookRepository;
 
@@ -44,23 +54,27 @@ public class LogbookRepositoryIT {
     private static final String testOwner = "test-owner";
     /**
      * Test the creation of a test logbook
+     * @throws IOException 
      */
     @Test
-    public void createLogbook() {
+    public void createLogbook() throws IOException
+    {
         Logbook testLogbook = new Logbook("test-logbook-1", testOwner, State.Active);
         logbookRepository.index(testLogbook);
         Optional<Logbook> result = logbookRepository.findById(testLogbook.getName());
         assertThat("Failed to create Logbook " + testLogbook, result.isPresent() && result.get().equals(testLogbook));
 
         // Manual cleanup since Olog does not delete things
-        elasticsearchTemplate.getClient().prepareDelete(ES_LOGBOOK_INDEX, ES_LOGBOOK_TYPE, testLogbook.getName()).get("10s");
+        client.delete(new DeleteRequest(ES_LOGBOOK_INDEX, ES_LOGBOOK_TYPE, testLogbook.getName()),
+                RequestOptions.DEFAULT);
     }
 
     /**
      * Test the deletion of a test logbook
+     * @throws IOException 
      */
     @Test
-    public void deleteLogbook() {
+    public void deleteLogbook() throws IOException {
         Logbook testLogbook = new Logbook("test-logbook-2", testOwner, State.Active);
         logbookRepository.index(testLogbook);
         Optional<Logbook> result = logbookRepository.findById(testLogbook.getName());
@@ -72,14 +86,16 @@ public class LogbookRepositoryIT {
         assertThat("Failed to delete Logbook", result.isPresent() && result.get().equals(testLogbook));
 
         // Manual cleanup since Olog does not delete things
-        elasticsearchTemplate.getClient().prepareDelete(ES_LOGBOOK_INDEX, ES_LOGBOOK_TYPE, testLogbook.getName()).get("10s");
+        client.delete(new DeleteRequest(ES_LOGBOOK_INDEX, ES_LOGBOOK_TYPE, testLogbook.getName()),
+                RequestOptions.DEFAULT);
     }
 
     /**
      * create a set of logbooks
+     * @throws IOException 
      */
     @Test
-    public void createLogbooks() {
+    public void createLogbooks() throws IOException {
         Logbook testLogbook1 = new Logbook("test-logbook-1", testOwner, State.Active);
         Logbook testLogbook2 = new Logbook("test-logbook-2", testOwner, State.Active);
         Logbook testLogbook3 = new Logbook("test-logbook-3", testOwner, State.Active);
@@ -103,11 +119,11 @@ public class LogbookRepositoryIT {
         assertThat("Failed to list all logbooks", findAll.containsAll(logbooks));
 
         // Manual cleanup since Olog does not delete things
-        BulkRequestBuilder bulk = elasticsearchTemplate.getClient().prepareBulk();
+        BulkRequest bulk = new BulkRequest();
         logbooks.forEach(logbook -> {
-            bulk.add(elasticsearchTemplate.getClient().prepareDelete(ES_LOGBOOK_INDEX, ES_LOGBOOK_TYPE, logbook.getName()));
+            bulk.add(new DeleteRequest(ES_LOGBOOK_INDEX, ES_LOGBOOK_TYPE, logbook.getName()));
         });
-        bulk.get("10s");
+        client.bulk(bulk, RequestOptions.DEFAULT);
     }
 
 }

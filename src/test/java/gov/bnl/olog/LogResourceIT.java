@@ -10,9 +10,13 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 
+import org.elasticsearch.action.delete.DeleteRequest;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.core.io.Resource;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
@@ -38,8 +42,11 @@ public class LogResourceIT
 
     @Autowired
     LogResource logResource;
+
     @Autowired
-    private ElasticsearchTemplate elasticsearchTemplate;
+    @Qualifier("indexClient")
+    RestHighLevelClient client;
+
     @Autowired
     private LogbookRepository logbookRepository;
     @Autowired
@@ -51,7 +58,7 @@ public class LogResourceIT
     private static Logbook testLogbook;
 
     @Test
-    public void retrieveAttachment()
+    public void retrieveAttachment() throws IOException
     {
         File testFile = new File("src/test/resources/SampleTextFile_100kb.txt");
 
@@ -81,14 +88,16 @@ public class LogResourceIT
             gridOperation.delete(new Query(Criteria.where("_id").is(attachmentId)));
 
             // Manual cleanup since Olog does not delete things
-            elasticsearchTemplate.getClient().prepareDelete(ES_LOG_INDEX, ES_LOG_TYPE, createdLog.getId().toString()).get("10s");
+            client.delete(new DeleteRequest(ES_LOG_INDEX, ES_LOG_TYPE, createdLog.getId().toString()),
+                    RequestOptions.DEFAULT);
         } catch (IOException e)
         {
             e.printStackTrace();
-        } finally 
+        } finally
         {
             // Manual cleanup since Olog does not delete things
-            elasticsearchTemplate.getClient().prepareDelete(ES_LOGBOOK_INDEX, ES_LOGBOOK_TYPE, testLogbook.getName()).get("10s");
+            client.delete(new DeleteRequest(ES_LOGBOOK_INDEX, ES_LOGBOOK_TYPE, testLogbook.getName()),
+                    RequestOptions.DEFAULT);
         }
     }
 }
