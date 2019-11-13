@@ -12,7 +12,7 @@ import org.springframework.data.elasticsearch.repository.config.EnableElasticsea
 @EnableElasticsearchRepositories(basePackages = "gov.bnl.olog")
 @ComponentScan(basePackages = { "gov.bnl.olog" })
 public class Application {
-    private static final Logger logger = Logger.getLogger("Olog");
+    static final Logger logger = Logger.getLogger("Olog");
 
     public static void main(String[] args)
     {
