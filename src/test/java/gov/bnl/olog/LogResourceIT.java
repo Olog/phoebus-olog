@@ -76,7 +76,7 @@ public class LogResourceIT
                     .withAttachment(testAttachment)
                     .build();
 
-            Log createdLog = logRepository.index(log);
+            Log createdLog = logRepository.save(log);
 
             String attachmentId = createdLog.getAttachments().iterator().next().getId();
             Resource a = logResource.findResources(createdLog.getId().toString(), attachmentId);

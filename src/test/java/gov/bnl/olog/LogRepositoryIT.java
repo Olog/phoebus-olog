@@ -105,20 +105,20 @@ public class LogRepositoryIT
 
         // create a log entry with a logbook only
         Log log = Log.LogBuilder.createLog("This is a test entry").owner(testOwner).withLogbook(testLogbook).build();
-        Log createdLog = logRepository.index(log);
+        Log createdLog = logRepository.save(log);
 
         assertTrue("Failed to create a log entry with a valid id", createdLog.getId() != null);
         assertTrue(createdLog.getLogbooks().contains(testLogbook));
 
         Log log2 = Log.LogBuilder.createLog("This is a test entry").owner(testOwner).withTag(testTag)
                 .withLogbook(testLogbook).build();
-        Log createdLog2 = logRepository.index(log2);
+        Log createdLog2 = logRepository.save(log2);
         assertTrue(createdLog2.getLogbooks().contains(testLogbook));
         assertTrue(createdLog2.getTags().contains(testTag));
 
         Log log3 = Log.LogBuilder.createLog("This is a test entry").owner(testOwner).withTag(testTag)
                 .withLogbook(testLogbook).withProperty(testProperty).build();
-        Log createdLog3 = logRepository.index(log3);
+        Log createdLog3 = logRepository.save(log3);
         assertTrue(createdLog3.getLogbooks().contains(testLogbook));
         assertTrue(createdLog3.getTags().contains(testTag));
         assertTrue(createdLog3.getProperties().contains(testProperty));
@@ -170,7 +170,7 @@ public class LogRepositoryIT
                     .withProperty(testProperty)
                     .withAttachment(testAttachment)
                     .build();
-            Log createdLog = logRepository.index(log);
+            Log createdLog = logRepository.save(log);
 
             createdLog.getAttachments().forEach(a -> {
                 String id = a.getId();
