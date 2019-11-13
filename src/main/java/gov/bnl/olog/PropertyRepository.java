@@ -8,29 +8,32 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 import org.elasticsearch.action.DocWriteResponse.Result;
-import org.elasticsearch.action.bulk.BulkRequestBuilder;
+import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
+import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;
+import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
-import org.elasticsearch.action.search.SearchRequestBuilder;
+import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
-import org.elasticsearch.client.Client;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.bytes.BytesReference;
+import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.engine.DocumentMissingException;
-import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.elasticsearch.core.query.SearchQuery;
-import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -40,27 +43,13 @@ import gov.bnl.olog.entity.Property;
 import gov.bnl.olog.entity.State;
 
 @Repository
-public class PropertyRepository implements ElasticsearchRepository<Property, String>
+public class PropertyRepository implements CrudRepository<Property, String>
 {
-
     @Autowired
-    Client client;
+    @Qualifier("indexClient")
+    RestHighLevelClient client;
 
     private static final ObjectMapper mapper = new ObjectMapper();
-
-    @Override
-    public Iterable<Property> findAll(Sort sort)
-    {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public Page<Property> findAll(Pageable pageable)
-    {
-        // TODO Auto-generated method stub
-        return null;
-    }
 
     @Override
     public <S extends Property> S save(S entity)
@@ -71,34 +60,43 @@ public class PropertyRepository implements ElasticsearchRepository<Property, Str
     @Override
     public <S extends Property> Iterable<S> saveAll(Iterable<S> properties)
     {
-        BulkRequestBuilder bulk = client.prepareBulk();
+        BulkRequest bulk = new BulkRequest();
         properties.forEach(property -> {
             try
             {
-                bulk.add(client.prepareIndex(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, property.getName())
-                        .setSource(mapper.writeValueAsBytes(property), XContentType.JSON));
+                bulk.add(new IndexRequest(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, property.getName())
+                        .source(mapper.writeValueAsBytes(property), XContentType.JSON));
             } catch (JsonProcessingException e)
             {
                 PropertiesResource.log.log(Level.SEVERE, e.getMessage(), e);
             }
         });
-        BulkResponse bulkResponse = bulk.get("10s");
-        if (bulkResponse.hasFailures())
+        BulkResponse bulkResponse;
+        try
         {
-            // process failures by iterating through each bulk response item
-            bulkResponse.forEach(response -> {
-                if (response.getFailure() != null)
-                {
-                    PropertiesResource.log.log(Level.SEVERE, response.getFailureMessage(),
-                            response.getFailure().getCause());
-                }
-                ;
-            });
-            return null;
-        } else
+            bulkResponse = client.bulk(bulk, RequestOptions.DEFAULT);
+
+            if (bulkResponse.hasFailures())
+            {
+                // process failures by iterating through each bulk response item
+                bulkResponse.forEach(response -> {
+                    if (response.getFailure() != null)
+                    {
+                        PropertiesResource.log.log(Level.SEVERE, response.getFailureMessage(),
+                                response.getFailure().getCause());
+                    }
+                    ;
+                });
+            } else
+            {
+                return properties;
+            }
+        } catch (IOException e)
         {
-            return properties;
+            // TODO Auto-generated catch block
+            e.printStackTrace();
         }
+        return null;
     }
 
     @Override
@@ -106,7 +104,8 @@ public class PropertyRepository implements ElasticsearchRepository<Property, Str
     {
         try
         {
-            GetResponse result = client.prepareGet(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, propertyName).get();
+            GetResponse result = client.get(new GetRequest(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, propertyName),
+                    RequestOptions.DEFAULT);
             if (result.isExists())
             {
                 return Optional.of(mapper.readValue(result.getSourceAsBytesRef().streamInput(), Property.class));
@@ -138,12 +137,16 @@ public class PropertyRepository implements ElasticsearchRepository<Property, Str
     {
         try
         { 
-            SearchRequestBuilder search = client.prepareSearch(ES_PROPERTY_INDEX).setTypes(ES_PROPERTY_TYPE);
+
+            SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
             if (!includeInactive)
             {
-                search = search.setQuery(QueryBuilders.termQuery("state", State.Active.toString()));
+                sourceBuilder.query(QueryBuilders.termQuery("state", State.Active.toString()));
             }
-            SearchResponse response = search.get("10s");
+            sourceBuilder.timeout(new TimeValue(10, TimeUnit.SECONDS));
+            SearchResponse response = client.search(
+                    new SearchRequest(ES_PROPERTY_INDEX).types(ES_PROPERTY_TYPE).source(sourceBuilder), RequestOptions.DEFAULT);
+
             List<Property> result = new ArrayList<Property>();
             response.getHits().forEach(h -> {
                 BytesReference b = h.getSourceRef();
@@ -182,12 +185,16 @@ public class PropertyRepository implements ElasticsearchRepository<Property, Str
     {
         try
         {
-            UpdateResponse response = client.prepareUpdate(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, propertyName)
-                    .setDoc(jsonBuilder().startObject().field("state", State.Inactive).endObject()).get();
+
+            UpdateResponse response = client.update(
+                    new UpdateRequest(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, propertyName)
+                            .doc(jsonBuilder().startObject().field("state", State.Inactive).endObject()),
+                    RequestOptions.DEFAULT);
 
             if (response.getResult().equals(Result.UPDATED))
             {
-                BytesReference ref = client.prepareGet(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, response.getId()).get()
+                BytesReference ref = client
+                        .get(new GetRequest(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, response.getId()), RequestOptions.DEFAULT)
                         .getSourceAsBytesRef();
                 Property deletedProperty = mapper.readValue(ref.streamInput(), Property.class);
                 PropertiesResource.log.log(Level.INFO, "Deleted property " + deletedProperty.toLogger());
@@ -217,12 +224,16 @@ public class PropertyRepository implements ElasticsearchRepository<Property, Str
                 }).collect(Collectors.toSet()));
             }
 
-            UpdateResponse response = client.prepareUpdate(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, propertyName)
-                    .setDoc(mapper.writeValueAsBytes(property), XContentType.JSON).get();
+
+            UpdateResponse response = client.update(
+                    new UpdateRequest(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, propertyName)
+                            .doc(mapper.writeValueAsBytes(property), XContentType.JSON),
+                    RequestOptions.DEFAULT);
 
             if (response.getResult().equals(Result.UPDATED))
             {
-                BytesReference ref = client.prepareGet(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, response.getId()).get()
+                BytesReference ref = client
+                        .get(new GetRequest(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, response.getId()), RequestOptions.DEFAULT)
                         .getSourceAsBytesRef();
                 Property deletedProperty = mapper.readValue(ref.streamInput(), Property.class);
                 PropertiesResource.log.log(Level.INFO, "Deleted property attribute" + deletedProperty.toLogger());
@@ -256,17 +267,17 @@ public class PropertyRepository implements ElasticsearchRepository<Property, Str
 
     }
 
-    @Override
     public <S extends Property> S index(S property)
     {
         try
         {
-            IndexResponse response = client.prepareIndex(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, property.getName())
-                    .setSource(mapper.writeValueAsBytes(property), XContentType.JSON).get();
-
+            IndexRequest indexRequest = new IndexRequest(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, property.getName())
+                    .source(mapper.writeValueAsBytes(property), XContentType.JSON);
+            IndexResponse response = client.index(indexRequest, RequestOptions.DEFAULT);
             if (response.getResult().equals(Result.CREATED))
             {
-                BytesReference ref = client.prepareGet(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, response.getId()).get()
+                BytesReference ref = client
+                        .get(new GetRequest(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, response.getId()), RequestOptions.DEFAULT)
                         .getSourceAsBytesRef();
                 Property createdProperty = mapper.readValue(ref.streamInput(), Property.class);
                 return (S) createdProperty;
@@ -275,48 +286,6 @@ public class PropertyRepository implements ElasticsearchRepository<Property, Str
         {
             PropertiesResource.log.log(Level.SEVERE, e.getMessage(), e);
         }
-        return null;
-    }
-
-    @Override
-    public Iterable<Property> search(QueryBuilder query)
-    {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public Page<Property> search(QueryBuilder query, Pageable pageable)
-    {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public Page<Property> search(SearchQuery searchQuery)
-    {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public Page<Property> searchSimilar(Property entity, String[] fields, Pageable pageable)
-    {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public void refresh()
-    {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public Class<Property> getEntityClass()
-    {
-        // TODO Auto-generated method stub
         return null;
     }
 

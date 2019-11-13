@@ -16,7 +16,7 @@ import com.mongodb.MongoClient;
 @PropertySource("classpath:application.properties")
 public class MongoConfig extends AbstractMongoConfiguration
 {
-    private static final Logger log = Logger.getAnonymousLogger(MongoConfig.class.getName());
+    private static final Logger log = Logger.getLogger(MongoClient.class.getName());
     
     @Value("${mongo.database:ologAttachments}")
     private String mongoDbName;

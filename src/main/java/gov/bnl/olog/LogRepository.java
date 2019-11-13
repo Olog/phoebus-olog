@@ -11,19 +11,17 @@ import java.util.Set;
 import java.util.logging.Level;
 
 import org.elasticsearch.action.DocWriteResponse.Result;
+import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;
-import org.elasticsearch.action.index.IndexRequestBuilder;
+import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
-import org.elasticsearch.client.Client;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.bytes.BytesReference;
 import org.elasticsearch.common.xcontent.XContentType;
-import org.elasticsearch.index.query.QueryBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.elasticsearch.core.query.SearchQuery;
-import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.repository.CrudRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Repository;
 import org.springframework.web.server.ResponseStatusException;
@@ -35,29 +33,16 @@ import gov.bnl.olog.entity.Log;
 import gov.bnl.olog.entity.Log.LogBuilder;
 
 @Repository
-public class LogRepository implements ElasticsearchRepository<Log, String>
+public class LogRepository implements CrudRepository<Log, String>
 {
 
     @Autowired
-    Client client;
+    @Qualifier("indexClient")
+    RestHighLevelClient client;
     @Autowired
     AttachmentRepository attachmentRepository;
 
     private static final ObjectMapper mapper = new ObjectMapper();
-
-    @Override
-    public Iterable<Log> findAll(Sort sort)
-    {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public Page<Log> findAll(Pageable pageable)
-    {
-        // TODO Auto-generated method stub
-        return null;
-    }
 
     @Override
     public <S extends Log> S save(S entity)
@@ -78,7 +63,7 @@ public class LogRepository implements ElasticsearchRepository<Log, String>
     {
         try
         {
-            GetResponse result = client.prepareGet(ES_LOG_INDEX, ES_LOG_TYPE, id).get();
+            GetResponse result = client.get(new GetRequest(ES_LOG_INDEX, ES_LOG_TYPE, id), RequestOptions.DEFAULT);
             Log createdLog = mapper.readValue(result.getSourceAsBytesRef().streamInput(), Log.class);
             return Optional.of(createdLog);
         } catch (IOException e)
@@ -145,70 +130,32 @@ public class LogRepository implements ElasticsearchRepository<Log, String>
 
     }
 
-    @Override
-    public Iterable<Log> search(QueryBuilder query)
-    {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public Page<Log> search(QueryBuilder query, Pageable pageable)
-    {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public Page<Log> search(SearchQuery searchQuery)
-    {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public Page<Log> searchSimilar(Log entity, String[] fields, Pageable pageable)
-    {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public void refresh()
-    {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public Class<Log> getEntityClass()
-    {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
     public <S extends Log> S index(S log)
     {
         try
         {
             Long id = SequenceGenerator.getID();
             LogBuilder validatedLog = LogBuilder.createLog(log).id(id).createDate(Instant.now());
-            if(log.getAttachments() != null && !log.getAttachments().isEmpty()) {
-                Set<Attachment> createdAttachments = new HashSet<Attachment>(); 
+            if (log.getAttachments() != null && !log.getAttachments().isEmpty())
+            {
+                Set<Attachment> createdAttachments = new HashSet<Attachment>();
                 log.getAttachments().forEach(attachment -> {
                     createdAttachments.add(attachmentRepository.save(attachment));
                 });
                 validatedLog = validatedLog.setAttachments(createdAttachments);
             }
 
-            IndexRequestBuilder request = client.prepareIndex(ES_LOG_INDEX, ES_LOG_TYPE, String.valueOf(id))
-                    .setSource(mapper.writeValueAsBytes(validatedLog.build()), XContentType.JSON);
-            IndexResponse response = request.get();
+            IndexRequest indexRequest = new IndexRequest(ES_LOG_INDEX, ES_LOG_TYPE, String.valueOf(id))
+                    .source(mapper.writeValueAsBytes(validatedLog.build()), XContentType.JSON);
+
+            IndexResponse response = client.index(indexRequest, RequestOptions.DEFAULT);
 
             if (response.getResult().equals(Result.CREATED))
             {
-                BytesReference ref = client.prepareGet(ES_LOG_INDEX, ES_LOG_TYPE, response.getId()).get().getSourceAsBytesRef();
+                BytesReference ref = client
+                        .get(new GetRequest(ES_LOG_INDEX, ES_LOG_TYPE, response.getId()), RequestOptions.DEFAULT)
+                        .getSourceAsBytesRef();
+
                 Log createdLog = mapper.readValue(ref.streamInput(), Log.class);
                 return (S) createdLog;
             }

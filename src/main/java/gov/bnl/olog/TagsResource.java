@@ -38,16 +38,19 @@ public class TagsResource {
     static Logger log = Logger.getLogger(TagsResource.class.getName());
 
     /** Creates a new instance of TagsResource */
-    public TagsResource() {
+    public TagsResource()
+    {
     }
 
     @GetMapping
-    public Iterable findAll() {
+    public Iterable findAll()
+    {
         return tagRepository.findAll();
     }
 
     @PostMapping
-    public Iterable<Tag> updateTag(@RequestBody final List<Tag> tags) {
+    public Iterable<Tag> updateTag(@RequestBody final List<Tag> tags)
+    {
         // TODO Check permissions
         // TODO Validate
         // TODO Create a tag
@@ -55,12 +58,14 @@ public class TagsResource {
     }
 
     @GetMapping("/{tagName}")
-    public Tag findByTitle(@PathVariable String tagName) {
+    public Tag findByTitle(@PathVariable String tagName)
+    {
         return tagRepository.findById(tagName).orElseGet(null);
     }
 
     @PutMapping("/{tagName}")
-    public Tag createTag(@PathVariable String tagName, @RequestBody final Tag tag) {
+    public Tag createTag(@PathVariable String tagName, @RequestBody final Tag tag)
+    {
         // TODO Check permissions
         // TODO Validate
         // TODO Create a tag
@@ -68,7 +73,8 @@ public class TagsResource {
     }
 
     @PostMapping("/{tagName}")
-    public Tag updateTag(@PathVariable String tagName, @RequestBody final Tag tag) {
+    public Tag updateTag(@PathVariable String tagName, @RequestBody final Tag tag)
+    {
         // TODO Check permissions
         // TODO Validate
         // TODO Create a tag
@@ -76,7 +82,8 @@ public class TagsResource {
     }
 
     @DeleteMapping("/{tagName}")
-    public void deleteTag (@PathVariable String tagName) {
+    public void deleteTag(@PathVariable String tagName)
+    {
         tagRepository.deleteById(tagName);
     }
 

@@ -13,33 +13,21 @@ import static gov.bnl.olog.OlogResourceDescriptors.ES_TAG_TYPE;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.http.HttpHost;
-import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.get.GetIndexRequest;
-import org.elasticsearch.action.admin.indices.get.GetIndexRequestBuilder;
-import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequestBuilder;
-import org.elasticsearch.action.admin.indices.template.put.PutIndexTemplateAction;
 import org.elasticsearch.action.admin.indices.template.put.PutIndexTemplateRequest;
-import org.elasticsearch.action.admin.indices.template.put.PutIndexTemplateRequestBuilder;
 import org.elasticsearch.action.admin.indices.template.put.PutIndexTemplateResponse;
-import org.elasticsearch.client.Client;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
-import org.elasticsearch.common.transport.TransportAddress;
 import org.elasticsearch.common.xcontent.XContentFactory;
-import org.elasticsearch.index.query.ExistsQueryBuilder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -66,7 +54,7 @@ public class ElasticConfig
     private RestHighLevelClient searchClient;
     private RestHighLevelClient indexClient;
 
-    @Bean
+    @Bean({"searchClient"})
     public RestHighLevelClient getSearchClient()
     {
         if (searchClient == null)
@@ -76,7 +64,7 @@ public class ElasticConfig
         return searchClient;
     }
 
-    @Bean
+    @Bean({"indexClient"})
     public RestHighLevelClient getIndexClient()
     {
         if (indexClient == null)
@@ -88,8 +76,8 @@ public class ElasticConfig
     }
 
     /**
-     * Checks for the existance of the elastic indices needed for Olog and creates
-     * them with the appropirate mapping is they are missing.
+     * Checks for the existence of the elastic indices needed for Olog and creates
+     * them with the appropriate mapping is they are missing.
      * 
      * @param indexClient the elastic client instance used to validate and create olog indices
      */

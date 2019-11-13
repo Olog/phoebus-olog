@@ -2,33 +2,43 @@ package gov.bnl.olog;
 
 import static gov.bnl.olog.OlogResourceDescriptors.ES_LOGBOOK_INDEX;
 import static gov.bnl.olog.OlogResourceDescriptors.ES_LOGBOOK_TYPE;
+import static gov.bnl.olog.OlogResourceDescriptors.ES_LOG_INDEX;
+import static gov.bnl.olog.OlogResourceDescriptors.ES_LOG_TYPE;
+import static gov.bnl.olog.OlogResourceDescriptors.ES_PROPERTY_INDEX;
+import static gov.bnl.olog.OlogResourceDescriptors.ES_PROPERTY_TYPE;
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
 import org.elasticsearch.action.DocWriteResponse.Result;
+import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.bulk.BulkResponse;
+import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;
+import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
+import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.Client;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.bytes.BytesReference;
+import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.engine.DocumentMissingException;
-import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.elasticsearch.core.query.SearchQuery;
-import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -38,27 +48,14 @@ import gov.bnl.olog.entity.Logbook;
 import gov.bnl.olog.entity.State;
 
 @Repository
-public class LogbookRepository implements ElasticsearchRepository<Logbook, String>
+public class LogbookRepository implements CrudRepository<Logbook, String>
 {
 
     @Autowired
-    Client client;
+    @Qualifier("indexClient")
+    RestHighLevelClient client;
 
     private static final ObjectMapper mapper = new ObjectMapper();
-
-    @Override
-    public Iterable<Logbook> findAll(Sort sort)
-    {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public Page<Logbook> findAll(Pageable pageable)
-    {
-        // TODO Auto-generated method stub
-        return null;
-    }
 
     @Override
     public <S extends Logbook> S save(S entity)
@@ -69,33 +66,42 @@ public class LogbookRepository implements ElasticsearchRepository<Logbook, Strin
     @Override
     public <S extends Logbook> Iterable<S> saveAll(Iterable<S> logbooks)
     {
-        BulkRequestBuilder bulk = client.prepareBulk();
+        BulkRequest bulk = new BulkRequest();
         logbooks.forEach(logbook -> {
             try
             {
-                bulk.add(client.prepareIndex(ES_LOGBOOK_INDEX, ES_LOGBOOK_TYPE, logbook.getName())
-                        .setSource(mapper.writeValueAsBytes(logbook), XContentType.JSON));
+                bulk.add(new IndexRequest(ES_LOGBOOK_INDEX, ES_LOGBOOK_TYPE, logbook.getName())
+                        .source(mapper.writeValueAsBytes(logbook), XContentType.JSON));
             } catch (JsonProcessingException e)
             {
                 LogbooksResource.log.log(Level.SEVERE, e.getMessage(), e);
             }
         });
-        BulkResponse bulkResponse = bulk.get("10s");
-        if (bulkResponse.hasFailures())
+        BulkResponse bulkResponse;
+        try
         {
-            // process failures by iterating through each bulk response item
-            bulkResponse.forEach(response -> {
-                if (response.getFailure() != null)
-                {
-                    LogbooksResource.log.log(Level.SEVERE, response.getFailureMessage(), response.getFailure().getCause());
-                }
-                ;
-            });
-            return null;
-        } else
+            bulkResponse = client.bulk(bulk, RequestOptions.DEFAULT);
+            if (bulkResponse.hasFailures())
+            {
+                // process failures by iterating through each bulk response item
+                bulkResponse.forEach(response -> {
+                    if (response.getFailure() != null)
+                    {
+                        LogbooksResource.log.log(Level.SEVERE, response.getFailureMessage(),
+                                response.getFailure().getCause());
+                    }
+                    ;
+                });
+            } else
+            {
+                return logbooks;
+            }
+        } catch (IOException e)
         {
-            return logbooks;
+            // TODO Auto-generated catch block
+            e.printStackTrace();
         }
+        return null;
     }
 
     @Override
@@ -103,7 +109,8 @@ public class LogbookRepository implements ElasticsearchRepository<Logbook, Strin
     {
         try
         {
-            GetResponse result = client.prepareGet(ES_LOGBOOK_INDEX, ES_LOGBOOK_TYPE, logbookName).get();
+            GetResponse result = client.get(new GetRequest(ES_LOGBOOK_INDEX, ES_LOGBOOK_TYPE, logbookName),
+                    RequestOptions.DEFAULT);
             if (result.isExists())
             {
                 return Optional.of(mapper.readValue(result.getSourceAsBytesRef().streamInput(), Logbook.class));
@@ -131,8 +138,14 @@ public class LogbookRepository implements ElasticsearchRepository<Logbook, Strin
 
         try
         {
-            SearchResponse response = client.prepareSearch(ES_LOGBOOK_INDEX).setTypes(ES_LOGBOOK_TYPE)
-                    .setQuery(QueryBuilders.termQuery("state", State.Active.toString())).get("10s");
+
+            SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
+            sourceBuilder.query(QueryBuilders.termQuery("state", State.Active.toString()));
+            sourceBuilder.timeout(new TimeValue(10, TimeUnit.SECONDS));
+
+            SearchResponse response = client.search(
+                    new SearchRequest(ES_LOGBOOK_INDEX).types(ES_LOGBOOK_TYPE).source(sourceBuilder), RequestOptions.DEFAULT);
+
             List<Logbook> result = new ArrayList<Logbook>();
             response.getHits().forEach(h -> {
                 BytesReference b = h.getSourceRef();
@@ -171,13 +184,18 @@ public class LogbookRepository implements ElasticsearchRepository<Logbook, Strin
     {
         try
         {
-            UpdateResponse response = client.prepareUpdate(ES_LOGBOOK_INDEX, ES_LOGBOOK_TYPE, logbookName)
-                    .setDoc(jsonBuilder().startObject().field("state", State.Inactive).endObject()).get();
+
+            UpdateResponse response = client.update(
+                    new UpdateRequest(ES_LOGBOOK_INDEX, ES_LOGBOOK_TYPE, logbookName)
+                            .doc(jsonBuilder().startObject().field("state", State.Inactive).endObject()),
+                    RequestOptions.DEFAULT);
 
             if (response.getResult().equals(Result.UPDATED))
             {
-                BytesReference ref = client.prepareGet(ES_LOGBOOK_INDEX, ES_LOGBOOK_TYPE, response.getId()).get()
+                BytesReference ref = client
+                        .get(new GetRequest(ES_LOGBOOK_INDEX, ES_LOGBOOK_TYPE, response.getId()), RequestOptions.DEFAULT)
                         .getSourceAsBytesRef();
+
                 Logbook deletedLogbook = mapper.readValue(ref.streamInput(), Logbook.class);
                 LogbooksResource.log.log(Level.INFO, "Deleted logbook " + deletedLogbook.toLogger());
             }
@@ -210,17 +228,20 @@ public class LogbookRepository implements ElasticsearchRepository<Logbook, Strin
         // TODO Auto-generated method stub
     }
 
-    @Override
     public <S extends Logbook> S index(S logbook)
     {
         try
         {
-            IndexResponse response = client.prepareIndex(ES_LOGBOOK_INDEX, ES_LOGBOOK_TYPE, logbook.getName())
-                    .setSource(mapper.writeValueAsBytes(logbook), XContentType.JSON).get();
 
+            IndexRequest indexRequest = new IndexRequest(ES_LOGBOOK_INDEX, ES_LOGBOOK_TYPE, logbook.getName())
+                    .source(mapper.writeValueAsBytes(logbook), XContentType.JSON);
+
+            IndexResponse response = client.index(indexRequest, RequestOptions.DEFAULT);
+            
             if (response.getResult().equals(Result.CREATED))
             {
-                BytesReference ref = client.prepareGet(ES_LOGBOOK_INDEX, ES_LOGBOOK_TYPE, response.getId()).get()
+                BytesReference ref = client
+                        .get(new GetRequest(ES_LOGBOOK_INDEX, ES_LOGBOOK_TYPE, response.getId()), RequestOptions.DEFAULT)
                         .getSourceAsBytesRef();
                 Logbook createdLogbook = mapper.readValue(ref.streamInput(), Logbook.class);
                 return (S) createdLogbook;
@@ -232,46 +253,5 @@ public class LogbookRepository implements ElasticsearchRepository<Logbook, Strin
         return null;
     }
 
-    @Override
-    public Iterable<Logbook> search(QueryBuilder query)
-    {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public Page<Logbook> search(QueryBuilder query, Pageable pageable)
-    {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public Page<Logbook> search(SearchQuery searchQuery)
-    {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public Page<Logbook> searchSimilar(Logbook entity, String[] fields, Pageable pageable)
-    {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public void refresh()
-    {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public Class<Logbook> getEntityClass()
-    {
-        // TODO Auto-generated method stub
-        return null;
-    }
 
 }

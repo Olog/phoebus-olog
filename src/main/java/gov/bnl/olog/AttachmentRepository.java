@@ -1,14 +1,11 @@
 package gov.bnl.olog;
 
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.Optional;
 
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ByteArrayResource;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.gridfs.GridFsOperations;
@@ -19,6 +16,7 @@ import org.springframework.stereotype.Repository;
 import com.mongodb.client.gridfs.model.GridFSFile;
 
 import gov.bnl.olog.entity.Attachment;
+
 
 @Repository
 public class AttachmentRepository implements CrudRepository<Attachment, String>
