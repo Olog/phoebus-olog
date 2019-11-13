@@ -9,7 +9,7 @@ Olog
 
   * JDK 11 or newer
   * Elastic version 6.3
-  * gridfs
+  * mongo gridfs
 
 
  **Download links for the prerequisites**   
@@ -31,5 +31,5 @@ mvn clean install
 Using spring boot  
 
 ```
-mvn spring-boot:run
+mvn org.springframework.boot:spring-boot-maven-plugin:run
 ```
