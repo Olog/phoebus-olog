@@ -21,6 +21,8 @@ import java.util.logging.Logger;
 import org.apache.http.HttpHost;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.get.GetIndexRequest;
+import org.elasticsearch.action.admin.indices.template.get.GetIndexTemplatesRequest;
+import org.elasticsearch.action.admin.indices.template.get.GetIndexTemplatesResponse;
 import org.elasticsearch.action.admin.indices.template.put.PutIndexTemplateRequest;
 import org.elasticsearch.action.admin.indices.template.put.PutIndexTemplateResponse;
 import org.elasticsearch.client.RequestOptions;
@@ -159,18 +161,22 @@ public class ElasticConfig
 
         try
         {
-            PutIndexTemplateRequest templateRequest = new PutIndexTemplateRequest(ES_LOG_INDEX + "_template");
-            templateRequest.patterns(Arrays.asList(ES_LOG_INDEX));
+            GetIndexTemplatesResponse response = indexClient.indices().getTemplate(new GetIndexTemplatesRequest(ES_LOG_INDEX + "_template"), RequestOptions.DEFAULT);
+            if (response.getIndexTemplates().isEmpty())
+            {
+                PutIndexTemplateRequest templateRequest = new PutIndexTemplateRequest(ES_LOG_INDEX + "_template");
+                templateRequest.patterns(Arrays.asList(ES_LOG_INDEX));
 
-            ObjectMapper mapper = new ObjectMapper();
-            InputStream is = ElasticConfig.class.getResourceAsStream("/log_template_mapping.json");
+                ObjectMapper mapper = new ObjectMapper();
+                InputStream is = ElasticConfig.class.getResourceAsStream("/log_template_mapping.json");
 
-            Map<String, String> jsonMap = mapper.readValue(is, Map.class);
-            templateRequest.mapping(ES_LOG_TYPE, XContentFactory.jsonBuilder().map(jsonMap));
-            templateRequest.create(true);
+                Map<String, String> jsonMap = mapper.readValue(is, Map.class);
+                templateRequest.mapping(ES_LOG_TYPE, XContentFactory.jsonBuilder().map(jsonMap));
+                templateRequest.create(true);
 
-            PutIndexTemplateResponse putTemplateResponse = indexClient.indices().putTemplate(templateRequest,
-                    RequestOptions.DEFAULT);
+                PutIndexTemplateResponse putTemplateResponse = indexClient.indices().putTemplate(templateRequest,
+                        RequestOptions.DEFAULT);
+            }
         } catch (IOException e)
         {
             logger.log(Level.WARNING, "Failed to create template for index " + ES_LOG_TYPE, e);
