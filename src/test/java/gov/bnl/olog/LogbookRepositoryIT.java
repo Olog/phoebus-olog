@@ -2,8 +2,6 @@ package gov.bnl.olog;
 
 import static gov.bnl.olog.OlogResourceDescriptors.ES_LOGBOOK_INDEX;
 import static gov.bnl.olog.OlogResourceDescriptors.ES_LOGBOOK_TYPE;
-import static gov.bnl.olog.OlogResourceDescriptors.ES_PROPERTY_INDEX;
-import static gov.bnl.olog.OlogResourceDescriptors.ES_PROPERTY_TYPE;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.io.IOException;
@@ -13,7 +11,6 @@ import java.util.List;
 import java.util.Optional;
 
 import org.elasticsearch.action.bulk.BulkRequest;
-import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
@@ -23,8 +20,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import gov.bnl.olog.entity.Logbook;
@@ -32,6 +29,7 @@ import gov.bnl.olog.entity.State;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = ElasticConfig.class)
+@TestPropertySource(locations="classpath:test_application.properties")
 public class LogbookRepositoryIT {
 
     @Autowired

@@ -24,6 +24,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.gridfs.GridFsOperations;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import gov.bnl.olog.LogRepository;
@@ -37,6 +38,7 @@ import junitx.framework.FileAssert;
 
 @RunWith(SpringRunner.class)
 @WebMvcTest(LogResource.class)
+@TestPropertySource(locations="classpath:test_application.properties")
 public class LogResourceIT
 {
 

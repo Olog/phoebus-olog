@@ -18,6 +18,7 @@ import org.springframework.data.mongodb.gridfs.GridFsOperations;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.mongodb.client.gridfs.model.GridFSFile;
@@ -28,6 +29,7 @@ import junitx.framework.FileAssert;
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = ElasticConfig.class)
 @SuppressWarnings("unused")
+@TestPropertySource(locations="classpath:test_application.properties")
 public class AttachmentRepositoryIT
 {
     @Autowired
