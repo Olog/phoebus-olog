@@ -1,7 +1,5 @@
 package gov.bnl.olog;
 
-import static gov.bnl.olog.OlogResourceDescriptors.ES_LOG_INDEX;
-import static gov.bnl.olog.OlogResourceDescriptors.ES_LOG_TYPE;
 import static gov.bnl.olog.OlogResourceDescriptors.ES_TAG_INDEX;
 import static gov.bnl.olog.OlogResourceDescriptors.ES_TAG_TYPE;
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
@@ -14,20 +12,17 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
 import org.elasticsearch.action.DocWriteResponse.Result;
-import org.elasticsearch.action.bulk.BulkAction;
 import org.elasticsearch.action.bulk.BulkRequest;
-import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
-import org.elasticsearch.action.search.SearchAction;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.support.WriteRequest;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
-import org.elasticsearch.client.Client;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.bytes.BytesReference;
@@ -60,25 +55,52 @@ public class TagRepository implements CrudRepository<Tag, String> {
 
     private static final ObjectMapper mapper = new ObjectMapper();
 
+    /**
+     * 
+     */
     @Override
-    public <S extends Tag> S save(S entity) {
-        return index(entity);
+    public <S extends Tag> S save(S tag)
+    {
+        try
+        {
+            IndexRequest indexRequest = new IndexRequest(ES_TAG_INDEX, ES_TAG_TYPE, tag.getName())
+                    .source(mapper.writeValueAsBytes(tag), XContentType.JSON);
+
+            IndexResponse response = client.index(indexRequest, RequestOptions.DEFAULT);
+            if (response.getResult().equals(Result.CREATED))
+            {
+                BytesReference ref = client
+                        .get(new GetRequest(ES_TAG_INDEX, ES_TAG_TYPE, response.getId()), RequestOptions.DEFAULT)
+                        .getSourceAsBytesRef();
+                Tag createdTag = mapper.readValue(ref.streamInput(), Tag.class);
+                return (S) createdTag;
+            }
+        } catch (Exception e)
+        {
+            TagsResource.log.log(Level.SEVERE, e.getMessage(), e);
+        }
+        return null;
     }
 
     @Override
-    public <S extends Tag> Iterable<S> saveAll(Iterable<S> tags) {
+    public <S extends Tag> Iterable<S> saveAll(Iterable<S> tags)
+    {
         BulkRequest bulk = new BulkRequest();
         tags.forEach(tag -> {
-            try {
+            try
+            {
                 bulk.add(new IndexRequest(ES_TAG_INDEX, ES_TAG_TYPE, tag.getName())
                         .source(mapper.writeValueAsBytes(tag), XContentType.JSON));
-            } catch (JsonProcessingException e) {
+            } catch (JsonProcessingException e)
+            {
                 TagsResource.log.log(Level.SEVERE, e.getMessage(), e);
             }
         });
         BulkResponse bulkResponse;
         try
         {
+
+            bulk.setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE);
             bulkResponse = client.bulk(bulk, RequestOptions.DEFAULT);
             if (bulkResponse.hasFailures())
             {
@@ -89,7 +111,6 @@ public class TagRepository implements CrudRepository<Tag, String> {
                         TagsResource.log.log(Level.SEVERE, response.getFailureMessage(),
                                 response.getFailure().getCause());
                     }
-                    ;
                 });
             } else
             {
@@ -104,23 +125,32 @@ public class TagRepository implements CrudRepository<Tag, String> {
     }
 
     @Override
-    public Optional<Tag> findById(String tagName) {
-        try {
+    public Optional<Tag> findById(String tagName)
+    {
+        try
+        {
             GetResponse result = client.get(new GetRequest(ES_TAG_INDEX, ES_TAG_TYPE, tagName), RequestOptions.DEFAULT);
-            if (result.isExists()) {
+            if (result.isExists())
+            {
                 return Optional.of(mapper.readValue(result.getSourceAsBytesRef().streamInput(), Tag.class));
-            } else {
-                return Optional.empty();
             }
-        } catch (Exception e) {
+        } catch (Exception e)
+        {
             TagsResource.log.log(Level.SEVERE, e.getMessage(), e);
         }
         return Optional.empty();
     }
 
     @Override
-    public boolean existsById(String id) {
-        // TODO Auto-generated method stub
+    public boolean existsById(String tagName) {
+        
+        try
+        {
+            return client.exists(new GetRequest(ES_TAG_INDEX, ES_TAG_TYPE, tagName), RequestOptions.DEFAULT);
+        } catch (IOException e)
+        {
+            TagsResource.log.log(Level.SEVERE, e.getMessage(), e);
+        }
         return false;
     }
 
@@ -168,7 +198,8 @@ public class TagRepository implements CrudRepository<Tag, String> {
         {
             UpdateResponse response = client.update(
                     new UpdateRequest(ES_TAG_INDEX, ES_TAG_TYPE, tagName)
-                            .doc(jsonBuilder().startObject().field("state", State.Inactive).endObject()),
+                            .doc(jsonBuilder().startObject().field("state", State.Inactive).endObject())
+                            .setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE),
                     RequestOptions.DEFAULT);
 
             if (response.getResult().equals(Result.UPDATED)) {
@@ -206,22 +237,4 @@ public class TagRepository implements CrudRepository<Tag, String> {
         return null;
     }
 
-    public <S extends Tag> S index(S tag) {
-        try {
-            IndexRequest indexRequest = new IndexRequest(ES_TAG_INDEX, ES_TAG_TYPE, tag.getName())
-                    .source(mapper.writeValueAsBytes(tag), XContentType.JSON);
-
-            IndexResponse response = client.index(indexRequest, RequestOptions.DEFAULT);
-            if (response.getResult().equals(Result.CREATED)) {
-                BytesReference ref = client
-                        .get(new GetRequest(ES_TAG_INDEX, ES_TAG_TYPE, response.getId()), RequestOptions.DEFAULT)
-                        .getSourceAsBytesRef();
-                Tag createdTag = mapper.readValue(ref.streamInput(), Tag.class);
-                return (S) createdTag;
-            }
-        } catch (Exception e) {
-            TagsResource.log.log(Level.SEVERE, e.getMessage(), e);
-        }
-        return null;
-    }
 }
