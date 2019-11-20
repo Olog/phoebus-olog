@@ -41,8 +41,14 @@ public class TagRepositoryIT {
     @Autowired
     private TagRepository tagRepository;
 
+    private Tag testTag1 = new Tag("test-tag-1", State.Active);
+    private Tag testTag2 = new Tag("test-tag-2", State.Active);
+    private Tag testTag3 = new Tag("test-tag-3", State.Active);
+    private Tag testTag4 = new Tag("test-tag-4", State.Active);
+
     @BeforeClass
-    public static void setup() {
+    public static void setup()
+    {
 
     }
 
@@ -92,10 +98,6 @@ public class TagRepositoryIT {
      */
     @Test
     public void createTags() throws IOException {
-        Tag testTag1 = new Tag("test-tag-1", State.Active);
-        Tag testTag2 = new Tag("test-tag-2", State.Active);
-        Tag testTag3 = new Tag("test-tag-3", State.Active);
-        Tag testTag4 = new Tag("test-tag-4", State.Active);
         List<Tag> tags = Arrays.asList(testTag1, testTag2, testTag3, testTag4);
         List<Tag> result = new ArrayList<Tag>();
         tagRepository.saveAll(tags).forEach(tag -> {
@@ -116,10 +118,6 @@ public class TagRepositoryIT {
     @Test
     public void findAllTags() throws IOException
     {
-        Tag testTag1 = new Tag("test-tag-1", State.Active);
-        Tag testTag2 = new Tag("test-tag-2", State.Active);
-        Tag testTag3 = new Tag("test-tag-3", State.Active);
-        Tag testTag4 = new Tag("test-tag-4", State.Active);
         List<Tag> tags = Arrays.asList(testTag1, testTag2, testTag3, testTag4);
         tagRepository.saveAll(tags);
 
@@ -135,10 +133,6 @@ public class TagRepositoryIT {
     @Test
     public void findAllTagsById() throws IOException
     {
-        Tag testTag1 = new Tag("test-tag-1", State.Active);
-        Tag testTag2 = new Tag("test-tag-2", State.Active);
-        Tag testTag3 = new Tag("test-tag-3", State.Active);
-        Tag testTag4 = new Tag("test-tag-4", State.Active);
         List<Tag> tags = Arrays.asList(testTag1, testTag2, testTag3, testTag4);
         tagRepository.saveAll(tags);
 
@@ -159,10 +153,10 @@ public class TagRepositoryIT {
     {
 
     }
+
     @Test
-    public void findById() throws IOException {
-        Tag testTag1 = new Tag("test-tag-1", State.Active);
-        Tag testTag2 = new Tag("test-tag-2", State.Active);
+    public void findById() throws IOException
+    {
         List<Tag> tags = Arrays.asList(testTag1, testTag2);
         tagRepository.saveAll(tags);
 
@@ -175,8 +169,6 @@ public class TagRepositoryIT {
 
     @Test
     public void checkTagExists() throws IOException {
-        Tag testTag1 = new Tag("test-tag-1", State.Active);
-        Tag testTag2 = new Tag("test-tag-2", State.Active);
         List<Tag> tags = Arrays.asList(testTag1, testTag2);
         tagRepository.saveAll(tags);
 
@@ -204,8 +196,7 @@ public class TagRepositoryIT {
             client.bulk(bulk, RequestOptions.DEFAULT);
         } catch (IOException e)
         {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            
         }
     }
 
