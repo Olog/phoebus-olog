@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.delete.DeleteRequest;
@@ -44,10 +45,19 @@ public class PropertyRepositoryIT
     @Autowired
     private PropertyRepository propertyRepository;
 
+
+    Set<Attribute> attributes = Stream.of(
+            new Attribute("test-attribute-1"),
+            new Attribute("test-attribute-2"))
+            .collect(Collectors.toSet());
+    
+    Property testProperty1 = new Property("test-property-1", testOwner, State.Active, attributes);
+    Property testProperty2 = new Property("test-property-2", testOwner, State.Active, attributes);
+    
     @BeforeClass
     public static void setup()
     {
-
+        
     }
 
     @AfterClass
@@ -65,18 +75,13 @@ public class PropertyRepositoryIT
     @Test
     public void createProperty() throws IOException
     {
-        Set<Attribute> attributes = new HashSet<Attribute>();
-        attributes.add(new Attribute("test-attribute-1"));
-        attributes.add(new Attribute("test-attribute-2"));
-        Property testProperty = new Property("test-property-1", testOwner, State.Active, attributes);
-        propertyRepository.index(testProperty);
-        Optional<Property> result = propertyRepository.findById(testProperty.getName());
-        assertThat("Failed to create Property " + testProperty,
-                result.isPresent() && result.get().equals(testProperty));
+        propertyRepository.index(testProperty1);
+        Optional<Property> result = propertyRepository.findById(testProperty1.getName());
+        assertThat("Failed to create Property " + testProperty1,
+                result.isPresent() && result.get().equals(testProperty1));
 
         // Manual cleanup since Olog does not delete things
-        client.delete(new DeleteRequest(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, testProperty.getName()),
-                RequestOptions.DEFAULT);
+        cleanupProperties(Arrays.asList(testProperty1));
     }
 
     /**
@@ -86,23 +91,18 @@ public class PropertyRepositoryIT
     @Test
     public void deleteProperty() throws IOException
     {
-        Set<Attribute> attributes = new HashSet<Attribute>();
-        attributes.add(new Attribute("test-attribute-1"));
-        attributes.add(new Attribute("test-attribute-2"));
-        Property testProperty = new Property("test-property-2", testOwner, State.Active, attributes);
-        propertyRepository.index(testProperty);
-        Optional<Property> result = propertyRepository.findById(testProperty.getName());
-        assertThat("Failed to create Property " + testProperty,
-                result.isPresent() && result.get().equals(testProperty));
+        propertyRepository.index(testProperty2);
+        Optional<Property> result = propertyRepository.findById(testProperty2.getName());
+        assertThat("Failed to create Property " + testProperty2,
+                result.isPresent() && result.get().equals(testProperty2));
 
-        propertyRepository.delete(testProperty);
-        result = propertyRepository.findById(testProperty.getName());
-        testProperty.setState(State.Inactive);
-        assertThat("Failed to delete Property", result.isPresent() && result.get().equals(testProperty));
+        propertyRepository.delete(testProperty2);
+        result = propertyRepository.findById(testProperty2.getName());
+        testProperty2.setState(State.Inactive);
+        assertThat("Failed to delete Property", result.isPresent() && result.get().equals(testProperty2));
 
         // Manual cleanup since Olog does not delete things
-        client.delete(new DeleteRequest(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, testProperty.getName()),
-                RequestOptions.DEFAULT);
+        cleanupProperties(Arrays.asList(testProperty2));
     }
 
     /**
@@ -112,29 +112,24 @@ public class PropertyRepositoryIT
     @Test
     public void deletePropertyAttribute() throws IOException
     {
-        Set<Attribute> attributes = new HashSet<Attribute>();
-        attributes.add(new Attribute("test-attribute-1"));
-        attributes.add(new Attribute("test-attribute-2"));
-        Property testProperty = new Property("test-property-2", testOwner, State.Active, attributes);
-        propertyRepository.index(testProperty);
-        Optional<Property> result = propertyRepository.findById(testProperty.getName());
-        assertThat("Failed to create Property " + testProperty,
-                result.isPresent() && result.get().equals(testProperty));
+        propertyRepository.index(testProperty2);
+        Optional<Property> result = propertyRepository.findById(testProperty2.getName());
+        assertThat("Failed to create Property " + testProperty2,
+                result.isPresent() && result.get().equals(testProperty2));
 
-        propertyRepository.deleteAttribute(testProperty.getName(), "test-attribute-1");
-        result = propertyRepository.findById(testProperty.getName());
-        testProperty.setAttributes(testProperty.getAttributes().stream().map(p -> {
+        propertyRepository.deleteAttribute(testProperty2.getName(), "test-attribute-1");
+        result = propertyRepository.findById(testProperty2.getName());
+        testProperty2.setAttributes(testProperty2.getAttributes().stream().map(p -> {
             if (p.getName().equals("test-attribute-1"))
             {
                 p.setState(State.Inactive);
             }
             return p;
         }).collect(Collectors.toSet()));
-        assertThat("Failed to delete Property", result.isPresent() && result.get().equals(testProperty));
+        assertThat("Failed to delete Property", result.isPresent() && result.get().equals(testProperty2));
 
         // Manual cleanup since Olog does not delete things
-        client.delete(new DeleteRequest(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, testProperty.getName()),
-                RequestOptions.DEFAULT);
+        cleanupProperties(Arrays.asList(testProperty2));
     }
 
     /**
@@ -144,9 +139,6 @@ public class PropertyRepositoryIT
     @Test
     public void createProperties() throws IOException
     {
-        Set<Attribute> attributes = new HashSet<Attribute>();
-        attributes.add(new Attribute("test-attribute-1"));
-        attributes.add(new Attribute("test-attribute-2"));
         Property testProperty1 = new Property("test-property-1", testOwner, State.Active, attributes);
         Property testProperty2 = new Property("test-property-2", testOwner, State.Active, attributes);
         Property testProperty3 = new Property("test-property-3", testOwner, State.Active, attributes);
@@ -172,13 +164,27 @@ public class PropertyRepositoryIT
         assertThat("Failed to list all properties", findAll.containsAll(properties));
 
         // Manual cleanup since Olog does not delete things
+        cleanupProperties(properties);
+    }
 
-        BulkRequest bulk = new BulkRequest();
-        properties.forEach(property -> {
-            bulk.add(new DeleteRequest(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE,
-                    property.getName()));
-        });
-        client.bulk(bulk, RequestOptions.DEFAULT);
+    /**
+     * Clean up the properties
+     * @param properties
+     */
+    private void cleanupProperties(List<Property> properties)
+    {
+        try
+        {
+            BulkRequest bulk = new BulkRequest();
+            properties.forEach(property -> {
+                bulk.add(new DeleteRequest(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, property.getName()));
+            });
+            client.bulk(bulk, RequestOptions.DEFAULT);
+        } catch (IOException e)
+        {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 
 }
