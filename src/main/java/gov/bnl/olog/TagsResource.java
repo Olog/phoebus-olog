@@ -34,7 +34,6 @@ public class TagsResource {
     @Autowired
     private TagRepository tagRepository;
 
-    private static Logger audit = Logger.getLogger(TagsResource.class.getName() + ".audit");
     static Logger log = Logger.getLogger(TagsResource.class.getName());
 
     /** Creates a new instance of TagsResource */
@@ -42,21 +41,23 @@ public class TagsResource {
     {
     }
 
+    /**
+     * GET method for retrieving the list of tags in the database.
+     *
+     * @return list of tags
+     */
     @GetMapping
-    public Iterable findAll()
+    public Iterable<Tag> findAll()
     {
         return tagRepository.findAll();
     }
 
-    @PostMapping
-    public Iterable<Tag> updateTag(@RequestBody final List<Tag> tags)
-    {
-        // TODO Check permissions
-        // TODO Validate
-        // TODO Create a tag
-        return tagRepository.saveAll(tags);
-    }
-
+    /**
+     * Get method for retrieving the tag with name matching tagName
+     * 
+     * @param tagName
+     * @return the matching tag, or null
+     */
     @GetMapping("/{tagName}")
     public Tag findByTitle(@PathVariable String tagName)
     {
@@ -68,8 +69,7 @@ public class TagsResource {
     {
         // TODO Check permissions
         // TODO Validate
-        // TODO Create a tag
-        return tagRepository.index(tag);
+        return tagRepository.save(tag);
     }
 
     @PostMapping("/{tagName}")
@@ -77,8 +77,15 @@ public class TagsResource {
     {
         // TODO Check permissions
         // TODO Validate
-        // TODO Create a tag
         return tagRepository.save(tag);
+    }
+
+    @PostMapping
+    public Iterable<Tag> updateTag(@RequestBody final List<Tag> tags)
+    {
+        // TODO Check permissions
+        // TODO Validate
+        return tagRepository.saveAll(tags);
     }
 
     @DeleteMapping("/{tagName}")
@@ -87,31 +94,6 @@ public class TagsResource {
         tagRepository.deleteById(tagName);
     }
 
-//    /**
-//     * GET method for retrieving the list of tags in the database.
-//     *
-//     * @return list of logs with their logbooks and tags that match
-//     */
-//
-//    @GET
-//    @Produces({"application/xml", "application/json"})
-//    public Response list() {
-//        OlogImpl cm = OlogImpl.getInstance();
-//        String user = securityContext.getUserPrincipal() != null ? securityContext.getUserPrincipal().getName() : "";
-//        Tags result = null;
-//        try {
-//            result = cm.listTags();
-//            Response r = Response.ok(result).build();
-//            log.fine(user + "|" + uriInfo.getPath() + "|GET|OK|" + r.getStatus()
-//                    + "|returns " + result.getTags().size() + " tags");
-//            return r;
-//        } catch (OlogException e) {
-//            log.warning(user + "|" + uriInfo.getPath() + "|GET|ERROR|"
-//                    + e.getResponseStatusCode() +  "|cause=" + e);
-//            return e.toResponse();
-//        }
-//    }
-//
 //    /**
 //     * POST method for creating multiple tags.
 //     *

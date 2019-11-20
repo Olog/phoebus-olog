@@ -12,11 +12,8 @@ import org.springframework.data.mongodb.gridfs.GridFsOperations;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
-
 import com.mongodb.client.gridfs.model.GridFSFile;
-
 import gov.bnl.olog.entity.Attachment;
-
 
 @Repository
 public class AttachmentRepository implements CrudRepository<Attachment, String>

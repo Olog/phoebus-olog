@@ -101,7 +101,7 @@ public class LogRepositoryIT
     public void createLog() throws IOException
     {
         logbookRepository.index(testLogbook);
-        tagRepository.index(testTag);
+        tagRepository.save(testTag);
         propertyRepository.index(testProperty);
 
         // create a log entry with a logbook only
@@ -146,7 +146,7 @@ public class LogRepositoryIT
     public void createLogWithAttachment() throws IOException
     {
         logbookRepository.index(testLogbook);
-        tagRepository.index(testTag);
+        tagRepository.save(testTag);
         propertyRepository.index(testProperty);
 
         try

@@ -16,6 +16,9 @@ import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;
+import org.elasticsearch.action.get.MultiGetItemResponse;
+import org.elasticsearch.action.get.MultiGetRequest;
+import org.elasticsearch.action.get.MultiGetResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchRequest;
@@ -34,7 +37,9 @@ import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.repository.CrudRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Repository;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -181,9 +186,32 @@ public class TagRepository implements CrudRepository<Tag, String> {
     }
 
     @Override
-    public Iterable<Tag> findAllById(Iterable<String> ids) {
-        // TODO Auto-generated method stub
-        return null;
+    public Iterable<Tag> findAllById(Iterable<String> tagNames)
+    {
+        MultiGetRequest request = new MultiGetRequest();
+
+        for (String tagName : tagNames)
+        {
+            request.add(new MultiGetRequest.Item(ES_TAG_INDEX, ES_TAG_TYPE, tagName));
+        }
+        try
+        {
+            List<Tag> foundChannels = new ArrayList<Tag>();
+            MultiGetResponse response = client.mget(request, RequestOptions.DEFAULT);
+            for (MultiGetItemResponse multiGetItemResponse : response)
+            {
+                if (!multiGetItemResponse.isFailed())
+                {
+                    foundChannels.add(mapper.readValue(
+                            multiGetItemResponse.getResponse().getSourceAsBytesRef().streamInput(), Tag.class));
+                }
+            }
+            return foundChannels;
+        } catch (Exception e)
+        {
+            TagsResource.log.log(Level.SEVERE, "Failed to find tags: " + tagNames, e);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to find tags: " + tagNames, null);
+        }
     }
 
     @Override
@@ -211,8 +239,10 @@ public class TagRepository implements CrudRepository<Tag, String> {
             }
         } catch (DocumentMissingException e) {
             TagsResource.log.log(Level.SEVERE, tagName + " Does not exist and thus cannot be deleted");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to delete tag: " + tagName + " because it does not exist", e);
         } catch (Exception e) {
             TagsResource.log.log(Level.SEVERE, e.getMessage(), e);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to delete tag: " + tagName, e);
         }
     }
 

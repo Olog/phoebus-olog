@@ -35,7 +35,6 @@ public class PropertiesResource {
     @Autowired
     private PropertyRepository propertyRepository;
 
-    private static Logger audit = Logger.getLogger(PropertiesResource.class.getName() + ".audit");
     static Logger log = Logger.getLogger(PropertiesResource.class.getName());
 
     /** Creates a new instance of LogbooksResource */
