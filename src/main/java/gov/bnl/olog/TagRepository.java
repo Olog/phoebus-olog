@@ -69,7 +69,8 @@ public class TagRepository implements CrudRepository<Tag, String> {
         try
         {
             IndexRequest indexRequest = new IndexRequest(ES_TAG_INDEX, ES_TAG_TYPE, tag.getName())
-                    .source(mapper.writeValueAsBytes(tag), XContentType.JSON);
+                    .source(mapper.writeValueAsBytes(tag), XContentType.JSON)
+                    .setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE);;
 
             IndexResponse response = client.index(indexRequest, RequestOptions.DEFAULT);
             if (response.getResult().equals(Result.CREATED))
@@ -104,7 +105,6 @@ public class TagRepository implements CrudRepository<Tag, String> {
         BulkResponse bulkResponse;
         try
         {
-
             bulk.setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE);
             bulkResponse = client.bulk(bulk, RequestOptions.DEFAULT);
             if (bulkResponse.hasFailures())
@@ -259,12 +259,6 @@ public class TagRepository implements CrudRepository<Tag, String> {
     @Override
     public void deleteAll() {
         // TODO Auto-generated method stub
-
-    }
-
-    public Iterable<Tag> search(String tagName) {
-        // QueryBuilders.wildcardQuery(TAG_INDEX, tagName);
-        return null;
     }
 
 }

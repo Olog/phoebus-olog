@@ -21,6 +21,7 @@ import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.support.WriteRequest;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.RequestOptions;
@@ -74,6 +75,7 @@ public class PropertyRepository implements CrudRepository<Property, String>
         BulkResponse bulkResponse;
         try
         {
+            bulk.setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE);
             bulkResponse = client.bulk(bulk, RequestOptions.DEFAULT);
 
             if (bulkResponse.hasFailures())
@@ -85,7 +87,6 @@ public class PropertyRepository implements CrudRepository<Property, String>
                         PropertiesResource.log.log(Level.SEVERE, response.getFailureMessage(),
                                 response.getFailure().getCause());
                     }
-                    ;
                 });
             } else
             {
