@@ -19,7 +19,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.core.io.Resource;
-import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.gridfs.GridFsOperations;
@@ -27,9 +26,6 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import gov.bnl.olog.LogRepository;
-import gov.bnl.olog.LogResource;
-import gov.bnl.olog.LogbookRepository;
 import gov.bnl.olog.entity.Attachment;
 import gov.bnl.olog.entity.Log;
 import gov.bnl.olog.entity.Logbook;

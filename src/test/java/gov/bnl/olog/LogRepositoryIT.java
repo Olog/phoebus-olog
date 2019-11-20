@@ -8,6 +8,7 @@ import static gov.bnl.olog.OlogResourceDescriptors.ES_PROPERTY_INDEX;
 import static gov.bnl.olog.OlogResourceDescriptors.ES_PROPERTY_TYPE;
 import static gov.bnl.olog.OlogResourceDescriptors.ES_TAG_INDEX;
 import static gov.bnl.olog.OlogResourceDescriptors.ES_TAG_TYPE;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
@@ -76,7 +77,13 @@ public class LogRepositoryIT
     @BeforeClass
     public static void setup()
     {
+        testLogbook = new Logbook("test-logbook-1", testOwner, State.Active);
+        testTag = new Tag("test-tag-1", State.Active);
 
+        Set<Attribute> attributes = new HashSet<Attribute>();
+        attributes.add(new Attribute("test-attribute-1"));
+        attributes.add(new Attribute("test-attribute-2"));
+        testProperty = new Property("test-property-1", testOwner, State.Active, attributes);
     }
 
     @AfterClass
@@ -93,16 +100,8 @@ public class LogRepositoryIT
     @Test
     public void createLog() throws IOException
     {
-        testLogbook = new Logbook("test-logbook-1", testOwner, State.Active);
         logbookRepository.index(testLogbook);
-
-        testTag = new Tag("test-tag-1", State.Active);
         tagRepository.index(testTag);
-
-        Set<Attribute> attributes = new HashSet<Attribute>();
-        attributes.add(new Attribute("test-attribute-1"));
-        attributes.add(new Attribute("test-attribute-2"));
-        testProperty = new Property("test-property-1", testOwner, State.Active, attributes);
         propertyRepository.index(testProperty);
 
         // create a log entry with a logbook only
@@ -140,22 +139,14 @@ public class LogRepositoryIT
     }
 
     /**
-     * Test the creation of a simple test log
+     * Test the creation of a simple test log with attachments
      * @throws IOException 
      */
     @Test
     public void createLogWithAttachment() throws IOException
     {
-        testLogbook = new Logbook("test-logbook-1", testOwner, State.Active);
         logbookRepository.index(testLogbook);
-
-        testTag = new Tag("test-tag-1", State.Active);
         tagRepository.index(testTag);
-
-        Set<Attribute> attributes = new HashSet<Attribute>();
-        attributes.add(new Attribute("test-attribute-1"));
-        attributes.add(new Attribute("test-attribute-2"));
-        testProperty = new Property("test-property-1", testOwner, State.Active, attributes);
         propertyRepository.index(testProperty);
 
         try
@@ -225,8 +216,21 @@ public class LogRepositoryIT
             // Manual cleanup since Olog does not delete things
             client.delete(new DeleteRequest(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, testProperty.getName()),
             RequestOptions.DEFAULT);
-
         }
+    }
+
+    @Test
+    public void checkLogExists()
+    {
+        // check for non existing log entry 
+        assertFalse("Failed to check non existance of log entry 123456789" , logRepository.existsById("123456789"));
+
+        // check for an existing log entry
+        Log log = Log.LogBuilder.createLog("This is a test entry").owner(testOwner).withLogbook(testLogbook).build();
+        Log createdLog = logRepository.save(log);
+
+        assertTrue("Failed to create a log entry with a valid id", createdLog.getId() != null);
+        assertTrue("Failed to check existance of log entry " + createdLog.getId(), logRepository.existsById(String.valueOf(createdLog.getId())));
 
     }
 }

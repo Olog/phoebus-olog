@@ -113,8 +113,13 @@ public class LogRepository implements CrudRepository<Log, String>
     @Override
     public boolean existsById(String id)
     {
-        // TODO Auto-generated method stub
-        return false;
+        try
+        {
+            return client.exists(new GetRequest(ES_LOG_INDEX, ES_LOG_TYPE, id), RequestOptions.DEFAULT);
+        } catch (IOException e)
+        {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to check existance of log with id " + id, e);
+        }
     }
 
     @Override
