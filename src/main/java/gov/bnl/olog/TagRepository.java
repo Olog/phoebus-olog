@@ -81,11 +81,12 @@ public class TagRepository implements CrudRepository<Tag, String> {
                 Tag createdTag = mapper.readValue(ref.streamInput(), Tag.class);
                 return (S) createdTag;
             }
+            return null;
         } catch (Exception e)
         {
             TagsResource.log.log(Level.SEVERE, e.getMessage(), e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to create tag: " + tag, e);
         }
-        return null;
     }
 
     @Override
@@ -100,6 +101,7 @@ public class TagRepository implements CrudRepository<Tag, String> {
             } catch (JsonProcessingException e)
             {
                 TagsResource.log.log(Level.SEVERE, e.getMessage(), e);
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to create tags: " + tags, e);
             }
         });
         BulkResponse bulkResponse;
@@ -117,16 +119,16 @@ public class TagRepository implements CrudRepository<Tag, String> {
                                 response.getFailure().getCause());
                     }
                 });
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                        "Failed to create tags: " + tags);
             } else
             {
                 return tags;
             }
         } catch (IOException e)
         {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to create tags: " + tags, e);
         }
-        return null;
     }
 
     @Override
@@ -139,11 +141,12 @@ public class TagRepository implements CrudRepository<Tag, String> {
             {
                 return Optional.of(mapper.readValue(result.getSourceAsBytesRef().streamInput(), Tag.class));
             }
+            return Optional.empty();
         } catch (Exception e)
         {
             TagsResource.log.log(Level.SEVERE, e.getMessage(), e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to find tag: " + tagName, e);
         }
-        return Optional.empty();
     }
 
     @Override
@@ -155,8 +158,8 @@ public class TagRepository implements CrudRepository<Tag, String> {
         } catch (IOException e)
         {
             TagsResource.log.log(Level.SEVERE, e.getMessage(), e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to find tag: " + tagName, e);
         }
-        return false;
     }
 
     @Override
@@ -181,8 +184,8 @@ public class TagRepository implements CrudRepository<Tag, String> {
             return result;
         } catch (Exception e) {
             TagsResource.log.log(Level.SEVERE, e.getMessage(), e);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to find tags: ", e);
         }
-        return null;
     }
 
     @Override
@@ -258,7 +261,7 @@ public class TagRepository implements CrudRepository<Tag, String> {
 
     @Override
     public void deleteAll() {
-        // TODO Auto-generated method stub
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Deleteting all tags not allowed");
     }
 
 }
