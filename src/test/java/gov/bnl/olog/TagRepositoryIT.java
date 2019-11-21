@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.delete.DeleteRequest;
@@ -63,13 +64,12 @@ public class TagRepositoryIT {
      */
     @Test
     public void createTag() throws IOException {
-        Tag testTag = new Tag("test-tag-1", State.Active);
-        tagRepository.save(testTag);
-        Optional<Tag> result = tagRepository.findById(testTag.getName());
-        assertThat("Failed to create Tag " + testTag, result.isPresent() && result.get().equals(testTag));
+        tagRepository.save(testTag1);
+        Optional<Tag> result = tagRepository.findById(testTag1.getName());
+        assertThat("Failed to create Tag " + testTag1, result.isPresent() && result.get().equals(testTag1));
 
         // Manual cleanup since Olog does not delete things
-        client.delete(new DeleteRequest(ES_TAG_INDEX, ES_TAG_TYPE, testTag.getName()), RequestOptions.DEFAULT);
+        client.delete(new DeleteRequest(ES_TAG_INDEX, ES_TAG_TYPE, testTag1.getName()), RequestOptions.DEFAULT);
     }
 
     /**
@@ -78,18 +78,17 @@ public class TagRepositoryIT {
      */
     @Test
     public void deleteTag() throws IOException {
-        Tag testTag = new Tag("test-tag-2", State.Active);
-        tagRepository.save(testTag);
-        Optional<Tag> result = tagRepository.findById(testTag.getName());
-        assertThat("Failed to create Tag " + testTag, result.isPresent() && result.get().equals(testTag));
+        tagRepository.save(testTag2);
+        Optional<Tag> result = tagRepository.findById(testTag2.getName());
+        assertThat("Failed to create Tag " + testTag2, result.isPresent() && result.get().equals(testTag2));
 
-        tagRepository.delete(testTag);
-        result = tagRepository.findById(testTag.getName());
-        testTag.setState(State.Inactive);
-        assertThat("Failed to delete Tag", result.isPresent() && result.get().equals(testTag));
+        tagRepository.delete(testTag2);
+        result = tagRepository.findById(testTag2.getName());
+        Tag expectedTag = new Tag("test-tag-2", State.Inactive);
+        assertThat("Failed to delete Tag", result.isPresent() && result.get().equals(expectedTag));
 
         // Manual cleanup since Olog does not delete things
-        client.delete(new DeleteRequest(ES_TAG_INDEX, ES_TAG_TYPE, testTag.getName()), RequestOptions.DEFAULT);
+        client.delete(new DeleteRequest(ES_TAG_INDEX, ES_TAG_TYPE, testTag2.getName()), RequestOptions.DEFAULT);
     }
 
     /**
@@ -97,55 +96,98 @@ public class TagRepositoryIT {
      * @throws IOException 
      */
     @Test
-    public void createTags() throws IOException {
+    public void createTags() throws IOException
+    {
         List<Tag> tags = Arrays.asList(testTag1, testTag2, testTag3, testTag4);
-        List<Tag> result = new ArrayList<Tag>();
-        tagRepository.saveAll(tags).forEach(tag -> {
-            result.add(tag);
-        });
-        assertThat("Failed to create multiple tags", result.containsAll(tags));
+        try
+        {
+            List<Tag> result = new ArrayList<Tag>();
+            tagRepository.saveAll(tags).forEach(tag -> {
+                result.add(tag);
+            });
+            assertThat("Failed to create multiple tags", result.containsAll(tags));
 
-        List<Tag> findAll = new ArrayList<Tag>();
-        tagRepository.findAll().forEach(tag -> {
-            findAll.add(tag);
-        });
-        assertThat("Failed to create multiple tags ", findAll.containsAll(tags));
-
-        // Manual cleanup
-        cleanUp(tags);
+            List<Tag> findAll = new ArrayList<Tag>();
+            tagRepository.findAll().forEach(tag -> {
+                findAll.add(tag);
+            });
+            assertThat("Failed to create multiple tags ", findAll.containsAll(tags));
+        } finally
+        {
+            // Manual cleanup
+            cleanUp(tags);
+        }
     }
 
+    /**
+     * delete a set of tags
+     * 
+     * @throws IOException
+     */
+    @Test
+    public void deleteTags() throws IOException {
+        List<Tag> tags = Arrays.asList(testTag1, testTag2, testTag3, testTag4);
+        try
+        {
+            List<Tag> result = new ArrayList<Tag>();
+            tagRepository.saveAll(tags).forEach(tag -> {
+                result.add(tag);
+            });
+
+            tagRepository.deleteAll(tags);
+            List<Tag> inactiveTags = new ArrayList<Tag>();
+            tagRepository.findAllById(tags.stream().map(Tag::getName).collect(Collectors.toList())).forEach(tag -> {
+                if (tag.getState().equals(State.Inactive))
+                {
+                    inactiveTags.add(tag);
+                }
+            });
+            assertThat("Failed to delete multiple tags ", inactiveTags.containsAll(tags));
+        } finally
+        {
+            // Manual cleanup
+            cleanUp(tags);
+        }
+    }
     @Test
     public void findAllTags() throws IOException
     {
         List<Tag> tags = Arrays.asList(testTag1, testTag2, testTag3, testTag4);
-        tagRepository.saveAll(tags);
-
-        List<Tag> findAll = new ArrayList<Tag>();
-        tagRepository.findAll().forEach(tag -> {
-            findAll.add(tag);
-        });
-        assertThat("Failed to list all tags", findAll.containsAll(tags));
-        // Manual cleanup
-        cleanUp(tags);
+        try
+        {
+            tagRepository.saveAll(tags);
+            List<Tag> findAll = new ArrayList<Tag>();
+            tagRepository.findAll().forEach(tag -> {
+                findAll.add(tag);
+            });
+            assertThat("Failed to list all tags", findAll.containsAll(tags));
+        } finally
+        {
+            // Manual cleanup
+            cleanUp(tags);
+        }
     }
 
     @Test
     public void findAllTagsById() throws IOException
     {
         List<Tag> tags = Arrays.asList(testTag1, testTag2, testTag3, testTag4);
-        tagRepository.saveAll(tags);
+        try
+        {
+            tagRepository.saveAll(tags);
 
-        List<Tag> findAllById = new ArrayList<Tag>();
-        tagRepository.findAllById(Arrays.asList("test-tag-1", "test-tag-2")).forEach(tag -> {
-            findAllById.add(tag);
-        });
-        assertTrue("Failed to search by id test-tag-1 and test-tag-2 " ,
-                findAllById.size() == 2
-                && findAllById.contains(testTag1)
-                && findAllById.contains(testTag2));
-        // Manual cleanup
-        cleanUp(tags);
+            List<Tag> findAllById = new ArrayList<Tag>();
+            tagRepository.findAllById(Arrays.asList("test-tag-1", "test-tag-2"))
+                                        .forEach(tag -> {
+                                            findAllById.add(tag);
+                                        });
+            assertTrue("Failed to search by id test-tag-1 and test-tag-2 ",
+                    findAllById.size() == 2 && findAllById.contains(testTag1) && findAllById.contains(testTag2));
+        } finally
+        {
+            // Manual cleanup
+            cleanUp(tags);
+        }
     }
 
     @Test
@@ -158,27 +200,36 @@ public class TagRepositoryIT {
     public void findById() throws IOException
     {
         List<Tag> tags = Arrays.asList(testTag1, testTag2);
-        tagRepository.saveAll(tags);
-
-        assertTrue("Failed to find by index tag: " + testTag1, testTag1.equals(tagRepository.findById(testTag1.getName()).get()));
-        assertTrue("Failed to find by index tag: " + testTag2, testTag2.equals(tagRepository.findById(testTag2.getName()).get()));
-
-        // Manual cleanup
-        cleanUp(tags);
+        try
+        {
+            tagRepository.saveAll(tags);
+            assertTrue("Failed to find by index tag: " + testTag1,
+                    testTag1.equals(tagRepository.findById(testTag1.getName()).get()));
+            assertTrue("Failed to find by index tag: " + testTag2,
+                    testTag2.equals(tagRepository.findById(testTag2.getName()).get()));
+        } finally
+        {
+            // Manual cleanup
+            cleanUp(tags);
+        }
     }
 
     @Test
     public void checkTagExists() throws IOException {
         List<Tag> tags = Arrays.asList(testTag1, testTag2);
-        tagRepository.saveAll(tags);
+        try
+        {
+            tagRepository.saveAll(tags);
 
-        assertTrue("Failed to check if exists tag: " + testTag1, tagRepository.existsById(testTag1.getName()));
-        assertTrue("Failed to check if exists tag: " + testTag2, tagRepository.existsById(testTag2.getName()));
+            assertTrue("Failed to check if exists tag: " + testTag1, tagRepository.existsById(testTag1.getName()));
+            assertTrue("Failed to check if exists tag: " + testTag2, tagRepository.existsById(testTag2.getName()));
 
-        assertFalse("Failed to check if exists tag: non-existant-tag", tagRepository.existsById("non-existant-tag"));
-
-        // Manual cleanup
-        cleanUp(tags);
+            assertFalse("Failed to check if exists tag: non-existant-tag", tagRepository.existsById("non-existant-tag"));
+        } finally
+        {
+            // Manual cleanup
+            cleanUp(tags);
+        }
     }
     
     /**
