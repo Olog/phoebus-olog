@@ -21,10 +21,8 @@ import java.util.logging.Logger;
 import org.apache.http.HttpHost;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.get.GetIndexRequest;
-import org.elasticsearch.action.admin.indices.template.get.GetIndexTemplatesRequest;
-import org.elasticsearch.action.admin.indices.template.get.GetIndexTemplatesResponse;
 import org.elasticsearch.action.admin.indices.template.put.PutIndexTemplateRequest;
-import org.elasticsearch.action.admin.indices.template.put.PutIndexTemplateResponse;
+import org.elasticsearch.action.support.master.AcknowledgedResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
@@ -56,7 +54,7 @@ public class ElasticConfig
     private RestHighLevelClient searchClient;
     private RestHighLevelClient indexClient;
 
-    @Bean({"searchClient"})
+    @Bean({ "searchClient" })
     public RestHighLevelClient getSearchClient()
     {
         if (searchClient == null)
@@ -66,7 +64,7 @@ public class ElasticConfig
         return searchClient;
     }
 
-    @Bean({"indexClient"})
+    @Bean({ "indexClient" })
     public RestHighLevelClient getIndexClient()
     {
         if (indexClient == null)
@@ -81,9 +79,11 @@ public class ElasticConfig
      * Checks for the existence of the elastic indices needed for Olog and creates
      * them with the appropriate mapping is they are missing.
      * 
-     * @param indexClient the elastic client instance used to validate and create olog indices
+     * @param indexClient the elastic client instance used to validate and create
+     *                    olog indices
      */
-    private static synchronized void elasticIndexValidation(RestHighLevelClient indexClient) {
+    private static synchronized void elasticIndexValidation(RestHighLevelClient indexClient)
+    {
         // Create/migrate the tag index
 
         try
@@ -161,22 +161,16 @@ public class ElasticConfig
 
         try
         {
-            GetIndexTemplatesResponse response = indexClient.indices().getTemplate(new GetIndexTemplatesRequest(ES_LOG_INDEX + "_template"), RequestOptions.DEFAULT);
-            if (response.getIndexTemplates().isEmpty())
-            {
-                PutIndexTemplateRequest templateRequest = new PutIndexTemplateRequest(ES_LOG_INDEX + "_template");
-                templateRequest.patterns(Arrays.asList(ES_LOG_INDEX));
+            PutIndexTemplateRequest templateRequest = new PutIndexTemplateRequest(ES_LOG_INDEX + "_template");
+            templateRequest.patterns(Arrays.asList(ES_LOG_INDEX));
 
-                ObjectMapper mapper = new ObjectMapper();
-                InputStream is = ElasticConfig.class.getResourceAsStream("/log_template_mapping.json");
+            ObjectMapper mapper = new ObjectMapper();
+            InputStream is = ElasticConfig.class.getResourceAsStream("/log_template_mapping.json");
 
-                Map<String, String> jsonMap = mapper.readValue(is, Map.class);
-                templateRequest.mapping(ES_LOG_TYPE, XContentFactory.jsonBuilder().map(jsonMap));
-                templateRequest.create(true);
-
-                PutIndexTemplateResponse putTemplateResponse = indexClient.indices().putTemplate(templateRequest,
-                        RequestOptions.DEFAULT);
-            }
+            Map<String, String> jsonMap = mapper.readValue(is, Map.class);
+            templateRequest.mapping(ES_LOG_TYPE, XContentFactory.jsonBuilder().map(jsonMap));
+            templateRequest.create(true);
+            AcknowledgedResponse response = indexClient.indices().putTemplate(templateRequest, RequestOptions.DEFAULT);
         } catch (IOException e)
         {
             logger.log(Level.WARNING, "Failed to create template for index " + ES_LOG_TYPE, e);
