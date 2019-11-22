@@ -70,7 +70,7 @@ public class TagRepository implements CrudRepository<Tag, String> {
         {
             IndexRequest indexRequest = new IndexRequest(ES_TAG_INDEX, ES_TAG_TYPE, tag.getName())
                     .source(mapper.writeValueAsBytes(tag), XContentType.JSON)
-                    .setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE);;
+                    .setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE);
 
             IndexResponse response = client.index(indexRequest, RequestOptions.DEFAULT);
             if (response.getResult().equals(Result.CREATED))
@@ -151,7 +151,6 @@ public class TagRepository implements CrudRepository<Tag, String> {
 
     @Override
     public boolean existsById(String tagName) {
-        
         try
         {
             return client.exists(new GetRequest(ES_TAG_INDEX, ES_TAG_TYPE, tagName), RequestOptions.DEFAULT);
@@ -192,7 +191,6 @@ public class TagRepository implements CrudRepository<Tag, String> {
     public Iterable<Tag> findAllById(Iterable<String> tagNames)
     {
         MultiGetRequest request = new MultiGetRequest();
-
         for (String tagName : tagNames)
         {
             request.add(new MultiGetRequest.Item(ES_TAG_INDEX, ES_TAG_TYPE, tagName));

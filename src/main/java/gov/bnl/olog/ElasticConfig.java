@@ -21,6 +21,8 @@ import java.util.logging.Logger;
 import org.apache.http.HttpHost;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.get.GetIndexRequest;
+import org.elasticsearch.action.admin.indices.template.get.GetIndexTemplatesRequest;
+import org.elasticsearch.action.admin.indices.template.get.GetIndexTemplatesResponse;
 import org.elasticsearch.action.admin.indices.template.put.PutIndexTemplateRequest;
 import org.elasticsearch.action.support.master.AcknowledgedResponse;
 import org.elasticsearch.client.RequestOptions;
@@ -161,16 +163,23 @@ public class ElasticConfig
 
         try
         {
-            PutIndexTemplateRequest templateRequest = new PutIndexTemplateRequest(ES_LOG_INDEX + "_template");
-            templateRequest.patterns(Arrays.asList(ES_LOG_INDEX));
+            GetIndexTemplatesResponse templates = indexClient.indices().getTemplate(new GetIndexTemplatesRequest("*"), RequestOptions.DEFAULT);
+            if (!templates.getIndexTemplates().stream().anyMatch(i -> {
+                return i.get().getName().equalsIgnoreCase(ES_LOG_INDEX + "_template");
+            }))
+            {
+                PutIndexTemplateRequest templateRequest = new PutIndexTemplateRequest(ES_LOG_INDEX + "_template");
 
-            ObjectMapper mapper = new ObjectMapper();
-            InputStream is = ElasticConfig.class.getResourceAsStream("/log_template_mapping.json");
+                templateRequest.patterns(Arrays.asList(ES_LOG_INDEX));
 
-            Map<String, String> jsonMap = mapper.readValue(is, Map.class);
-            templateRequest.mapping(ES_LOG_TYPE, XContentFactory.jsonBuilder().map(jsonMap));
-            templateRequest.create(true);
-            AcknowledgedResponse response = indexClient.indices().putTemplate(templateRequest, RequestOptions.DEFAULT);
+                ObjectMapper mapper = new ObjectMapper();
+                InputStream is = ElasticConfig.class.getResourceAsStream("/log_template_mapping.json");
+
+                Map<String, String> jsonMap = mapper.readValue(is, Map.class);
+                templateRequest.mapping(ES_LOG_TYPE, XContentFactory.jsonBuilder().map(jsonMap));
+                templateRequest.create(true);
+                indexClient.indices().putTemplate(templateRequest, RequestOptions.DEFAULT);
+            }
         } catch (IOException e)
         {
             logger.log(Level.WARNING, "Failed to create template for index " + ES_LOG_TYPE, e);
