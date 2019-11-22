@@ -29,7 +29,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.gridfs.GridFsOperations;
@@ -100,7 +99,7 @@ public class LogRepositoryIT
     @Test
     public void createLog() throws IOException
     {
-        logbookRepository.index(testLogbook);
+        logbookRepository.save(testLogbook);
         tagRepository.save(testTag);
         propertyRepository.index(testProperty);
 
@@ -145,7 +144,7 @@ public class LogRepositoryIT
     @Test
     public void createLogWithAttachment() throws IOException
     {
-        logbookRepository.index(testLogbook);
+        logbookRepository.save(testLogbook);
         tagRepository.save(testTag);
         propertyRepository.index(testProperty);
 

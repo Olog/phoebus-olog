@@ -66,7 +66,7 @@ public class LogResourceIT
             Attachment testAttachment = new Attachment(mock, "SampleTextFile_100kb.txt", "");
 
             testLogbook = new Logbook("test-logbook-1", testOwner , State.Active);
-            logbookRepository.index(testLogbook);
+            logbookRepository.save(testLogbook);
 
             Log log = Log.LogBuilder.createLog("This is a test entry")
                     .owner(testOwner)

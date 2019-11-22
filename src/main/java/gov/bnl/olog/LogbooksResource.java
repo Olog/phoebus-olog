@@ -64,7 +64,7 @@ public class LogbooksResource {
         // TODO Check permissions
         // TODO Validate
         // TODO Create a logbook
-        return logbookRepository.index(logbook);
+        return logbookRepository.save(logbook);
     }
 
     @PostMapping("/{logbookName}")

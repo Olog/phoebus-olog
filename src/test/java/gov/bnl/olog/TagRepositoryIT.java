@@ -169,7 +169,7 @@ public class TagRepositoryIT {
     }
 
     @Test
-    public void findAllTagsById() throws IOException
+    public void findAllTagsByIds() throws IOException
     {
         List<Tag> tags = Arrays.asList(testTag1, testTag2, testTag3, testTag4);
         try
@@ -197,7 +197,7 @@ public class TagRepositoryIT {
     }
 
     @Test
-    public void findById() throws IOException
+    public void findTagById() throws IOException
     {
         List<Tag> tags = Arrays.asList(testTag1, testTag2);
         try
