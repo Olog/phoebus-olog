@@ -92,6 +92,8 @@ public class LogRepositoryIT
     @Test
     public void createLog() throws IOException
     {
+        try
+        {
         logbookRepository.save(testLogbook);
         tagRepository.save(testTag);
         propertyRepository.save(testProperty);
@@ -116,17 +118,21 @@ public class LogRepositoryIT
         assertTrue(createdLog3.getTags().contains(testTag));
         assertTrue(createdLog3.getProperties().contains(testProperty));
 
-        // Manual cleanup since Olog does not delete things
-        client.delete(new DeleteRequest(ES_LOGBOOK_INDEX, ES_LOGBOOK_TYPE, testLogbook.getName()),
-                RequestOptions.DEFAULT);
+        client.delete(new DeleteRequest(ES_LOG_INDEX, ES_LOG_TYPE, createdLog1.getId().toString()), RequestOptions.DEFAULT);
+        client.delete(new DeleteRequest(ES_LOG_INDEX, ES_LOG_TYPE, createdLog2.getId().toString()), RequestOptions.DEFAULT);
+        client.delete(new DeleteRequest(ES_LOG_INDEX, ES_LOG_TYPE, createdLog3.getId().toString()), RequestOptions.DEFAULT);
 
-        // Manual cleanup since Olog does not delete things
-        client.delete(new DeleteRequest(ES_TAG_INDEX, ES_TAG_TYPE, testTag.getName()),
-                RequestOptions.DEFAULT);
+        } finally
+        {
+            // Manual cleanup since Olog does not delete things
+            client.delete(new DeleteRequest(ES_LOGBOOK_INDEX, ES_LOGBOOK_TYPE, testLogbook.getName()), RequestOptions.DEFAULT);
 
-        // Manual cleanup since Olog does not delete things
-        client.delete(new DeleteRequest(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, testProperty.getName()),
-                RequestOptions.DEFAULT);
+            // Manual cleanup since Olog does not delete things
+            client.delete(new DeleteRequest(ES_TAG_INDEX, ES_TAG_TYPE, testTag.getName()), RequestOptions.DEFAULT);
+
+            // Manual cleanup since Olog does not delete things
+            client.delete(new DeleteRequest(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, testProperty.getName()), RequestOptions.DEFAULT);
+        }
 
     }
 
@@ -188,13 +194,10 @@ public class LogRepositoryIT
             assertTrue(createdLog.getTags().contains(testTag));
             assertTrue(createdLog.getProperties().contains(testProperty));
 
+            client.delete(new DeleteRequest(ES_LOG_INDEX, ES_LOG_TYPE, createdLog.getId().toString()), RequestOptions.DEFAULT);
             // Manual cleanup since Olog does not delete things
             client.delete(new DeleteRequest(ES_LOG_INDEX, ES_LOG_TYPE, createdLog.getId().toString()),
             RequestOptions.DEFAULT);
-        } catch ( IOException e)
-        {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
         } finally
         {
             // Manual cleanup since Olog does not delete things
@@ -248,7 +251,7 @@ public class LogRepositoryIT
     }
     
     @Test
-    public void checkLogExists()
+    public void checkLogExists() throws IOException
     {
         // check for non existing log entry 
         assertFalse("Failed to check non existance of log entry 123456789" , logRepository.existsById("123456789"));
@@ -260,12 +263,13 @@ public class LogRepositoryIT
         assertTrue("Failed to create a log entry with a valid id", createdLog.getId() != null);
         assertTrue("Failed to check existance of log entry " + createdLog.getId(), logRepository.existsById(String.valueOf(createdLog.getId())));
 
+        client.delete(new DeleteRequest(ES_LOG_INDEX, ES_LOG_TYPE, createdLog.getId().toString()), RequestOptions.DEFAULT);
     }
     
     
 
     @Test
-    public void findLogsByIds()
+    public void findLogsByIds() throws IOException
     {
         // check for non existing log entry 
         assertFalse("Failed to check non existance of log entry 123456789" , logRepository.existsById("123456789"));
@@ -276,6 +280,8 @@ public class LogRepositoryIT
 
         assertTrue("Failed to create a log entry with a valid id", createdLog.getId() != null);
         assertTrue("Failed to check existance of log entry " + createdLog.getId(), logRepository.existsById(String.valueOf(createdLog.getId())));
+
+        client.delete(new DeleteRequest(ES_LOG_INDEX, ES_LOG_TYPE, createdLog.getId().toString()), RequestOptions.DEFAULT);
     }
 
     /**
