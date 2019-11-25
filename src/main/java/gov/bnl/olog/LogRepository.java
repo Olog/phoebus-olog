@@ -85,11 +85,11 @@ public class LogRepository implements CrudRepository<Log, String>
     }
 
     @Override
-    public <S extends Log> Iterable<S> saveAll(Iterable<S> entities)
+    public <S extends Log> Iterable<S> saveAll(Iterable<S> logs)
     {
         List<S> createdLogs = new ArrayList<S>();
-        entities.forEach(log -> {
-            createdLogs.add(log);
+        logs.forEach(log -> {
+            createdLogs.add(save(log));
         });
         return createdLogs;
     }
@@ -104,7 +104,6 @@ public class LogRepository implements CrudRepository<Log, String>
             return Optional.of(createdLog);
         } catch (IOException e)
         {
-            // TODO improve the exception handling based on
             // https://www.baeldung.com/exception-handling-for-rest-with-spring#controlleradvice
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to retrieve log with id " + id, e);
         }
@@ -125,40 +124,37 @@ public class LogRepository implements CrudRepository<Log, String>
     @Override
     public Iterable<Log> findAll()
     {
-        // TODO Auto-generated method stub
-        return null;
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Retrieving all log entries is not supported. Use Search with scroll.");
     }
 
     @Override
     public Iterable<Log> findAllById(Iterable<String> ids)
     {
-        // TODO Auto-generated method stub
         return null;
     }
 
     @Override
     public long count()
     {
-        // TODO Auto-generated method stub
         return 0;
     }
 
     @Override
     public void deleteById(String id)
     {
-        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Deleting log entries is not supported");
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Deleting log entries is not supported");
     }
 
     @Override
     public void delete(Log entity)
     {
-        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Deleting log entries is not supported");
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Deleting log entries is not supported");
     }
 
     @Override
     public void deleteAll(Iterable<? extends Log> entities)
     {
-        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Deleting log entries is not supported");
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Deleting log entries is not supported");
     }
 
     @Override

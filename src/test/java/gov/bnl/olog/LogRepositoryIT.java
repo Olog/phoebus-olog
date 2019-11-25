@@ -16,10 +16,15 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 
+import org.assertj.core.util.Arrays;
+import org.assertj.core.util.Lists;
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
@@ -66,31 +71,19 @@ public class LogRepositoryIT
     @Autowired
     private GridFsOperations gridOperation;
 
-    private static Logbook testLogbook;
-    private static Tag testTag;
-    private static Property testProperty;
-
     @Autowired
     private LogRepository logRepository;
 
-    @BeforeClass
-    public static void setup()
-    {
-        testLogbook = new Logbook("test-logbook-1", testOwner, State.Active);
-        testTag = new Tag("test-tag-1", State.Active);
-
-        Set<Attribute> attributes = new HashSet<Attribute>();
-        attributes.add(new Attribute("test-attribute-1"));
-        attributes.add(new Attribute("test-attribute-2"));
-        testProperty = new Property("test-property-1", testOwner, State.Active, attributes);
-    }
-
-    @AfterClass
-    public static void cleanup()
-    {
-    }
 
     private static final String testOwner = "test-owner";
+    private static Logbook testLogbook = new Logbook("test-logbook-1", testOwner, State.Active);
+    private static Tag testTag = new Tag("test-tag-1", State.Active);
+
+    private static Attribute attribute1 = new Attribute("test-attribute-1");
+    private static Attribute attribute2 = new Attribute("test-attribute-2");
+    private static Set<Attribute> attributes = new HashSet<Attribute>(Lists.list(attribute1, attribute2));
+    private static Property testProperty = new Property("test-property-1", testOwner, State.Active, attributes);
+
 
     /**
      * Test the creation of a simple test log
@@ -104,11 +97,11 @@ public class LogRepositoryIT
         propertyRepository.save(testProperty);
 
         // create a log entry with a logbook only
-        Log log = Log.LogBuilder.createLog("This is a test entry").owner(testOwner).withLogbook(testLogbook).build();
-        Log createdLog = logRepository.save(log);
+        Log log1 = Log.LogBuilder.createLog("This is a test entry").owner(testOwner).withLogbook(testLogbook).build();
+        Log createdLog1 = logRepository.save(log1);
 
-        assertTrue("Failed to create a log entry with a valid id", createdLog.getId() != null);
-        assertTrue(createdLog.getLogbooks().contains(testLogbook));
+        assertTrue("Failed to create a log entry with a valid id", createdLog1.getId() != null);
+        assertTrue(createdLog1.getLogbooks().contains(testLogbook));
 
         Log log2 = Log.LogBuilder.createLog("This is a test entry").owner(testOwner).withTag(testTag)
                 .withLogbook(testLogbook).build();
@@ -218,6 +211,42 @@ public class LogRepositoryIT
         }
     }
 
+    /**
+     * Test the creation of a multiple test log entries
+     * @throws IOException 
+     */
+    @Test
+    public void createLogs() throws IOException
+    {
+        logbookRepository.save(testLogbook);
+        tagRepository.save(testTag);
+        propertyRepository.save(testProperty);
+
+        // create a log entry with a logbook only
+        Log log1 = Log.LogBuilder.createLog("This is a test entry").owner(testOwner)
+                                 .withLogbook(testLogbook).build();
+        Log log2 = Log.LogBuilder.createLog("This is a test entry").owner(testOwner)
+                                 .withLogbook(testLogbook).withTag(testTag).build();
+        Log log3 = Log.LogBuilder.createLog("This is a test entry").owner(testOwner)
+                                 .withLogbook(testLogbook).withTag(testTag).withProperty(testProperty).build();
+
+        List<Log> createdLogs = new ArrayList<Log>(); 
+        logRepository.saveAll(Lists.list(log1, log2, log3)).forEach(log -> createdLogs.add(log));
+
+        assertTrue("Failed to create logs ", containsLogs(createdLogs, Lists.list(log1, log2, log3)));
+        createdLogs.forEach(cleanupLog -> {
+            try
+            {
+                client.delete(new DeleteRequest(ES_LOG_INDEX, ES_LOG_TYPE, cleanupLog.getId().toString()),
+                                                RequestOptions.DEFAULT);
+            } catch (IOException e)
+            {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        });
+    }
+    
     @Test
     public void checkLogExists()
     {
@@ -231,5 +260,42 @@ public class LogRepositoryIT
         assertTrue("Failed to create a log entry with a valid id", createdLog.getId() != null);
         assertTrue("Failed to check existance of log entry " + createdLog.getId(), logRepository.existsById(String.valueOf(createdLog.getId())));
 
+    }
+    
+    
+
+    @Test
+    public void findLogsByIds()
+    {
+        // check for non existing log entry 
+        assertFalse("Failed to check non existance of log entry 123456789" , logRepository.existsById("123456789"));
+
+        // check for an existing log entry
+        Log log = Log.LogBuilder.createLog("This is a test entry").owner(testOwner).withLogbook(testLogbook).build();
+        Log createdLog = logRepository.save(log);
+
+        assertTrue("Failed to create a log entry with a valid id", createdLog.getId() != null);
+        assertTrue("Failed to check existance of log entry " + createdLog.getId(), logRepository.existsById(String.valueOf(createdLog.getId())));
+    }
+
+    /**
+     * Checks if the expected logs are present in the found logs. The id's field is
+     * ignored since the expected logs are usually user created objects and the id
+     * is assigned by the service
+     * 
+     * @return
+     */
+    private boolean containsLogs(Collection<Log> foundLogs, Collection<Log> expectedLogs)
+    {
+        return expectedLogs.stream().allMatch(expectedLog -> {
+            return foundLogs.stream().anyMatch(foundLog -> {
+                return foundLog.getDescription().equals(expectedLog.getDescription()) &&
+                       foundLog.getLogbooks().equals(expectedLog.getLogbooks()) &&
+                       foundLog.getTags().equals(expectedLog.getTags()) &&
+                       foundLog.getProperties().equals(expectedLog.getProperties()) &&
+                       foundLog.getOwner().equals(expectedLog.getOwner()) &&
+                       foundLog.getSource().equals(expectedLog.getSource());
+            });
+        });
     }
 }
