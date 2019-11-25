@@ -2,6 +2,8 @@ package gov.bnl.olog;
 
 import static gov.bnl.olog.OlogResourceDescriptors.ES_PROPERTY_INDEX;
 import static gov.bnl.olog.OlogResourceDescriptors.ES_PROPERTY_TYPE;
+import static gov.bnl.olog.OlogResourceDescriptors.ES_TAG_INDEX;
+import static gov.bnl.olog.OlogResourceDescriptors.ES_TAG_TYPE;
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
 import java.io.IOException;
@@ -17,6 +19,9 @@ import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;
+import org.elasticsearch.action.get.MultiGetItemResponse;
+import org.elasticsearch.action.get.MultiGetRequest;
+import org.elasticsearch.action.get.MultiGetResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchRequest;
@@ -27,21 +32,26 @@ import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.bytes.BytesReference;
+import org.elasticsearch.common.io.stream.StreamInput;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.engine.DocumentMissingException;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.repository.CrudRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Repository;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import gov.bnl.olog.entity.Property;
 import gov.bnl.olog.entity.State;
+import gov.bnl.olog.entity.Tag;
 
 @Repository
 public class PropertyRepository implements CrudRepository<Property, String>
@@ -53,9 +63,25 @@ public class PropertyRepository implements CrudRepository<Property, String>
     private static final ObjectMapper mapper = new ObjectMapper();
 
     @Override
-    public <S extends Property> S save(S entity)
+    public <S extends Property> S save(S property)
     {
-        return index(entity);
+        try
+        {
+            IndexRequest indexRequest = new IndexRequest(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, property.getName())
+                    .source(mapper.writeValueAsBytes(property), XContentType.JSON);
+            IndexResponse response = client.index(indexRequest, RequestOptions.DEFAULT);
+            if (response.getResult().equals(Result.CREATED))
+            {
+                BytesReference ref = client.get(new GetRequest(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, response.getId()),
+                        RequestOptions.DEFAULT).getSourceAsBytesRef();
+                Property createdProperty = mapper.readValue(ref.streamInput(), Property.class);
+                return (S) createdProperty;
+            }
+        } catch (Exception e)
+        {
+            PropertiesResource.log.log(Level.SEVERE, e.getMessage(), e);
+        }
+        return null;
     }
 
     @Override
@@ -106,7 +132,7 @@ public class PropertyRepository implements CrudRepository<Property, String>
         try
         {
             GetResponse result = client.get(new GetRequest(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, propertyName),
-                    RequestOptions.DEFAULT);
+                                                           RequestOptions.DEFAULT);
             if (result.isExists())
             {
                 return Optional.of(mapper.readValue(result.getSourceAsBytesRef().streamInput(), Property.class));
@@ -122,10 +148,16 @@ public class PropertyRepository implements CrudRepository<Property, String>
     }
 
     @Override
-    public boolean existsById(String id)
+    public boolean existsById(String propertyName)
     {
-        // TODO Auto-generated method stub
-        return false;
+        try
+        {
+            return client.exists(new GetRequest(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, propertyName), RequestOptions.DEFAULT);
+        } catch (IOException e)
+        {
+            PropertiesResource.log.log(Level.SEVERE, e.getMessage(), e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to find property: " + propertyName, e);
+        }
     }
 
     @Override
@@ -168,10 +200,32 @@ public class PropertyRepository implements CrudRepository<Property, String>
     }
     
     @Override
-    public Iterable<Property> findAllById(Iterable<String> ids)
+    public Iterable<Property> findAllById(Iterable<String> propertyNames)
     {
-        // TODO Auto-generated method stub
-        return null;
+        MultiGetRequest request = new MultiGetRequest();
+        for (String propertyName : propertyNames)
+        {
+            request.add(new MultiGetRequest.Item(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, propertyName));
+        }
+        try
+        {
+            List<Property> foundProperties = new ArrayList<Property>();
+            MultiGetResponse response = client.mget(request, RequestOptions.DEFAULT);
+            for (MultiGetItemResponse multiGetItemResponse : response)
+            {
+                if (!multiGetItemResponse.isFailed())
+                {
+                    GetResponse res = multiGetItemResponse.getResponse();
+                    StreamInput str = res.getSourceAsBytesRef().streamInput();
+                    foundProperties.add(mapper.readValue(str, Property.class));
+                }
+            }
+            return foundProperties;
+        } catch (Exception e)
+        {
+            PropertiesResource.log.log(Level.SEVERE, "Failed to find properties: " + propertyNames, e);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to find properties: " + propertyNames, null);
+        }
     }
 
     @Override
@@ -189,7 +243,8 @@ public class PropertyRepository implements CrudRepository<Property, String>
 
             UpdateResponse response = client.update(
                     new UpdateRequest(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, propertyName)
-                            .doc(jsonBuilder().startObject().field("state", State.Inactive).endObject()),
+                                        .doc(jsonBuilder().startObject().field("state", State.Inactive).endObject())
+                                        .setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE),
                     RequestOptions.DEFAULT);
 
             if (response.getResult().equals(Result.UPDATED))
@@ -228,7 +283,8 @@ public class PropertyRepository implements CrudRepository<Property, String>
 
             UpdateResponse response = client.update(
                     new UpdateRequest(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, propertyName)
-                            .doc(mapper.writeValueAsBytes(property), XContentType.JSON),
+                            .doc(mapper.writeValueAsBytes(property), XContentType.JSON)
+                            .setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE),
                     RequestOptions.DEFAULT);
 
             if (response.getResult().equals(Result.UPDATED))
@@ -255,39 +311,15 @@ public class PropertyRepository implements CrudRepository<Property, String>
     }
 
     @Override
-    public void deleteAll(Iterable<? extends Property> entities)
+    public void deleteAll(Iterable<? extends Property> properties)
     {
-        // TODO Auto-generated method stub
-
+        properties.forEach(property -> deleteById(property.getName()));
     }
 
     @Override
     public void deleteAll()
     {
-        // TODO Auto-generated method stub
-
-    }
-
-    public <S extends Property> S index(S property)
-    {
-        try
-        {
-            IndexRequest indexRequest = new IndexRequest(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, property.getName())
-                    .source(mapper.writeValueAsBytes(property), XContentType.JSON);
-            IndexResponse response = client.index(indexRequest, RequestOptions.DEFAULT);
-            if (response.getResult().equals(Result.CREATED))
-            {
-                BytesReference ref = client
-                        .get(new GetRequest(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, response.getId()), RequestOptions.DEFAULT)
-                        .getSourceAsBytesRef();
-                Property createdProperty = mapper.readValue(ref.streamInput(), Property.class);
-                return (S) createdProperty;
-            }
-        } catch (Exception e)
-        {
-            PropertiesResource.log.log(Level.SEVERE, e.getMessage(), e);
-        }
-        return null;
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Deleteting all properties not allowed");
     }
 
 }

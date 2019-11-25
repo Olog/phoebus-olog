@@ -78,7 +78,7 @@ public class PropertiesResource {
         // TODO Check permissions
         // TODO Validate
         // TODO Create a property
-        return propertyRepository.index(property);
+        return propertyRepository.save(property);
     }
 
     @PostMapping("/{propertyName}")

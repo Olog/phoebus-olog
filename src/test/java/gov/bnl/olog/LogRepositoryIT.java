@@ -101,7 +101,7 @@ public class LogRepositoryIT
     {
         logbookRepository.save(testLogbook);
         tagRepository.save(testTag);
-        propertyRepository.index(testProperty);
+        propertyRepository.save(testProperty);
 
         // create a log entry with a logbook only
         Log log = Log.LogBuilder.createLog("This is a test entry").owner(testOwner).withLogbook(testLogbook).build();
@@ -146,7 +146,7 @@ public class LogRepositoryIT
     {
         logbookRepository.save(testLogbook);
         tagRepository.save(testTag);
-        propertyRepository.index(testProperty);
+        propertyRepository.save(testProperty);
 
         try
         {
