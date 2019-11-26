@@ -197,17 +197,17 @@ public class TagRepository implements CrudRepository<Tag, String> {
         }
         try
         {
-            List<Tag> foundChannels = new ArrayList<Tag>();
+            List<Tag> foundTags = new ArrayList<Tag>();
             MultiGetResponse response = client.mget(request, RequestOptions.DEFAULT);
             for (MultiGetItemResponse multiGetItemResponse : response)
             {
                 if (!multiGetItemResponse.isFailed())
                 {
-                    foundChannels.add(mapper.readValue(
+                    foundTags.add(mapper.readValue(
                             multiGetItemResponse.getResponse().getSourceAsBytesRef().streamInput(), Tag.class));
                 }
             }
-            return foundChannels;
+            return foundTags;
         } catch (Exception e)
         {
             TagsResource.log.log(Level.SEVERE, "Failed to find tags: " + tagNames, e);
@@ -248,17 +248,20 @@ public class TagRepository implements CrudRepository<Tag, String> {
     }
 
     @Override
-    public void delete(Tag tag) {
+    public void delete(Tag tag)
+    {
         deleteById(tag.getName());
     }
 
     @Override
-    public void deleteAll(Iterable<? extends Tag> tags) {
+    public void deleteAll(Iterable<? extends Tag> tags)
+    {
         tags.forEach(tag -> deleteById(tag.getName()));
     }
 
     @Override
-    public void deleteAll() {
+    public void deleteAll()
+    {
         throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Deleteting all tags not allowed");
     }
 

@@ -17,8 +17,6 @@ import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,17 +44,6 @@ public class TagRepositoryIT {
     private Tag testTag2 = new Tag("test-tag-2", State.Active);
     private Tag testTag3 = new Tag("test-tag-3", State.Active);
     private Tag testTag4 = new Tag("test-tag-4", State.Active);
-
-    @BeforeClass
-    public static void setup()
-    {
-
-    }
-
-    @AfterClass
-    public static void cleanup() {
-
-    }
 
     /**
      * Test the creation of a test tag
@@ -102,15 +89,11 @@ public class TagRepositoryIT {
         try
         {
             List<Tag> result = new ArrayList<Tag>();
-            tagRepository.saveAll(tags).forEach(tag -> {
-                result.add(tag);
-            });
+            tagRepository.saveAll(tags).forEach(tag -> result.add(tag));
             assertThat("Failed to create multiple tags", result.containsAll(tags));
 
             List<Tag> findAll = new ArrayList<Tag>();
-            tagRepository.findAll().forEach(tag -> {
-                findAll.add(tag);
-            });
+            tagRepository.findAll().forEach(tag -> findAll.add(tag));
             assertThat("Failed to create multiple tags ", findAll.containsAll(tags));
         } finally
         {
@@ -149,6 +132,7 @@ public class TagRepositoryIT {
             cleanUp(tags);
         }
     }
+
     @Test
     public void findAllTags() throws IOException
     {
@@ -231,7 +215,7 @@ public class TagRepositoryIT {
             cleanUp(tags);
         }
     }
-    
+
     /**
      * Cleanup the given tags
      * @param tags
@@ -247,7 +231,7 @@ public class TagRepositoryIT {
             client.bulk(bulk, RequestOptions.DEFAULT);
         } catch (IOException e)
         {
-            
+            e.printStackTrace();
         }
     }
 
