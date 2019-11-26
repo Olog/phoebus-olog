@@ -2,10 +2,13 @@ package gov.bnl.olog;
 
 import static gov.bnl.olog.OlogResourceDescriptors.ES_LOG_INDEX;
 import static gov.bnl.olog.OlogResourceDescriptors.ES_LOG_TYPE;
+import static gov.bnl.olog.OlogResourceDescriptors.ES_TAG_INDEX;
+import static gov.bnl.olog.OlogResourceDescriptors.ES_TAG_TYPE;
 
 import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -15,6 +18,9 @@ import java.util.logging.Level;
 import org.elasticsearch.action.DocWriteResponse.Result;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;
+import org.elasticsearch.action.get.MultiGetItemResponse;
+import org.elasticsearch.action.get.MultiGetRequest;
+import org.elasticsearch.action.get.MultiGetResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.client.RequestOptions;
@@ -32,6 +38,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import gov.bnl.olog.entity.Attachment;
 import gov.bnl.olog.entity.Log;
+import gov.bnl.olog.entity.Tag;
 import gov.bnl.olog.entity.Log.LogBuilder;
 
 @Repository
@@ -110,14 +117,14 @@ public class LogRepository implements CrudRepository<Log, String>
     }
 
     @Override
-    public boolean existsById(String id)
+    public boolean existsById(String logId)
     {
         try
         {
-            return client.exists(new GetRequest(ES_LOG_INDEX, ES_LOG_TYPE, id), RequestOptions.DEFAULT);
+            return client.exists(new GetRequest(ES_LOG_INDEX, ES_LOG_TYPE, logId), RequestOptions.DEFAULT);
         } catch (IOException e)
         {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to check existance of log with id " + id, e);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to check existance of log with id " + logId, e);
         }
     }
 
@@ -128,9 +135,32 @@ public class LogRepository implements CrudRepository<Log, String>
     }
 
     @Override
-    public Iterable<Log> findAllById(Iterable<String> ids)
+    public Iterable<Log> findAllById(Iterable<String> logIds)
     {
-        return null;
+        MultiGetRequest request = new MultiGetRequest();
+        for (String logId : logIds)
+        {
+            request.add(new MultiGetRequest.Item(ES_LOG_INDEX, ES_LOG_TYPE, logId));
+        }
+        try
+        {
+            List<Log> foundLogs = new ArrayList<Log>();
+            MultiGetResponse response = client.mget(request, RequestOptions.DEFAULT);
+            for (MultiGetItemResponse multiGetItemResponse : response)
+            {
+                if (!multiGetItemResponse.isFailed())
+                {
+                    foundLogs.add(mapper.readValue(
+                                            multiGetItemResponse.getResponse().getSourceAsBytesRef().streamInput(),
+                                            Log.class));
+                }
+            }
+            return foundLogs;
+        } catch (Exception e)
+        {
+            TagsResource.log.log(Level.SEVERE, "Failed to find logs: " + logIds, e);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to find logs: " + logIds, null);
+        }
     }
 
     @Override
@@ -162,4 +192,5 @@ public class LogRepository implements CrudRepository<Log, String>
     {
         throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Deleting log entries is not supported");
     }
+
 }

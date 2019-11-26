@@ -17,19 +17,18 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
-import org.assertj.core.util.Arrays;
-import org.assertj.core.util.Lists;
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -81,7 +80,7 @@ public class LogRepositoryIT
 
     private static Attribute attribute1 = new Attribute("test-attribute-1");
     private static Attribute attribute2 = new Attribute("test-attribute-2");
-    private static Set<Attribute> attributes = new HashSet<Attribute>(Lists.list(attribute1, attribute2));
+    private static Set<Attribute> attributes = new HashSet<Attribute>(List.of(attribute1, attribute2));
     private static Property testProperty = new Property("test-property-1", testOwner, State.Active, attributes);
 
 
@@ -234,9 +233,9 @@ public class LogRepositoryIT
                                  .withLogbook(testLogbook).withTag(testTag).withProperty(testProperty).build();
 
         List<Log> createdLogs = new ArrayList<Log>(); 
-        logRepository.saveAll(Lists.list(log1, log2, log3)).forEach(log -> createdLogs.add(log));
+        logRepository.saveAll(List.of(log1, log2, log3)).forEach(log -> createdLogs.add(log));
 
-        assertTrue("Failed to create logs ", containsLogs(createdLogs, Lists.list(log1, log2, log3)));
+        assertTrue("Failed to create logs ", containsLogs(createdLogs, List.of(log1, log2, log3)));
         createdLogs.forEach(cleanupLog -> {
             try
             {
@@ -244,7 +243,6 @@ public class LogRepositoryIT
                                                 RequestOptions.DEFAULT);
             } catch (IOException e)
             {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
             }
         });
@@ -269,11 +267,8 @@ public class LogRepositoryIT
     
 
     @Test
-    public void findLogsByIds() throws IOException
+    public void findLogsById() throws IOException
     {
-        // check for non existing log entry 
-        assertFalse("Failed to check non existance of log entry 123456789" , logRepository.existsById("123456789"));
-
         // check for an existing log entry
         Log log = Log.LogBuilder.createLog("This is a test entry").owner(testOwner).withLogbook(testLogbook).build();
         Log createdLog = logRepository.save(log);
@@ -284,6 +279,44 @@ public class LogRepositoryIT
         client.delete(new DeleteRequest(ES_LOG_INDEX, ES_LOG_TYPE, createdLog.getId().toString()), RequestOptions.DEFAULT);
     }
 
+    @Test
+    public void findLogsByNonExistingId() throws IOException
+    {
+        // check for non existing log entry 
+        assertFalse("Failed to check non existance of log entry 123456789" , logRepository.existsById("123456789"));
+    }
+
+    @Test
+    public void findLogsByIds() throws IOException
+    {
+        // check for an existing log entry
+        Log log1 = Log.LogBuilder.createLog("This is a test entry").owner(testOwner).withLogbook(testLogbook).build();
+        Log log2 = Log.LogBuilder.createLog("This is a test entry").owner(testOwner).withLogbook(testLogbook).build();
+        List<Log> createdLogs = StreamSupport.stream(logRepository.saveAll(List.of(log1, log2)).spliterator(), false).collect(Collectors.toList());
+        assertTrue("Failed to find logs by ids:",
+                containsLogs(logRepository.findAllById(createdLogs.stream().map(log -> {
+                                                                                    return String.valueOf(log.getId());
+                                                                                }).collect(Collectors.toList()))
+                        , createdLogs));
+
+        createdLogs.forEach(cleanupLog -> {
+            try
+            {
+                client.delete(new DeleteRequest(ES_LOG_INDEX, ES_LOG_TYPE, cleanupLog.getId().toString()),
+                                                RequestOptions.DEFAULT);
+            } catch (IOException e)
+            {
+                e.printStackTrace();
+            }
+        });
+    }
+
+    private boolean containsLogs(Iterable<Log> foundLogs, Iterable<Log> expectedLogs)
+    {
+        return containsLogs(() -> StreamSupport.stream(foundLogs.spliterator(), false) ,
+                            () -> StreamSupport.stream(expectedLogs.spliterator(), false));
+    }
+
     /**
      * Checks if the expected logs are present in the found logs. The id's field is
      * ignored since the expected logs are usually user created objects and the id
@@ -291,11 +324,17 @@ public class LogRepositoryIT
      * 
      * @return
      */
-    private boolean containsLogs(Collection<Log> foundLogs, Collection<Log> expectedLogs)
+    private boolean containsLogs(List<Log> foundLogs, List<Log> expectedLogs)
     {
-        return expectedLogs.stream().allMatch(expectedLog -> {
-            return foundLogs.stream().anyMatch(foundLog -> {
-                return foundLog.getDescription().equals(expectedLog.getDescription()) &&
+        return containsLogs(() -> foundLogs.stream(), () -> expectedLogs.stream());
+    }
+
+    private boolean containsLogs(Supplier<Stream<Log>> foundLogs, Supplier<Stream<Log>> expectedLogs)
+    {
+        return expectedLogs.get().allMatch(expectedLog -> {
+            return foundLogs.get().anyMatch(foundLog -> {
+                return foundLog.getId() != null &&
+                       foundLog.getDescription().equals(expectedLog.getDescription()) &&
                        foundLog.getLogbooks().equals(expectedLog.getLogbooks()) &&
                        foundLog.getTags().equals(expectedLog.getTags()) &&
                        foundLog.getProperties().equals(expectedLog.getProperties()) &&
