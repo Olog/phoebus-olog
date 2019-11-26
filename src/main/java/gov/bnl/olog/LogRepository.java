@@ -193,4 +193,9 @@ public class LogRepository implements CrudRepository<Log, String>
         throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Deleting log entries is not supported");
     }
 
+    public void search()
+    {
+
+    }
+
 }

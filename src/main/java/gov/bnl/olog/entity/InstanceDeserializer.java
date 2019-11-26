@@ -10,6 +10,11 @@ import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 
 public class InstanceDeserializer extends StdDeserializer<Instant>
 {
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -3082880744820026541L;
+
     public InstanceDeserializer()
     {
         this(null);

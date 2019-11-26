@@ -10,8 +10,9 @@ import static gov.bnl.olog.OlogResourceDescriptors.ES_LOG_TYPE;
 
 import java.io.Serializable;
 import java.time.Instant;
-import java.util.Date;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.springframework.data.annotation.Id;
@@ -25,8 +26,6 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 /**
  * Log object that can be represented as XML/JSON in payload data.
- *
- * @author Eric Berryman taken from Ralph Lange <Ralph.Lange@bessy.de>
  */
 @Document(indexName = ES_LOG_INDEX, type = ES_LOG_TYPE)
 public class Log implements Serializable
@@ -39,12 +38,7 @@ public class Log implements Serializable
 
     @Id
     private Long id;
-    @JsonSerialize(using = InstanceSerializer.class)
-    @JsonDeserialize(using = InstanceDeserializer.class)
-    private Instant createdDate;
-    @JsonSerialize(using = InstanceSerializer.class)
-    @JsonDeserialize(using = InstanceDeserializer.class)
-    private Instant modifyDate;
+
     private String owner;
 
     private String source;
@@ -52,13 +46,23 @@ public class Log implements Serializable
 
     private Level level;
     private State state;
-
+    
+    @JsonSerialize(using = InstanceSerializer.class)
+    @JsonDeserialize(using = InstanceDeserializer.class)
+    private Instant createdDate;
+    @JsonSerialize(using = InstanceSerializer.class)
+    @JsonDeserialize(using = InstanceDeserializer.class)
+    private Instant modifyDate;
+    
     @Field(type = FieldType.Nested, includeInParent = true)
-    private Set<Property> properties = new HashSet<Property>();
+    private List<Event> events;
+
     @Field(type = FieldType.Nested, includeInParent = true)
     private Set<Logbook> logbooks = new HashSet<Logbook>();
     @Field(type = FieldType.Nested, includeInParent = true)
     private Set<Tag> tags = new HashSet<Tag>();
+    @Field(type = FieldType.Nested, includeInParent = true)
+    private Set<Property> properties = new HashSet<Property>();
 
     @Field(type = FieldType.Nested, includeInParent = true)
     private Set<Attachment> attachments = new HashSet<Attachment>();
@@ -67,8 +71,17 @@ public class Log implements Serializable
     {
     }
 
-    private Log(Long id, String version, String owner, String source, String description, Level level, State state,
-            Date modifiedDate, Set<Property> properties, Set<Logbook> logbooks, Set<Tag> tags)
+    private Log(Long id,
+                String version,
+                String owner,
+                String source,
+                String description,
+                Level level,
+                State state,
+                List<Event> events,
+                Set<Logbook> logbooks,
+                Set<Tag> tags,
+                Set<Property> properties)
     {
 
         super();
@@ -79,198 +92,149 @@ public class Log implements Serializable
         this.level = level;
         this.state = state;
 
-        this.properties = properties;
+        this.events = events;
+
         this.logbooks = logbooks;
         this.tags = tags;
+        this.properties = properties;
     }
 
-    /**
-     * @param id the id to set
-     */
-    void setId(Long id)
+    public Long getId()
+    {
+        return id;
+    }
+
+    public void setId(Long id)
     {
         this.id = id;
     }
 
-    /**
-     * @param createdDate the createdDate to set
-     */
-    private void setCreatedDate(Instant createdDate)
+    public String getOwner()
+    {
+        return owner;
+    }
+
+    public void setOwner(String owner)
+    {
+        this.owner = owner;
+    }
+
+    public String getSource()
+    {
+        return source;
+    }
+
+    public void setSource(String source)
+    {
+        this.source = source;
+    }
+
+    public String getDescription()
+    {
+        return description;
+    }
+
+    public void setDescription(String description)
+    {
+        this.description = description;
+    }
+
+    public Level getLevel()
+    {
+        return level;
+    }
+
+    public void setLevel(Level level)
+    {
+        this.level = level;
+    }
+
+    public State getState()
+    {
+        return state;
+    }
+
+    public void setState(State state)
+    {
+        this.state = state;
+    }
+
+    public Instant getCreatedDate()
+    {
+        return createdDate;
+    }
+
+    public void setCreatedDate(Instant createdDate)
     {
         this.createdDate = createdDate;
     }
 
-    /**
-     * 
-     * @return modify date
-     */
     public Instant getModifyDate()
     {
         return modifyDate;
     }
 
-    /**
-     * @param owner the owner to set
-     */
-    private void setOwner(String owner)
+    public void setModifyDate(Instant modifyDate)
     {
-        this.owner = owner;
+        this.modifyDate = modifyDate;
     }
 
-    /**
-     * @param source the source to set
-     */
-    private void setSource(String source)
+    public List<Event> getEvents()
     {
-        this.source = source;
+        return events;
     }
 
-    /**
-     * @param description the description to set
-     */
-    private void setDescription(String description)
+    public void setEvents(List<Event> events)
     {
-        this.description = description;
+        this.events = events;
     }
 
-    /**
-     * @param level the level to set
-     */
-    private void setLevel(Level level)
+    public Set<Logbook> getLogbooks()
     {
-        this.level = level;
+        return logbooks;
     }
 
-    /**
-     * @param state the state to set
-     */
-    private void setState(State state)
-    {
-        this.state = state;
-    }
-
-    /**
-     * @param properties the properties to set
-     */
-    private void setProperties(Set<Property> properties)
-    {
-        this.properties = properties;
-    }
-
-    /**
-     * @param logbooks the logbooks to set
-     */
-    private void setLogbooks(Set<Logbook> logbooks)
+    public void setLogbooks(Set<Logbook> logbooks)
     {
         this.logbooks = logbooks;
     }
 
-    /**
-     * @param tags the tags to set
-     */
-    private void setTags(Set<Tag> tags)
+    public Set<Tag> getTags()
+    {
+        return tags;
+    }
+
+    public void setTags(Set<Tag> tags)
     {
         this.tags = tags;
     }
-    
-    /**
-     * @param attachments the attachments to set
-     */
-    private void setAttachments(Set<Attachment> attachments)
+
+    public Set<Property> getProperties()
+    {
+        return properties;
+    }
+
+    public void setProperties(Set<Property> properties)
+    {
+        this.properties = properties;
+    }
+
+    public Set<Attachment> getAttachments()
+    {
+        return attachments;
+    }
+
+    public void setAttachments(Set<Attachment> attachments)
     {
         this.attachments = attachments;
     }
+
     /**
      * @return the serialversionuid
      */
     public static long getSerialversionuid()
     {
         return serialVersionUID;
-    }
-
-    /**
-     * @return the id
-     */
-    public Long getId()
-    {
-        return id;
-    }
-
-    /**
-     * @return the createdDate
-     */
-    public Instant getCreatedDate()
-    {
-        return createdDate;
-    }
-
-    /**
-     * @return the owner
-     */
-    public String getOwner()
-    {
-        return owner;
-    }
-
-    /**
-     * @return the source
-     */
-    public String getSource()
-    {
-        return source;
-    }
-
-    /**
-     * @return the description
-     */
-    public String getDescription()
-    {
-        return description;
-    }
-
-    /**
-     * @return the level
-     */
-    public Level getLevel()
-    {
-        return level;
-    }
-
-    /**
-     * @return the state
-     */
-    public State getState()
-    {
-        return state;
-    }
-
-    /**
-     * @return the properties
-     */
-    public Set<Property> getProperties()
-    {
-        return properties;
-    }
-
-    /**
-     * @return the logbooks
-     */
-    public Set<Logbook> getLogbooks()
-    {
-        return logbooks;
-    }
-
-    /**
-     * @return the tags
-     */
-    public Set<Tag> getTags()
-    {
-        return tags;
-    }
-
-    public Set<Attachment> getAttachments()
-    {
-        return attachments;
     }
 
     /**
@@ -314,6 +278,7 @@ public class Log implements Serializable
 
         private Long id;
         private Instant createDate;
+        private List<Event> events = new ArrayList<Event>();
 
         private String owner;
         private StringBuilder source = new StringBuilder();
@@ -340,6 +305,8 @@ public class Log implements Serializable
             this.description = new StringBuilder(log.getDescription());
             this.level = log.getLevel();
             this.state = log.getState();
+
+            this.events = log.getEvents();
 
             this.properties = log.getProperties();
             this.logbooks = log.getLogbooks();
@@ -389,6 +356,12 @@ public class Log implements Serializable
             return this;
         }
 
+        public LogBuilder withEvents(List<Event> events)
+        {
+            this.events = events;
+            return this;
+        }
+       
         public LogBuilder description(String description)
         {
             if (description != null)
@@ -508,6 +481,7 @@ public class Log implements Serializable
             {
                 log.setCreatedDate(createDate);
             }
+            log.setEvents(events);
             log.setDescription(this.description.toString());
             log.setSource(this.source.toString());
             log.setLevel(level);
@@ -518,8 +492,6 @@ public class Log implements Serializable
             log.setAttachments(attachments);
             return log;
         }
-
-
     }
 
     @Override
@@ -529,12 +501,13 @@ public class Log implements Serializable
         int result = 1;
         result = prime * result + ((createdDate == null) ? 0 : createdDate.hashCode());
         result = prime * result + ((description == null) ? 0 : description.hashCode());
+        result = prime * result + ((events == null) ? 0 : events.hashCode());
         result = prime * result + ((id == null) ? 0 : id.hashCode());
         result = prime * result + ((level == null) ? 0 : level.hashCode());
         result = prime * result + ((logbooks == null) ? 0 : logbooks.hashCode());
+        result = prime * result + ((modifyDate == null) ? 0 : modifyDate.hashCode());
         result = prime * result + ((owner == null) ? 0 : owner.hashCode());
         result = prime * result + ((properties == null) ? 0 : properties.hashCode());
-        result = prime * result + ((source == null) ? 0 : source.hashCode());
         result = prime * result + ((state == null) ? 0 : state.hashCode());
         result = prime * result + ((tags == null) ? 0 : tags.hashCode());
         return result;
@@ -562,6 +535,12 @@ public class Log implements Serializable
                 return false;
         } else if (!description.equals(other.description))
             return false;
+        if (events == null)
+        {
+            if (other.events != null)
+                return false;
+        } else if (!events.equals(other.events))
+            return false;
         if (id == null)
         {
             if (other.id != null)
@@ -576,6 +555,12 @@ public class Log implements Serializable
                 return false;
         } else if (!logbooks.equals(other.logbooks))
             return false;
+        if (modifyDate == null)
+        {
+            if (other.modifyDate != null)
+                return false;
+        } else if (!modifyDate.equals(other.modifyDate))
+            return false;
         if (owner == null)
         {
             if (other.owner != null)
@@ -587,12 +572,6 @@ public class Log implements Serializable
             if (other.properties != null)
                 return false;
         } else if (!properties.equals(other.properties))
-            return false;
-        if (source == null)
-        {
-            if (other.source != null)
-                return false;
-        } else if (!source.equals(other.source))
             return false;
         if (state != other.state)
             return false;

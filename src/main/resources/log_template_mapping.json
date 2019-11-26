@@ -12,7 +12,7 @@
         "description": {
             "type": "text"
         },
-        "Level": {
+        "level": {
             "type": "text"
         },
         "state": {
@@ -29,6 +29,9 @@
         "events": {
             "type": "nested",
             "properties": {
+                "name": {
+                    "type": "keyword"
+                },
                 "event": {
                     "type": "date",
                     "format": "epoch_millis||yyyy-MM-dd HH:mm:ss.SSS"

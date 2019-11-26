@@ -16,6 +16,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -45,6 +46,7 @@ import com.mongodb.client.gridfs.model.GridFSFile;
 
 import gov.bnl.olog.entity.Attachment;
 import gov.bnl.olog.entity.Attribute;
+import gov.bnl.olog.entity.Event;
 import gov.bnl.olog.entity.Log;
 import gov.bnl.olog.entity.Logbook;
 import gov.bnl.olog.entity.Property;
@@ -103,7 +105,10 @@ public class LogRepositoryIT
 
         assertTrue("Failed to create a log entry with a valid id", createdLog1.getId() != null);
         assertTrue(createdLog1.getLogbooks().contains(testLogbook));
-
+        Log retrievedLog1 = logRepository.findById(String.valueOf(createdLog1.getId())).get();
+        assertTrue("Failed to create a log entry with a valid id", retrievedLog1.getId() != null);
+        assertTrue(retrievedLog1.getLogbooks().contains(testLogbook));
+        
         Log log2 = Log.LogBuilder.createLog("This is a test entry").owner(testOwner).withTag(testTag)
                 .withLogbook(testLogbook).build();
         Log createdLog2 = logRepository.save(log2);
@@ -135,6 +140,43 @@ public class LogRepositoryIT
 
     }
 
+    /**
+     * Test the creation of a test log with events
+     * 
+     * @throws IOException
+     */
+    @Test
+    public void createLogWithEvents() throws IOException
+    {
+        try
+        {
+            logbookRepository.save(testLogbook);
+            tagRepository.save(testTag);
+            propertyRepository.save(testProperty);
+
+            List<Event> testEvents = List.of(new Event("now", Instant.ofEpochMilli(System.currentTimeMillis())));
+            // create a log entry with a logbook only
+            Log log1 = Log.LogBuilder.createLog("This is a test entry")
+                                     .owner(testOwner)
+                                     .withLogbook(testLogbook)
+                                     .withEvents(testEvents)
+                                     .build();
+            Log createdLog1 = logRepository.save(log1);
+
+            assertTrue("Failed to create a log entry with a valid id", createdLog1.getId() != null);
+            assertTrue(createdLog1.getEvents().containsAll(testEvents));
+            Log retrievedLog1 = logRepository.findById(String.valueOf(createdLog1.getId())).get();
+            assertTrue("Failed to create a log entry with a valid id", retrievedLog1.getId() != null);
+            assertTrue(retrievedLog1.getEvents().containsAll(testEvents));
+
+            client.delete(new DeleteRequest(ES_LOG_INDEX, ES_LOG_TYPE, createdLog1.getId().toString()), RequestOptions.DEFAULT);
+        } finally
+        {
+            client.delete(new DeleteRequest(ES_LOGBOOK_INDEX, ES_LOGBOOK_TYPE, testLogbook.getName()), RequestOptions.DEFAULT);
+            client.delete(new DeleteRequest(ES_TAG_INDEX, ES_TAG_TYPE, testTag.getName()), RequestOptions.DEFAULT);
+            client.delete(new DeleteRequest(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, testProperty.getName()), RequestOptions.DEFAULT);
+        }
+    }
     /**
      * Test the creation of a simple test log with attachments
      * @throws IOException 
