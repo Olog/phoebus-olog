@@ -2,18 +2,16 @@ package gov.bnl.olog;
 
 import static gov.bnl.olog.OlogResourceDescriptors.ES_LOG_INDEX;
 import static gov.bnl.olog.OlogResourceDescriptors.ES_LOG_TYPE;
-import static gov.bnl.olog.OlogResourceDescriptors.ES_TAG_INDEX;
-import static gov.bnl.olog.OlogResourceDescriptors.ES_TAG_TYPE;
 
 import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.elasticsearch.action.DocWriteResponse.Result;
 import org.elasticsearch.action.get.GetRequest;
@@ -23,6 +21,9 @@ import org.elasticsearch.action.get.MultiGetRequest;
 import org.elasticsearch.action.get.MultiGetResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
+import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.support.WriteRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.bytes.BytesReference;
@@ -32,18 +33,20 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Repository;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import gov.bnl.olog.entity.Attachment;
 import gov.bnl.olog.entity.Log;
-import gov.bnl.olog.entity.Tag;
 import gov.bnl.olog.entity.Log.LogBuilder;
 
 @Repository
 public class LogRepository implements CrudRepository<Log, String>
 {
+
+    private static final Logger logger = Logger.getLogger(LogRepository.class.getName());
 
     @Autowired
     @Qualifier("indexClient")
@@ -70,7 +73,8 @@ public class LogRepository implements CrudRepository<Log, String>
             }
 
             IndexRequest indexRequest = new IndexRequest(ES_LOG_INDEX, ES_LOG_TYPE, String.valueOf(id))
-                    .source(mapper.writeValueAsBytes(validatedLog.build()), XContentType.JSON);
+                                                    .source(mapper.writeValueAsBytes(validatedLog.build()), XContentType.JSON)
+                                                    .setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE);
 
             IndexResponse response = client.index(indexRequest, RequestOptions.DEFAULT);
 
@@ -158,7 +162,7 @@ public class LogRepository implements CrudRepository<Log, String>
             return foundLogs;
         } catch (Exception e)
         {
-            TagsResource.log.log(Level.SEVERE, "Failed to find logs: " + logIds, e);
+            logger.log(Level.SEVERE, "Failed to find logs: " + logIds, e);
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to find logs: " + logIds, null);
         }
     }
@@ -193,9 +197,30 @@ public class LogRepository implements CrudRepository<Log, String>
         throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Deleting log entries is not supported");
     }
 
-    public void search()
+    public List<Log> search(MultiValueMap<String, String> searchParameters)
     {
-
+        SearchRequest searchRequest = LogSearchUtil.buildSearchRequest(searchParameters);
+        try
+        {
+            final SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);
+            List<Log> result = new ArrayList<Log>();
+            searchResponse.getHits().forEach(hit -> {
+                try
+                {
+                    result.add(mapper.readValue(hit.getSourceAsString(), Log.class));
+                } catch (IOException e)
+                {
+                    logger.log(Level.SEVERE, "Failed to parse result for search : " + searchParameters, e);
+                    throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                            "Failed to parse result for search : " + searchParameters + ", CAUSE: " + e.getMessage(),
+                            e);
+                }
+            });
+            return result;
+        } catch (IOException e)
+        {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to complete search");
+        }
     }
 
 }

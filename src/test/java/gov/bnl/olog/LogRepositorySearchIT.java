@@ -204,9 +204,25 @@ public class LogRepositorySearchIT  implements TestExecutionListener
     }
 
     @Test
-    public void searchByProperty()
+    public void searchByPropertyName()
     {
-        assertTrue(false);
+
+        // simple search based on the property name
+        MultiValueMap<String, String> searchParameters = new LinkedMultiValueMap<String, String>();
+        searchParameters.put("properties", List.of(testProperty1.getName()));
+        List<Log> foundLogs = logRepository.search(searchParameters);
+        assertTrue("Failed to search for log entries based on property name " + testProperty1.getName(),
+                foundLogs.size() == 1 && foundLogs.contains(createdLog1));
+        searchParameters.put("properties", List.of(testProperty2.getName()));
+        foundLogs = logRepository.search(searchParameters);
+        assertTrue("Failed to search for log entries based on property name " + testProperty2.getName(),
+                foundLogs.size() == 1 && foundLogs.contains(createdLog2));
+        
+        // search based on a tag name with wildcards
+        searchParameters.put("properties", List.of("testProperty*"));
+        foundLogs = logRepository.search(searchParameters);
+        assertTrue("Failed to search for log entries based on logbook names with wildcard cahrs : testLogbook*",
+                foundLogs.size() == 2 && foundLogs.contains(createdLog1) && foundLogs.contains(createdLog2));
     }
 
     @Test
