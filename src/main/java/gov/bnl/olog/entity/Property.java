@@ -10,6 +10,7 @@ import static gov.bnl.olog.OlogResourceDescriptors.*;
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
@@ -122,6 +123,19 @@ public class Property implements Serializable {
         return attributes;
     }
 
+
+    /**
+     * Find the attributes with the matching name
+     * @param name attribute name to be used to filter the set of property attributes
+     * @return a set of attributes with matching names
+     */
+    public Set<Attribute> getAttribute(String name)
+    {
+        return attributes.stream().filter(attr -> {
+            return name.equals(attr.getName());
+        }).collect(Collectors.toSet());
+    }
+
     /**
      * @param attributes the attributes to set
      */
@@ -129,6 +143,19 @@ public class Property implements Serializable {
         this.attributes = attributes;
     }
 
+    /**
+     * @param attributes the attributes to be added to the existing attribute sets
+     */
+    public void addAttributes(Set<Attribute> attributes) {
+        this.attributes.addAll(attributes);
+    }
+
+    /**
+     * @param attribute the attribute to be added to the existing attribute sets
+     */
+    public void addAttributes(Attribute attribute) {
+        this.attributes.add(attribute);
+    }
     /**
      * Creates a compact string representation for the log.
      *
