@@ -16,6 +16,7 @@ import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
 import static org.elasticsearch.index.query.QueryBuilders.nestedQuery;
 import static org.elasticsearch.index.query.QueryBuilders.wildcardQuery;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
@@ -87,20 +88,22 @@ public class LogSearchUtil
                 for (String value : parameter.getValue()) {
                     for (String pattern : value.split("[\\|,;]")) {
                         String[] propertySearchFields;
-                        if (pattern.contains("."))
-                            propertySearchFields = pattern.split(".");
-                        else
-                            propertySearchFields = new String[] { pattern, "", "" };
+                        propertySearchFields = Arrays.copyOf(pattern.split("\\."), 3);
 
                         BoolQueryBuilder bq = boolQuery();
-                        if (!propertySearchFields[0].isEmpty())
+                        if (propertySearchFields[0] != null && !propertySearchFields[0].isEmpty())
                         {
                             bq.must(wildcardQuery("properties.name", propertySearchFields[0].trim()));
                         }
-                        if (!propertySearchFields[1].isEmpty())
+                        if (propertySearchFields[1] != null && !propertySearchFields[1].isEmpty())
                         {
                             bq.must(nestedQuery("properties.attributes",
-                                    wildcardQuery("name", propertySearchFields[1].trim()), ScoreMode.None));
+                                    wildcardQuery("properties.attributes.name", propertySearchFields[1].trim()), ScoreMode.None));
+                        }
+                        if (propertySearchFields[2] != null && !propertySearchFields[2].isEmpty())
+                        {
+                            bq.must(nestedQuery("properties.attributes",
+                                    wildcardQuery("properties.attributes.value", propertySearchFields[2].trim()), ScoreMode.None));
                         }
                         propertyQuery.add(nestedQuery("properties", bq, ScoreMode.None));
                     }

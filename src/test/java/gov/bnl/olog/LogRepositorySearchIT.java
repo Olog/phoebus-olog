@@ -65,19 +65,19 @@ public class LogRepositorySearchIT  implements TestExecutionListener
     private static Tag testTag1 = new Tag("testTag1", State.Active);
     private static Tag testTag2= new Tag("testTag2", State.Active);
 
-    private static Attribute attribute1 = new Attribute("testAttribute1");
-    private static Attribute attribute2 = new Attribute("testAttribute2");
+    private static Attribute testAttribute1 = new Attribute("testAttribute1");
+    private static Attribute testAttribute2 = new Attribute("testAttribute2");
 
     private static Property testProperty1 = new Property("testProperty1",
                                                          testOwner1,
                                                          State.Active,
-                                                         new HashSet<Attribute>(List.of(attribute1, attribute2)));
+                                                         new HashSet<Attribute>(List.of(testAttribute1, testAttribute2)));
     
 
     private static Property testProperty2 = new Property("testProperty2",
                                                          testOwner1,
                                                          State.Active,
-                                                         new HashSet<Attribute>(List.of(attribute2)));
+                                                         new HashSet<Attribute>(List.of(testAttribute1)));
 
     /**
      * Search for a particular keyword
@@ -212,17 +212,109 @@ public class LogRepositorySearchIT  implements TestExecutionListener
         searchParameters.put("properties", List.of(testProperty1.getName()));
         List<Log> foundLogs = logRepository.search(searchParameters);
         assertTrue("Failed to search for log entries based on property name " + testProperty1.getName(),
-                foundLogs.size() == 1 && foundLogs.contains(createdLog1));
+                   foundLogs.size() == 1 && foundLogs.contains(createdLog1));
         searchParameters.put("properties", List.of(testProperty2.getName()));
         foundLogs = logRepository.search(searchParameters);
         assertTrue("Failed to search for log entries based on property name " + testProperty2.getName(),
-                foundLogs.size() == 1 && foundLogs.contains(createdLog2));
-        
-        // search based on a tag name with wildcards
+                   foundLogs.size() == 1 && foundLogs.contains(createdLog2));
+
+        // search based on a property name with wildcards
         searchParameters.put("properties", List.of("testProperty*"));
         foundLogs = logRepository.search(searchParameters);
         assertTrue("Failed to search for log entries based on logbook names with wildcard cahrs : testLogbook*",
-                foundLogs.size() == 2 && foundLogs.contains(createdLog1) && foundLogs.contains(createdLog2));
+                   foundLogs.size() == 2 && foundLogs.contains(createdLog1) && foundLogs.contains(createdLog2));
+
+        // search for a non existing property
+        searchParameters.put("properties", List.of("noProperty"));
+        foundLogs = logRepository.search(searchParameters);
+        assertTrue("Failed to search for log entries based on logbook names with wildcard cahrs : testLogbook*",
+                   foundLogs.size() == 0);
+    }
+
+    @Test
+    public void searchByPropertyAttribute()
+    {
+
+        // simple search based on the property attribute
+        MultiValueMap<String, String> searchParameters = new LinkedMultiValueMap<String, String>();
+        searchParameters.put("properties", List.of(testProperty1.getName() + "." + testAttribute1.getName()));
+        List<Log> foundLogs = logRepository.search(searchParameters);
+        assertTrue("Failed to search for log entries based on property atrribute name " + testProperty1.getName() + "."
+                + testAttribute1.getName(), foundLogs.size() == 1 && foundLogs.contains(createdLog1));
+        searchParameters.put("properties", List.of(testProperty2.getName() + "." + testAttribute1.getName()));
+        foundLogs = logRepository.search(searchParameters);
+        assertTrue("Failed to search for log entries based on property name " + testProperty2.getName() + "."
+                + testAttribute1.getName(), foundLogs.size() == 1 && foundLogs.contains(createdLog2));
+
+        // search based on a property name with wildcards and an attribute name
+        searchParameters.put("properties", List.of("testProperty*.testAttribute1"));
+        foundLogs = logRepository.search(searchParameters);
+        assertTrue("Failed to search for log entries based on logbook names with wildcard cahrs : testLogbook*",
+                   foundLogs.size() == 2 && foundLogs.contains(createdLog1) && foundLogs.contains(createdLog2));
+        searchParameters.put("properties", List.of("testProperty*.testAttribute2"));
+        foundLogs = logRepository.search(searchParameters);
+        assertTrue("Failed to search for log entries based on logbook names with wildcard cahrs : testLogbook*",
+                   foundLogs.size() == 1 && foundLogs.contains(createdLog1));
+        
+        // search based on a property name and attribute name with wildcards
+        searchParameters.put("properties", List.of("testProperty*.testAttribute*"));
+        foundLogs = logRepository.search(searchParameters);
+        assertTrue("Failed to search for log entries based on logbook names with wildcard cahrs : testLogbook*",
+                   foundLogs.size() == 2 && foundLogs.contains(createdLog1) && foundLogs.contains(createdLog2));
+
+        // search for a non existing property
+        searchParameters.put("properties", List.of(testProperty1.getName() + ".noAttribute"));
+        foundLogs = logRepository.search(searchParameters);
+        assertTrue("Failed to search for log entries based on logbook names with wildcard cahrs : testLogbook*",
+                   foundLogs.size() == 0);
+    }
+
+
+    @Test
+    public void searchByPropertyAttributeValue()
+    {
+
+        // simple search based on the property attribute
+        MultiValueMap<String, String> searchParameters = new LinkedMultiValueMap<String, String>();
+        searchParameters.put("properties", List.of(testProperty1.getName() + "." + testAttribute1.getName() + ".log1"));
+        List<Log> foundLogs = logRepository.search(searchParameters);
+        assertTrue("Failed to search for log entries based on property atrribute name "
+                                                        + testProperty1.getName() + "."
+                                                        + testAttribute1.getName() +".log1",
+                   foundLogs.size() == 1 && foundLogs.contains(createdLog1));
+        searchParameters.put("properties", List.of(testProperty2.getName() + "." + testAttribute1.getName() + ".log2"));
+        foundLogs = logRepository.search(searchParameters);
+        assertTrue("Failed to search for log entries based on property name "
+                                            + testProperty2.getName() + "."
+                                            + testAttribute1.getName() + ".log2"
+                   , foundLogs.size() == 1 && foundLogs.contains(createdLog2));
+
+        // search based on a property name with wildcards and an attribute name
+        searchParameters.put("properties", List.of("testProperty*.testAttribute1.*"));
+        foundLogs = logRepository.search(searchParameters);
+        assertTrue("Failed to search for log entries based on logbook names with wildcard cahrs : testLogbook*",
+                   foundLogs.size() == 2 && foundLogs.contains(createdLog1) && foundLogs.contains(createdLog2));
+        searchParameters.put("properties", List.of("testProperty*.testAttribute1.*1"));
+        foundLogs = logRepository.search(searchParameters);
+        assertTrue("Failed to search for log entries based on logbook names with wildcard cahrs : testLogbook*",
+                   foundLogs.size() == 1 && foundLogs.contains(createdLog1));
+        
+        // search based on a property name and attribute name with wildcards
+        searchParameters.put("properties", List.of("testProperty*.testAttribute*.log*"));
+        foundLogs = logRepository.search(searchParameters);
+        assertTrue("Failed to search for log entries based on logbook names with wildcard cahrs : testLogbook*",
+                   foundLogs.size() == 2 && foundLogs.contains(createdLog1) && foundLogs.contains(createdLog2));
+
+        searchParameters.put("properties", List.of("testProperty*.testAttribute1.log*"));
+        foundLogs = logRepository.search(searchParameters);
+        assertTrue("Failed to search for log entries based on logbook names with wildcard cahrs : testLogbook*",
+                   foundLogs.size() == 2 && foundLogs.contains(createdLog1) && foundLogs.contains(createdLog2));
+
+        // search for a non existing property
+        searchParameters.put("properties", List.of(testProperty1.getName() + ".testAttribute1.noValue"));
+        foundLogs = logRepository.search(searchParameters);
+        assertTrue("Failed to search for log entries based on logbook names with wildcard cahrs : testLogbook*",
+                   foundLogs.size() == 0);
     }
 
     @Test
@@ -263,8 +355,7 @@ public class LogRepositorySearchIT  implements TestExecutionListener
         testProperty1 = new Property("testProperty1",
                 testOwner1,
                 State.Active,
-                new HashSet<Attribute>(List.of(new Attribute("testProperty1", "log1"), new Attribute("testProperty2", "log1"))));
-        // create a log entry with a logbook only
+                new HashSet<Attribute>(List.of(new Attribute("testAttribute1", "log1"), new Attribute("testAttribute2", "log1"))));
         Log log1 = Log.LogBuilder.createLog()
                                  .owner(testOwner1)
                                  .appendDescription(description1)
@@ -278,7 +369,7 @@ public class LogRepositorySearchIT  implements TestExecutionListener
         testProperty2 = new Property("testProperty2",
                 testOwner1,
                 State.Active,
-                new HashSet<Attribute>(List.of(new Attribute("testProperty1", "log2"))));
+                new HashSet<Attribute>(List.of(new Attribute("testAttribute1", "log2"))));
         Log log2 = Log.LogBuilder.createLog()
                                  .owner(testOwner2)
                                  .description(description2)
