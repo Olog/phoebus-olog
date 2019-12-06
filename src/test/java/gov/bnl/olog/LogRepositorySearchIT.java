@@ -11,6 +11,9 @@ import static gov.bnl.olog.OlogResourceDescriptors.ES_PROPERTY_INDEX;
 import static gov.bnl.olog.OlogResourceDescriptors.ES_PROPERTY_TYPE;
 import static gov.bnl.olog.OlogResourceDescriptors.ES_TAG_INDEX;
 import static gov.bnl.olog.OlogResourceDescriptors.ES_TAG_TYPE;
+
+import static gov.bnl.olog.LogSearchUtil.MILLI_FORMAT;
+
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
@@ -320,7 +323,14 @@ public class LogRepositorySearchIT  implements TestExecutionListener
     @Test
     public void searchByTime() 
     {
-        assertTrue(false);
+        // simple search based on the start and end time
+        MultiValueMap<String, String> searchParameters = new LinkedMultiValueMap<String, String>();
+        
+        searchParameters.put("start", List.of(MILLI_FORMAT.format(createdLog1.getCreatedDate().minusMillis(1000))));
+        searchParameters.put("end",   List.of(MILLI_FORMAT.format(createdLog1.getCreatedDate().plusMillis(1000))));
+        List<Log> foundLogs = logRepository.search(searchParameters);
+        assertTrue("Failed to search for log entries based on log entry create time",
+                   foundLogs.size() == 1 && foundLogs.contains(createdLog1));
     }
     
     @Test
@@ -339,9 +349,10 @@ public class LogRepositorySearchIT  implements TestExecutionListener
 
     /**
      * Before running the search tests create the set of log entries to be used for searching
+     * @throws InterruptedException 
      */
     @Override
-    public void beforeTestClass(TestContext testContext)
+    public void beforeTestClass(TestContext testContext) throws InterruptedException
     {
         logRepository = (LogRepository) testContext.getApplicationContext().getBean("logRepository");
         TagRepository tagRepository = (TagRepository) testContext.getApplicationContext().getBean("tagRepository");
@@ -366,6 +377,8 @@ public class LogRepositorySearchIT  implements TestExecutionListener
                                  .build();
         createdLog1 = logRepository.save(log1);
 
+        // ensure that the log entries are created 5s apart to test time based searches
+        Thread.sleep(5000);
         testProperty2 = new Property("testProperty2",
                 testOwner1,
                 State.Active,
