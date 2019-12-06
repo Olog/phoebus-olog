@@ -137,12 +137,12 @@ public class LogRepositorySearchIT  implements TestExecutionListener
     public void searchByKeywordsOrdered()
     {
         MultiValueMap<String, String> searchParameters = new LinkedMultiValueMap<String, String>();
-        searchParameters.put("desc", List.of("\"brown quick\""));
+        searchParameters.put("phrase", List.of("brown quick"));
         List<Log> foundLogs = logRepository.search(searchParameters);
-        assertTrue("Failed to search for log entries based on exact ordered match of key words",
+        assertTrue("Failed to search for log entries based on exact ordered match of key words, expected 0 but found " + foundLogs.size(),
                    foundLogs.size() == 0);
         
-        searchParameters.put("desc", List.of("\"quick brown\""));
+        searchParameters.put("phrase", List.of("quick brown"));
         foundLogs = logRepository.search(searchParameters);
         assertTrue("Failed to search for log entries based on exact ordered match of key words",
                    foundLogs.size() == 2 && foundLogs.contains(createdLog1) && foundLogs.contains(createdLog2));

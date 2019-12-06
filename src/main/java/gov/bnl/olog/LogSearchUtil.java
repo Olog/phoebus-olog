@@ -4,14 +4,13 @@ import static gov.bnl.olog.OlogResourceDescriptors.ES_LOG_INDEX;
 import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
 import static org.elasticsearch.index.query.QueryBuilders.disMaxQuery;
 import static org.elasticsearch.index.query.QueryBuilders.nestedQuery;
-import static org.elasticsearch.index.query.QueryBuilders.wildcardQuery;
 import static org.elasticsearch.index.query.QueryBuilders.rangeQuery;
-
+import static org.elasticsearch.index.query.QueryBuilders.wildcardQuery;
+import static org.elasticsearch.index.query.QueryBuilders.matchPhraseQuery;
 
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeFormatterBuilder;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map.Entry;
@@ -23,7 +22,6 @@ import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.DisMaxQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.index.query.RangeQueryBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.springframework.util.MultiValueMap;
 
@@ -63,6 +61,14 @@ public class LogSearchUtil
                     }
                 }
                 boolQuery.must(descQuery);
+                break;
+            case "phrase":
+                DisMaxQueryBuilder exactQuery = disMaxQuery();
+                for (String value : parameter.getValue())
+                {
+                    exactQuery.add(matchPhraseQuery("description", value.trim()));
+                }
+                boolQuery.must(exactQuery);
                 break;
             case "owner":
                 DisMaxQueryBuilder ownerQuery = disMaxQuery();
