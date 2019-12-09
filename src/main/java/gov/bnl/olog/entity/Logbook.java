@@ -1,7 +1,7 @@
 /*
- * Copyright (c) 2010 Brookhaven National Laboratory
- * Copyright (c) 2010 Helmholtz-Zentrum Berlin für Materialien und Energie GmbH
- * Subject to license terms and conditions.
+ * Copyright (c) 2010-2020 Brookhaven National Laboratory
+ * Copyright (c) 2010-2020 Helmholtz-Zentrum Berlin für Materialien und Energie GmbH
+ * All rights reserved. Use is subject to license terms and conditions.
  */
 package gov.bnl.olog.entity;
 
@@ -14,17 +14,14 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Mapping;
 
 /**
- * Logbook object that can be represented as XML/JSON in payload data.
+ * Logbook object that can be represented as JSON in payload data.
+ * @author Kunal Shroff
  *
- * @author Eric Berryman taken from Ralph Lange <Ralph.Lange@bessy.de>
  */
 @Document(indexName = ES_LOGBOOK_INDEX, type = ES_LOGBOOK_TYPE)
 @Mapping(mappingPath = "/logbook_mapping.json")
 public class Logbook implements Serializable {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = 1L;
     @Id
     private String name = null;
@@ -41,8 +38,8 @@ public class Logbook implements Serializable {
     /**
      * Creates a new instance of Logbook.
      *
-     * @param name
-     * @param owner
+     * @param name - name of the logbook
+     * @param owner - owner of the logbook
      */
     public Logbook(String name, String owner) {
         this.owner = owner;
@@ -52,8 +49,9 @@ public class Logbook implements Serializable {
     /**
      * Creates a new instance of Logbook.
      *
-     * @param name
-     * @param owner
+     * @param name - name of the logbook
+     * @param owner - owner of the logbook
+     * @param state - the state of the logbook, i.e. Active or Inactive
      */
     public Logbook(String name, String owner, State state) {
         this.owner = owner;
@@ -73,41 +71,44 @@ public class Logbook implements Serializable {
     /**
      * Setter for logbook owner.
      *
-     * @param owner
-     *            logbook owner
+     * @param owner - logbook owner
      */
     public void setOwner(String owner) {
         this.owner = owner;
     }
 
     /**
-     * Getter for tag name.
+     * Getter for logbook name.
      *
-     * @return name tag name
+     * @return name logbook name
      */
     public String getName() {
         return name;
     }
 
     /**
-     * Setter for tag name.
+     * Setter for logbook name.
      *
-     * @param name
-     *            tag name
+     * @param name logbook name
      */
     public void setName(String name) {
         this.name = name;
     }
 
     /**
-     * @return the status
+     * Getter for logbook state.
+     *
+     * @return the state
      */
     public State getState() {
         return state;
     }
 
+
     /**
-     * @return the status
+     * Set the state of the logbook, Active or InActive
+     * 
+     * @param state - the state of the logbook
      */
     public void setState(State state) {
         this.state = state;
@@ -116,7 +117,6 @@ public class Logbook implements Serializable {
     /**
      * Creates a compact string representation for the log.
      *
-     * @param data the Label to log
      * @return string representation for log
      */
     public String toLogger() {

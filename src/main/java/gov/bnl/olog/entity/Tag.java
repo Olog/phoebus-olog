@@ -1,6 +1,7 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright (c) 2010-2020 Brookhaven National Laboratory
+ * Copyright (c) 2010-2020 Helmholtz-Zentrum Berlin für Materialien und Energie GmbH
+ * All rights reserved. Use is subject to license terms and conditions.
  */
 package gov.bnl.olog.entity;
 
@@ -14,34 +15,42 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Mapping;
 
 /**
- *
- * @author berryman, shroffk
+ * Tag object that can be represented as JSON in payload data.
+ * @author berryman, Kunal Shroff
  */
 @Document(indexName = ES_TAG_INDEX, type = ES_TAG_TYPE)
 @Mapping(mappingPath = "/tag_mapping.json")
 public class Tag implements Serializable {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = 1L;
     @Id
     private String name;
     private State state;
 
-    public Tag() {
+    /**
+     * Creates a new instance of Tag.
+     */
+    public Tag()
+    {
     }
 
     /**
-     * Creates a new instance of Tag.
+     * Creates a new instance of Tag with the given name.
      *
-     * @param name
+     * @param name - the name of the tag
      */
-    public Tag(String name) {
+    public Tag(String name)
+    {
         this.name = name;
     }
 
-    public Tag(String name, State state) {
+    /**
+     * Creates a new instance of Tag with the given name and state.
+     * @param name - the name of the tag
+     * @param state - the {@link State} of the tag
+     */
+    public Tag(String name, State state)
+    {
         this.name = name;
         this.state = state;
     }
@@ -58,21 +67,23 @@ public class Tag implements Serializable {
     /**
      * Setter for tag name.
      *
-     * @param name tag name
+     * @param name - tag name
      */
     public void setName(String name) {
         this.name = name;
     }
 
     /**
-     * @return the status
+     * @return the {@link State} of the tag
      */
     public State getState() {
         return state;
     }
 
     /**
-     * @return the status
+     * Setter for the state of the Tag, Active or InActive
+     * 
+     * @param state - the {@link State} to set
      */
     public void setState(State state) {
         this.state = state;
@@ -81,7 +92,6 @@ public class Tag implements Serializable {
     /**
      * Creates a compact string representation for the log.
      *
-     * @param data the Label to log
      * @return string representation for log
      */
     public String toLogger() {
