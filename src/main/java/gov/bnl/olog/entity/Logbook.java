@@ -10,16 +10,12 @@ import static gov.bnl.olog.OlogResourceDescriptors.*;
 import java.io.Serializable;
 
 import org.springframework.data.annotation.Id;
-import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.annotations.Mapping;
 
 /**
  * Logbook object that can be represented as XML/JSON in payload data.
  *
  * @author Eric Berryman taken from Ralph Lange <Ralph.Lange@bessy.de>
  */
-@Document(indexName = ES_LOGBOOK_INDEX, type = ES_LOGBOOK_TYPE)
-@Mapping(mappingPath = "/logbook_mapping.json")
 public class Logbook implements Serializable {
 
     /**

@@ -16,9 +16,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.springframework.data.annotation.Id;
-import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.annotations.Field;
-import org.springframework.data.elasticsearch.annotations.FieldType;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreType;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -27,7 +24,6 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 /**
  * Log object that can be represented as XML/JSON in payload data.
  */
-@Document(indexName = ES_LOG_INDEX, type = ES_LOG_TYPE)
 public class Log implements Serializable
 {
 
@@ -54,17 +50,12 @@ public class Log implements Serializable
     @JsonDeserialize(using = InstanceDeserializer.class)
     private Instant modifyDate;
     
-    @Field(type = FieldType.Nested, includeInParent = true)
     private List<Event> events;
 
-    @Field(type = FieldType.Nested, includeInParent = true)
     private Set<Logbook> logbooks = new HashSet<Logbook>();
-    @Field(type = FieldType.Nested, includeInParent = true)
     private Set<Tag> tags = new HashSet<Tag>();
-    @Field(type = FieldType.Nested, includeInParent = true)
     private Set<Property> properties = new HashSet<Property>();
 
-    @Field(type = FieldType.Nested, includeInParent = true)
     private Set<Attachment> attachments = new HashSet<Attachment>();
 
     private Log()

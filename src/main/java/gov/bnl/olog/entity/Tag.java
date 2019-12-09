@@ -10,15 +10,11 @@ import static gov.bnl.olog.OlogResourceDescriptors.ES_TAG_TYPE;
 import java.io.Serializable;
 
 import org.springframework.data.annotation.Id;
-import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.annotations.Mapping;
 
 /**
  *
  * @author berryman, shroffk
  */
-@Document(indexName = ES_TAG_INDEX, type = ES_TAG_TYPE)
-@Mapping(mappingPath = "/tag_mapping.json")
 public class Tag implements Serializable {
 
     /**
