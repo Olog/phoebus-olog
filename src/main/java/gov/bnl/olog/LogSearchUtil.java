@@ -50,7 +50,7 @@ public class LogSearchUtil
 
         for (Entry<String, List<String>> parameter : searchParameters.entrySet())
         {
-            switch (parameter.getKey()) {
+            switch (parameter.getKey().strip().toLowerCase()) {
             case "desc":
                 DisMaxQueryBuilder descQuery = disMaxQuery();
                 for (String value : parameter.getValue())
