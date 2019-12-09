@@ -17,6 +17,8 @@ import static gov.bnl.olog.LogSearchUtil.MILLI_FORMAT;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
+import java.time.Instant;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 
@@ -37,6 +39,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
 import gov.bnl.olog.entity.Attribute;
+import gov.bnl.olog.entity.Event;
 import gov.bnl.olog.entity.Log;
 import gov.bnl.olog.entity.Logbook;
 import gov.bnl.olog.entity.Property;
@@ -67,6 +70,9 @@ public class LogRepositorySearchIT  implements TestExecutionListener
     
     private static Tag testTag1 = new Tag("testTag1", State.Active);
     private static Tag testTag2= new Tag("testTag2", State.Active);
+    
+    private static Event event1 = new Event("testEvent1", Instant.now().minusSeconds(3600));
+    private static Event event2 = new Event("testEvent2", Instant.now().minusSeconds(2*3600));
 
     private static Attribute testAttribute1 = new Attribute("testAttribute1");
     private static Attribute testAttribute2 = new Attribute("testAttribute2");
@@ -325,18 +331,29 @@ public class LogRepositorySearchIT  implements TestExecutionListener
     {
         // simple search based on the start and end time
         MultiValueMap<String, String> searchParameters = new LinkedMultiValueMap<String, String>();
-        
+
         searchParameters.put("start", List.of(MILLI_FORMAT.format(createdLog1.getCreatedDate().minusMillis(1000))));
         searchParameters.put("end",   List.of(MILLI_FORMAT.format(createdLog1.getCreatedDate().plusMillis(1000))));
         List<Log> foundLogs = logRepository.search(searchParameters);
         assertTrue("Failed to search for log entries based on log entry create time",
                    foundLogs.size() == 1 && foundLogs.contains(createdLog1));
     }
-    
+
     @Test
     public void searchByEventTime()
-    {
-        assertTrue(false);
+    {   
+        // simple search based on events that occured between the start and end time
+        MultiValueMap<String, String> searchParameters = new LinkedMultiValueMap<String, String>();
+
+        searchParameters.put("start", List.of(MILLI_FORMAT.format(event1.getEvent().minusMillis(1000))));
+        searchParameters.put("end",   List.of(MILLI_FORMAT.format(event1.getEvent().plusMillis(1000))));
+        List<Log> foundLogs = logRepository.search(searchParameters);
+        assertTrue("Failed to search for log entries based on log event times", foundLogs.size() == 0);
+
+        searchParameters.put("includeEvents", null);
+        foundLogs = logRepository.search(searchParameters);
+        assertTrue("Failed to search for log entries based on log event times. Expected 1 log entry but found " + foundLogs.size(),
+                foundLogs.size() == 1 && foundLogs.contains(createdLog1));
     }
 
     private String description1 = "The quick brown fox jumps over the lazy dog";
@@ -374,6 +391,7 @@ public class LogRepositorySearchIT  implements TestExecutionListener
                                  .withLogbook(testLogbook1)
                                  .withTag(testTag1)
                                  .withProperty(testProperty1)
+                                 .withEvents(Arrays.asList(event1))
                                  .build();
         createdLog1 = logRepository.save(log1);
 
@@ -390,6 +408,7 @@ public class LogRepositorySearchIT  implements TestExecutionListener
                                  .withLogbook(testLogbook2)
                                  .withTag(testTag2)
                                  .withProperty(testProperty2)
+                                 .withEvents(Arrays.asList(event2))
                                  .build();
         createdLog2 = logRepository.save(log2);
     }

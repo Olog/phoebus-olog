@@ -37,6 +37,7 @@ public class LogSearchUtil
 
     final private static String MILLI_PATTERN = "yyyy-MM-dd HH:mm:ss.SSS";
     final public static DateTimeFormatter MILLI_FORMAT = DateTimeFormatter.ofPattern(MILLI_PATTERN).withZone(ZoneId.systemDefault());
+    
 
     public static SearchRequest buildSearchRequest(MultiValueMap<String, String> searchParameters)
     {
@@ -44,9 +45,10 @@ public class LogSearchUtil
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
         BoolQueryBuilder boolQuery = QueryBuilders.boolQuery();
         // The default temporal range for the query
-        boolean temporalQuery = false;
+        boolean temporalSearch = false;
         Instant start = Instant.EPOCH;
         Instant end = Instant.now();
+        boolean includeEvents = false;
 
         for (Entry<String, List<String>> parameter : searchParameters.entrySet())
         {
@@ -111,7 +113,7 @@ public class LogSearchUtil
                     Instant time = Instant.from(MILLI_FORMAT.parse(value));
                     earliestStartTime = earliestStartTime.isBefore(time) ? earliestStartTime : time;
                 }
-                temporalQuery = true;
+                temporalSearch = true;
                 start = earliestStartTime;
                 break;
             case "end":
@@ -122,8 +124,12 @@ public class LogSearchUtil
                     Instant time = Instant.from(MILLI_FORMAT.parse(value));
                     latestEndTime = latestEndTime.isBefore(time) ? time : latestEndTime;
                 }
-                temporalQuery = true;
+                temporalSearch = true;
                 end = latestEndTime;
+                break;
+            case "includeevents":
+            case "includeevent":
+                includeEvents = true;
                 break;
             case "properties":
                 DisMaxQueryBuilder propertyQuery = disMaxQuery();
@@ -155,12 +161,25 @@ public class LogSearchUtil
             }
         }
         // Add the temporal queries
-        if(temporalQuery)
+        if(temporalSearch)
         {
             // check that the start is before the end
             if (start.isBefore(end))
             {
-                boolQuery.must(rangeQuery("createdDate").from(start.toEpochMilli()).to(end.toEpochMilli()));
+                if (includeEvents)
+                {
+                    DisMaxQueryBuilder temporalQuery = disMaxQuery();
+                    // Add a query based on the create time
+                    temporalQuery.add(rangeQuery("createdDate").from(start.toEpochMilli()).to(end.toEpochMilli()));
+                    // Add a query based on the time of the associated events
+                    temporalQuery.add(nestedQuery("events",
+                                                  rangeQuery("events.event").from(start.toEpochMilli()).to(end.toEpochMilli()),
+                                                  ScoreMode.None));
+                    boolQuery.must(temporalQuery);
+                }
+                else {
+                    boolQuery.must(rangeQuery("createdDate").from(start.toEpochMilli()).to(end.toEpochMilli()));
+                }
             }
         }
         
