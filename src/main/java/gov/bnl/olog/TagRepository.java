@@ -1,8 +1,15 @@
+/*
+ * Copyright (c) 2010-2020 Brookhaven National Laboratory
+ * Copyright (c) 2010-2020 Helmholtz-Zentrum Berlin für Materialien und Energie GmbH
+ * All rights reserved. Use is subject to license terms and conditions.
+ */
 package gov.bnl.olog;
 
 import static gov.bnl.olog.OlogResourceDescriptors.ES_TAG_INDEX;
 import static gov.bnl.olog.OlogResourceDescriptors.ES_TAG_TYPE;
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
+
+import static org.elasticsearch.action.DocWriteResponse.Result.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -73,7 +80,7 @@ public class TagRepository implements CrudRepository<Tag, String> {
                     .setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE);
 
             IndexResponse response = client.index(indexRequest, RequestOptions.DEFAULT);
-            if (response.getResult().equals(Result.CREATED))
+            if (response.getResult().equals(CREATED) || response.getResult().equals(UPDATED))
             {
                 BytesReference ref = client
                         .get(new GetRequest(ES_TAG_INDEX, ES_TAG_TYPE, response.getId()), RequestOptions.DEFAULT)
@@ -231,7 +238,7 @@ public class TagRepository implements CrudRepository<Tag, String> {
                             .setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE),
                     RequestOptions.DEFAULT);
 
-            if (response.getResult().equals(Result.UPDATED)) {
+            if (response.getResult().equals(UPDATED)) {
                 BytesReference ref = client
                         .get(new GetRequest(ES_TAG_INDEX, ES_TAG_TYPE, response.getId()), RequestOptions.DEFAULT)
                         .getSourceAsBytesRef();

@@ -1,7 +1,7 @@
 /*
- * Copyright (c) 2010 Brookhaven National Laboratory
- * Copyright (c) 2010 Helmholtz-Zentrum Berlin für Materialien und Energie GmbH
- * Subject to license terms and conditions.
+ * Copyright (c) 2010-2020 Brookhaven National Laboratory
+ * Copyright (c) 2010-2020 Helmholtz-Zentrum Berlin für Materialien und Energie GmbH
+ * All rights reserved. Use is subject to license terms and conditions.
  */
 package gov.bnl.olog;
 
@@ -23,9 +23,9 @@ import org.springframework.web.bind.annotation.RestController;
 import gov.bnl.olog.entity.Logbook;
 
 /**
- * Top level Jersey HTTP methods for the .../logbooks URL
+ * Resource for handling the requests to ../logbooks
+ * @author kunal
  *
- * @author Eric Berryman taken from Ralph Lange <Ralph.Lange@bessy.de>
  */
 @RestController
 @RequestMapping(LOGBOOK_RESOURCE_URI)
@@ -46,14 +46,6 @@ public class LogbooksResource {
         return logbookRepository.findAll();
     }
 
-    @PostMapping
-    public Iterable<Logbook> updateLogbooks(@RequestBody final List<Logbook> logbooks) {
-        // TODO Check permissions
-        // TODO Validate
-        // TODO Create a logbook
-        return logbookRepository.saveAll(logbooks);
-    }
-
     @GetMapping("/{logbookName}")
     public Logbook findByTitle(@PathVariable String logbookName) {
         return logbookRepository.findById(logbookName).orElseGet(null);
@@ -67,12 +59,12 @@ public class LogbooksResource {
         return logbookRepository.save(logbook);
     }
 
-    @PostMapping("/{logbookName}")
-    public Logbook updateLogbook(@PathVariable String logbookName, @RequestBody final Logbook logbook) {
+    @PutMapping
+    public Iterable<Logbook> updateLogbooks(@RequestBody final List<Logbook> logbooks) {
         // TODO Check permissions
         // TODO Validate
         // TODO Create a logbook
-        return logbookRepository.save(logbook);
+        return logbookRepository.saveAll(logbooks);
     }
 
     @DeleteMapping("/{logbookName}")
