@@ -1,6 +1,5 @@
 package gov.bnl.olog;
 
-import static gov.bnl.olog.OlogResourceDescriptors.ES_LOG_INDEX;
 import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
 import static org.elasticsearch.index.query.QueryBuilders.disMaxQuery;
 import static org.elasticsearch.index.query.QueryBuilders.nestedQuery;
@@ -23,6 +22,8 @@ import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.DisMaxQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 import org.springframework.util.MultiValueMap;
 
 /**
@@ -32,14 +33,19 @@ import org.springframework.util.MultiValueMap;
  * @author kunal
  *
  */
+@Service
 public class LogSearchUtil
 {
 
     final private static String MILLI_PATTERN = "yyyy-MM-dd HH:mm:ss.SSS";
     final public static DateTimeFormatter MILLI_FORMAT = DateTimeFormatter.ofPattern(MILLI_PATTERN).withZone(ZoneId.systemDefault());
-    
 
-    public static SearchRequest buildSearchRequest(MultiValueMap<String, String> searchParameters)
+    @Value("${elasticsearch.tag.index:olog_logs}")
+    private String ES_LOG_INDEX;
+    @Value("${elasticsearch.tag.type:olog_log}")
+    private String ES_LOG_TYPE;
+
+    public synchronized SearchRequest buildSearchRequest(MultiValueMap<String, String> searchParameters)
     {
         SearchRequest searchRequest = new SearchRequest(ES_LOG_INDEX+"*");
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();

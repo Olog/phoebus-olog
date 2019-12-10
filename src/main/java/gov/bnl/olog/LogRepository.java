@@ -5,9 +5,6 @@
  */
 package gov.bnl.olog;
 
-import static gov.bnl.olog.OlogResourceDescriptors.ES_LOG_INDEX;
-import static gov.bnl.olog.OlogResourceDescriptors.ES_LOG_TYPE;
-
 import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -35,6 +32,7 @@ import org.elasticsearch.common.bytes.BytesReference;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Repository;
@@ -52,6 +50,11 @@ public class LogRepository implements CrudRepository<Log, String>
 {
 
     private static final Logger logger = Logger.getLogger(LogRepository.class.getName());
+
+    @Value("${elasticsearch.log.index:olog_logs}")
+    private String ES_LOG_INDEX;
+    @Value("${elasticsearch.log.type:olog_log}")
+    private String ES_LOG_TYPE;
 
     @Autowired
     @Qualifier("indexClient")
@@ -202,9 +205,11 @@ public class LogRepository implements CrudRepository<Log, String>
         throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Deleting log entries is not supported");
     }
 
+    @Autowired
+    LogSearchUtil logSearchUtil;
     public List<Log> search(MultiValueMap<String, String> searchParameters)
     {
-        SearchRequest searchRequest = LogSearchUtil.buildSearchRequest(searchParameters);
+        SearchRequest searchRequest = logSearchUtil.buildSearchRequest(searchParameters);
         try
         {
             final SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);

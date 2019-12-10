@@ -1,7 +1,5 @@
 package gov.bnl.olog;
 
-import static gov.bnl.olog.OlogResourceDescriptors.ES_TAG_INDEX;
-import static gov.bnl.olog.OlogResourceDescriptors.ES_TAG_TYPE;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -21,6 +19,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -44,6 +43,12 @@ public class TagRepositoryIT {
     private Tag testTag2 = new Tag("test-tag-2", State.Active);
     private Tag testTag3 = new Tag("test-tag-3", State.Active);
     private Tag testTag4 = new Tag("test-tag-4", State.Active);
+
+    // Read the elatic index and type from the application.properties
+    @Value("${elasticsearch.tag.index:olog_tags}")
+    private String ES_TAG_INDEX;
+    @Value("${elasticsearch.tag.type:olog_tag}")
+    private String ES_TAG_TYPE;
 
     /**
      * Test the creation of a test tag

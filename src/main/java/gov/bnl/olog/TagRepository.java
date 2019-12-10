@@ -5,8 +5,6 @@
  */
 package gov.bnl.olog;
 
-import static gov.bnl.olog.OlogResourceDescriptors.ES_TAG_INDEX;
-import static gov.bnl.olog.OlogResourceDescriptors.ES_TAG_TYPE;
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
 import static org.elasticsearch.action.DocWriteResponse.Result.*;
@@ -43,6 +41,7 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Repository;
@@ -56,6 +55,11 @@ import gov.bnl.olog.entity.Tag;
 
 @Repository
 public class TagRepository implements CrudRepository<Tag, String> {
+
+    @Value("${elasticsearch.tag.index:olog_tags}")
+    private String ES_TAG_INDEX;
+    @Value("${elasticsearch.tag.type:olog_tag}")
+    private String ES_TAG_TYPE;
 
     @Autowired
     @Qualifier("indexClient")

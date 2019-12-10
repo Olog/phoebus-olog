@@ -1,16 +1,5 @@
 package gov.bnl.olog;
 
-import static gov.bnl.olog.OlogResourceDescriptors.ES_LOGBOOK_INDEX;
-import static gov.bnl.olog.OlogResourceDescriptors.ES_LOGBOOK_TYPE;
-import static gov.bnl.olog.OlogResourceDescriptors.ES_LOG_INDEX;
-import static gov.bnl.olog.OlogResourceDescriptors.ES_LOG_TYPE;
-import static gov.bnl.olog.OlogResourceDescriptors.ES_PROPERTY_INDEX;
-import static gov.bnl.olog.OlogResourceDescriptors.ES_PROPERTY_TYPE;
-import static gov.bnl.olog.OlogResourceDescriptors.ES_SEQ_INDEX;
-import static gov.bnl.olog.OlogResourceDescriptors.ES_SEQ_TYPE;
-import static gov.bnl.olog.OlogResourceDescriptors.ES_TAG_INDEX;
-import static gov.bnl.olog.OlogResourceDescriptors.ES_TAG_TYPE;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
@@ -24,7 +13,6 @@ import org.elasticsearch.action.admin.indices.get.GetIndexRequest;
 import org.elasticsearch.action.admin.indices.template.get.GetIndexTemplatesRequest;
 import org.elasticsearch.action.admin.indices.template.get.GetIndexTemplatesResponse;
 import org.elasticsearch.action.admin.indices.template.put.PutIndexTemplateRequest;
-import org.elasticsearch.action.support.master.AcknowledgedResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
@@ -45,6 +33,28 @@ public class ElasticConfig
 {
 
     private static final Logger logger = Logger.getLogger(ElasticConfig.class.getName());
+
+    // Read the elatic index and type from the application.properties
+    @Value("${elasticsearch.tag.index:olog_tags}")
+    private String ES_TAG_INDEX;
+    @Value("${elasticsearch.tag.type:olog_tag}")
+    private String ES_TAG_TYPE;
+    @Value("${elasticsearch.logbook.index:olog_logbooks}")
+    private String ES_LOGBOOK_INDEX;
+    @Value("${elasticsearch.logbook.type:olog_logbook}")
+    private String ES_LOGBOOK_TYPE;
+    @Value("${elasticsearch.property.index:olog_properties}")
+    private String ES_PROPERTY_INDEX;
+    @Value("${elasticsearch.property.type:olog_property}")
+    private String ES_PROPERTY_TYPE;
+    @Value("${elasticsearch.log.index:olog_logs}")
+    private String ES_LOG_INDEX;
+    @Value("${elasticsearch.log.type:olog_log}")
+    private String ES_LOG_TYPE;
+    @Value("${elasticsearch.sequence.index:olog_sequence}")
+    private String ES_SEQ_INDEX;
+    @Value("${elasticsearch.sequence.type:olog_sequence}")
+    private String ES_SEQ_TYPE;
 
     @Value("${elasticsearch.cluster.name:elasticsearch}")
     private String clusterName;
@@ -84,7 +94,7 @@ public class ElasticConfig
      * @param indexClient the elastic client instance used to validate and create
      *                    olog indices
      */
-    private static synchronized void elasticIndexValidation(RestHighLevelClient indexClient)
+    private synchronized void elasticIndexValidation(RestHighLevelClient indexClient)
     {
         // Create/migrate the tag index
 
@@ -160,7 +170,6 @@ public class ElasticConfig
         }
 
         // create/migrate log template
-
         try
         {
             GetIndexTemplatesResponse templates = indexClient.indices().getTemplate(new GetIndexTemplatesRequest("*"), RequestOptions.DEFAULT);

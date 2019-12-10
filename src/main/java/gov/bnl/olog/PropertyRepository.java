@@ -5,8 +5,6 @@
  */
 package gov.bnl.olog;
 
-import static gov.bnl.olog.OlogResourceDescriptors.ES_PROPERTY_INDEX;
-import static gov.bnl.olog.OlogResourceDescriptors.ES_PROPERTY_TYPE;
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
 import java.io.IOException;
@@ -43,6 +41,7 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Repository;
@@ -58,6 +57,11 @@ import gov.bnl.olog.entity.State;
 @Repository
 public class PropertyRepository implements CrudRepository<Property, String>
 {
+    @Value("${elasticsearch.tag.index:olog_properties}")
+    private String ES_PROPERTY_INDEX;
+    @Value("${elasticsearch.tag.type:olog_property}")
+    private String ES_PROPERTY_TYPE;
+
     @Autowired
     @Qualifier("indexClient")
     RestHighLevelClient client;

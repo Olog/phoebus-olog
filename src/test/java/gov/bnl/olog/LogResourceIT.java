@@ -1,10 +1,5 @@
 package gov.bnl.olog;
 
-import static gov.bnl.olog.OlogResourceDescriptors.ES_LOGBOOK_INDEX;
-import static gov.bnl.olog.OlogResourceDescriptors.ES_LOGBOOK_TYPE;
-import static gov.bnl.olog.OlogResourceDescriptors.ES_LOG_INDEX;
-import static gov.bnl.olog.OlogResourceDescriptors.ES_LOG_TYPE;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -17,6 +12,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.core.io.Resource;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -55,6 +51,16 @@ public class LogResourceIT
     private static String testOwner = "log-resource-test";
     private static Logbook testLogbook;
 
+    // Read the elatic index and type from the application.properties
+    @Value("${elasticsearch.logbook.index:olog_logbooks}")
+    private String ES_LOGBOOK_INDEX;
+    @Value("${elasticsearch.logbook.type:olog_logbook}")
+    private String ES_LOGBOOK_TYPE;
+    @Value("${elasticsearch.log.index:olog_logs}")
+    private String ES_LOG_INDEX;
+    @Value("${elasticsearch.log.type:olog_log}")
+    private String ES_LOG_TYPE;
+    
     @Test
     public void retrieveAttachment() throws IOException
     {

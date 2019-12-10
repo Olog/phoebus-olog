@@ -3,17 +3,7 @@
  */
 package gov.bnl.olog;
 
-import static gov.bnl.olog.OlogResourceDescriptors.ES_LOGBOOK_INDEX;
-import static gov.bnl.olog.OlogResourceDescriptors.ES_LOGBOOK_TYPE;
-import static gov.bnl.olog.OlogResourceDescriptors.ES_LOG_INDEX;
-import static gov.bnl.olog.OlogResourceDescriptors.ES_LOG_TYPE;
-import static gov.bnl.olog.OlogResourceDescriptors.ES_PROPERTY_INDEX;
-import static gov.bnl.olog.OlogResourceDescriptors.ES_PROPERTY_TYPE;
-import static gov.bnl.olog.OlogResourceDescriptors.ES_TAG_INDEX;
-import static gov.bnl.olog.OlogResourceDescriptors.ES_TAG_TYPE;
-
 import static gov.bnl.olog.LogSearchUtil.MILLI_FORMAT;
-
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
@@ -29,6 +19,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestContext;
 import org.springframework.test.context.TestExecutionListener;
@@ -87,6 +78,24 @@ public class LogRepositorySearchIT  implements TestExecutionListener
                                                          testOwner1,
                                                          State.Active,
                                                          new HashSet<Attribute>(List.of(testAttribute1)));
+
+    // Read the elatic index and type from the application.properties
+    @Value("${elasticsearch.tag.index:olog_tags}")
+    private String ES_TAG_INDEX;
+    @Value("${elasticsearch.tag.type:olog_tag}")
+    private String ES_TAG_TYPE;
+    @Value("${elasticsearch.logbook.index:olog_logbooks}")
+    private String ES_LOGBOOK_INDEX;
+    @Value("${elasticsearch.logbook.type:olog_logbook}")
+    private String ES_LOGBOOK_TYPE;
+    @Value("${elasticsearch.property.index:olog_properties}")
+    private String ES_PROPERTY_INDEX;
+    @Value("${elasticsearch.property.type:olog_property}")
+    private String ES_PROPERTY_TYPE;
+    @Value("${elasticsearch.log.index:olog_logs}")
+    private String ES_LOG_INDEX;
+    @Value("${elasticsearch.log.type:olog_log}")
+    private String ES_LOG_TYPE;
 
     /**
      * Search for a particular word

@@ -5,12 +5,7 @@
  */
 package gov.bnl.olog;
 
-import static gov.bnl.olog.OlogResourceDescriptors.ES_LOGBOOK_INDEX;
-import static gov.bnl.olog.OlogResourceDescriptors.ES_LOGBOOK_TYPE;
-import static gov.bnl.olog.OlogResourceDescriptors.ES_TAG_INDEX;
-import static gov.bnl.olog.OlogResourceDescriptors.ES_TAG_TYPE;
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
-import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -40,12 +35,11 @@ import org.elasticsearch.common.bytes.BytesReference;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.engine.DocumentMissingException;
-import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
-import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Repository;
@@ -56,12 +50,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import gov.bnl.olog.entity.Logbook;
 import gov.bnl.olog.entity.State;
-import gov.bnl.olog.entity.Tag;
 
 @Repository
 public class LogbookRepository implements CrudRepository<Logbook, String>
 {
 
+    // Read the elatic index and type from the application.properties
+    @Value("${elasticsearch.logbook.index:olog_logbooks}")
+    private String ES_LOGBOOK_INDEX;
+    @Value("${elasticsearch.logbook.type:olog_logbook}")
+    private String ES_LOGBOOK_TYPE;
+    
     @Autowired
     @Qualifier("indexClient")
     RestHighLevelClient client;
@@ -73,7 +72,6 @@ public class LogbookRepository implements CrudRepository<Logbook, String>
     {
         try
         {
-
             IndexRequest indexRequest = new IndexRequest(ES_LOGBOOK_INDEX, ES_LOGBOOK_TYPE, logbook.getName())
                     .source(mapper.writeValueAsBytes(logbook), XContentType.JSON)
                     .setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE);
@@ -259,7 +257,6 @@ public class LogbookRepository implements CrudRepository<Logbook, String>
     {
         try
         {
-
             UpdateResponse response = client.update(
                     new UpdateRequest(ES_LOGBOOK_INDEX, ES_LOGBOOK_TYPE, logbookName)
                             .doc(jsonBuilder().startObject().field("state", State.Inactive).endObject())
@@ -283,7 +280,6 @@ public class LogbookRepository implements CrudRepository<Logbook, String>
         {
             LogbooksResource.log.log(Level.SEVERE, e.getMessage(), e);
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to delete logbook: " + logbookName + " because it does not exist", e);
-
         }
 
     }

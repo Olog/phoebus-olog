@@ -1,7 +1,5 @@
 package gov.bnl.olog;
 
-import static gov.bnl.olog.OlogResourceDescriptors.ES_LOGBOOK_INDEX;
-import static gov.bnl.olog.OlogResourceDescriptors.ES_LOGBOOK_TYPE;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -23,6 +21,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -34,6 +33,12 @@ import gov.bnl.olog.entity.State;
 @ContextConfiguration(classes = ElasticConfig.class)
 @TestPropertySource(locations="classpath:test_application.properties")
 public class LogbookRepositoryIT {
+
+    // Read the elatic index and type from the application.properties
+    @Value("${elasticsearch.logbook.index:olog_logbooks}")
+    private String ES_LOGBOOK_INDEX;
+    @Value("${elasticsearch.logbook.type:olog_logbook}")
+    private String ES_LOGBOOK_TYPE;
 
     @Autowired
     private LogbookRepository logbookRepository;

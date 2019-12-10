@@ -1,7 +1,5 @@
 package gov.bnl.olog;
 
-import static gov.bnl.olog.OlogResourceDescriptors.ES_PROPERTY_INDEX;
-import static gov.bnl.olog.OlogResourceDescriptors.ES_PROPERTY_TYPE;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -23,6 +21,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -54,6 +53,11 @@ public class PropertyRepositoryIT
     Property testProperty2 = new Property("test-property-2", testOwner, State.Active, attributes);
     Property testProperty3 = new Property("test-property-3", testOwner, State.Active, attributes);
     Property testProperty4 = new Property("test-property-4", testOwner, State.Active, attributes);
+
+    @Value("${elasticsearch.property.index:olog_properties}")
+    private String ES_PROPERTY_INDEX;
+    @Value("${elasticsearch.property.type:olog_property}")
+    private String ES_PROPERTY_TYPE;
 
     private static final String testOwner = "test-owner";
 
