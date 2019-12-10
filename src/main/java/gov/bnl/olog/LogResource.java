@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2010-2020 Brookhaven National Laboratory
+ * Copyright (c) 2010-2020 Helmholtz-Zentrum Berlin für Materialien und Energie GmbH
+ * All rights reserved. Use is subject to license terms and conditions.
+ */
 package gov.bnl.olog;
 
 import static gov.bnl.olog.OlogResourceDescriptors.LOG_RESOURCE_URI;
@@ -18,6 +23,11 @@ import org.springframework.web.bind.annotation.RestController;
 import gov.bnl.olog.entity.Attachment;
 import gov.bnl.olog.entity.Log;
 
+/**
+ * Resource for handling the requests to ../logs
+ * @author kunal
+ *
+ */
 @RestController
 @RequestMapping(LOG_RESOURCE_URI)
 public class LogResource

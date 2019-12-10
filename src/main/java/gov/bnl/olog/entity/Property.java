@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2010 Brookhaven National Laboratory
- * Copyright (c) 2010-2011 Helmholtz-Zentrum Berlin für Materialien und Energie GmbH
+ * Copyright (c) 2010-2020 Brookhaven National Laboratory
+ * Copyright (c) 2010-2020 Helmholtz-Zentrum Berlin für Materialien und Energie GmbH
  * All rights reserved. Use is subject to license terms and conditions.
  */
 package gov.bnl.olog.entity;
@@ -15,16 +15,12 @@ import java.util.stream.Collectors;
 import org.springframework.data.annotation.Id;
 
 /**
- * Property object that can be represented as XML/JSON in payload data.
+ * Property object that can be represented as JSON in payload data.
+ * @author Kunal Shroff
  *
- * @author Eric Berryman taken from Ralph Lange
- *         <Ralph.Lange@helmholtz-berlin.de>
  */
 public class Property implements Serializable {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = 1L;
     @Id
     private String name;
@@ -41,20 +37,19 @@ public class Property implements Serializable {
     }
 
     /**
-     * Creates a new instance of Property.
-     *
-     * @param name
-     * @param value
+     * Create a new instance of Property.
+     * @param name - the name of the property
      */
     public Property(String name) {
         this.name = name;
     }
 
-
     /**
-     * @param name
-     * @param state
-     * @param attributes
+     * Create a new instance of Property.
+     * @param name - name property name
+     * @param owner - the owner of this property
+     * @param state - state property state
+     * @param attributes - attributes a set of attributes for this property
      */
     public Property(String name, String owner, State state, Set<Attribute> attributes) {
         this.name = name;
@@ -62,9 +57,11 @@ public class Property implements Serializable {
         this.state = state;
         this.attributes = attributes;
     }
+
     /**
-     * @param name
-     * @param attributes
+     * Create a new instance of Property.
+     * @param name - property name
+     * @param attributes - a set of attributes for this property
      */
     public Property(String name, Set<Attribute> attributes) {
         this.name = name;
@@ -74,7 +71,7 @@ public class Property implements Serializable {
     /**
      * Getter for property name.
      *
-     * @return property name
+     * @return the property name
      */
     public String getName() {
         return name;
@@ -83,13 +80,16 @@ public class Property implements Serializable {
     /**
      * Setter for property name.
      *
-     * @param name
-     *            property name
+     * @param name - property name
      */
     public void setName(String name) {
         this.name = name;
     }
 
+    /**
+     * Getter for property owner.
+     * @return the property owner
+     */
     public String getOwner()
     {
         return owner;
@@ -100,6 +100,10 @@ public class Property implements Serializable {
         this.owner = owner;
     }
 
+    /**
+     * Getter for property state.
+     * @return the property state
+     */
     public State getState() {
         return state;
     }
@@ -110,7 +114,8 @@ public class Property implements Serializable {
 
     
     /**
-     * @return the attributes
+     * Getter for property attributes.
+     * @return a set of the attributes
      */
     public Set<Attribute> getAttributes() {
         return attributes;
@@ -118,8 +123,8 @@ public class Property implements Serializable {
 
 
     /**
-     * Find the attributes with the matching name
-     * @param name attribute name to be used to filter the set of property attributes
+     * Find the attributes with the matching name.
+     * @param name - attribute name to be used to filter the set of property attributes
      * @return a set of attributes with matching names
      */
     public Set<Attribute> getAttribute(String name)
@@ -130,14 +135,18 @@ public class Property implements Serializable {
     }
 
     /**
-     * @param attributes the attributes to set
+     * Set the attributes of this property.
+     * @param attributes - the attributes to set
      */
     public void setAttributes(Set<Attribute> attributes) {
         this.attributes = attributes;
     }
 
     /**
-     * @param attributes the attributes to be added to the existing attribute sets
+     * Append the given set of attributes to the existing attributes of this
+     * property
+     *
+     * @param attributes - the attributes to be added to the existing attribute sets
      */
     public void addAttributes(Set<Attribute> attributes) {
         this.attributes.addAll(attributes);
@@ -149,17 +158,19 @@ public class Property implements Serializable {
     public void addAttributes(Attribute attribute) {
         this.attributes.add(attribute);
     }
+
     /**
      * Creates a compact string representation for the log.
      *
-     * @param data
-     *            the Property to log
      * @return string representation for log
      */
-    public String toLogger() {
-        if (this.attributes == null) {
+    public String toLogger()
+    {
+        if (this.attributes == null)
+        {
             return this.getName();
-        } else {
+        } else
+        {
             return this.getName() + "(" + this.getAttributes().toString() + ")";
         }
     }

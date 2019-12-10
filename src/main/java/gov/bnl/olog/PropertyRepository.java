@@ -1,9 +1,12 @@
+/*
+ * Copyright (c) 2010-2020 Brookhaven National Laboratory
+ * Copyright (c) 2010-2020 Helmholtz-Zentrum Berlin für Materialien und Energie GmbH
+ * All rights reserved. Use is subject to license terms and conditions.
+ */
 package gov.bnl.olog;
 
 import static gov.bnl.olog.OlogResourceDescriptors.ES_PROPERTY_INDEX;
 import static gov.bnl.olog.OlogResourceDescriptors.ES_PROPERTY_TYPE;
-import static gov.bnl.olog.OlogResourceDescriptors.ES_TAG_INDEX;
-import static gov.bnl.olog.OlogResourceDescriptors.ES_TAG_TYPE;
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
 import java.io.IOException;
@@ -38,7 +41,6 @@ import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.engine.DocumentMissingException;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
-import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.repository.CrudRepository;
@@ -51,7 +53,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import gov.bnl.olog.entity.Property;
 import gov.bnl.olog.entity.State;
-import gov.bnl.olog.entity.Tag;
+
 
 @Repository
 public class PropertyRepository implements CrudRepository<Property, String>

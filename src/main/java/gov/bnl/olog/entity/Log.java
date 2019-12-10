@@ -1,7 +1,7 @@
 /*
- * Copyright (c) 2010 Brookhaven National Laboratory
- * Copyright (c) 2010 Helmholtz-Zentrum Berlin fuer Materialien und Energie GmbH
- * Subject to license terms and conditions.
+ * Copyright (c) 2010-2020 Brookhaven National Laboratory
+ * Copyright (c) 2010-2020 Helmholtz-Zentrum Berlin für Materialien und Energie GmbH
+ * All rights reserved. Use is subject to license terms and conditions.
  */
 package gov.bnl.olog.entity;
 
@@ -22,14 +22,13 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 /**
- * Log object that can be represented as XML/JSON in payload data.
+ * Log object that can be represented as JSON in payload data.
+ * 
+ * @author Kunal Shroff
  */
 public class Log implements Serializable
 {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = 1L;
 
     @Id
@@ -42,14 +41,14 @@ public class Log implements Serializable
 
     private Level level;
     private State state;
-    
+
     @JsonSerialize(using = InstanceSerializer.class)
     @JsonDeserialize(using = InstanceDeserializer.class)
     private Instant createdDate;
     @JsonSerialize(using = InstanceSerializer.class)
     @JsonDeserialize(using = InstanceDeserializer.class)
     private Instant modifyDate;
-    
+
     private List<Event> events;
 
     private Set<Logbook> logbooks = new HashSet<Logbook>();
@@ -62,17 +61,8 @@ public class Log implements Serializable
     {
     }
 
-    private Log(Long id,
-                String version,
-                String owner,
-                String source,
-                String description,
-                Level level,
-                State state,
-                List<Event> events,
-                Set<Logbook> logbooks,
-                Set<Tag> tags,
-                Set<Property> properties)
+    private Log(Long id, String version, String owner, String source, String description, Level level, State state,
+            List<Event> events, Set<Logbook> logbooks, Set<Tag> tags, Set<Property> properties)
     {
 
         super();
@@ -90,131 +80,261 @@ public class Log implements Serializable
         this.properties = properties;
     }
 
+    /**
+     * Getter for log id
+     * 
+     * @return the log id
+     */
     public Long getId()
     {
         return id;
     }
 
+    /**
+     * Setter for log id
+     * 
+     * @param id - the id to set
+     */
     public void setId(Long id)
     {
         this.id = id;
     }
 
+    /**
+     * Getter for log owner
+     * 
+     * @return the owner
+     */
     public String getOwner()
     {
         return owner;
     }
 
+    /**
+     * Setter for log owner
+     * 
+     * @param owner - the owner to set
+     */
     public void setOwner(String owner)
     {
         this.owner = owner;
     }
 
+    /**
+     * Getter for log source
+     * 
+     * @return the source
+     */
     public String getSource()
     {
         return source;
     }
 
+    /**
+     * Setter for log source
+     * 
+     * @param source - the source to set
+     */
     public void setSource(String source)
     {
         this.source = source;
     }
 
+    /**
+     * Getter for log description
+     * 
+     * @return the description
+     */
     public String getDescription()
     {
         return description;
     }
 
+    /**
+     * Setter for log description
+     * 
+     * @param description - the description to set
+     */
     public void setDescription(String description)
     {
         this.description = description;
     }
 
+    /**
+     * Getter for log level
+     * 
+     * @return the level
+     */
     public Level getLevel()
     {
         return level;
     }
 
+    /**
+     * Setter for log level
+     * 
+     * @param level - the level to set
+     */
     public void setLevel(Level level)
     {
         this.level = level;
     }
 
+    /**
+     * Getter for log state
+     * 
+     * @return the state
+     */
     public State getState()
     {
         return state;
     }
 
+    /**
+     * Setter for log state
+     * 
+     * @param state - the state to set
+     */
     public void setState(State state)
     {
         this.state = state;
     }
 
+    /**
+     * Getter for log create date
+     * 
+     * @return the createdDate
+     */
     public Instant getCreatedDate()
     {
         return createdDate;
     }
 
+    /**
+     * Setter for log createdDate
+     * 
+     * @param createdDate - the createdDate to set
+     */
     public void setCreatedDate(Instant createdDate)
     {
         this.createdDate = createdDate;
     }
 
+    /**
+     * Getter for log modify date
+     * 
+     * @return the modifyDate
+     */
     public Instant getModifyDate()
     {
         return modifyDate;
     }
 
+    /**
+     * Setter for log modifyDate
+     * 
+     * @param modifyDate - the modifyDate to set
+     */
     public void setModifyDate(Instant modifyDate)
     {
         this.modifyDate = modifyDate;
     }
 
+    /**
+     * Getter for log events
+     * 
+     * @return the events
+     */
     public List<Event> getEvents()
     {
         return events;
     }
 
+    /**
+     * Setter for log events
+     * 
+     * @param events - the events to set
+     */
     public void setEvents(List<Event> events)
     {
         this.events = events;
     }
 
+    /**
+     * Getter for log logbooks
+     * 
+     * @return the logbooks
+     */
     public Set<Logbook> getLogbooks()
     {
         return logbooks;
     }
 
+    /**
+     * Setter for log logbooks
+     * 
+     * @param logbooks - the logbooks to set
+     */
     public void setLogbooks(Set<Logbook> logbooks)
     {
         this.logbooks = logbooks;
     }
 
+    /**
+     * Getter for log tags
+     * 
+     * @return the tags
+     */
     public Set<Tag> getTags()
     {
         return tags;
     }
 
+    /**
+     * Setter for log tags
+     * 
+     * @param tags - the tags to set
+     */
     public void setTags(Set<Tag> tags)
     {
         this.tags = tags;
     }
 
+    /**
+     * Getter for log properties
+     * 
+     * @return the properties
+     */
     public Set<Property> getProperties()
     {
         return properties;
     }
 
+    /**
+     * Setter for log properties
+     * 
+     * @param properties - the properties to set
+     */
     public void setProperties(Set<Property> properties)
     {
         this.properties = properties;
     }
 
+    /**
+     * Getter for log attachments
+     * 
+     * @return the attachments
+     */
     public Set<Attachment> getAttachments()
     {
         return attachments;
     }
 
+    /**
+     * Setter for log attachments
+     * 
+     * @param attachments - the attachments to set
+     */
     public void setAttachments(Set<Attachment> attachments)
     {
         this.attachments = attachments;
@@ -259,9 +379,9 @@ public class Log implements Serializable
     }
 
     /**
+     * A builder for creating a {@link Log} entry
      * 
      * @author Kunal Shroff
-     *
      */
     @JsonIgnoreType
     public static class LogBuilder
@@ -287,6 +407,11 @@ public class Log implements Serializable
         {
         }
 
+        /**
+         * Create a logbuilder initialized based on the given {@link Log}
+         * 
+         * @param log - the log to be used to initialize the {@link LogBuilder}
+         */
         public LogBuilder(Log log)
         {
             this.id = log.getId();
@@ -352,7 +477,7 @@ public class Log implements Serializable
             this.events = events;
             return this;
         }
-       
+
         public LogBuilder description(String description)
         {
             if (description != null)
@@ -463,6 +588,11 @@ public class Log implements Serializable
             return this;
         }
 
+        /**
+         * Create the log entry
+         * 
+         * @return an instance of {@link Log}
+         */
         public Log build()
         {
             Log log = new Log();

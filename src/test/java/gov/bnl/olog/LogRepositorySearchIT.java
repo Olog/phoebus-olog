@@ -361,8 +361,8 @@ public class LogRepositorySearchIT  implements TestExecutionListener
         // simple search based on events that occured between the start and end time
         MultiValueMap<String, String> searchParameters = new LinkedMultiValueMap<String, String>();
 
-        searchParameters.put("start", List.of(MILLI_FORMAT.format(event1.getEvent().minusMillis(1000))));
-        searchParameters.put("end",   List.of(MILLI_FORMAT.format(event1.getEvent().plusMillis(1000))));
+        searchParameters.put("start", List.of(MILLI_FORMAT.format(event1.getInstant().minusMillis(1000))));
+        searchParameters.put("end",   List.of(MILLI_FORMAT.format(event1.getInstant().plusMillis(1000))));
         List<Log> foundLogs = logRepository.search(searchParameters);
         assertTrue("Failed to search for log entries based on log event times", foundLogs.size() == 0);
 

@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2010-2020 Brookhaven National Laboratory
+ * Copyright (c) 2010-2020 Helmholtz-Zentrum Berlin für Materialien und Energie GmbH
+ * All rights reserved. Use is subject to license terms and conditions.
+ */
 package gov.bnl.olog.entity;
 
 import java.time.Instant;
@@ -7,48 +12,87 @@ import org.springframework.data.annotation.Id;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
+/**
+ * A event represents a specific instance in time that can be assigned to log entries.
+ * @author Kunal Shroff
+ *
+ */
 public class Event
 {
     @Id
     private String name;
     @JsonSerialize(using = InstanceSerializer.class)
     @JsonDeserialize(using = InstanceDeserializer.class)
-    private Instant event = null;
+    private Instant instant = null;
 
+    /**
+     * Create a new instant of {@link Event}
+     */
     public Event()
     {
     }
 
+    /**
+     * Create a new instant of {@link Event} with the given name
+     * 
+     * @param name - name of the event
+     */
     public Event(String name)
     {
         this.name = name;
-        this.event = Instant.now();
+        this.instant = Instant.now();
     }
 
-    public Event(String name, Instant event)
+    /**
+     * Create a new instant of {@link Event} with the given name and instant
+     * 
+     * @param name - event name
+     * @param instant - the instant in time described by this event
+     */
+    public Event(String name, Instant instant)
     {
         this.name = name;
-        this.event = event;
+        this.instant = instant;
     }
 
+    /**
+     * Getter for event name.
+     *
+     * @return name event name
+     */
     public String getName()
     {
         return name;
     }
 
+    /**
+     * Setter for event name.
+     *
+     * @param name - set event name
+     */
     public void setName(String name)
     {
         this.name = name;
     }
 
-    public Instant getEvent()
+    /**
+     * Getter for event instant.
+     *
+     * @return instant - the {@link Instant} in time described by this event
+     */
+    public Instant getInstant()
     {
-        return event;
+        return instant;
     }
 
-    public void setEvent(Instant event)
+    /**
+     * Setter for event instant.
+     *
+     * @param instant - set event Instant
+     */
+    public void setInstant(Instant instant)
     {
-        this.event = event;
+        this.instant = instant;
     }
 
     @Override
@@ -56,7 +100,7 @@ public class Event
     {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((event == null) ? 0 : event.hashCode());
+        result = prime * result + ((instant == null) ? 0 : instant.hashCode());
         result = prime * result + ((name == null) ? 0 : name.hashCode());
         return result;
     }
@@ -71,11 +115,11 @@ public class Event
         if (getClass() != obj.getClass())
             return false;
         Event other = (Event) obj;
-        if (event == null)
+        if (instant == null)
         {
-            if (other.event != null)
+            if (other.instant != null)
                 return false;
-        } else if (!event.equals(other.event))
+        } else if (!instant.equals(other.instant))
             return false;
         if (name == null)
         {
