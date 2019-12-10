@@ -6,10 +6,8 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.ComponentScan;
-import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
 
 @SpringBootApplication
-@EnableElasticsearchRepositories(basePackages = "gov.bnl.olog")
 @ComponentScan(basePackages = { "gov.bnl.olog" })
 public class Application {
     static final Logger logger = Logger.getLogger("Olog");
