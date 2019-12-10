@@ -207,6 +207,7 @@ public class LogRepository implements CrudRepository<Log, String>
 
     @Autowired
     LogSearchUtil logSearchUtil;
+
     public List<Log> search(MultiValueMap<String, String> searchParameters)
     {
         SearchRequest searchRequest = logSearchUtil.buildSearchRequest(searchParameters);

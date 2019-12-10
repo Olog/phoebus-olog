@@ -57,9 +57,9 @@ import gov.bnl.olog.entity.State;
 @Repository
 public class PropertyRepository implements CrudRepository<Property, String>
 {
-    @Value("${elasticsearch.tag.index:olog_properties}")
+    @Value("${elasticsearch.property.index:olog_properties}")
     private String ES_PROPERTY_INDEX;
-    @Value("${elasticsearch.tag.type:olog_property}")
+    @Value("${elasticsearch.property.type:olog_property}")
     private String ES_PROPERTY_TYPE;
 
     @Autowired

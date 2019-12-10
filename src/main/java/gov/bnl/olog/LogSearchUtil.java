@@ -30,7 +30,7 @@ import org.springframework.util.MultiValueMap;
  * A utility class for creating a search query for log entires based on time,
  * logboks, tags, properties, description, etc.
  * 
- * @author kunal
+ * @author Kunal Shroff
  *
  */
 @Service
@@ -40,9 +40,9 @@ public class LogSearchUtil
     final private static String MILLI_PATTERN = "yyyy-MM-dd HH:mm:ss.SSS";
     final public static DateTimeFormatter MILLI_FORMAT = DateTimeFormatter.ofPattern(MILLI_PATTERN).withZone(ZoneId.systemDefault());
 
-    @Value("${elasticsearch.tag.index:olog_logs}")
+    @Value("${elasticsearch.log.index:olog_logs}")
     private String ES_LOG_INDEX;
-    @Value("${elasticsearch.tag.type:olog_log}")
+    @Value("${elasticsearch.log.type:olog_log}")
     private String ES_LOG_TYPE;
 
     public synchronized SearchRequest buildSearchRequest(MultiValueMap<String, String> searchParameters)
@@ -179,7 +179,7 @@ public class LogSearchUtil
                     temporalQuery.add(rangeQuery("createdDate").from(start.toEpochMilli()).to(end.toEpochMilli()));
                     // Add a query based on the time of the associated events
                     temporalQuery.add(nestedQuery("events",
-                                                  rangeQuery("events.event").from(start.toEpochMilli()).to(end.toEpochMilli()),
+                                                  rangeQuery("events.instant").from(start.toEpochMilli()).to(end.toEpochMilli()),
                                                   ScoreMode.None));
                     boolQuery.must(temporalQuery);
                 }

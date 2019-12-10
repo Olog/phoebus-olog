@@ -5,9 +5,9 @@
  */
 package gov.bnl.olog;
 
+import static org.elasticsearch.action.DocWriteResponse.Result.CREATED;
+import static org.elasticsearch.action.DocWriteResponse.Result.UPDATED;
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
-
-import static org.elasticsearch.action.DocWriteResponse.Result.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -16,7 +16,6 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
-import org.elasticsearch.action.DocWriteResponse.Result;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.get.GetRequest;
