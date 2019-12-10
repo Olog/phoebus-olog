@@ -5,9 +5,6 @@
  */
 package gov.bnl.olog.entity;
 
-import static gov.bnl.olog.OlogResourceDescriptors.ES_LOG_INDEX;
-import static gov.bnl.olog.OlogResourceDescriptors.ES_LOG_TYPE;
-
 import java.io.Serializable;
 import java.time.Instant;
 import java.util.ArrayList;

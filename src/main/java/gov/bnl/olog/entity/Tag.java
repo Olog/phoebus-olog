@@ -5,9 +5,6 @@
  */
 package gov.bnl.olog.entity;
 
-import static gov.bnl.olog.OlogResourceDescriptors.ES_TAG_INDEX;
-import static gov.bnl.olog.OlogResourceDescriptors.ES_TAG_TYPE;
-
 import java.io.Serializable;
 
 import org.springframework.data.annotation.Id;
