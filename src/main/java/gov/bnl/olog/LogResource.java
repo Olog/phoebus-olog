@@ -8,6 +8,7 @@ package gov.bnl.olog;
 import static gov.bnl.olog.OlogResourceDescriptors.LOG_RESOURCE_URI;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -15,9 +16,13 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import gov.bnl.olog.entity.Attachment;
@@ -37,9 +42,9 @@ public class LogResource
     @Autowired
     AttachmentRepository attachmentRepository;
 
-    /** Creates a new instance of LogResource */
-    public LogResource()
-    {
+    @GetMapping("{logId}")
+    public Log getLog(@PathVariable String logId) {
+        return logRepository.findById(logId).get();
     }
 
     @GetMapping("/attachments/{logId}/{attachmentId}")
@@ -69,5 +74,20 @@ public class LogResource
             }
         }
         return null;
+    }
+
+    @GetMapping()
+    public List<Log> findLogs(@RequestParam MultiValueMap<String, String> allRequestParams) {
+        return logRepository.search(allRequestParams);
+    }
+    
+    /**
+     * 
+     * @param log
+     * @return
+     */
+    @PutMapping()
+    public Log createLog(@RequestBody Log log) {
+        return logRepository.save(log);
     }
 }
