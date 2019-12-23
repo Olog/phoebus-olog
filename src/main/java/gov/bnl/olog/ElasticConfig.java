@@ -26,6 +26,13 @@ import org.springframework.context.annotation.PropertySource;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+/**
+ * A element which creates the elastic rest clients used the olog service for
+ * creating and retrieving logs and other resources
+ * 
+ * @author kunal
+ *
+ */
 @Configuration
 @ComponentScan(basePackages = { "gov.bnl.olog" })
 @PropertySource("classpath:application.properties")

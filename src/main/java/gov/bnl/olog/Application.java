@@ -23,9 +23,8 @@ public class Application {
         logger.info("Starting Olog Service");
         configureTruststore();
         ConfigurableApplicationContext olog = SpringApplication.run(Application.class, args);
-        logger.info(olog.getApplicationName() + " : " + olog.getId());
     }
-    
+
     /**
      * Set the default ssl trust store
      */

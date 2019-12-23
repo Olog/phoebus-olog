@@ -6,10 +6,12 @@ import static org.elasticsearch.index.query.QueryBuilders.nestedQuery;
 import static org.elasticsearch.index.query.QueryBuilders.rangeQuery;
 import static org.elasticsearch.index.query.QueryBuilders.wildcardQuery;
 import static org.elasticsearch.index.query.QueryBuilders.matchPhraseQuery;
+import static org.elasticsearch.index.query.QueryBuilders.fuzzyQuery;
 
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map.Entry;
@@ -27,8 +29,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.MultiValueMap;
 
 /**
- * A utility class for creating a search query for log entires based on time,
- * logboks, tags, properties, description, etc.
+ * A utility class for creating a search query for log entries based on time,
+ * logbooks, tags, properties, description, etc.
  * 
  * @author Kunal Shroff
  *
@@ -45,12 +47,19 @@ public class LogSearchUtil
     @Value("${elasticsearch.log.type:olog_log}")
     private String ES_LOG_TYPE;
 
+    /**
+     * 
+     * @param searchParameters - the various search parameters
+     * @return A {@link SearchRequest} based on the provided search parameters
+     */
     public synchronized SearchRequest buildSearchRequest(MultiValueMap<String, String> searchParameters)
     {
         SearchRequest searchRequest = new SearchRequest(ES_LOG_INDEX+"*");
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
         BoolQueryBuilder boolQuery = QueryBuilders.boolQuery();
         // The default temporal range for the query
+        boolean fuzzySearch = false;
+        List<String> searchTerms = new ArrayList<String>();
         boolean temporalSearch = false;
         Instant start = Instant.EPOCH;
         Instant end = Instant.now();
@@ -60,15 +69,17 @@ public class LogSearchUtil
         {
             switch (parameter.getKey().strip().toLowerCase()) {
             case "desc":
-                DisMaxQueryBuilder descQuery = disMaxQuery();
+            case "description":
                 for (String value : parameter.getValue())
                 {
                     for (String pattern : value.split("[\\|,;\\s+]"))
                     {
-                        descQuery.add(wildcardQuery("description", pattern.trim()));
+                        searchTerms.add(pattern.trim());
                     }
                 }
-                boolQuery.must(descQuery);
+                break;
+            case "fuzzy":
+                fuzzySearch = true;
                 break;
             case "phrase":
                 DisMaxQueryBuilder exactQuery = disMaxQuery();
@@ -188,7 +199,24 @@ public class LogSearchUtil
                 }
             }
         }
-        
+        // Add the description query
+        if (!searchTerms.isEmpty())
+        {
+            DisMaxQueryBuilder descQuery = disMaxQuery();
+            if (fuzzySearch)
+            {
+                searchTerms.stream().forEach(searchTerm -> {
+                    descQuery.add(fuzzyQuery("description", searchTerm));
+                });
+            } else
+            {
+                searchTerms.stream().forEach(searchTerm -> {
+                    descQuery.add(wildcardQuery("description", searchTerm));
+                });
+            }
+            boolQuery.must(descQuery);
+        }
+
         searchSourceBuilder.query(boolQuery);
         searchSourceBuilder.from(0);
         searchSourceBuilder.size(100);
