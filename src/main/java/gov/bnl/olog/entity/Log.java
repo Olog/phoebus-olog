@@ -409,12 +409,18 @@ public class Log implements Serializable
          * 
          * @param log - the log to be used to initialize the {@link LogBuilder}
          */
-        public LogBuilder(Log log)
+        LogBuilder(Log log)
         {
             this.id = log.getId();
             this.createDate = log.getCreatedDate();
             this.owner = log.getOwner();
-            this.source = new StringBuilder(log.getSource());
+            if (log.getSource() != null)
+            {
+                this.source = new StringBuilder(log.getSource());
+            } else
+            {
+                this.source = new StringBuilder();
+            }
             this.description = new StringBuilder(log.getDescription());
             this.level = log.getLevel();
             this.state = log.getState();
