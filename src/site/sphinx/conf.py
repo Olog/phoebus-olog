@@ -13,7 +13,7 @@ master_doc = 'index'
 pygments_style = 'tango'
 add_function_parentheses = True
 
-extensions = ['sphinx.ext.autodoc', 'sphinxcontrib.plantuml']
+extensions = ['sphinx.ext.autodoc' ]
 
 templates_path = ['_templates']
 exclude_trees = ['.build']
