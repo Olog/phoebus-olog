@@ -175,6 +175,9 @@ public class LogSearchUtil
                 }
                 boolQuery.must(propertyQuery);
                 break;
+            case "default":
+                // Unsupported search parameters are ignored
+                break;
             }
         }
         // Add the temporal queries
