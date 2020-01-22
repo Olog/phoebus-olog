@@ -74,7 +74,9 @@ public class LogRepository implements CrudRepository<Log, String>
             if (log.getAttachments() != null && !log.getAttachments().isEmpty())
             {
                 Set<Attachment> createdAttachments = new HashSet<Attachment>();
-                log.getAttachments().forEach(attachment -> {
+                log.getAttachments().stream().filter(attachment -> {
+                    return attachment.getAttachment() != null;
+                }).forEach(attachment -> {
                     createdAttachments.add(attachmentRepository.save(attachment));
                 });
                 validatedLog = validatedLog.setAttachments(createdAttachments);
@@ -113,6 +115,36 @@ public class LogRepository implements CrudRepository<Log, String>
         return createdLogs;
     }
 
+    public Log update(Log log)
+    {
+        try
+        {
+            LogBuilder validatedLog = LogBuilder.createLog(log);
+
+            IndexRequest indexRequest = new IndexRequest(ES_LOG_INDEX, ES_LOG_TYPE, String.valueOf(log.getId()))
+                    .source(mapper.writeValueAsBytes(validatedLog.build()), XContentType.JSON)
+                    .setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE);
+
+            IndexResponse response = client.index(indexRequest, RequestOptions.DEFAULT);
+
+            if (response.getResult().equals(Result.CREATED))
+            {
+                BytesReference ref = client
+                        .get(new GetRequest(ES_LOG_INDEX, ES_LOG_TYPE, response.getId()), RequestOptions.DEFAULT)
+                        .getSourceAsBytesRef();
+
+                Log createdLog = mapper.readValue(ref.streamInput(), Log.class);
+                return createdLog;
+            }
+        } catch (Exception e)
+        {
+            TagsResource.log.log(Level.SEVERE, e.getMessage(), e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Failed to save log enrty " + log.toString(), e);
+        }
+        return null;
+    }
+    
     @Override
     public Optional<Log> findById(String id)
     {

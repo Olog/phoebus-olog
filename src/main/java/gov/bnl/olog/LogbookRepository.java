@@ -248,8 +248,7 @@ public class LogbookRepository implements CrudRepository<Logbook, String>
     @Override
     public long count()
     {
-        // TODO Auto-generated method stub
-        return 0;
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Count is not implemented");
     }
 
     @Override

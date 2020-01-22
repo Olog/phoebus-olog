@@ -54,7 +54,6 @@ public class LogbooksResource {
     public Logbook createLogbook(@PathVariable String logbookName, @RequestBody final Logbook logbook) {
         // TODO Check permissions
         // TODO Validate
-        // TODO Create a logbook
         return logbookRepository.save(logbook);
     }
 
@@ -62,7 +61,6 @@ public class LogbooksResource {
     public Iterable<Logbook> updateLogbooks(@RequestBody final List<Logbook> logbooks) {
         // TODO Check permissions
         // TODO Validate
-        // TODO Create a logbook
         return logbookRepository.saveAll(logbooks);
     }
 
