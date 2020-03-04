@@ -116,6 +116,7 @@ public class ElasticConfig
                 createRequest.mapping(ES_TAG_TYPE, jsonMap);
 
                 indexClient.indices().create(createRequest, RequestOptions.DEFAULT);
+                logger.info("Successfully created index: " + ES_TAG_INDEX);
             }
         } catch (IOException e)
         {
@@ -133,6 +134,7 @@ public class ElasticConfig
                 createRequest.mapping(ES_LOGBOOK_TYPE, jsonMap);
 
                 indexClient.indices().create(createRequest, RequestOptions.DEFAULT);
+                logger.info("Successfully created index: " + ES_LOGBOOK_INDEX);
             }
         } catch (IOException e)
         {
@@ -151,6 +153,7 @@ public class ElasticConfig
                 createRequest.mapping(ES_PROPERTY_TYPE, jsonMap);
 
                 indexClient.indices().create(createRequest, RequestOptions.DEFAULT);
+                logger.info("Successfully created index: " + ES_PROPERTY_INDEX);
             }
         } catch (IOException e)
         {
@@ -169,7 +172,7 @@ public class ElasticConfig
                 InputStream is = ElasticConfig.class.getResourceAsStream("/seq_mapping.json");
                 Map<String, String> jsonMap = mapper.readValue(is, Map.class);
                 createRequest.mapping(ES_SEQ_TYPE, jsonMap);
-
+                logger.info("Successfully created index: " + ES_SEQ_TYPE);
             }
         } catch (IOException e)
         {
