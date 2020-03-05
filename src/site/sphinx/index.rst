@@ -135,14 +135,14 @@ Configure the service
 The configuration files for olog-es are present under olog-es/tree/master/src/main/resources/applications.properties
 
 Build
-
 ::
- mvn clean install
+
+   mvn clean install
 
 Start the service
-
 ::
- mvn org.springframework.boot:spring-boot-maven-plugin:run
+
+   mvn org.springframework.boot:spring-boot-maven-plugin:run
 
 Detailed Installation Instructions:
 `Install Olog-es <http://https://github.com/shroffk/olog-es/>`_.
