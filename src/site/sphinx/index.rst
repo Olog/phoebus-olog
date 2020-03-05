@@ -117,9 +117,35 @@ A property to link log entries to Tickets
        }]
    }
 
+events
+*******
+
+There are instances when the log entry being created is actually associated with an event that happened some time ago. 
+The users had higher priority tasks to address at that moment and is able to log the event after those tasks.
+The using **events** allows users to associate log entries with different instances in time,
+time based searches will ensure that these log entries are also found even if the create time might not fall in the search range.
+
 Quick Start
 ############
 
+Download and install elasticsearch (verision 6.3) from elastic.com
+Download and install mongodb from mongodb
+
+Configure the service
+The configuration files for olog-es are present under olog-es/tree/master/src/main/resources/applications.properties
+
+Build
+
+::
+ mvn clean install
+
+Start the service
+
+::
+ mvn org.springframework.boot:spring-boot-maven-plugin:run
+
+Detailed Installation Instructions:
+`Install Olog-es <http://https://github.com/shroffk/olog-es/>`_.
 
 REST API 
 #########
@@ -137,12 +163,5 @@ Managing Properties
 *******************
 
 
-
-
-
-Create a log entry 
-
-Installation Instructions:
-`Install Olog-es <http://https://github.com/shroffk/olog-es/>`_.
 
 `Javadocs <apidocs/index.html>`_
