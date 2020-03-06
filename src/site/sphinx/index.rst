@@ -153,12 +153,22 @@ REST API
 Creating a Log Entry
 ***********************
 
-Create a log entry 
+Create a simple log entry 
 
 **PUT** https://localhost:8181/Olog/logs
 
 .. code-block:: json
 
+ {
+      "owner":"log",
+      "description":"Beam Dump due to Major power dip Current Alarms Booster transmitter switched back to lower state.",
+      "level":"Info",
+      "logbooks":[
+         {
+            "name":"Operations"
+         }
+      ]
+ }
 
 Add an attachment 
 
