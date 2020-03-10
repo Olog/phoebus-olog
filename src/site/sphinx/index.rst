@@ -174,6 +174,14 @@ Add an attachment
 
 **POST** https://localhost:8181/attachments/{logId}
 
+.. code-block:: 
+ 
+ content-type: multipart/form-data  
+ filename : "databrowser.png"  
+ fileMetadataDescription : "image/png"  
+ file : 'application/octet-stream' (the actual file)
+
+
 Searching for Log Entries
 **************************
 
