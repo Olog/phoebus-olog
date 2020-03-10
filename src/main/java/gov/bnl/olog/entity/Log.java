@@ -36,8 +36,8 @@ public class Log implements Serializable
     private String source;
     private String description;
 
-    private Level level;
-    private State state;
+    private Level level = Level.Info;
+    private State state = State.Active;
 
     @JsonSerialize(using = InstanceSerializer.class)
     @JsonDeserialize(using = InstanceDeserializer.class)

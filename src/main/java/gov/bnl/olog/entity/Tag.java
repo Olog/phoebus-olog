@@ -18,7 +18,7 @@ public class Tag implements Serializable {
     private static final long serialVersionUID = 1L;
     @Id
     private String name;
-    private State state;
+    private State state = State.Active;
 
     /**
      * Creates a new instance of Tag.
