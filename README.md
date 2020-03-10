@@ -2,6 +2,8 @@
 
 An online logbook for recroding logs 
 
+[Olog-es Documentation](https://olog-es.readthedocs.io/)
+
 ### Installation
 Olog 
 
