@@ -170,16 +170,27 @@ Create a simple log entry
       ]
  }
 
-Add an attachment 
+Adding an attachment 
 
 **POST** https://localhost:8181/attachments/{logId}
 
-.. code-block:: 
+.. code-block:: HTML
  
- content-type: multipart/form-data  
- filename : "databrowser.png"  
- fileMetadataDescription : "image/png"  
- file : 'application/octet-stream' (the actual file)
+ Content-Type: multipart/form-data; boundary=----formBoundary
+ ------formBoundary
+ Content-Disposition: form-data; name="filename"
+ Content-Type: application/json
+ {"image1.png"}
+ ------formBoundary
+ Content-Disposition: form-data; name="fileMetadataDescription"
+ Content-Type: application/json
+ {"image/png"}
+ ------formBoundary
+ Content-Disposition: form-data; name="file "; filename="image1.png"
+ Content-Type: application/octet-steam
+ {…file content…}
+ ------formBoundary--
+
 
 
 Searching for Log Entries
