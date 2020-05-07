@@ -172,7 +172,7 @@ Create a simple log entry
 
 Adding an attachment 
 
-**POST** https://localhost:8181/attachments/{logId}
+**POST** https://localhost:8181/Olog/logs/attachments/{logId}
 
 .. code-block:: HTML
  
