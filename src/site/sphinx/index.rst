@@ -230,7 +230,10 @@ Search Parameters
 |*logbooks*     | Search for log entries with at least one of the given logbooks   |
 +---------------+------------------------------------------------------------------+
 
+Retrieving an attachment of a log entry
  
+**GET** https://localhost:8181/Olog/logs/attachments/{logId}/{filename}
+
 
 Managing Logbooks & Tags
 ************************
