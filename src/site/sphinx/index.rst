@@ -318,6 +318,7 @@ Create a new property
 **PUT** https://localhost:8181/Olog/properties/{propertyName}
 
 .. code-block:: json
+
  {
       "name":"Ticket",
       "owner":"olog-logs",
