@@ -246,31 +246,57 @@ Retrieve the list of existing logbooks
 
 **GET** https://localhost:8181/Olog/logbooks
 
-Create a new Tag
+Create a new tag
+
+**PUT** https://localhost:8181/Olog/tags/{tagName}
+
+.. code-block:: json
+
+ https://localhost:8181/Olog/tags/Fault
+
+ {
+      "name":"Fault",
+      "state":"Active"
+ }
+ 
+Create multiple tags
 
 **PUT** https://localhost:8181/Olog/tags
   
 .. code-block:: json
 
- [
-   {
-      "name":"Fault",
-      "state":"Active"
-   }
- ]
+ https://localhost:8181/Olog/tags
 
+ [
+   {"name":"Fault", "state":"Active" },
+   {"name":"Alarm", "state":"Active" }
+ ]
+ 
 Create a new logbook
+
+**PUT** https://localhost:8181/Olog/logbooks/{logbookName}
+
+.. code-block:: json
+
+ https://localhost:8181/Olog/logbooks/Operations
+
+ {
+      "name":"Operations",
+      "owner":"olog-logs",
+      "state":"Active"
+ }
+
+Create multiple logbooks
 
 **PUT** https://localhost:8181/Olog/logbooks
 
 .. code-block:: json
 
+ https://localhost:8181/Olog/logbooks
+
  [
-   {
-      "name":"Operations",
-      "owner":"olog-logs",
-      "state":"Active"
-   }
+   {"name":"Operations", "owner":"olog-logs", "state":"Active"},
+   {"name":"DAMA",       "owner":"olog-logs", "state":"Active"}
  ]
 
 Managing Properties
