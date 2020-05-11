@@ -230,6 +230,13 @@ Search Parameters
 |*logbooks*     | Search for log entries with at least one of the given logbooks   |
 +---------------+------------------------------------------------------------------+
 
+Example:
+
+**GET** https://localhost:8181/Olog/logs?desc=dump&logbooks=Operations
+
+The above search request will return all log entires with the term "dump" in their 
+descriptions and which are part of the Operations logbook.
+
 Retrieving an attachment of a log entry
  
 **GET** https://localhost:8181/Olog/logs/attachments/{logId}/{filename}
@@ -308,12 +315,10 @@ Retrieve the list of existing properties
 
 Create a new property
 
-**PUT** https://localhost:8181/Olog/properties
+**PUT** https://localhost:8181/Olog/properties/{propertyName}
 
 .. code-block:: json
-
- [
-   {
+ {
       "name":"Ticket",
       "owner":"olog-logs",
       "state":"Active",
@@ -327,7 +332,32 @@ Create a new property
             "state":"Active"
          }
       ]
+ }
+
+Create multiple properties
+
+**PUT** https://localhost:8181/Olog/properties
+
+.. code-block:: json
+
+ [
+   {
+      "name":"Ticket",
+      "owner":"olog-logs",
+      "state":"Active",
+      "attributes":[
+         {"name":"id", "state":"Active"},
+         {"name":"url", "state":"Active"}
+      ]
+   },
+      {
+      "name":"Scan",
+      "owner":"olog-logs",
+      "state":"Active",
+      "attributes":[
+         {"name":"id", "state":"Active"}
+      ]
    }
  ]
-
+ 
 `Javadocs <apidocs/index.html>`_
