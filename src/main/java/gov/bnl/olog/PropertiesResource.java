@@ -8,10 +8,12 @@ package gov.bnl.olog;
 import static gov.bnl.olog.OlogResourceDescriptors.PROPERTY_RESOURCE_URI;
 
 import java.io.IOException;
+import java.security.Principal;
 import java.util.List;
 import java.util.logging.Logger;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -58,10 +60,13 @@ public class PropertiesResource {
     }
 
     @PutMapping("/{propertyName}")
-    public Property createProperty(@PathVariable String propertyName, @RequestBody final Property property) {
+    public Property createProperty(@PathVariable String propertyName,
+                                   @RequestBody final Property property,
+                                   @AuthenticationPrincipal Principal principal) {
         // TODO Check permissions
         // TODO Validate
         // TODO Create a property
+        property.setOwner(principal.getName());
         return propertyRepository.save(property);
     }
 
