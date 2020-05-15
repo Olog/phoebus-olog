@@ -8,15 +8,19 @@ package gov.bnl.olog;
 import static gov.bnl.olog.OlogResourceDescriptors.LOG_RESOURCE_URI;
 
 import java.io.IOException;
+import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -71,11 +75,14 @@ public class LogResource
                     return resource;
                 } catch (IOException e)
                 {
-                    e.printStackTrace();
+                    Logger.getLogger(LogResource.class.getName()).log(Level.WARNING,
+                            String.format("Unable to retrieve attachment %s for log id %s", attachmentName, logId),
+                            e);
                 }
             } else
             {
-                // Throw exception, either attachment not found or more than one found
+                Logger.getLogger(LogResource.class.getName()).log(Level.WARNING,
+                        String.format("Found %d attachments named %s for log id %s", attachments.size(), attachmentName, logId));
             }
         }
         return null;
@@ -92,7 +99,9 @@ public class LogResource
      * @return
      */
     @PutMapping()
-    public Log createLog(@RequestBody Log log) {
+    public Log createLog(@RequestBody Log log,
+                         @AuthenticationPrincipal Principal principal) {
+        log.setOwner(principal.getName());
         return logRepository.save(log);
     }
 

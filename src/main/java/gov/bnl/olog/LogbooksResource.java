@@ -7,10 +7,12 @@ package gov.bnl.olog;
 
 import static gov.bnl.olog.OlogResourceDescriptors.LOGBOOK_RESOURCE_URI;
 
+import java.security.Principal;
 import java.util.List;
 import java.util.logging.Logger;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -51,9 +53,12 @@ public class LogbooksResource {
     }
 
     @PutMapping("/{logbookName}")
-    public Logbook createLogbook(@PathVariable String logbookName, @RequestBody final Logbook logbook) {
+    public Logbook createLogbook(@PathVariable String logbookName,
+                                 @RequestBody final Logbook logbook,
+                                 @AuthenticationPrincipal Principal principal) {
         // TODO Check permissions
         // TODO Validate
+        logbook.setOwner(principal.getName());
         return logbookRepository.save(logbook);
     }
 
