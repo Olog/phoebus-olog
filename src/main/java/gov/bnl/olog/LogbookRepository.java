@@ -78,7 +78,8 @@ public class LogbookRepository implements CrudRepository<Logbook, String>
 
             IndexResponse response = client.index(indexRequest, RequestOptions.DEFAULT);
             
-            if (response.getResult().equals(Result.CREATED))
+            if (response.getResult().equals(Result.CREATED) ||
+                response.getResult().equals(Result.UPDATED))
             {
                 BytesReference ref = client
                         .get(new GetRequest(ES_LOGBOOK_INDEX, ES_LOGBOOK_TYPE, response.getId()), RequestOptions.DEFAULT)

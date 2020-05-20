@@ -76,7 +76,8 @@ public class PropertyRepository implements CrudRepository<Property, String>
             IndexRequest indexRequest = new IndexRequest(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, property.getName())
                     .source(mapper.writeValueAsBytes(property), XContentType.JSON);
             IndexResponse response = client.index(indexRequest, RequestOptions.DEFAULT);
-            if (response.getResult().equals(Result.CREATED))
+            if (response.getResult().equals(Result.CREATED) ||
+                response.getResult().equals(Result.UPDATED))
             {
                 BytesReference ref = client.get(new GetRequest(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, response.getId()),
                         RequestOptions.DEFAULT).getSourceAsBytesRef();
