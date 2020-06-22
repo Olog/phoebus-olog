@@ -118,4 +118,23 @@ public class AuthenticationResource {
         }
         return new ResponseEntity<>("", HttpStatus.OK);
     }
+
+    /**
+     * Will return the user name of the session as identified by the session cookie, or null if the
+     * request does not contain the expected cookie or if the cookie is not associated with a non-expired session.
+     * @param cookieValue
+     * @return
+     */
+    @GetMapping(value = "user")
+    public ResponseEntity<String> getCurrentUser(@CookieValue(value = WebSecurityConfig.SESSION_COOKIE_NAME, required = false) String cookieValue) {
+        if (cookieValue == null) {
+            return new ResponseEntity<>(null, HttpStatus.OK);
+        }
+        Session session = sessionRepository.findById(cookieValue);
+        if (session == null || session.isExpired()) {
+            return new ResponseEntity<>(null, HttpStatus.OK);
+        }
+        String userName = session.getAttribute(FindByIndexNameSessionRepository.PRINCIPAL_NAME_INDEX_NAME);
+        return new ResponseEntity<>(userName, HttpStatus.OK);
+    }
 }

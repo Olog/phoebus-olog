@@ -53,7 +53,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     public void configure(WebSecurity web) throws Exception {
         web.ignoring().antMatchers(HttpMethod.GET, "/**");
         web.ignoring().antMatchers(HttpMethod.POST, "/login*");
-        web.ignoring().antMatchers(HttpMethod.POST, "/logout*");
+        web.ignoring().antMatchers(HttpMethod.POST, "/logout");
+        web.ignoring().antMatchers(HttpMethod.POST, "/user");
         web.ignoring().requestMatchers(PathRequest.toH2Console());
         // Authentication and Authorization is only needed for non search/query operations
     }
