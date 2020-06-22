@@ -1,36 +1,61 @@
 package gov.bnl.olog;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import gov.bnl.olog.security.SessionFilter;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.h2.H2ConsoleProperties;
+import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.Scope;
 import org.springframework.http.HttpMethod;
+import org.springframework.jdbc.core.JdbcOperations;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
+import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.ldap.DefaultSpringSecurityContextSource;
 import org.springframework.security.ldap.userdetails.DefaultLdapAuthoritiesPopulator;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.session.FindByIndexNameSessionRepository;
+import org.springframework.session.jdbc.JdbcIndexedSessionRepository;
+import org.springframework.transaction.support.TransactionOperations;
+import org.springframework.transaction.support.TransactionTemplate;
+
+import javax.sql.DataSource;
 
 @EnableWebSecurity
 @Configuration
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
+    public static final String SESSION_COOKIE_NAME = "SESSION";
+    public static final String ROLES_ATTRIBUTE_NAME = "roles";
+
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.csrf().disable();
-        http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
         http.authorizeRequests().anyRequest().authenticated();
+        http.addFilterBefore(new SessionFilter(authenticationManager(), sessionRepository()), UsernamePasswordAuthenticationFilter.class);
         http.httpBasic();
     }
 
     @Override
     public void configure(WebSecurity web) throws Exception {
-        // Authentication and Authorization is only needed for non search/query operations
         web.ignoring().antMatchers(HttpMethod.GET, "/**");
+        web.ignoring().antMatchers(HttpMethod.POST, "/login*");
+        web.ignoring().antMatchers(HttpMethod.POST, "/logout*");
+        web.ignoring().requestMatchers(PathRequest.toH2Console());
+        // Authentication and Authorization is only needed for non search/query operations
     }
 
     /**
@@ -90,9 +115,9 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
             myAuthPopulator.setIgnorePartialResultException(true);
 
             auth.ldapAuthentication()
-                .userDnPatterns(ldap_user_dn_pattern)
-                .ldapAuthoritiesPopulator(myAuthPopulator)
-                .contextSource(contextSource);
+                    .userDnPatterns(ldap_user_dn_pattern)
+                    .ldapAuthoritiesPopulator(myAuthPopulator)
+                    .contextSource(contextSource);
         }
 
         if (embedded_ldap_enabled) {
@@ -117,6 +142,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
             auth.inMemoryAuthentication()
                     .withUser("admin").password(encoder().encode("adminPass")).roles("ADMIN").and()
                     .withUser("user").password(encoder().encode("userPass")).roles("USER");
+
         }
     }
 
@@ -125,4 +151,52 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         return new BCryptPasswordEncoder();
     }
 
+    @Bean
+    public AuthenticationManager authenticationManager() {
+        try {
+            return super.authenticationManager();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    /**
+     * The {@link DataSource} for the session repository.
+     * @return
+     */
+    @Bean
+    public DataSource dataSource() {
+        return new EmbeddedDatabaseBuilder()
+                .setType(EmbeddedDatabaseType.H2)
+                .addScript("org/springframework/session/jdbc/schema-h2.sql")
+                .build();
+    }
+
+    /**
+     * A session repository managing the sessions created when user logs in though the
+     * dedicated endpoint.
+     * @return
+     */
+    @Bean
+    public FindByIndexNameSessionRepository sessionRepository() {
+        JdbcOperations jdbcOperations = new JdbcTemplate(dataSource());
+        TransactionOperations transactionOperations =
+                new TransactionTemplate(new DataSourceTransactionManager(dataSource()));
+
+        return new JdbcIndexedSessionRepository(jdbcOperations, transactionOperations);
+    }
+
+    @Bean
+    @Scope("singleton")
+    public ObjectMapper objectMapper() {
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        return objectMapper;
+    }
+
+    @Bean
+    @Primary
+    public H2ConsoleProperties h2ConsoleProperties(){
+        return new H2ConsoleProperties();
+    }
 }

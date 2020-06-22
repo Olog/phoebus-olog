@@ -10,12 +10,12 @@ import java.util.logging.Logger;
 import org.apache.http.HttpHost;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.get.GetIndexRequest;
-import org.elasticsearch.action.admin.indices.template.get.GetIndexTemplatesRequest;
-import org.elasticsearch.action.admin.indices.template.get.GetIndexTemplatesResponse;
 import org.elasticsearch.action.admin.indices.template.put.PutIndexTemplateRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.client.indices.GetIndexTemplatesRequest;
+import org.elasticsearch.client.indices.GetIndexTemplatesResponse;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.xcontent.XContentFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -182,9 +182,9 @@ public class ElasticConfig
         // create/migrate log template
         try
         {
-            GetIndexTemplatesResponse templates = indexClient.indices().getTemplate(new GetIndexTemplatesRequest("*"), RequestOptions.DEFAULT);
+            GetIndexTemplatesResponse templates = indexClient.indices().getIndexTemplate(new GetIndexTemplatesRequest("*"), RequestOptions.DEFAULT);
             if (!templates.getIndexTemplates().stream().anyMatch(i -> {
-                return i.get().getName().equalsIgnoreCase(ES_LOG_INDEX + "_template");
+                return i.name().equalsIgnoreCase(ES_LOG_INDEX + "_template");
             }))
             {
                 PutIndexTemplateRequest templateRequest = new PutIndexTemplateRequest(ES_LOG_INDEX + "_template");

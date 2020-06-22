@@ -20,13 +20,22 @@ package gov.bnl.olog;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import gov.bnl.olog.entity.Property;
+import jdk.jfr.DataAmount;
+import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatcher;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.HttpHeaders;
+import org.springframework.mock.web.MockHttpSession;
+import org.springframework.session.FindByIndexNameSessionRepository;
+import org.springframework.session.Session;
+import org.springframework.session.jdbc.config.annotation.web.http.JdbcHttpSessionConfiguration;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.ContextHierarchy;
@@ -35,6 +44,8 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
+import javax.servlet.http.Cookie;
+import javax.sql.DataSource;
 import java.util.Arrays;
 import java.util.Optional;
 
@@ -120,8 +131,10 @@ public class PropertiesResourceTest extends ResourcesTestBase {
 
     @Test
     public void testUpdatePropertyUnauthoroized() throws Exception{
+
         MockHttpServletRequestBuilder request = put("/" +
-                OlogResourceDescriptors.PROPERTY_RESOURCE_URI);
+                OlogResourceDescriptors.PROPERTY_RESOURCE_URI)
+                .session(new MockHttpSession());
         mockMvc.perform(request).andExpect(status().isUnauthorized());
     }
 

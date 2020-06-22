@@ -21,68 +21,85 @@ package gov.bnl.olog;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.mockito.Mockito;
-import org.springframework.boot.SpringBootConfiguration;
+import org.springframework.boot.autoconfigure.h2.H2ConsoleProperties;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Profile;
-import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.gridfs.GridFsOperations;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
-import org.springframework.test.context.TestPropertySource;
+import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
+import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
+
+import javax.sql.DataSource;
 
 @TestConfiguration
 @EnableWebMvc
-@ComponentScan(basePackages = "gov.bnl.olog")
-@Import({WebSecurityConfig.class})
-@Profile({ "test" })
+@Import(WebSecurityConfig.class)
 public class ResourcesTestConfig {
 
     @Bean
-    public LogbookRepository logbookRepository(){
+    public LogbookRepository logbookRepository() {
         return Mockito.mock(LogbookRepository.class);
     }
 
     @Bean
-    public PropertyRepository propertyRepository(){
+    public PropertyRepository propertyRepository() {
         return Mockito.mock(PropertyRepository.class);
     }
 
     @Bean
-    public LogRepository logRepository(){
+    public LogRepository logRepository() {
         return Mockito.mock(LogRepository.class);
     }
 
     @Bean
-    public AttachmentRepository attachmentRepository(){
+    public AttachmentRepository attachmentRepository() {
         return Mockito.mock(AttachmentRepository.class);
     }
 
     @Bean("indexClient")
-    public RestHighLevelClient client(){
+    public RestHighLevelClient client() {
         return Mockito.mock(RestHighLevelClient.class);
     }
 
     @Bean
-    public GridFsOperations gridOperation(){
+    public GridFsOperations gridOperation() {
         return Mockito.mock(GridFsOperations.class);
     }
 
     @Bean
-    public GridFsTemplate gridFsTemplate(){
+    public GridFsTemplate gridFsTemplate() {
         return Mockito.mock(GridFsTemplate.class);
     }
 
     @Bean
-    public LogSearchUtil logSearchUtil(){
+    public LogSearchUtil logSearchUtil() {
         return Mockito.mock(LogSearchUtil.class);
     }
 
     @Bean
-    public ObjectMapper objectMapper(){
+    public ObjectMapper objectMapper() {
         return new ObjectMapper();
+    }
+
+
+    @Bean
+    public PlatformTransactionManager platformTransactionManager() {
+        return Mockito.mock(PlatformTransactionManager.class);
+    }
+
+    @Bean
+    public DataSource dataSource(){
+        return Mockito.mock(DataSource.class);
+    }
+
+    @Bean
+    public H2ConsoleProperties h2ConsoleProperties() {
+        return Mockito.mock(H2ConsoleProperties.class);
     }
 }

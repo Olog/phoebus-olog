@@ -2,3 +2,6 @@
 /target/
 **/.idea
 **/*iml
+
+# The H2 database files
+session*
