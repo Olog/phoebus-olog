@@ -19,6 +19,7 @@
 package gov.bnl.olog;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import gov.bnl.olog.entity.UserData;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -69,18 +70,19 @@ public class AuthenticationResource {
      * @param password User's password
      * @param response {@link HttpServletResponse} to which a session cookie is
      *                 attached upon successful authentication.
-     * @return A {@link ResponseEntity} indicating authentication result.
+     * @return A {@link ResponseEntity} carrying a {@link UserData} object if the login was successfull,
+     * otherwise the body will be <code>null</code>.
      */
     @PostMapping(value = "login")
-    public ResponseEntity<String> login(@RequestParam(value = "username") String userName,
-                                        @RequestParam(value = "password") String password,
-                                        HttpServletResponse response) {
+    public ResponseEntity<UserData> login(@RequestParam(value = "username") String userName,
+                                          @RequestParam(value = "password") String password,
+                                          HttpServletResponse response) {
         Authentication authentication = new UsernamePasswordAuthenticationToken(userName, password);
         try {
             authentication = authenticationManager.authenticate(authentication);
         } catch (AuthenticationException e) {
             return new ResponseEntity<>(
-                    "Invalid credentials",
+                    null,
                     HttpStatus.UNAUTHORIZED);
         }
         Session session = sessionRepository.createSession();
@@ -96,19 +98,19 @@ public class AuthenticationResource {
             session = sessionRepository.findById(sessionIds.keySet().iterator().next());
             Cookie cookie = new Cookie(WebSecurityConfig.SESSION_COOKIE_NAME, session.getId());
             response.addCookie(cookie);
-
+            return new ResponseEntity<>(
+                    new UserData(userName, roles),
+                    HttpStatus.OK);
         } else {
             return new ResponseEntity<>(
-                    "Unable to create session for user",
+                    null,
                     HttpStatus.UNAUTHORIZED);
         }
-        return new ResponseEntity<>(
-                "",
-                HttpStatus.OK);
     }
 
     /**
      * Deletes a session identified by the session cookie, if present in the request.
+     *
      * @param cookieValue
      */
     @GetMapping(value = "logout")
@@ -120,21 +122,24 @@ public class AuthenticationResource {
     }
 
     /**
-     * Will return the user name of the session as identified by the session cookie, or null if the
-     * request does not contain the expected cookie or if the cookie is not associated with a non-expired session.
+     * Returns a {@link UserData} object populated with user name and roles. If the session cookie
+     * is missing from the request, the {@link UserData} object fields are set to <code>null</code>.
+     *
      * @param cookieValue
      * @return
      */
     @GetMapping(value = "user")
-    public ResponseEntity<String> getCurrentUser(@CookieValue(value = WebSecurityConfig.SESSION_COOKIE_NAME, required = false) String cookieValue) {
+    public ResponseEntity<UserData> getCurrentUser(@CookieValue(value = WebSecurityConfig.SESSION_COOKIE_NAME,
+            required = false) String cookieValue) {
         if (cookieValue == null) {
-            return new ResponseEntity<>(null, HttpStatus.OK);
+            return new ResponseEntity<>(new UserData(), HttpStatus.OK);
         }
         Session session = sessionRepository.findById(cookieValue);
         if (session == null || session.isExpired()) {
-            return new ResponseEntity<>(null, HttpStatus.OK);
+            return new ResponseEntity<>(new UserData(), HttpStatus.OK);
         }
         String userName = session.getAttribute(FindByIndexNameSessionRepository.PRINCIPAL_NAME_INDEX_NAME);
-        return new ResponseEntity<>(userName, HttpStatus.OK);
+        List<String> roles = session.getAttribute(WebSecurityConfig.ROLES_ATTRIBUTE_NAME);
+        return new ResponseEntity<>(new UserData(userName, roles), HttpStatus.OK);
     }
 }

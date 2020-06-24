@@ -18,10 +18,13 @@
 
 package gov.bnl.olog;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import gov.bnl.olog.entity.UserData;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -36,7 +39,6 @@ import org.springframework.test.web.servlet.RequestBuilder;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 import javax.servlet.http.Cookie;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -73,12 +75,20 @@ public class AuthenticationResourceTest extends ResourcesTestBase {
                 .andReturn();
         Cookie cookie = result.getResponse().getCookie("SESSION");
         assertNotNull(cookie);
+        String content = result.getResponse().getContentAsString();
+        UserData userData =
+                new ObjectMapper().readValue(content, UserData.class);
+        assertEquals("admin", userData.getUserName());
+        assertNotNull(userData.getRoles());
 
         request = get("/user").cookie(cookie);
         result = mockMvc.perform(request).andExpect(status().isOk())
                 .andReturn();
-        assertEquals("admin", result.getResponse().getContentAsString());
-
+        content = result.getResponse().getContentAsString();
+        userData =
+                new ObjectMapper().readValue(content, UserData.class);
+        assertEquals("admin", userData.getUserName());
+        assertNotNull(userData.getRoles());
         reset(authenticationManager);
     }
 
@@ -91,7 +101,7 @@ public class AuthenticationResourceTest extends ResourcesTestBase {
         when(mockAuthentication.getAuthorities()).thenReturn(authorities);
         Authentication authentication = new UsernamePasswordAuthenticationToken("admin", "adminPass");
         when(authenticationManager.authenticate(authentication)).thenReturn(mockAuthentication);
-        RequestBuilder requestBuilder = formLogin().user("admin").password("adminPass");
+        RequestBuilder requestBuilder = formLogin().acceptMediaType(MediaType.APPLICATION_JSON).user("admin").password("adminPass");
         mockMvc.perform(requestBuilder)
                 .andDo(print())
                 .andExpect(status().isOk())
@@ -120,7 +130,11 @@ public class AuthenticationResourceTest extends ResourcesTestBase {
     public void testGetCurrentUserReturningEmpty() throws Exception {
         MockHttpServletRequestBuilder request = get("/user");
         MvcResult result = mockMvc.perform(request).andExpect(status().isOk()).andReturn();
-        assertTrue(result.getResponse().getContentAsString().isEmpty());
+        String content = result.getResponse().getContentAsString();
+        UserData userData =
+                new ObjectMapper().readValue(content, UserData.class);
+        assertNull(userData.getUserName());
+        assertNull(userData.getRoles());
 
         request = get("/logout").cookie(new Cookie("BAD", "abc"));
         result = mockMvc.perform(request).andExpect(status().isOk()).andReturn();

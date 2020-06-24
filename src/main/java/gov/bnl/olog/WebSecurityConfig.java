@@ -163,6 +163,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     /**
      * The {@link DataSource} for the session repository.
+     *
      * @return
      */
     @Bean
@@ -176,6 +177,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     /**
      * A session repository managing the sessions created when user logs in though the
      * dedicated endpoint.
+     *
      * @return
      */
     @Bean
@@ -197,7 +199,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Bean
     @Primary
-    public H2ConsoleProperties h2ConsoleProperties(){
+    public H2ConsoleProperties h2ConsoleProperties() {
         return new H2ConsoleProperties();
     }
 }
