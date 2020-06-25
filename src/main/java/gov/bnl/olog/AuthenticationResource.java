@@ -40,6 +40,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -70,7 +71,7 @@ public class AuthenticationResource {
      * @param password User's password
      * @param response {@link HttpServletResponse} to which a session cookie is
      *                 attached upon successful authentication.
-     * @return A {@link ResponseEntity} carrying a {@link UserData} object if the login was successfull,
+     * @return A {@link ResponseEntity} carrying a {@link UserData} object if the login was successful,
      * otherwise the body will be <code>null</code>.
      */
     @PostMapping(value = "login")
@@ -85,27 +86,16 @@ public class AuthenticationResource {
                     null,
                     HttpStatus.UNAUTHORIZED);
         }
-        Session session = sessionRepository.createSession();
-        session.setMaxInactiveInterval(Duration.ofMinutes(sessionTimeout));
-        session.setAttribute(FindByIndexNameSessionRepository.PRINCIPAL_NAME_INDEX_NAME, userName);
         List<String> roles = authentication.getAuthorities().stream()
                 .map(authority -> authority.getAuthority()).collect(Collectors.toList());
-        session.setAttribute(WebSecurityConfig.ROLES_ATTRIBUTE_NAME, roles);
+        Session session = findOrCreateSession(userName, roles);
+        session.setLastAccessedTime(Instant.now());
         sessionRepository.save(session);
-        Map<String, ? extends Session> sessionIds =
-                sessionRepository.findByPrincipalName(userName);
-        if (sessionIds.size() > 0) {
-            session = sessionRepository.findById(sessionIds.keySet().iterator().next());
-            Cookie cookie = new Cookie(WebSecurityConfig.SESSION_COOKIE_NAME, session.getId());
-            response.addCookie(cookie);
-            return new ResponseEntity<>(
-                    new UserData(userName, roles),
-                    HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(
-                    null,
-                    HttpStatus.UNAUTHORIZED);
-        }
+        Cookie cookie = new Cookie(WebSecurityConfig.SESSION_COOKIE_NAME, session.getId());
+        response.addCookie(cookie);
+        return new ResponseEntity<>(
+                new UserData(userName, roles),
+                HttpStatus.OK);
     }
 
     /**
@@ -141,5 +131,36 @@ public class AuthenticationResource {
         String userName = session.getAttribute(FindByIndexNameSessionRepository.PRINCIPAL_NAME_INDEX_NAME);
         List<String> roles = session.getAttribute(WebSecurityConfig.ROLES_ATTRIBUTE_NAME);
         return new ResponseEntity<>(new UserData(userName, roles), HttpStatus.OK);
+    }
+
+    /**
+     * Creates a session or returns an existing one if a non-expired one is found in the session repository.
+     * This is synchronized so that a user name is always associated with one session, irrespective of the
+     * number of logins from clients.
+     * @param userName
+     * @param roles
+     * @return
+     */
+    protected synchronized Session findOrCreateSession(String userName, List<String> roles){
+        Session session;
+        Map<String, Session> sessions = sessionRepository.findByPrincipalName(userName);
+        if(!sessions.isEmpty()){
+            // Get the first object in the map. Since a given user name should always use the same session,
+            // the sessions maps should have only one element. However, an existing session may have
+            // expired, so this must be checked as well.
+            session = sessions.entrySet().iterator().next().getValue();
+            if(session.isExpired()){
+                sessionRepository.deleteById(session.getId());
+            }
+            else{
+                return session;
+            }
+        }
+        // No session found, create it.
+        session = sessionRepository.createSession();
+        session.setAttribute(FindByIndexNameSessionRepository.PRINCIPAL_NAME_INDEX_NAME, userName);
+        session.setAttribute(WebSecurityConfig.ROLES_ATTRIBUTE_NAME, roles);
+        session.setMaxInactiveInterval(Duration.ofMinutes(sessionTimeout));
+        return session;
     }
 }

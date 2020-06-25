@@ -81,6 +81,15 @@ public class AuthenticationResourceTest extends ResourcesTestBase {
         assertEquals("admin", userData.getUserName());
         assertNotNull(userData.getRoles());
 
+        // Log in again and verify that the cookie value is the same, i.e. same session on server.
+        when(mockAuthentication.getAuthorities()).thenReturn(authorities);
+        when(authenticationManager.authenticate(authentication)).thenReturn(mockAuthentication);
+        request = post("/login?username=admin&password=adminPass");
+        result = mockMvc.perform(request).andExpect(status().isOk())
+                .andReturn();
+        Cookie cookie2 = result.getResponse().getCookie("SESSION");
+        assertEquals(cookie.getValue(), cookie2.getValue());
+
         request = get("/user").cookie(cookie);
         result = mockMvc.perform(request).andExpect(status().isOk())
                 .andReturn();
