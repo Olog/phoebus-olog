@@ -48,18 +48,20 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Tests {@link Logbook} resource endpoints. The authentication scheme used is the
  * hard coded user/userPass credentials. The {@link LogbookRepository} is mocked.
  */
+
 @RunWith(SpringRunner.class)
 @ContextHierarchy({@ContextConfiguration(classes = {ResourcesTestConfig.class})})
 @WebMvcTest(LogbookResourceTest.class)
 @TestPropertySource(locations = "classpath:no_ldap_test_application.properties")
 @ActiveProfiles({"test"})
-public class LogbookResourceTest extends ResourcesTestBase{
+public class LogbookResourceTest extends ResourcesTestBase {
 
     @Autowired
     private LogbookRepository logbookRepository;
 
     private Logbook logbook1;
     private Logbook logbook2;
+
 
     @Before
     public void init() {
@@ -159,7 +161,7 @@ public class LogbookResourceTest extends ResourcesTestBase{
                 .contentType(JSON);
         MvcResult result = mockMvc.perform(request).andExpect(status().isOk()).andReturn();
         logbooks = objectMapper.readValue(result.getResponse().getContentAsString(),
-                new TypeReference<Iterable<Logbook>>() {
+                new TypeReference<List<Logbook>>() {
                 });
         assertEquals("name1", logbooks.iterator().next().getName());
         verify(logbookRepository, times(1)).saveAll(logbooks);
@@ -167,7 +169,7 @@ public class LogbookResourceTest extends ResourcesTestBase{
     }
 
     @Test
-    public void testDeleteUnauthorized() throws Exception{
+    public void testDeleteUnauthorized() throws Exception {
         MockHttpServletRequestBuilder request = delete("/" +
                 OlogResourceDescriptors.LOGBOOK_RESOURCE_URI +
                 "/name1");
@@ -175,7 +177,7 @@ public class LogbookResourceTest extends ResourcesTestBase{
     }
 
     @Test
-    public void testDelete() throws Exception{
+    public void testDelete() throws Exception {
         MockHttpServletRequestBuilder request = delete("/" +
                 OlogResourceDescriptors.LOGBOOK_RESOURCE_URI +
                 "/name1")
