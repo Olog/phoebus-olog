@@ -51,12 +51,15 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     public void configure(WebSecurity web) throws Exception {
+        // The below lists exceptions for authentication.
         web.ignoring().antMatchers(HttpMethod.GET, "/**");
         web.ignoring().antMatchers(HttpMethod.POST, "/login*");
         web.ignoring().antMatchers(HttpMethod.POST, "/logout");
         web.ignoring().antMatchers(HttpMethod.POST, "/user");
+        // This is needed for CORS pre-flight
+        web.ignoring().antMatchers(HttpMethod.OPTIONS, "/**");
+        // h2 database console, if enabled.
         web.ignoring().requestMatchers(PathRequest.toH2Console());
-        // Authentication and Authorization is only needed for non search/query operations
     }
 
     /**

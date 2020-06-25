@@ -28,7 +28,6 @@ public class Application {
      * Specifies the allowed origins for CORS requests. Defaults to http://localhost:3000,
      * which is useful during development of the web front-end in NodeJS.
      */
-    //@Value("${cors.allowed.origins:http://localhost:3000}")
     @Value("#{'${cors.allowed.origins:http://localhost:3000}'.split(',')}")
     private String[] corsAllowedOrigins;
 
@@ -75,7 +74,10 @@ public class Application {
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/**").allowedOrigins(corsAllowedOrigins);
+                registry.addMapping("/**")
+                        .allowCredentials(true)
+                        .allowedMethods("HEAD", "GET", "POST", "PUT", "DELETE", "PATCH")
+                        .allowedOrigins(corsAllowedOrigins);
             }
         };
     }
