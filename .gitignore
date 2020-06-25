@@ -4,4 +4,5 @@
 **/*iml
 
 # The H2 database files
-session*
+session.mv.db
+session.trace.db
