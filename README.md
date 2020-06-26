@@ -1,4 +1,4 @@
-# olog-es   [![Build Status](https://travis-ci.org/shroffk/olog-es.svg?branch=master)](https://travis-ci.org/shroffk/olog-es)
+# olog-es   [![Build Status](https://travis-ci.org/Olog/olog-es.svg?branch=master)](https://travis-ci.org/Olog/olog-es)
 
 An online logbook for recroding logs 
 
@@ -10,12 +10,12 @@ Olog
 * Prerequisites
 
   * JDK 11 or newer
-  * Elastic version 6.3
+  * Elastic version 6.8.4
   * mongo gridfs
 
 
  **Download links for the prerequisites**   
- Download and install elasticsearch (verision 6.3) from [elastic.com](https://www.elastic.co/downloads/past-releases/elasticsearch-6-3-1)    
+ Download and install elasticsearch (verision 6.8.4) from [elastic.com](https://www.elastic.co/downloads/past-releases/elasticsearch-6-8-4)    
  Download and install mongodb from [mongodb](https://www.mongodb.com/download-center/community)    
   
   
