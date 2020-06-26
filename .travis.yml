@@ -8,6 +8,7 @@ jdk:
 
 services:
   - elasticsearch
+  - mongodb
   
 install:
   - mvn clean verify
