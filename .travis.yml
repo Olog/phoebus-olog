@@ -8,6 +8,10 @@ jdk:
 
 services:
   - elasticsearch
+  - mongodb
   
+before_install:
+  - curl -O https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-6.8.6.deb && sudo dpkg -i --force-confnew elasticsearch-6.8.6.deb && sudo service elasticsearch restart
+
 install:
   - mvn clean verify

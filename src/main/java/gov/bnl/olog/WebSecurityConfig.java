@@ -9,11 +9,16 @@ import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.Profile;
 import org.springframework.context.annotation.Scope;
 import org.springframework.http.HttpMethod;
 import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.jdbc.datasource.SimpleDriverDataSource;
+import org.springframework.jdbc.datasource.embedded.ConnectionProperties;
+import org.springframework.jdbc.datasource.embedded.DataSourceFactory;
+import org.springframework.jdbc.datasource.embedded.EmbeddedDatabase;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -33,6 +38,7 @@ import org.springframework.transaction.support.TransactionOperations;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.sql.DataSource;
+import java.sql.Driver;
 
 @EnableWebSecurity
 @Configuration
@@ -170,11 +176,14 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
      * @return
      */
     @Bean
+    @Profile("!ITtest")
     public DataSource dataSource() {
-        return new EmbeddedDatabaseBuilder()
-                .setType(EmbeddedDatabaseType.H2)
-                .addScript("org/springframework/session/jdbc/schema-h2.sql")
+        SessionRepositoryDataSourceFactory factory = new SessionRepositoryDataSourceFactory();
+        EmbeddedDatabaseBuilder builder = new EmbeddedDatabaseBuilder().addScript("org/springframework/session/jdbc/schema-h2.sql");
+        EmbeddedDatabase db = builder.setType(EmbeddedDatabaseType.H2)
+                .setDataSourceFactory(factory)
                 .build();
+        return db;
     }
 
     /**
@@ -184,6 +193,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
      * @return
      */
     @Bean
+    @Profile("!ITtest")
     public FindByIndexNameSessionRepository sessionRepository() {
         JdbcOperations jdbcOperations = new JdbcTemplate(dataSource());
         TransactionOperations transactionOperations =
@@ -204,5 +214,42 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Primary
     public H2ConsoleProperties h2ConsoleProperties() {
         return new H2ConsoleProperties();
+    }
+
+    /**
+     * Needed to be able to customize H2 URL.
+     */
+    private class SessionRepositoryDataSourceFactory implements DataSourceFactory{
+        private final SimpleDriverDataSource dataSource = new SimpleDriverDataSource();
+
+        @Override
+        public ConnectionProperties getConnectionProperties() {
+            return new ConnectionProperties() {
+                @Override
+                public void setDriverClass(Class<? extends Driver> driverClass) {
+                    dataSource.setDriverClass(driverClass);
+                }
+
+                @Override
+                public void setUrl(String url) {
+                    dataSource.setUrl("jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=TRUE");
+                }
+
+                @Override
+                public void setUsername(String username) {
+                    dataSource.setUsername("sa");
+                }
+
+                @Override
+                public void setPassword(String password) {
+                    dataSource.setPassword("");
+                }
+            };
+        }
+
+        @Override
+        public DataSource getDataSource() {
+            return this.dataSource;
+        }
     }
 }

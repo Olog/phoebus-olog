@@ -1,10 +1,10 @@
 package gov.bnl.olog;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.nio.file.Files;
-
+import gov.bnl.olog.entity.Attachment;
+import gov.bnl.olog.entity.Log;
+import gov.bnl.olog.entity.Logbook;
+import gov.bnl.olog.entity.State;
+import junitx.framework.FileAssert;
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
@@ -22,17 +22,15 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import gov.bnl.olog.entity.Attachment;
-import gov.bnl.olog.entity.Log;
-import gov.bnl.olog.entity.Logbook;
-import gov.bnl.olog.entity.State;
-import junitx.framework.FileAssert;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.nio.file.Files;
 
 @RunWith(SpringRunner.class)
 @WebMvcTest(LogResource.class)
-@TestPropertySource(locations="classpath:test_application.properties")
-public class LogResourceIT
-{
+@TestPropertySource(locations = "classpath:test_application.properties")
+public class LogResourceIT {
 
     @Autowired
     LogResource logResource;
@@ -60,18 +58,16 @@ public class LogResourceIT
     private String ES_LOG_INDEX;
     @Value("${elasticsearch.log.type:olog_log}")
     private String ES_LOG_TYPE;
-    
+
     @Test
-    public void retrieveAttachment() throws IOException
-    {
+    public void retrieveAttachment() throws IOException {
         File testFile = new File("src/test/resources/SampleTextFile_100kb.txt");
 
-        try
-        {
+        try {
             MockMultipartFile mock = new MockMultipartFile(testFile.getName(), new FileInputStream(testFile));
             Attachment testAttachment = new Attachment(mock, "SampleTextFile_100kb.txt", "");
 
-            testLogbook = new Logbook("test-logbook-1", testOwner , State.Active);
+            testLogbook = new Logbook("test-logbook-1", testOwner, State.Active);
             logbookRepository.save(testLogbook);
 
             Log log = Log.LogBuilder.createLog("This is a test entry")
@@ -83,7 +79,7 @@ public class LogResourceIT
             Log createdLog = logRepository.save(log);
 
             String attachmentId = createdLog.getAttachments().iterator().next().getId();
-            Resource a = logResource.findResources(createdLog.getId().toString(), attachmentId);
+            Resource a = logResource.findResources(createdLog.getId().toString(), testFile.getName());
 
             File foundTestFile = new File("LogResourceIT_attachment_" + testAttachment.getId() + "_" + testAttachment.getFilename());
             Files.copy(a.getInputStream(), foundTestFile.toPath());
@@ -94,11 +90,9 @@ public class LogResourceIT
             // Manual cleanup since Olog does not delete things
             client.delete(new DeleteRequest(ES_LOG_INDEX, ES_LOG_TYPE, createdLog.getId().toString()),
                     RequestOptions.DEFAULT);
-        } catch (IOException e)
-        {
+        } catch (IOException e) {
             e.printStackTrace();
-        } finally
-        {
+        } finally {
             // Manual cleanup since Olog does not delete things
             client.delete(new DeleteRequest(ES_LOGBOOK_INDEX, ES_LOGBOOK_TYPE, testLogbook.getName()),
                     RequestOptions.DEFAULT);
