@@ -1,0 +1,98 @@
+{
+    "properties": {
+        "id": {
+            "type": "keyword"
+        },
+        "owner": {
+            "type": "keyword"
+        },
+        "source": {
+            "type": "text"
+        },
+        "description": {
+            "type": "text"
+        },
+        "level": {
+            "type": "text"
+        },
+        "title" : {
+            "type": "text"
+        },
+        "state": {
+            "type": "keyword"
+        },
+        "createdDate": {
+            "type": "date",
+            "format": "epoch_millis||yyyy-MM-dd HH:mm:ss.SSS"
+        },
+        "modifyDate": {
+            "type": "date",
+            "format": "epoch_millis||yyyy-MM-dd HH:mm:ss.SSS"
+        },
+        "events": {
+            "type": "nested",
+            "properties": {
+                "name": {
+                    "type": "keyword"
+                },
+                "event": {
+                    "type": "date",
+                    "format": "epoch_millis||yyyy-MM-dd HH:mm:ss.SSS"
+                }
+            }
+        },
+        "logbooks": {
+            "type": "nested",
+            "properties": {
+                "name": {
+                    "type": "keyword"
+                },
+                "owner": {
+                    "type": "keyword"
+                },
+                "state": {
+                    "type": "keyword"
+                }
+            }
+        },
+        "tags": {
+            "type": "nested",
+            "properties": {
+                "name": {
+                    "type": "keyword"
+                },
+                "state": {
+                    "type": "keyword"
+                }
+            }
+        },
+        "properties": {
+            "type": "nested",
+            "properties": {
+                "name": {
+                    "type": "keyword"
+                },
+                "owner": {
+                    "type": "keyword"
+                },
+                "state": {
+                    "type": "keyword"
+                },
+                "attributes": {
+                    "type": "nested",
+                    "properties": {
+                        "name": {
+                            "type": "keyword"
+                        },
+                        "value": {
+                            "type": "keyword"
+                        },
+                        "state": {
+                            "type": "keyword"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

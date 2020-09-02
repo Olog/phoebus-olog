@@ -199,6 +199,26 @@ public class ElasticConfig
                 templateRequest.create(true);
                 indexClient.indices().putTemplate(templateRequest, RequestOptions.DEFAULT);
             }
+
+            // Get the index templates again...
+            templates = indexClient.indices().getIndexTemplate(new GetIndexTemplatesRequest("*"), RequestOptions.DEFAULT);
+
+            if (templates.getIndexTemplates().stream().anyMatch(i -> {
+                return i.name().equalsIgnoreCase(ES_LOG_INDEX + "_template") && i.version() == null;
+            }))
+            {
+                PutIndexTemplateRequest templateRequest = new PutIndexTemplateRequest(ES_LOG_INDEX + "_template");
+
+                templateRequest.patterns(Arrays.asList(ES_LOG_INDEX));
+
+                ObjectMapper mapper = new ObjectMapper();
+                InputStream is = ElasticConfig.class.getResourceAsStream("/log_template_mapping_with_title.json");
+
+                Map<String, String> jsonMap = mapper.readValue(is, Map.class);
+                templateRequest.mapping(ES_LOG_TYPE, XContentFactory.jsonBuilder().map(jsonMap)).version(2);
+                templateRequest.create(false);
+                indexClient.indices().putTemplate(templateRequest, RequestOptions.DEFAULT);
+            }
         } catch (IOException e)
         {
             logger.log(Level.WARNING, "Failed to create template for index " + ES_LOG_TYPE, e);

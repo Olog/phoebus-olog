@@ -79,6 +79,30 @@ public class LogRepositorySearchIT  implements TestExecutionListener
                                                          new HashSet<Attribute>(List.of(testAttribute1)));
 
     /**
+     * Search by title
+     */
+    @Test
+    public void searchByTitle(){
+        MultiValueMap<String, String> searchParameters = new LinkedMultiValueMap<String, String>();
+        searchParameters.put("title", List.of("title2"));
+        List<Log> foundLogs = logRepository.search(searchParameters);
+        assertTrue("Failed to search for log entries based on title.",
+                foundLogs.size() == 1 && foundLogs.contains(createdLog2));
+
+        searchParameters = new LinkedMultiValueMap<String, String>();
+        searchParameters.put("title", List.of("le"));
+        foundLogs = logRepository.search(searchParameters);
+        assertTrue("Failed to search for log entries based on title.",
+                foundLogs.size() == 1 && foundLogs.contains(createdLog1));
+
+        searchParameters = new LinkedMultiValueMap<String, String>();
+        searchParameters.put("title", List.of("tit*"));
+        foundLogs = logRepository.search(searchParameters);
+        assertTrue("Failed to search for log entries based on title.",
+                foundLogs.size() == 2 && foundLogs.contains(createdLog1) && foundLogs.contains(createdLog2));
+    }
+
+    /**
      * Search for a particular word
      */
     @Test
@@ -405,8 +429,10 @@ public class LogRepositorySearchIT  implements TestExecutionListener
 
     private String description1 = "The quick brown fox jumps over the lazy dog";
     private String source1 = "The quick brown *fox* jumps over the lazy *dog*";
+    private String title1 = "tit le";
     private String description2 = "The quick brown foxes jumped over the lazy dogs";
     private String source2 = "The quick brown *foxes* jumped over the lazy *dogs*";
+    private String title2 = "title2";
     
 
     private String description3 = "some random test text for log entry 3";
@@ -444,6 +470,7 @@ public class LogRepositorySearchIT  implements TestExecutionListener
                                  .owner(testOwner1)
                                  .appendDescription(description1)
                                  .source(source1)
+                                 .title(title1)
                                  .withLogbook(testLogbook1)
                                  .withTag(testTag1)
                                  .withProperty(testProperty1)
@@ -460,6 +487,7 @@ public class LogRepositorySearchIT  implements TestExecutionListener
         Log log2 = Log.LogBuilder.createLog()
                                  .owner(testOwner2)
                                  .description(description2)
+                                 .title(title2)
                                  .source(source2)
                                  .withLogbook(testLogbook2)
                                  .withTag(testTag2)
