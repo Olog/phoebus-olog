@@ -35,6 +35,7 @@ public class Log implements Serializable
 
     private String source;
     private String description;
+    private String title;
 
     private Level level = Level.Info;
     private State state = State.Active;
@@ -58,23 +59,12 @@ public class Log implements Serializable
     {
     }
 
-    private Log(Long id, String version, String owner, String source, String description, Level level, State state,
-            List<Event> events, Set<Logbook> logbooks, Set<Tag> tags, Set<Property> properties)
-    {
+    public String getTitle(){
+        return title;
+    }
 
-        super();
-        this.id = id;
-        this.owner = owner;
-        this.source = source;
-        this.description = description;
-        this.level = level;
-        this.state = state;
-
-        this.events = events;
-
-        this.logbooks = logbooks;
-        this.tags = tags;
-        this.properties = properties;
+    public void setTitle(String title){
+        this.title = title;
     }
 
     /**
@@ -391,6 +381,7 @@ public class Log implements Serializable
         private String owner;
         private StringBuilder source = new StringBuilder();
         private StringBuilder description = new StringBuilder();
+        private StringBuilder title = new StringBuilder();
 
         private Level level = Level.Info;
         private State state = State.Active;
@@ -422,6 +413,7 @@ public class Log implements Serializable
                 this.source = new StringBuilder();
             }
             this.description = new StringBuilder(log.getDescription());
+            this.title = new StringBuilder(log.getTitle());
             this.level = log.getLevel();
             this.state = log.getState();
 
@@ -486,6 +478,15 @@ public class Log implements Serializable
             if (description != null)
             {
                 this.description = new StringBuilder(description);
+            }
+            return this;
+        }
+
+        public LogBuilder title(String title)
+        {
+            if (title != null)
+            {
+                this.title = new StringBuilder(title);
             }
             return this;
         }
@@ -607,6 +608,7 @@ public class Log implements Serializable
             }
             log.setEvents(events);
             log.setDescription(this.description.toString());
+            log.setTitle(this.title.toString());
             log.setSource(this.source.toString());
             log.setLevel(level);
             log.setState(state);

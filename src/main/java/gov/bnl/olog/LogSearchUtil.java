@@ -60,6 +60,7 @@ public class LogSearchUtil
         // The default temporal range for the query
         boolean fuzzySearch = false;
         List<String> searchTerms = new ArrayList<String>();
+        List<String> titleSearchTerms = new ArrayList<>();
         boolean temporalSearch = false;
         Instant start = Instant.EPOCH;
         Instant end = Instant.now();
@@ -75,6 +76,15 @@ public class LogSearchUtil
                     for (String pattern : value.split("[\\|,;\\s+]"))
                     {
                         searchTerms.add(pattern.trim());
+                    }
+                }
+                break;
+            case "title":
+                for (String value : parameter.getValue())
+                {
+                    for (String pattern : value.split("[\\|,;\\s+]"))
+                    {
+                        titleSearchTerms.add(pattern.trim());
                     }
                 }
                 break;
@@ -218,6 +228,23 @@ public class LogSearchUtil
                 });
             }
             boolQuery.must(descQuery);
+        }
+        // Add the title query
+        if (!titleSearchTerms.isEmpty())
+        {
+            DisMaxQueryBuilder titleQuery = disMaxQuery();
+            if (fuzzySearch)
+            {
+                titleSearchTerms.stream().forEach(searchTerm -> {
+                    titleQuery.add(fuzzyQuery("title", searchTerm));
+                });
+            } else
+            {
+                titleSearchTerms.stream().forEach(searchTerm -> {
+                    titleQuery.add(wildcardQuery("title", searchTerm));
+                });
+            }
+            boolQuery.must(titleQuery);
         }
 
         searchSourceBuilder.query(boolQuery);
