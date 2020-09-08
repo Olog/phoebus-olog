@@ -15,6 +15,7 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import org.elasticsearch.action.DocWriteResponse.Result;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;
@@ -250,6 +251,8 @@ public class LogRepository implements CrudRepository<Log, String>
             searchResponse.getHits().forEach(hit -> {
                 try
                 {
+                    mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
                     result.add(mapper.readValue(hit.getSourceAsString(), Log.class));
                 } catch (IOException e)
                 {

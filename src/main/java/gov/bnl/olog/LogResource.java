@@ -19,7 +19,11 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -57,7 +61,7 @@ public class LogResource
     }
 
     @GetMapping("/attachments/{logId}/{attachmentName}")
-    public Resource findResources(@PathVariable String logId, @PathVariable String attachmentName)
+    public ResponseEntity<Resource> findResources(@PathVariable String logId, @PathVariable String attachmentName)
     {
         Optional<Log> log = logRepository.findById(logId);
         if (log.isPresent())
@@ -72,7 +76,16 @@ public class LogResource
                 try
                 {
                     resource = new InputStreamResource(foundAttachment.getAttachment().getInputStream());
-                    return resource;
+                    ContentDisposition contentDisposition = ContentDisposition.builder("attachment")
+                            .filename(attachmentName)
+                            .build();
+                    HttpHeaders httpHeaders = new HttpHeaders();
+                    httpHeaders.setContentDisposition(contentDisposition);
+                    MediaType mediaType = ContentTypeResolver.determineMediaType(attachmentName);
+                    if(mediaType != null){
+                        httpHeaders.setContentType(mediaType);
+                    }
+                    return new ResponseEntity<>(resource, httpHeaders, HttpStatus.OK);
                 } catch (IOException e)
                 {
                     Logger.getLogger(LogResource.class.getName()).log(Level.WARNING,
