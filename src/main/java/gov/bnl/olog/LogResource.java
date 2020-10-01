@@ -119,10 +119,10 @@ public class LogResource
     }
 
     @PostMapping("/attachments/{logId}")
-    public Log createLog(@PathVariable String logId,
+    public synchronized Log createLog(@PathVariable String logId,
                          @RequestPart("file") MultipartFile file,
                          @RequestPart("filename") String filename,
-                         @RequestPart("fileMetadataDescription") String fileMetadataDescription) {
+                         @RequestPart(value = "fileMetadataDescription", required = false) String fileMetadataDescription) {
         Optional<Log> foundLog = logRepository.findById(logId);
         if (logRepository.findById(logId).isPresent())
         {
