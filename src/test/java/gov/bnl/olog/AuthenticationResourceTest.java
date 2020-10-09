@@ -23,6 +23,7 @@ import gov.bnl.olog.entity.UserData;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -61,6 +62,9 @@ public class AuthenticationResourceTest extends ResourcesTestBase {
     @Autowired
     private AuthenticationManager authenticationManager;
 
+    @Value("${spring.session.timeout}")
+    private int sessionTimeout;
+
     @Test
     public void testSuccessfullLogin() throws Exception {
         SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_ADMIN");
@@ -75,6 +79,8 @@ public class AuthenticationResourceTest extends ResourcesTestBase {
                 .andReturn();
         Cookie cookie = result.getResponse().getCookie("SESSION");
         assertNotNull(cookie);
+        // Cookie max-age should be same as spring.session.timeout, in seconds
+        assertEquals(60 * sessionTimeout, cookie.getMaxAge());
         String content = result.getResponse().getContentAsString();
         UserData userData =
                 new ObjectMapper().readValue(content, UserData.class);
@@ -98,6 +104,44 @@ public class AuthenticationResourceTest extends ResourcesTestBase {
                 new ObjectMapper().readValue(content, UserData.class);
         assertEquals("admin", userData.getUserName());
         assertNotNull(userData.getRoles());
+
+        reset(authenticationManager);
+    }
+
+    @Test
+    public void testGetUserWithNoCookie() throws Exception{
+        MockHttpServletRequestBuilder request = get("/user");
+        MvcResult mvcResult = mockMvc.perform(request).andExpect(status().isOk()).andReturn();
+        String content = mvcResult.getResponse().getContentAsString();
+        UserData userData =
+                new ObjectMapper().readValue(content, UserData.class);
+        assertNull(userData.getUserName());
+        assertNull(userData.getRoles());
+    }
+
+    @Test
+    public void testGetUserNoSession() throws Exception{
+
+        SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_ADMIN");
+        Authentication mockAuthentication = mock(Authentication.class);
+        Set authorities = new HashSet();
+        authorities.add(authority);
+        when(mockAuthentication.getAuthorities()).thenReturn(authorities);
+        Authentication authentication = new UsernamePasswordAuthenticationToken("admin", "adminPass");
+        when(authenticationManager.authenticate(authentication)).thenReturn(mockAuthentication);
+        MockHttpServletRequestBuilder request = post("/login?username=admin&password=adminPass");
+        MvcResult result = mockMvc.perform(request).andExpect(status().isOk())
+                .andReturn();
+
+        Cookie cookie = new Cookie("SESSION", "cookieValue");
+        request = get("/user").cookie(cookie);
+        MvcResult mvcResult = mockMvc.perform(request).andExpect(status().isOk()).andReturn();
+        String content = mvcResult.getResponse().getContentAsString();
+        UserData userData =
+                new ObjectMapper().readValue(content, UserData.class);
+        assertNull(userData.getUserName());
+        assertNull(userData.getRoles());
+
         reset(authenticationManager);
     }
 
