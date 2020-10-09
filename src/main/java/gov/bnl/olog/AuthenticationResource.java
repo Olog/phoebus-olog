@@ -61,6 +61,8 @@ public class AuthenticationResource {
 
     private ObjectMapper objectMapper = new ObjectMapper();
 
+    public static final int ONE_YEAR = 60 * 60 * 24 * 365;
+
     /**
      * Authenticates user and creates a session if authentication is successful.
      * A cookie named "SESSION" is created and provided in the response.
@@ -92,6 +94,12 @@ public class AuthenticationResource {
         session.setLastAccessedTime(Instant.now());
         sessionRepository.save(session);
         Cookie cookie = new Cookie(WebSecurityConfig.SESSION_COOKIE_NAME, session.getId());
+        if(sessionTimeout < 0){
+            cookie.setMaxAge(ONE_YEAR); // Cannot set infinite on Cookie, so 1 year.
+        }
+        else{
+            cookie.setMaxAge(60 * sessionTimeout); // sessionTimeout is in minutes.
+        }
         response.addCookie(cookie);
         return new ResponseEntity<>(
                 new UserData(userName, roles),
