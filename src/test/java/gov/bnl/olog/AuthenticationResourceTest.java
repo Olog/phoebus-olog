@@ -111,12 +111,7 @@ public class AuthenticationResourceTest extends ResourcesTestBase {
     @Test
     public void testGetUserWithNoCookie() throws Exception{
         MockHttpServletRequestBuilder request = get("/user");
-        MvcResult mvcResult = mockMvc.perform(request).andExpect(status().isOk()).andReturn();
-        String content = mvcResult.getResponse().getContentAsString();
-        UserData userData =
-                new ObjectMapper().readValue(content, UserData.class);
-        assertNull(userData.getUserName());
-        assertNull(userData.getRoles());
+        mockMvc.perform(request).andExpect(status().isNotFound());
     }
 
     @Test
@@ -135,12 +130,7 @@ public class AuthenticationResourceTest extends ResourcesTestBase {
 
         Cookie cookie = new Cookie("SESSION", "cookieValue");
         request = get("/user").cookie(cookie);
-        MvcResult mvcResult = mockMvc.perform(request).andExpect(status().isOk()).andReturn();
-        String content = mvcResult.getResponse().getContentAsString();
-        UserData userData =
-                new ObjectMapper().readValue(content, UserData.class);
-        assertNull(userData.getUserName());
-        assertNull(userData.getRoles());
+        mockMvc.perform(request).andExpect(status().isNotFound());
 
         reset(authenticationManager);
     }
@@ -177,20 +167,5 @@ public class AuthenticationResourceTest extends ResourcesTestBase {
 
         request = get("/logout").cookie(new Cookie("SESSION", "abc"));
         mockMvc.perform(request).andExpect(status().isOk());
-    }
-
-    @Test
-    public void testGetCurrentUserReturningEmpty() throws Exception {
-        MockHttpServletRequestBuilder request = get("/user");
-        MvcResult result = mockMvc.perform(request).andExpect(status().isOk()).andReturn();
-        String content = result.getResponse().getContentAsString();
-        UserData userData =
-                new ObjectMapper().readValue(content, UserData.class);
-        assertNull(userData.getUserName());
-        assertNull(userData.getRoles());
-
-        request = get("/logout").cookie(new Cookie("BAD", "abc"));
-        result = mockMvc.perform(request).andExpect(status().isOk()).andReturn();
-        assertTrue(result.getResponse().getContentAsString().isEmpty());
     }
 }

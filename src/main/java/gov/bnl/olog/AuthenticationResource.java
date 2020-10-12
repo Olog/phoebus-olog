@@ -130,11 +130,11 @@ public class AuthenticationResource {
     public ResponseEntity<UserData> getCurrentUser(@CookieValue(value = WebSecurityConfig.SESSION_COOKIE_NAME,
             required = false) String cookieValue) {
         if (cookieValue == null) {
-            return new ResponseEntity<>(new UserData(), HttpStatus.OK);
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
         Session session = sessionRepository.findById(cookieValue);
         if (session == null || session.isExpired()) {
-            return new ResponseEntity<>(new UserData(), HttpStatus.OK);
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
         String userName = session.getAttribute(FindByIndexNameSessionRepository.PRINCIPAL_NAME_INDEX_NAME);
         List<String> roles = session.getAttribute(WebSecurityConfig.ROLES_ATTRIBUTE_NAME);
