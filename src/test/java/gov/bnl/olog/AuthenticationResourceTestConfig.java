@@ -28,8 +28,6 @@ import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.session.FindByIndexNameSessionRepository;
 import org.springframework.session.jdbc.JdbcIndexedSessionRepository;
 import org.springframework.transaction.support.TransactionOperations;

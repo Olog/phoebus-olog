@@ -206,6 +206,26 @@ public class LogResourceTest extends ResourcesTestBase {
         reset(logRepository);
     }
 
+    /**
+     * Test only endpoint URI
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testCreateMultipleAttachments() throws Exception {
+        when(logRepository.findById("1")).thenReturn(Optional.of(log1));
+        MockMultipartFile file1 =
+                new MockMultipartFile("file", "filename1.txt", "text/plain", "some xml".getBytes());
+        MockMultipartFile file2 =
+                new MockMultipartFile("file", "filename2.txt", "text/plain", "some xml".getBytes());
+        mockMvc.perform(MockMvcRequestBuilders.multipart("/" + OlogResourceDescriptors.LOG_RESOURCE_URI + "/attachments-multi/1")
+                .file(file1)
+                .file(file2)
+                .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION))
+                .andExpect(status().is(200));
+        reset(logRepository);
+    }
+
 
     /**
      * A matcher used to work around issues with {@link Log#equals(Object)} when using the mocks.

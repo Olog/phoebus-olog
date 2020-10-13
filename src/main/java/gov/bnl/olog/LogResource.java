@@ -119,10 +119,10 @@ public class LogResource
     }
 
     @PostMapping("/attachments/{logId}")
-    public synchronized Log createLog(@PathVariable String logId,
-                         @RequestPart("file") MultipartFile file,
-                         @RequestPart("filename") String filename,
-                         @RequestPart(value = "fileMetadataDescription", required = false) String fileMetadataDescription) {
+    public Log uploadAttachment(@PathVariable String logId,
+                                @RequestPart("file") MultipartFile file,
+                                @RequestPart("filename") String filename,
+                                @RequestPart(value = "fileMetadataDescription", required = false) String fileMetadataDescription) {
         Optional<Log> foundLog = logRepository.findById(logId);
         if (logRepository.findById(logId).isPresent())
         {
@@ -141,6 +141,27 @@ public class LogResource
             return logRepository.update(log);
         } else
         {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to retrieve log with id " + logId);
+        }
+    }
+
+    /**
+     * Endpoint supporting upload of multiple files, i.e. saving the client from sending one POST request per file.
+     * Calls {@link #uploadAttachment(String, MultipartFile, String, String)} internally, using the original file's
+     * name and content type.
+     * @param logId
+     * @param files
+     * @return
+     */
+    @PostMapping(value = "/attachments-multi/{logId}", consumes = "multipart/form-data")
+    public Log uploadMultipleAttachments(@PathVariable String logId,
+                                         @RequestPart("file") MultipartFile[] files) {
+        if (logRepository.findById(logId).isPresent()) {
+            for (MultipartFile file : files) {
+                uploadAttachment(logId, file, file.getOriginalFilename(), file.getContentType());
+            }
+            return logRepository.findById(logId).get();
+        } else {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to retrieve log with id " + logId);
         }
     }
