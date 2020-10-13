@@ -61,6 +61,8 @@ public class AuthenticationResource {
 
     private ObjectMapper objectMapper = new ObjectMapper();
 
+    public static final int ONE_YEAR = 60 * 60 * 24 * 365;
+
     /**
      * Authenticates user and creates a session if authentication is successful.
      * A cookie named "SESSION" is created and provided in the response.
@@ -92,6 +94,12 @@ public class AuthenticationResource {
         session.setLastAccessedTime(Instant.now());
         sessionRepository.save(session);
         Cookie cookie = new Cookie(WebSecurityConfig.SESSION_COOKIE_NAME, session.getId());
+        if(sessionTimeout < 0){
+            cookie.setMaxAge(ONE_YEAR); // Cannot set infinite on Cookie, so 1 year.
+        }
+        else{
+            cookie.setMaxAge(60 * sessionTimeout); // sessionTimeout is in minutes.
+        }
         response.addCookie(cookie);
         return new ResponseEntity<>(
                 new UserData(userName, roles),
@@ -122,11 +130,11 @@ public class AuthenticationResource {
     public ResponseEntity<UserData> getCurrentUser(@CookieValue(value = WebSecurityConfig.SESSION_COOKIE_NAME,
             required = false) String cookieValue) {
         if (cookieValue == null) {
-            return new ResponseEntity<>(new UserData(), HttpStatus.OK);
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
         Session session = sessionRepository.findById(cookieValue);
         if (session == null || session.isExpired()) {
-            return new ResponseEntity<>(new UserData(), HttpStatus.OK);
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
         String userName = session.getAttribute(FindByIndexNameSessionRepository.PRINCIPAL_NAME_INDEX_NAME);
         List<String> roles = session.getAttribute(WebSecurityConfig.ROLES_ATTRIBUTE_NAME);

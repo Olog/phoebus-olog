@@ -50,7 +50,7 @@ public class AuthenticationResourceTestConfig {
     public DataSource dataSource() {
         return new EmbeddedDatabaseBuilder()
                 .setType(EmbeddedDatabaseType.H2)
-                .addScript("org/springframework/session/jdbc/schema-h2.sql")
+                .addScript("schema-h2.sql")
                 .build();
     }
 
