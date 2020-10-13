@@ -47,6 +47,9 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     public static final String SESSION_COOKIE_NAME = "SESSION";
     public static final String ROLES_ATTRIBUTE_NAME = "roles";
 
+    @Value("${spring.datasource.url:jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=TRUE}")
+    private String h2Url;
+
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.csrf().disable();
@@ -179,7 +182,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Profile("!ITtest")
     public DataSource dataSource() {
         SessionRepositoryDataSourceFactory factory = new SessionRepositoryDataSourceFactory();
-        EmbeddedDatabaseBuilder builder = new EmbeddedDatabaseBuilder().addScript("org/springframework/session/jdbc/schema-h2.sql");
+        EmbeddedDatabaseBuilder builder = new EmbeddedDatabaseBuilder().addScript("schema-h2.sql");
         EmbeddedDatabase db = builder.setType(EmbeddedDatabaseType.H2)
                 .setDataSourceFactory(factory)
                 .build();
@@ -232,7 +235,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
                 @Override
                 public void setUrl(String url) {
-                    dataSource.setUrl("jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=TRUE");
+                    dataSource.setUrl(h2Url);
                 }
 
                 @Override
