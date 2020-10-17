@@ -41,7 +41,7 @@ A Log Entry:
       "properties":[
          {
             "name":"FaultReport",
-            "owner":"testOwner1"
+            "owner":"testOwner1",
             "attributes":[
                {
                   "name":"id",
