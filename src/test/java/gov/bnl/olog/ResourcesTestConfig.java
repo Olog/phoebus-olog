@@ -99,4 +99,9 @@ public class ResourcesTestConfig {
     public H2ConsoleProperties h2ConsoleProperties() {
         return Mockito.mock(H2ConsoleProperties.class);
     }
+
+    @Bean
+    public TagRepository tagRepository(){
+        return Mockito.mock(TagRepository.class);
+    }
 }
