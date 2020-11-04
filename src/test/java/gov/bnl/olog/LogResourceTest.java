@@ -19,7 +19,6 @@
 package gov.bnl.olog;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import gov.bnl.olog.entity.Level;
 import gov.bnl.olog.entity.Log;
 import gov.bnl.olog.entity.Log.LogBuilder;
 import gov.bnl.olog.entity.Logbook;
@@ -84,7 +83,7 @@ public class LogResourceTest extends ResourcesTestBase {
                 .withLogbooks(Set.of(logbook1, logbook2))
                 .description("description1")
                 .createDate(now)
-                .level(Level.Urgent)
+                .level("Urgent")
                 .build();
 
         log2 = LogBuilder.createLog()
@@ -93,7 +92,7 @@ public class LogResourceTest extends ResourcesTestBase {
                 .withLogbooks(Set.of(logbook1, logbook2))
                 .description("description2")
                 .createDate(now)
-                .level(Level.Urgent)
+                .level("Urgent")
                 .build();
 
     }
@@ -148,7 +147,7 @@ public class LogResourceTest extends ResourcesTestBase {
                 .withLogbooks(Set.of(logbook1, logbook2))
                 .description("description1")
                 .createDate(now)
-                .level(Level.Urgent)
+                .level("Urgent")
                 .build();
 
         when(logRepository.save(argThat(new LogMatcher(log)))).thenReturn(log);

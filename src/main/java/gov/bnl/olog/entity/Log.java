@@ -37,7 +37,7 @@ public class Log implements Serializable
     private String description;
     private String title;
 
-    private Level level = Level.Info;
+    private String level = "Info";
     private State state = State.Active;
 
     @JsonSerialize(using = InstanceSerializer.class)
@@ -152,7 +152,7 @@ public class Log implements Serializable
      * 
      * @return the level
      */
-    public Level getLevel()
+    public String getLevel()
     {
         return level;
     }
@@ -162,7 +162,7 @@ public class Log implements Serializable
      * 
      * @param level - the level to set
      */
-    public void setLevel(Level level)
+    public void setLevel(String level)
     {
         this.level = level;
     }
@@ -383,7 +383,7 @@ public class Log implements Serializable
         private StringBuilder description = new StringBuilder();
         private StringBuilder title = new StringBuilder();
 
-        private Level level = Level.Info;
+        private String level = "Info";
         private State state = State.Active;
 
         private Set<Property> properties = new HashSet<Property>();
@@ -520,7 +520,7 @@ public class Log implements Serializable
             return this;
         }
 
-        public LogBuilder level(Level level)
+        public LogBuilder level(String level)
         {
             this.level = level;
             return this;
