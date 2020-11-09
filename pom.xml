@@ -215,5 +215,28 @@
         </plugins>
       </build>
     </profile>
+
+    <!-- A profile to build deployable jar -->
+    <profile>
+      <id>deployable-jar</id>
+        <build>
+          <plugins>
+            <plugin>
+              <groupId>org.springframework.boot</groupId>
+              <artifactId>spring-boot-maven-plugin</artifactId>
+              <configuration>
+                <executable>true</executable>
+              </configuration>
+              <executions>
+                <execution>
+                  <goals>
+                    <goal>repackage</goal>
+                  </goals>
+                </execution>
+              </executions>
+            </plugin>
+          </plugins>
+        </build>
+    </profile>
   </profiles>
 </project>
