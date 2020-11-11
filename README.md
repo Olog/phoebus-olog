@@ -38,4 +38,6 @@ mvn org.springframework.boot:spring-boot-maven-plugin:run
 #### Build deployable jar
 
 To build a jar with dependencies and Tomcat server, use Maven profile `deployable-jar`, e.g.:
-`mvn -Pdeployable-jar clean install`
+```
+mvn -Pdeployable-jar clean install
+```
