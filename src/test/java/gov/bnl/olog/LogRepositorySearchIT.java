@@ -103,6 +103,31 @@ public class LogRepositorySearchIT  implements TestExecutionListener
     }
 
     /**
+     * Search for log entries based on the level
+     */
+    @Test
+    public void searchByLevel()
+    {
+        MultiValueMap<String, String> searchParameters = new LinkedMultiValueMap<String, String>();
+        searchParameters.put("level", List.of("level2"));
+        List<Log> foundLogs = logRepository.search(searchParameters);
+        assertTrue("Failed to search for log entries based on level.",
+                foundLogs.size() == 1 && foundLogs.contains(createdLog2));
+
+        searchParameters = new LinkedMultiValueMap<String, String>();
+        searchParameters.put("level", List.of("el"));
+        foundLogs = logRepository.search(searchParameters);
+        assertTrue("Failed to search for log entries based on level.",
+                foundLogs.size() == 1 && foundLogs.contains(createdLog1));
+
+        searchParameters = new LinkedMultiValueMap<String, String>();
+        searchParameters.put("level", List.of("lev*"));
+        foundLogs = logRepository.search(searchParameters);
+        assertTrue("Failed to search for log entries based on level.",
+                foundLogs.size() == 2 && foundLogs.contains(createdLog1) && foundLogs.contains(createdLog2));
+    }
+
+    /**
      * Search for a particular word
      */
     @Test
@@ -430,10 +455,11 @@ public class LogRepositorySearchIT  implements TestExecutionListener
     private String description1 = "The quick brown fox jumps over the lazy dog";
     private String source1 = "The quick brown *fox* jumps over the lazy *dog*";
     private String title1 = "tit le";
+    private String level1 = "lev el";
     private String description2 = "The quick brown foxes jumped over the lazy dogs";
     private String source2 = "The quick brown *foxes* jumped over the lazy *dogs*";
     private String title2 = "title2";
-    
+    private String level2 = "level2";
 
     private String description3 = "some random test text for log entry 3";
     private String source3 =      "some random test text for log entry 3";
@@ -471,6 +497,7 @@ public class LogRepositorySearchIT  implements TestExecutionListener
                                  .appendDescription(description1)
                                  .source(source1)
                                  .title(title1)
+                                 .level(level1)
                                  .withLogbook(testLogbook1)
                                  .withTag(testTag1)
                                  .withProperty(testProperty1)
@@ -489,6 +516,7 @@ public class LogRepositorySearchIT  implements TestExecutionListener
                                  .description(description2)
                                  .title(title2)
                                  .source(source2)
+                                 .level(level2)
                                  .withLogbook(testLogbook2)
                                  .withTag(testTag2)
                                  .withProperty(testProperty2)
