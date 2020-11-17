@@ -59,8 +59,9 @@ public class LogSearchUtil
         BoolQueryBuilder boolQuery = QueryBuilders.boolQuery();
         // The default temporal range for the query
         boolean fuzzySearch = false;
-        List<String> searchTerms = new ArrayList<String>();
+        List<String> searchTerms = new ArrayList<>();
         List<String> titleSearchTerms = new ArrayList<>();
+        List<String> levelSearchTerms = new ArrayList<>();
         boolean temporalSearch = false;
         Instant start = Instant.EPOCH;
         Instant end = Instant.now();
@@ -185,6 +186,15 @@ public class LogSearchUtil
                 }
                 boolQuery.must(propertyQuery);
                 break;
+            case "level":
+                for (String value : parameter.getValue())
+                {
+                    for (String pattern : value.split("[\\|,;\\s+]"))
+                    {
+                        levelSearchTerms.add(pattern.trim());
+                    }
+                }
+                break;
             case "default":
                 // Unsupported search parameters are ignored
                 break;
@@ -245,6 +255,23 @@ public class LogSearchUtil
                 });
             }
             boolQuery.must(titleQuery);
+        }
+        // Add the level query
+        if (!levelSearchTerms.isEmpty())
+        {
+            DisMaxQueryBuilder levelQuery = disMaxQuery();
+            if (fuzzySearch)
+            {
+                levelSearchTerms.stream().forEach(searchTerm -> {
+                    levelQuery.add(fuzzyQuery("level", searchTerm));
+                });
+            } else
+            {
+                levelSearchTerms.stream().forEach(searchTerm -> {
+                    levelQuery.add(wildcardQuery("level", searchTerm));
+                });
+            }
+            boolQuery.must(levelQuery);
         }
 
         searchSourceBuilder.query(boolQuery);

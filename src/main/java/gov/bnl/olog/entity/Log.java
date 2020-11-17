@@ -673,7 +673,7 @@ public class Log implements Serializable
                 return false;
         } else if (!id.equals(other.id))
             return false;
-        if (level != other.level)
+        if (!level.equals(other.level))
             return false;
         if (logbooks == null)
         {
