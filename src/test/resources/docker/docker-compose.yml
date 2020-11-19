@@ -1,0 +1,39 @@
+version: '3'
+services:
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.8.4
+    container_name: olog-elasticsearch
+    environment:
+      - cluster.name=elasticsearch
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - olog-esdata:/usr/share/elasticsearch/data
+    ports:
+      - 9200:9200
+    networks:
+      - esnet
+
+  mongo:
+    image: mongo
+    container_name: olog-mongo
+    environment:
+      MONGO_INITDB_DATABASE: ologAttachments
+    ports:
+      - 27017:27017
+    volumes:
+      - olog-mongodata:/etc/mongo
+
+volumes:
+  olog-esdata:
+    driver: local
+  olog-mongodata:
+    driver: local
+
+networks:
+  esnet:
