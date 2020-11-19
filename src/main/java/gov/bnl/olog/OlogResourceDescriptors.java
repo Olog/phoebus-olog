@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 public class OlogResourceDescriptors
 {
     static final String OLOG_SERVICE = "Olog";
+    static final String OLOG_SERVICE_INFO = OLOG_SERVICE;
     static final String TAG_RESOURCE_URI = OLOG_SERVICE + "/tags";
     static final String LOGBOOK_RESOURCE_URI = OLOG_SERVICE + "/logbooks";
     static final String PROPERTY_RESOURCE_URI = OLOG_SERVICE + "/properties";
