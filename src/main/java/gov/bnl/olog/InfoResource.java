@@ -5,8 +5,6 @@ import static gov.bnl.olog.OlogResourceDescriptors.OLOG_SERVICE_INFO;
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Spliterator;
-import java.util.Spliterators;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -24,9 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.mongodb.MongoClient;
-import com.mongodb.connection.ClusterDescription;
-import com.mongodb.connection.Stream;
+import com.mongodb.client.MongoClient;
 
 @RestController
 @RequestMapping(OLOG_SERVICE_INFO)
@@ -37,10 +33,12 @@ public class InfoResource
     private String version;
 
     @Autowired
-    ElasticConfig esService;
+    private ElasticConfig esService;
 
     @Autowired
-    MongoConfig monoConfig;
+    private MongoConfig monoConfig;
+
+    private MongoClient mongoClient;
 
     private final static ObjectMapper objectMapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
 
@@ -72,11 +70,10 @@ public class InfoResource
         cfServiceInfo.put("elastic", elasticInfo);
 
         Map<String, String> mongoInfo = new LinkedHashMap<String, String>();
-        MongoClient mongoClient = monoConfig.mongoClient();
+        mongoClient = monoConfig.mongoClient();
         if (mongoClient != null) {
             mongoInfo.put("status", "Connected");
-            mongoInfo.put("mongo databases", StreamSupport.stream(mongoClient.listDatabaseNames().spliterator(), false).collect(Collectors.joining(",")));
-            mongoClient.close();
+            mongoInfo.put("mongo", monoConfig.mongoClient().getClusterDescription().getShortDescription());
         } else {
             mongoInfo.put("status", "Discconnected");
         }

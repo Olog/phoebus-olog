@@ -1,19 +1,21 @@
 package gov.bnl.olog;
 
-import com.mongodb.MongoClient;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
-import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
+import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
 
 @Configuration
 @PropertySource("classpath:application.properties")
-public class MongoConfig extends AbstractMongoConfiguration
+public class MongoConfig extends AbstractMongoClientConfiguration
 {
     private static final Logger log = Logger.getLogger(MongoClient.class.getName());
     
@@ -42,7 +44,7 @@ public class MongoConfig extends AbstractMongoConfiguration
     {
         try
         {
-            return new MongoClient(mongoHost, Integer.valueOf(mongoPort));
+            return MongoClients.create("mongodb://"+mongoHost+":"+mongoPort);
         } catch (Exception e)
         {
             log.log(Level.SEVERE, "Failed to create mongo gridFS client for attachments " , e);
