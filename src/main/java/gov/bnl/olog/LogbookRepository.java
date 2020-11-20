@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.elasticsearch.action.DocWriteResponse.Result;
 import org.elasticsearch.action.bulk.BulkRequest;
@@ -67,6 +68,8 @@ public class LogbookRepository implements CrudRepository<Logbook, String>
 
     private static final ObjectMapper mapper = new ObjectMapper();
 
+    private Logger logger = Logger.getLogger(LogbookRepository.class.getName());
+
     @Override
     public <S extends Logbook> S save(S logbook)
     {
@@ -90,7 +93,7 @@ public class LogbookRepository implements CrudRepository<Logbook, String>
             return null;
         } catch (Exception e)
         {
-            LogbooksResource.log.log(Level.SEVERE, e.getMessage(), e);
+            logger.log(Level.SEVERE, e.getMessage(), e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to create logbook: " + logbook, e);
         }
     }
@@ -106,7 +109,7 @@ public class LogbookRepository implements CrudRepository<Logbook, String>
                         .source(mapper.writeValueAsBytes(logbook), XContentType.JSON));
             } catch (JsonProcessingException e)
             {
-                LogbooksResource.log.log(Level.SEVERE, e.getMessage(), e);
+                logger.log(Level.SEVERE, e.getMessage(), e);
                 throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to create logbook: " + logbook, e);
                 
             }
@@ -122,7 +125,7 @@ public class LogbookRepository implements CrudRepository<Logbook, String>
                 bulkResponse.forEach(response -> {
                     if (response.getFailure() != null)
                     {
-                        LogbooksResource.log.log(Level.SEVERE, response.getFailureMessage(),
+                        logger.log(Level.SEVERE, response.getFailureMessage(),
                                 response.getFailure().getCause());
                     }
                 });
@@ -155,7 +158,7 @@ public class LogbookRepository implements CrudRepository<Logbook, String>
             }
         } catch (Exception e)
         {
-            LogbooksResource.log.log(Level.SEVERE, e.getMessage(), e);
+            logger.log(Level.SEVERE, e.getMessage(), e);
         }
         return Optional.empty();
     }
@@ -168,7 +171,7 @@ public class LogbookRepository implements CrudRepository<Logbook, String>
             return client.exists(new GetRequest(ES_LOGBOOK_INDEX, ES_LOGBOOK_TYPE, logbookName), RequestOptions.DEFAULT);
         } catch (IOException e)
         {
-            TagsResource.log.log(Level.SEVERE, e.getMessage(), e);
+            logger.log(Level.SEVERE, e.getMessage(), e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to find logbook: " + logbookName, e);
         }
     }
@@ -182,7 +185,7 @@ public class LogbookRepository implements CrudRepository<Logbook, String>
             });
         } catch (Exception e)
         {
-            TagsResource.log.log(Level.SEVERE, "Failed to find logbooks: " + logbookNames, e);
+            logger.log(Level.SEVERE, "Failed to find logbooks: " + logbookNames, e);
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to find logbooks: " + logbookNames, null);
         }
     }
@@ -207,13 +210,13 @@ public class LogbookRepository implements CrudRepository<Logbook, String>
                     result.add(mapper.readValue(b.streamInput(), Logbook.class));
                 } catch (IOException e)
                 {
-                    LogbooksResource.log.log(Level.SEVERE, e.getMessage(), e);
+                    logger.log(Level.SEVERE, e.getMessage(), e);
                 }
             });
             return result;
         } catch (Exception e)
         {
-            LogbooksResource.log.log(Level.SEVERE, e.getMessage(), e);
+            logger.log(Level.SEVERE, e.getMessage(), e);
         }
         return null;
     }
@@ -241,7 +244,7 @@ public class LogbookRepository implements CrudRepository<Logbook, String>
             return foundLogbooks;
         } catch (Exception e)
         {
-            TagsResource.log.log(Level.SEVERE, "Failed to find logbooks: " + logbookNames, e);
+            logger.log(Level.SEVERE, "Failed to find logbooks: " + logbookNames, e);
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to find logbooks: " + logbookNames, null);
         }
     }
@@ -270,15 +273,15 @@ public class LogbookRepository implements CrudRepository<Logbook, String>
                         .getSourceAsBytesRef();
 
                 Logbook deletedLogbook = mapper.readValue(ref.streamInput(), Logbook.class);
-                LogbooksResource.log.log(Level.INFO, "Deleted logbook " + deletedLogbook.toLogger());
+                logger.log(Level.INFO, "Deleted logbook " + deletedLogbook.toLogger());
             }
         } catch (DocumentMissingException e)
         {
-            LogbooksResource.log.log(Level.SEVERE, logbookName + " Does not exist and thus cannot be deleted");
+            logger.log(Level.SEVERE, logbookName + " Does not exist and thus cannot be deleted");
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to delete logbook: " + logbookName + " because it does not exist", e);
         } catch (Exception e)
         {
-            LogbooksResource.log.log(Level.SEVERE, e.getMessage(), e);
+            logger.log(Level.SEVERE, e.getMessage(), e);
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to delete logbook: " + logbookName + " because it does not exist", e);
         }
 

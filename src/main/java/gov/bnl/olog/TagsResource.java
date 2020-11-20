@@ -33,7 +33,7 @@ public class TagsResource {
     @Autowired
     private TagRepository tagRepository;
 
-    static Logger log = Logger.getLogger(TagsResource.class.getName());
+    private Logger log = Logger.getLogger(TagsResource.class.getName());
 
     /** Creates a new instance of TagsResource */
     public TagsResource()

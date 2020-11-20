@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import org.elasticsearch.action.DocWriteResponse.Result;
@@ -68,6 +69,8 @@ public class PropertyRepository implements CrudRepository<Property, String>
 
     private static final ObjectMapper mapper = new ObjectMapper();
 
+    private Logger logger = Logger.getLogger(PropertyRepository.class.getName());
+
     @Override
     public <S extends Property> S save(S property)
     {
@@ -86,7 +89,7 @@ public class PropertyRepository implements CrudRepository<Property, String>
             }
         } catch (Exception e)
         {
-            PropertiesResource.log.log(Level.SEVERE, e.getMessage(), e);
+            logger.log(Level.SEVERE, e.getMessage(), e);
         }
         return null;
     }
@@ -102,7 +105,7 @@ public class PropertyRepository implements CrudRepository<Property, String>
                         .source(mapper.writeValueAsBytes(property), XContentType.JSON));
             } catch (JsonProcessingException e)
             {
-                PropertiesResource.log.log(Level.SEVERE, e.getMessage(), e);
+                logger.log(Level.SEVERE, e.getMessage(), e);
             }
         });
         BulkResponse bulkResponse;
@@ -117,7 +120,7 @@ public class PropertyRepository implements CrudRepository<Property, String>
                 bulkResponse.forEach(response -> {
                     if (response.getFailure() != null)
                     {
-                        PropertiesResource.log.log(Level.SEVERE, response.getFailureMessage(),
+                        logger.log(Level.SEVERE, response.getFailureMessage(),
                                 response.getFailure().getCause());
                     }
                 });
@@ -149,7 +152,7 @@ public class PropertyRepository implements CrudRepository<Property, String>
             }
         } catch (Exception e)
         {
-            PropertiesResource.log.log(Level.SEVERE, e.getMessage(), e);
+            logger.log(Level.SEVERE, e.getMessage(), e);
         }
         return Optional.empty();
     }
@@ -162,7 +165,7 @@ public class PropertyRepository implements CrudRepository<Property, String>
             return client.exists(new GetRequest(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, propertyName), RequestOptions.DEFAULT);
         } catch (IOException e)
         {
-            PropertiesResource.log.log(Level.SEVERE, e.getMessage(), e);
+            logger.log(Level.SEVERE, e.getMessage(), e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to find property: " + propertyName, e);
         }
     }
@@ -195,13 +198,13 @@ public class PropertyRepository implements CrudRepository<Property, String>
                     result.add(mapper.readValue(b.streamInput(), Property.class));
                 } catch (IOException e)
                 {
-                    PropertiesResource.log.log(Level.SEVERE, e.getMessage(), e);
+                    logger.log(Level.SEVERE, e.getMessage(), e);
                 }
             });
             return result;
         } catch (Exception e)
         {
-            PropertiesResource.log.log(Level.SEVERE, e.getMessage(), e);
+            logger.log(Level.SEVERE, e.getMessage(), e);
         }
         return null;
     }
@@ -230,7 +233,7 @@ public class PropertyRepository implements CrudRepository<Property, String>
             return foundProperties;
         } catch (Exception e)
         {
-            PropertiesResource.log.log(Level.SEVERE, "Failed to find properties: " + propertyNames, e);
+            logger.log(Level.SEVERE, "Failed to find properties: " + propertyNames, e);
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to find properties: " + propertyNames, null);
         }
     }
@@ -260,14 +263,14 @@ public class PropertyRepository implements CrudRepository<Property, String>
                         .get(new GetRequest(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, response.getId()), RequestOptions.DEFAULT)
                         .getSourceAsBytesRef();
                 Property deletedProperty = mapper.readValue(ref.streamInput(), Property.class);
-                PropertiesResource.log.log(Level.INFO, "Deleted property " + deletedProperty.toLogger());
+                logger.log(Level.INFO, "Deleted property " + deletedProperty.toLogger());
             }
         } catch (DocumentMissingException e)
         {
-            PropertiesResource.log.log(Level.SEVERE, propertyName + " Does not exist and thus cannot be deleted");
+            logger.log(Level.SEVERE, propertyName + " Does not exist and thus cannot be deleted");
         } catch (Exception e)
         {
-            PropertiesResource.log.log(Level.SEVERE, e.getMessage(), e);
+            logger.log(Level.SEVERE, e.getMessage(), e);
         }
     }
 
@@ -300,14 +303,14 @@ public class PropertyRepository implements CrudRepository<Property, String>
                         .get(new GetRequest(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, response.getId()), RequestOptions.DEFAULT)
                         .getSourceAsBytesRef();
                 Property deletedProperty = mapper.readValue(ref.streamInput(), Property.class);
-                PropertiesResource.log.log(Level.INFO, "Deleted property attribute" + deletedProperty.toLogger());
+                logger.log(Level.INFO, "Deleted property attribute" + deletedProperty.toLogger());
             }
         } catch (DocumentMissingException e)
         {
-            PropertiesResource.log.log(Level.SEVERE, propertyName + " Does not exist and thus cannot be deleted");
+            logger.log(Level.SEVERE, propertyName + " Does not exist and thus cannot be deleted");
         } catch (Exception e)
         {
-            PropertiesResource.log.log(Level.SEVERE, e.getMessage(), e);
+            logger.log(Level.SEVERE, e.getMessage(), e);
         }
     }
 
