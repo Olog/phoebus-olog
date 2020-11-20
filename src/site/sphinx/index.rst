@@ -25,6 +25,7 @@ A Log Entry:
       "description":"Beam Dump due to Major power dip Current Alarms Booster transmitter switched back to lower state.
                      PV : BR-RF{Xmtr-PLC}ICS:Down-Sts",
       "level":"Info",
+      "title":"Some title",
       "state":"Active",
       "createdDate":1577392617217,
       "logbooks":[
@@ -163,6 +164,7 @@ Create a simple log entry
       "owner":"log",
       "description":"Beam Dump due to Major power dip Current Alarms Booster transmitter switched back to lower state.",
       "level":"Info",
+      "title":"Some title",
       "logbooks":[
          {
             "name":"Operations"
