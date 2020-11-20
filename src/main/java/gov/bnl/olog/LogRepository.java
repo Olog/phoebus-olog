@@ -100,7 +100,7 @@ public class LogRepository implements CrudRepository<Log, String>
             }
         } catch (Exception e)
         {
-            TagsResource.log.log(Level.SEVERE, e.getMessage(), e);
+            logger.log(Level.SEVERE, e.getMessage(), e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to save log enrty " + log.toString(), e);
         }
         return null;
@@ -139,7 +139,7 @@ public class LogRepository implements CrudRepository<Log, String>
             }
         } catch (Exception e)
         {
-            TagsResource.log.log(Level.SEVERE, e.getMessage(), e);
+            logger.log(Level.SEVERE, e.getMessage(), e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
                     "Failed to save log enrty " + log.toString(), e);
         }

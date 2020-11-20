@@ -38,8 +38,8 @@ public class LogbooksResource {
     @Autowired
     private LogbookRepository logbookRepository;
 
-    private static Logger audit = Logger.getLogger(LogbooksResource.class.getName() + ".audit");
-    static Logger log = Logger.getLogger(LogbooksResource.class.getName());
+    private Logger audit = Logger.getLogger(LogbooksResource.class.getName() + ".audit");
+    private Logger log = Logger.getLogger(LogbooksResource.class.getName());
 
     /** Creates a new instance of LogbooksResource */
     public LogbooksResource() {
