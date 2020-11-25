@@ -95,11 +95,19 @@ public class LogRepositorySearchIT  implements TestExecutionListener
         assertTrue("Failed to search for log entries based on title.",
                 foundLogs.size() == 1 && foundLogs.contains(createdLog1));
 
+        // Search using wildcards in title
         searchParameters = new LinkedMultiValueMap<String, String>();
         searchParameters.put("title", List.of("tit*"));
         foundLogs = logRepository.search(searchParameters);
         assertTrue("Failed to search for log entries based on title.",
                 foundLogs.size() == 2 && foundLogs.contains(createdLog1) && foundLogs.contains(createdLog2));
+        
+        // check case insensitive searches
+        searchParameters = new LinkedMultiValueMap<String, String>();
+        searchParameters.put("title", List.of("TITLE2"));
+        foundLogs = logRepository.search(searchParameters);
+        assertTrue("Failed case insensitive search for log entries based on title.",
+                foundLogs.size() == 1 && foundLogs.contains(createdLog2));
     }
 
     /**

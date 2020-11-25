@@ -76,7 +76,7 @@ public class LogSearchUtil
                 {
                     for (String pattern : value.split("[\\|,;\\s+]"))
                     {
-                        searchTerms.add(pattern.trim());
+                        searchTerms.add(pattern.trim().toLowerCase());
                     }
                 }
                 break;
@@ -85,7 +85,7 @@ public class LogSearchUtil
                 {
                     for (String pattern : value.split("[\\|,;\\s+]"))
                     {
-                        titleSearchTerms.add(pattern.trim());
+                        titleSearchTerms.add(pattern.trim().toLowerCase());
                     }
                 }
                 break;
@@ -96,7 +96,7 @@ public class LogSearchUtil
                 DisMaxQueryBuilder exactQuery = disMaxQuery();
                 for (String value : parameter.getValue())
                 {
-                    exactQuery.add(matchPhraseQuery("description", value.trim()));
+                    exactQuery.add(matchPhraseQuery("description", value.trim().toLowerCase()));
                 }
                 boolQuery.must(exactQuery);
                 break;
@@ -191,7 +191,7 @@ public class LogSearchUtil
                 {
                     for (String pattern : value.split("[\\|,;\\s+]"))
                     {
-                        levelSearchTerms.add(pattern.trim());
+                        levelSearchTerms.add(pattern.trim().toLowerCase());
                     }
                 }
                 break;
