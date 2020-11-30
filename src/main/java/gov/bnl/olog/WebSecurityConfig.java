@@ -141,12 +141,18 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
             myAuthPopulator.setSearchSubtree(true);
             myAuthPopulator.setIgnorePartialResultException(true);
 
-           auth.ldapAuthentication()
-                    .ldapAuthoritiesPopulator(myAuthPopulator)
-                    .userDnPatterns(ldap_user_dn_pattern)
-                    .userSearchFilter(ldap_user_search_filter)
-                    .userSearchBase(ldap_user_search_base)
-                    .contextSource(contextSource);
+           LdapAuthenticationProviderConfigurer configurer = auth.ldapAuthentication()
+                    .ldapAuthoritiesPopulator(myAuthPopulator);
+           if(ldap_user_dn_pattern != null && !ldap_user_dn_pattern.isEmpty()){
+               configurer.userDnPatterns(ldap_user_dn_pattern);
+           }
+           if(ldap_user_search_filter != null && !ldap_user_search_filter.isEmpty()){
+               configurer.userSearchFilter(ldap_user_search_filter);
+           }
+           if(ldap_user_search_base != null && !ldap_user_search_base.isEmpty()){
+               configurer.userSearchBase(ldap_user_search_base);
+           }
+           configurer.contextSource(contextSource);
         }
 
         if (embedded_ldap_enabled) {
