@@ -21,8 +21,10 @@ import org.springframework.jdbc.datasource.embedded.DataSourceFactory;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabase;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
+import org.springframework.ldap.core.support.LdapContextSource;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.authentication.configurers.ldap.LdapAuthenticationProviderConfigurer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -86,6 +88,14 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     String ldap_groups_search_base;
     @Value("${ldap.groups.search.pattern}")
     String ldap_groups_search_pattern;
+    @Value("${ldap.manager.dn}")
+    String ldap_manager_dn;
+    @Value("${ldap.manager.password}")
+    String ldap_manager_password;
+    @Value("${ldap.user.search.base}")
+    String ldap_user_search_base;
+    @Value("${ldap.user.search.filter}")
+    String ldap_user_search_filter;
 
     /**
      * Embedded LDAP configuration properties
@@ -120,6 +130,10 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
         if (ldap_enabled) {
             DefaultSpringSecurityContextSource contextSource = new DefaultSpringSecurityContextSource(ldap_url);
+            if(ldap_manager_dn != null && !ldap_manager_dn.isEmpty() && ldap_manager_password != null && !ldap_manager_password.isEmpty()){
+                contextSource.setUserDn(ldap_manager_dn);
+                contextSource.setPassword(ldap_manager_password);
+            }
             contextSource.afterPropertiesSet();
 
             DefaultLdapAuthoritiesPopulator myAuthPopulator = new DefaultLdapAuthoritiesPopulator(contextSource, ldap_groups_search_base);
@@ -127,10 +141,18 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
             myAuthPopulator.setSearchSubtree(true);
             myAuthPopulator.setIgnorePartialResultException(true);
 
-            auth.ldapAuthentication()
-                    .userDnPatterns(ldap_user_dn_pattern)
-                    .ldapAuthoritiesPopulator(myAuthPopulator)
-                    .contextSource(contextSource);
+           LdapAuthenticationProviderConfigurer configurer = auth.ldapAuthentication()
+                    .ldapAuthoritiesPopulator(myAuthPopulator);
+           if(ldap_user_dn_pattern != null && !ldap_user_dn_pattern.isEmpty()){
+               configurer.userDnPatterns(ldap_user_dn_pattern);
+           }
+           if(ldap_user_search_filter != null && !ldap_user_search_filter.isEmpty()){
+               configurer.userSearchFilter(ldap_user_search_filter);
+           }
+           if(ldap_user_search_base != null && !ldap_user_search_base.isEmpty()){
+               configurer.userSearchBase(ldap_user_search_base);
+           }
+           configurer.contextSource(contextSource);
         }
 
         if (embedded_ldap_enabled) {
