@@ -63,6 +63,9 @@ public class PropertyRepository implements CrudRepository<Property, String>
     @Value("${elasticsearch.property.type:olog_property}")
     private String ES_PROPERTY_TYPE;
 
+    @Value("${elasticsearch.result.size.properties:10}")
+    private int propertiesResultSize;
+
     @Autowired
     @Qualifier("indexClient")
     RestHighLevelClient client;
@@ -187,6 +190,8 @@ public class PropertyRepository implements CrudRepository<Property, String>
                 sourceBuilder.query(QueryBuilders.termQuery("state", State.Active.toString()));
             }
             sourceBuilder.timeout(new TimeValue(10, TimeUnit.SECONDS));
+            sourceBuilder.size(propertiesResultSize);
+
             SearchResponse response = client.search(
                     new SearchRequest(ES_PROPERTY_INDEX).types(ES_PROPERTY_TYPE).source(sourceBuilder), RequestOptions.DEFAULT);
 

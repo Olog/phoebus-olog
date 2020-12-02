@@ -61,6 +61,9 @@ public class TagRepository implements CrudRepository<Tag, String> {
     @Value("${elasticsearch.tag.type:olog_tag}")
     private String ES_TAG_TYPE;
 
+    @Value("${elasticsearch.result.size.tags:10}")
+    private int tagsResultSize;
+
     @Autowired
     @Qualifier("indexClient")
     RestHighLevelClient client;
@@ -181,6 +184,7 @@ public class TagRepository implements CrudRepository<Tag, String> {
             SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
             sourceBuilder.query(QueryBuilders.termQuery("state", State.Active.toString()));
             sourceBuilder.timeout(new TimeValue(10, TimeUnit.SECONDS));
+            sourceBuilder.size(tagsResultSize);
 
             SearchResponse response = client.search(
                     new SearchRequest(ES_TAG_INDEX).types(ES_TAG_TYPE).source(sourceBuilder), RequestOptions.DEFAULT);

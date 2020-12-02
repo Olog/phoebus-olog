@@ -61,7 +61,10 @@ public class LogbookRepository implements CrudRepository<Logbook, String>
     private String ES_LOGBOOK_INDEX;
     @Value("${elasticsearch.logbook.type:olog_logbook}")
     private String ES_LOGBOOK_TYPE;
-    
+
+    @Value("${elasticsearch.result.size.logbooks:10}")
+    private int logbooksResultSize;
+
     @Autowired
     @Qualifier("indexClient")
     RestHighLevelClient client;
@@ -198,6 +201,7 @@ public class LogbookRepository implements CrudRepository<Logbook, String>
             SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
             sourceBuilder.query(QueryBuilders.termQuery("state", State.Active.toString()));
             sourceBuilder.timeout(new TimeValue(10, TimeUnit.SECONDS));
+            sourceBuilder.size(logbooksResultSize);
 
             SearchResponse response = client.search(
                     new SearchRequest(ES_LOGBOOK_INDEX).types(ES_LOGBOOK_TYPE).source(sourceBuilder), RequestOptions.DEFAULT);
