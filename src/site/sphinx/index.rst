@@ -146,7 +146,7 @@ Start the service
    mvn org.springframework.boot:spring-boot-maven-plugin:run
 
 Detailed Installation Instructions:
-`Install Olog-es <http://https://github.com/shroffk/olog-es/>`_.
+`Install Olog-es <https://github.com/Olog/olog-es#olog-es--->`_.
 
 REST API 
 #########
