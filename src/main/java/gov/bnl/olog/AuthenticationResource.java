@@ -45,9 +45,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static gov.bnl.olog.OlogResourceDescriptors.OLOG_SERVICE;
+
 
 @Controller
-@RequestMapping("/")
+@RequestMapping(OLOG_SERVICE)
 public class AuthenticationResource {
 
     @Autowired
