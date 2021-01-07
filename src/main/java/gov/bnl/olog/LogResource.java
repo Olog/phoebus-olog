@@ -9,6 +9,7 @@ import static gov.bnl.olog.OlogResourceDescriptors.LOG_RESOURCE_URI;
 
 import java.io.IOException;
 import java.security.Principal;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -16,6 +17,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import gov.bnl.olog.entity.Tag;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
@@ -41,6 +44,8 @@ import org.springframework.web.server.ResponseStatusException;
 import gov.bnl.olog.entity.Attachment;
 import gov.bnl.olog.entity.Log;
 
+import javax.validation.Valid;
+
 /**
  * Resource for handling the requests to ../logs
  * @author kunal
@@ -54,6 +59,10 @@ public class LogResource
     LogRepository logRepository;
     @Autowired
     AttachmentRepository attachmentRepository;
+    @Autowired
+    private LogbookRepository logbookRepository;
+    @Autowired
+    private TagRepository tagRepository;
 
     @GetMapping("{logId}")
     public Log getLog(@PathVariable String logId) {
@@ -112,9 +121,24 @@ public class LogResource
      * @return
      */
     @PutMapping()
-    public Log createLog(@RequestBody Log log,
+    public Log createLog(@Valid @RequestBody Log log,
                          @AuthenticationPrincipal Principal principal) {
         log.setOwner(principal.getName());
+        Set<String> logbookNames = log.getLogbooks().stream().map(l -> l.getName()).collect(Collectors.toSet());
+        Set<String> persistedLogbookNames = new HashSet<>();
+        logbookRepository.findAll().forEach(l -> persistedLogbookNames.add(l.getName()));
+        if(!CollectionUtils.containsAll(persistedLogbookNames, logbookNames)){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "One or more invalid logbook name(s)");
+        }
+        Set<Tag> tags = log.getTags();
+        if(tags != null && !tags.isEmpty()){
+            Set<String> tagNames = tags.stream().map(t -> t.getName()).collect(Collectors.toSet());
+            Set<String> persistedTags = new HashSet<>();
+            tagRepository.findAll().forEach(t -> persistedLogbookNames.add(t.getName()));
+            if(!CollectionUtils.containsAll(persistedLogbookNames, tagNames)){
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "One or more invalid tag name(s)");
+            }
+        }
         return logRepository.save(log);
     }
 

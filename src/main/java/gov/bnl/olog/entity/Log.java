@@ -18,6 +18,10 @@ import com.fasterxml.jackson.annotation.JsonIgnoreType;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+
 /**
  * Log object that can be represented as JSON in payload data.
  * 
@@ -35,6 +39,9 @@ public class Log implements Serializable
 
     private String source;
     private String description;
+
+    @NotNull
+    @Size(min = 1, message = "A title must be specified.")
     private String title;
 
     private String level = "Info";
@@ -49,6 +56,8 @@ public class Log implements Serializable
 
     private List<Event> events;
 
+    @NotNull
+    @Size(min = 1, message = "At least one logbook must be specified.")
     private Set<Logbook> logbooks = new HashSet<Logbook>();
     private Set<Tag> tags = new HashSet<Tag>();
     private Set<Property> properties = new HashSet<Property>();
