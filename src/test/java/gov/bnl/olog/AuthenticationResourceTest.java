@@ -52,6 +52,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import static gov.bnl.olog.OlogResourceDescriptors.OLOG_SERVICE;
+
 @RunWith(SpringRunner.class)
 @ContextHierarchy({@ContextConfiguration(classes = {AuthenticationResourceTestConfig.class})})
 @WebMvcTest(AuthenticationResourceTest.class)
@@ -74,7 +76,7 @@ public class AuthenticationResourceTest extends ResourcesTestBase {
         when(mockAuthentication.getAuthorities()).thenReturn(authorities);
         Authentication authentication = new UsernamePasswordAuthenticationToken("admin", "adminPass");
         when(authenticationManager.authenticate(authentication)).thenReturn(mockAuthentication);
-        MockHttpServletRequestBuilder request = post("/login?username=admin&password=adminPass");
+        MockHttpServletRequestBuilder request = post("/" + OLOG_SERVICE + "/login?username=admin&password=adminPass");
         MvcResult result = mockMvc.perform(request).andExpect(status().isOk())
                 .andReturn();
         Cookie cookie = result.getResponse().getCookie("SESSION");
@@ -90,13 +92,13 @@ public class AuthenticationResourceTest extends ResourcesTestBase {
         // Log in again and verify that the cookie value is the same, i.e. same session on server.
         when(mockAuthentication.getAuthorities()).thenReturn(authorities);
         when(authenticationManager.authenticate(authentication)).thenReturn(mockAuthentication);
-        request = post("/login?username=admin&password=adminPass");
+        request = post("/" + OLOG_SERVICE + "/login?username=admin&password=adminPass");
         result = mockMvc.perform(request).andExpect(status().isOk())
                 .andReturn();
         Cookie cookie2 = result.getResponse().getCookie("SESSION");
         assertEquals(cookie.getValue(), cookie2.getValue());
 
-        request = get("/user").cookie(cookie);
+        request = get("/" + OLOG_SERVICE + "/user").cookie(cookie);
         result = mockMvc.perform(request).andExpect(status().isOk())
                 .andReturn();
         content = result.getResponse().getContentAsString();
@@ -124,7 +126,7 @@ public class AuthenticationResourceTest extends ResourcesTestBase {
         when(mockAuthentication.getAuthorities()).thenReturn(authorities);
         Authentication authentication = new UsernamePasswordAuthenticationToken("admin", "adminPass");
         when(authenticationManager.authenticate(authentication)).thenReturn(mockAuthentication);
-        MockHttpServletRequestBuilder request = post("/login?username=admin&password=adminPass");
+        MockHttpServletRequestBuilder request = post("/" + OLOG_SERVICE + "/login?username=admin&password=adminPass");
         MvcResult result = mockMvc.perform(request).andExpect(status().isOk())
                 .andReturn();
 
@@ -144,7 +146,7 @@ public class AuthenticationResourceTest extends ResourcesTestBase {
         when(mockAuthentication.getAuthorities()).thenReturn(authorities);
         Authentication authentication = new UsernamePasswordAuthenticationToken("admin", "adminPass");
         when(authenticationManager.authenticate(authentication)).thenReturn(mockAuthentication);
-        RequestBuilder requestBuilder = formLogin().acceptMediaType(MediaType.APPLICATION_JSON).user("admin").password("adminPass");
+        RequestBuilder requestBuilder = formLogin("/" + OLOG_SERVICE + "/login").acceptMediaType(MediaType.APPLICATION_JSON).user("admin").password("adminPass");
         mockMvc.perform(requestBuilder)
                 .andDo(print())
                 .andExpect(status().isOk())
@@ -155,17 +157,17 @@ public class AuthenticationResourceTest extends ResourcesTestBase {
     @Test
     public void testFailedLogin() throws Exception {
         doThrow(new BadCredentialsException("bad")).when(authenticationManager).authenticate(any(Authentication.class));
-        MockHttpServletRequestBuilder request = post("/login?username=admin&password=badPass");
+        MockHttpServletRequestBuilder request = post("/" + OLOG_SERVICE + "/login?username=admin&password=badPass");
         mockMvc.perform(request).andExpect(status().isUnauthorized());
         reset(authenticationManager);
     }
 
     @Test
     public void testLogout() throws Exception {
-        MockHttpServletRequestBuilder request = get("/logout");
+        MockHttpServletRequestBuilder request = get("/" + OLOG_SERVICE + "/logout");
         mockMvc.perform(request).andExpect(status().isOk());
 
-        request = get("/logout").cookie(new Cookie("SESSION", "abc"));
+        request = get("/" + OLOG_SERVICE + "/logout").cookie(new Cookie("SESSION", "abc"));
         mockMvc.perform(request).andExpect(status().isOk());
     }
 }
