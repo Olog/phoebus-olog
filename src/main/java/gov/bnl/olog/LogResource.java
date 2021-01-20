@@ -134,8 +134,8 @@ public class LogResource
         if(tags != null && !tags.isEmpty()){
             Set<String> tagNames = tags.stream().map(t -> t.getName()).collect(Collectors.toSet());
             Set<String> persistedTags = new HashSet<>();
-            tagRepository.findAll().forEach(t -> persistedLogbookNames.add(t.getName()));
-            if(!CollectionUtils.containsAll(persistedLogbookNames, tagNames)){
+            tagRepository.findAll().forEach(t -> persistedTags.add(t.getName()));
+            if(!CollectionUtils.containsAll(persistedTags, tagNames)){
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "One or more invalid tag name(s)");
             }
         }

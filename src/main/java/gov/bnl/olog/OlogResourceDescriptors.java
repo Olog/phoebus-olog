@@ -13,6 +13,7 @@ public class OlogResourceDescriptors
     static final String PROPERTY_RESOURCE_URI = OLOG_SERVICE + "/properties";
     static final String LOG_RESOURCE_URI = OLOG_SERVICE + "/logs";
     static final String SERVICE_CONFIGURATION_URI = OLOG_SERVICE + "/configuration";
+    static final String ATTACHMENT_URI = OLOG_SERVICE + "/attachment";
 
     // Read the elatic index and type from the application.properties
     @Value("${elasticsearch.tag.index:olog_tags}")

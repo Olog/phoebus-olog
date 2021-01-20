@@ -7,7 +7,12 @@ package gov.bnl.olog;
 
 import java.io.IOException;
 import java.util.Optional;
+import java.util.UUID;
 
+import com.mongodb.client.gridfs.GridFSBucket;
+import com.mongodb.client.gridfs.model.GridFSFile;
+import com.mongodb.client.gridfs.model.GridFSUploadOptions;
+import org.bson.BsonString;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +22,6 @@ import org.springframework.data.mongodb.gridfs.GridFsOperations;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
-import com.mongodb.client.gridfs.model.GridFSFile;
 import gov.bnl.olog.entity.Attachment;
 
 @Repository
@@ -28,18 +32,36 @@ public class AttachmentRepository implements CrudRepository<Attachment, String>
     private GridFsTemplate gridFsTemplate;
     @Autowired
     private GridFsOperations gridOperation;
+    @Autowired
+    private GridFSBucket gridFSBucket;
 
+    /**
+     * Saves an attachment.
+     *
+     * Client code may set an id on the entity to store, and it must be unique. In this manner a client
+     * may pre-define a search path or URL to the persisted entity.
+     *
+     * If the client does not set the id of the entity (or if it is an empty string), the id of the persisted
+     * entity will  be set by GridFs and then on the entity before it is returned.
+     * @param entity
+     * @param <S>
+     * @return The persisted entity with non-null and non-empty id.
+     */
     @Override
     public <S extends Attachment> S save(S entity)
     {
         try
         {
-            Document document = new Document();
-            document.put("meta-data", entity.getFileMetadataDescription());
-            ObjectId id = gridFsTemplate.store(entity.getAttachment().getInputStream(),
-                                               entity.getFilename(),
-                                               document);
-            entity.setId(id.toString());
+            GridFSUploadOptions options = new GridFSUploadOptions()
+                    .metadata(new Document("meta-data", entity.getFileMetadataDescription()));
+            if(entity.getId() != null && !entity.getId().isEmpty()){
+                BsonString id = new BsonString(UUID.randomUUID().toString());
+                gridFSBucket.uploadFromStream(id, entity.getFilename(), entity.getAttachment().getInputStream(), options);
+            }
+            else{
+                ObjectId objectId = gridFSBucket.uploadFromStream(entity.getFilename(), entity.getAttachment().getInputStream(), options);
+                entity.setId(objectId.toString());
+            }
             return entity;
         } catch (IOException e)
         {
@@ -55,11 +77,19 @@ public class AttachmentRepository implements CrudRepository<Attachment, String>
         return null;
     }
 
+    /**
+     *
+     * @param id The unique GridFS id of an attachment.
+     * @return {@link Optional<Attachment>} or - if the specified id is invalid - {@link Optional#empty()}.
+     */
     @Override
     public Optional<Attachment> findById(String id)
     {
         Attachment attachment = new Attachment();
         GridFSFile found = gridOperation.find(new Query(Criteria.where("_id").is(id))).first();
+        if(found == null){
+            return Optional.empty();
+        }
         attachment.setId(id);
         attachment.setAttachment(gridOperation.getResource(found));
         attachment.setFilename(found.getFilename());
