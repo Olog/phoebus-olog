@@ -23,8 +23,10 @@ import gov.bnl.olog.entity.Attachment;
 import gov.bnl.olog.entity.Log;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.core.io.InputStreamSource;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.ContextHierarchy;
 import org.springframework.test.context.TestPropertySource;
@@ -32,8 +34,12 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Optional;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -52,17 +58,31 @@ public class AttachmentResourceTest extends ResourcesTestBase {
     @Autowired
     private AttachmentRepository attachmentRepository;
 
-    @Autowired
-    private ObjectMapper objectMapper;
-
     @Test
     public void testGetAttachment() throws Exception {
-        when(attachmentRepository.findById("valid")).thenReturn(Optional.of(new Attachment()));
+        Attachment attachment = Mockito.mock(Attachment.class);
+        InputStreamSource inputStreamSource = Mockito.mock(InputStreamSource.class);
+        when(inputStreamSource.getInputStream()).thenReturn(new ByteArrayInputStream("data".getBytes()));
+        when(attachment.getAttachment()).thenReturn(inputStreamSource);
+        when(attachment.getFilename()).thenReturn("file.jpg");
+        when(attachmentRepository.findById("valid")).thenReturn(Optional.of(attachment));
         MockHttpServletRequestBuilder request = get("/" + OlogResourceDescriptors.ATTACHMENT_URI + "/valid");
         MvcResult result = mockMvc.perform(request).andExpect(status().isOk())
                 .andReturn();
-        Attachment attachment = objectMapper.readValue(result.getResponse().getContentAsString(), Attachment.class);
-        assertNotNull(attachment);
+        String responseData = result.getResponse().getContentAsString();
+        assertEquals("data", responseData);
+    }
+
+    @Test
+    public void testGetAttachmentIOException() throws Exception {
+        Attachment attachment = Mockito.mock(Attachment.class);
+        InputStreamSource inputStreamSource = Mockito.mock(InputStreamSource.class);
+        when(inputStreamSource.getInputStream()).thenThrow(new IOException());
+        when(attachment.getAttachment()).thenReturn(inputStreamSource);
+        when(attachment.getFilename()).thenReturn("file.jpg");
+        when(attachmentRepository.findById("valid")).thenReturn(Optional.of(attachment));
+        MockHttpServletRequestBuilder request = get("/" + OlogResourceDescriptors.ATTACHMENT_URI + "/valid");
+        mockMvc.perform(request).andExpect(status().isInternalServerError());
     }
 
     @Test
