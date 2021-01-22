@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>Commonmark Cheatsheet</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="twelve columns center">
+
+            <table class="markdown-reference">
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th class="second-example">Or</th>
+                        <th>… to Get</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>                        
+                        <td class="preformatted">*Italic*</td>
+                        <td class="preformatted second-example">_Italic_</td>
+                        <td><em>Italic</em></td>
+                    </tr>
+                    <tr>                        
+                        <td class="preformatted">**Bold**</td>
+                        <td class="preformatted second-example">__Bold__</td>
+                        <td><strong>Bold</strong></td>
+                    </tr>
+                    <tr>
+                        <td class="preformatted">
+                            # Heading 1
+                        </td>
+                        <td class="preformatted second-example">
+                            Heading 1<br>
+                            =========
+                        </td>
+                        <td>
+                            <h1 class="smaller-h1">Heading 1</h1>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="preformatted">
+                            ## Heading 2
+                        </td>
+                        <td class="preformatted second-example">
+                            Heading 2<br>
+                            ---------
+                        </td>
+                        <td>
+                            <h2 class="smaller-h2">Heading 2</h2>
+                        </td>
+                    </tr>
+                    <tr>                        
+                        <td class="preformatted">
+                            [Link](http://a.com)
+                        </td>
+                        <td class="preformatted second-example">
+                            [Link][1]<br>
+                            ⋮<br>
+                            [1]: http://b.org
+                        </td>
+                        <td><a href="https://commonmark.org/">Link</a></td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <p class="preformatted">
+                                ![Image](http://url/a.png){width=100 height=150}
+                            </p>
+                            <p>
+                                NOTE: the <span class="preformatted">{width=100 height=150}</span></span><br> 
+                                size specification is optional.
+                            </p>
+                        </td>
+                        <td>
+                            <p class="preformatted second-example">
+                                ![Image][1]<br>
+                                ⋮<br>
+                                [1]: http://url/b.jpg
+                            </p>
+                            <p>
+                                NOTE: this variant does not support<br>
+                                size specification.
+                            </p>
+                        </td>
+                        <td>
+                            <img src="data:image/jpeg;base64,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">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="preformatted">
+                            &gt; Blockquote
+                        </td>
+                        <td class="preformatted second-example">
+                            &nbsp;
+                        </td>
+                        <td>
+                            <blockquote>Blockquote</blockquote>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="preformatted">
+                            <p>
+                                * List<br>
+                                * List<br>
+                                * List
+                            </p>
+                        </td>
+                        <td class="preformatted second-example">
+                            <p>
+                                - List<br>
+                                - List<br>
+                                - List<br>
+                            </p>
+                        </td>
+                        <td>
+                            <ul>
+                                <li>List</li>
+                                <li>List</li>
+                                <li>List</li>
+                            </ul>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="preformatted">
+                            <p>
+                                1. One<br>
+                                2. Two<br>
+                                3. Three
+                            </p>
+                        </td>
+                        <td class="preformatted second-example">
+                            <p>
+                                1) One<br>
+                                2) Two<br>
+                                3) Three
+                            </p>
+                        </td>
+                        <td>
+                            <ol>
+                                <li>One</li>
+                                <li>Two</li>
+                                <li>Three</li>
+                            </ol>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="preformatted">
+                            Horizontal Rule<br>
+                            <br>
+                            ---
+                        </td>
+                        <td class="preformatted second-example">
+                            Horizontal Rule<br>
+                            <br>
+                            ***
+                        </td>
+                        <td>
+                            Horizontal Rule
+                            <hr class="custom-hr">
+                        </td>
+                    </tr>
+                    <tr>                        
+                        <td class="preformatted">
+                            `Inline code` with backticks
+                            </td>
+                        <td class="preformatted second-example">
+                            &nbsp;
+                        </td>
+                        <td>
+                            <code class="preformatted">Inline code</code> with backticks
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="preformatted">
+                            ```<br>
+                            # code block<br>
+                            print '3 backticks or'<br> 
+                            print 'indent 4 spaces'<br>                            
+                            ```
+                        </td>
+                        <td class="preformatted second-example">
+                            <span class="spaces">····</span># code block<br> 
+                            <span class="spaces">····</span>print '3 backticks or'<br>
+                            <span class="spaces">····</span>print 'indent 4 spaces'
+                        </td>
+                        <td>
+                            <div class="code-block">
+                                # code block
+                                <br> print '3 backticks or'
+                                <br> print 'indent 4 spaces'
+                            </div>
+                        </td>
+                    </tr>  
+                    <tr>
+                        <td class="preformatted">
+                            | Table Header 1| Table Header 2|<br>
+                            |---------------|---------------|<br>
+                            | Table Cell 11 | Table Cell 12 |<br>
+                            | Table Cell 21 | Table Cell 22 |<br>
+                        </td>
+                        <td class="preformatted second-example">
+                            &nbsp;
+                        </td>
+                        <td>
+                            <table class="olog-table">
+                                <tbody>
+                                    <tr>
+                                        <th>Table Header 1</th><th>Table Header 2</th>
+                                    </tr>
+                                    <tr>
+                                        <td>Table Cell 11</td><td>Table Cell 12</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Table Cell 21</td><td>Table Cell 22</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </td>
+                    </tr>                  
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+
+
+<div id="vidyowebrtcscreenshare_is_installed"></div>
+</body>
+<style type="text/css">
+/*! normalize.css v3.0.2 | MIT License | git.io/normalize */
+
+/**
+ * 1. Set default font family to sans-serif.
+ * 2. Prevent iOS text size adjust after orientation change, without disabling
+ *    user zoom.
+ */
+
+ html {
+  font-family: sans-serif; /* 1 */
+  -ms-text-size-adjust: 100%; /* 2 */
+  -webkit-text-size-adjust: 100%; /* 2 */
+}
+
+/**
+ * Remove default margin.
+ */
+
+body {
+  margin: 0;
+}
+
+/* HTML5 display definitions
+   ========================================================================== */
+
+/**
+ * Correct `block` display not defined for any HTML5 element in IE 8/9.
+ * Correct `block` display not defined for `details` or `summary` in IE 10/11
+ * and Firefox.
+ * Correct `block` display not defined for `main` in IE 11.
+ */
+
+article,
+aside,
+details,
+figcaption,
+figure,
+footer,
+header,
+hgroup,
+main,
+menu,
+nav,
+section,
+summary {
+  display: block;
+}
+
+/**
+ * 1. Correct `inline-block` display not defined in IE 8/9.
+ * 2. Normalize vertical alignment of `progress` in Chrome, Firefox, and Opera.
+ */
+
+audio,
+canvas,
+progress,
+video {
+  display: inline-block; /* 1 */
+  vertical-align: baseline; /* 2 */
+}
+
+/**
+ * Prevent modern browsers from displaying `audio` without controls.
+ * Remove excess height in iOS 5 devices.
+ */
+
+audio:not([controls]) {
+  display: none;
+  height: 0;
+}
+
+/**
+ * Address `[hidden]` styling not present in IE 8/9/10.
+ * Hide the `template` element in IE 8/9/11, Safari, and Firefox < 22.
+ */
+
+[hidden],
+template {
+  display: none;
+}
+
+/* Links
+   ========================================================================== */
+
+/**
+ * Remove the gray background color from active links in IE 10.
+ */
+
+a {
+  background-color: transparent;
+}
+
+/**
+ * Improve readability when focused and also mouse hovered in all browsers.
+ */
+
+a:active,
+a:hover {
+  outline: 0;
+}
+
+/* Text-level semantics
+   ========================================================================== */
+
+/**
+ * Address styling not present in IE 8/9/10/11, Safari, and Chrome.
+ */
+
+abbr[title] {
+  border-bottom: 1px dotted;
+}
+
+/**
+ * Address style set to `bolder` in Firefox 4+, Safari, and Chrome.
+ */
+
+b,
+strong {
+  font-weight: bold;
+}
+
+/**
+ * Address styling not present in Safari and Chrome.
+ */
+
+dfn {
+  font-style: italic;
+}
+
+/**
+ * Address variable `h1` font-size and margin within `section` and `article`
+ * contexts in Firefox 4+, Safari, and Chrome.
+ */
+
+h1 {
+  font-size: 2em;
+  margin: 0.67em 0;
+}
+
+/**
+ * Address styling not present in IE 8/9.
+ */
+
+mark {
+  background: #ff0;
+  color: #000;
+}
+
+/**
+ * Address inconsistent and variable font size in all browsers.
+ */
+
+small {
+  font-size: 80%;
+}
+
+/**
+ * Prevent `sub` and `sup` affecting `line-height` in all browsers.
+ */
+
+sub,
+sup {
+  font-size: 75%;
+  line-height: 0;
+  position: relative;
+  vertical-align: baseline;
+}
+
+sup {
+  top: -0.5em;
+}
+
+sub {
+  bottom: -0.25em;
+}
+
+/* Embedded content
+   ========================================================================== */
+
+/**
+ * Remove border when inside `a` element in IE 8/9/10.
+ */
+
+img {
+  border: 0;
+}
+
+/**
+ * Correct overflow not hidden in IE 9/10/11.
+ */
+
+svg:not(:root) {
+  overflow: hidden;
+}
+
+/* Grouping content
+   ========================================================================== */
+
+/**
+ * Address margin not present in IE 8/9 and Safari.
+ */
+
+figure {
+  margin: 1em 40px;
+}
+
+/**
+ * Address differences between Firefox and other browsers.
+ */
+
+hr {
+  -moz-box-sizing: content-box;
+  box-sizing: content-box;
+  height: 0;
+}
+
+/**
+ * Contain overflow in all browsers.
+ */
+
+pre {
+  overflow: auto;
+}
+
+/**
+ * Address odd `em`-unit font size rendering in all browsers.
+ */
+
+code,
+kbd,
+pre,
+samp {
+  font-family: monospace, monospace;
+  font-size: 1em;
+}
+
+/* Forms
+   ========================================================================== */
+
+/**
+ * Known limitation: by default, Chrome and Safari on OS X allow very limited
+ * styling of `select`, unless a `border` property is set.
+ */
+
+/**
+ * 1. Correct color not being inherited.
+ *    Known issue: affects color of disabled elements.
+ * 2. Correct font properties not being inherited.
+ * 3. Address margins set differently in Firefox 4+, Safari, and Chrome.
+ */
+
+button,
+input,
+optgroup,
+select,
+textarea {
+  color: inherit; /* 1 */
+  font: inherit; /* 2 */
+  margin: 0; /* 3 */
+}
+
+/**
+ * Address `overflow` set to `hidden` in IE 8/9/10/11.
+ */
+
+button {
+  overflow: visible;
+}
+
+/**
+ * Address inconsistent `text-transform` inheritance for `button` and `select`.
+ * All other form control elements do not inherit `text-transform` values.
+ * Correct `button` style inheritance in Firefox, IE 8/9/10/11, and Opera.
+ * Correct `select` style inheritance in Firefox.
+ */
+select {
+  text-transform: none;
+}
+
+/**
+ * 1. Avoid the WebKit bug in Android 4.0.* where (2) destroys native `audio`
+ *    and `video` controls.
+ * 2. Correct inability to style clickable `input` types in iOS.
+ * 3. Improve usability and consistency of cursor style between image-type
+ *    `input` and others.
+ */
+html input[type="button"], /* 1 */
+input[type="reset"],
+input[type="submit"] {
+  -webkit-appearance: button; /* 2 */
+  cursor: pointer; /* 3 */
+}
+/**
+ * Define consistent border, margin, and padding.
+ */
+
+fieldset {
+  border: 1px solid #c0c0c0;
+  margin: 0 2px;
+  padding: 0.35em 0.625em 0.75em;
+}
+
+/**
+ * 1. Correct `color` not being inherited in IE 8/9/10/11.
+ * 2. Remove padding so people aren't caught out if they zero out fieldsets.
+ */
+
+legend {
+  border: 0; /* 1 */
+  padding: 0; /* 2 */
+}
+
+/**
+ * Remove default vertical scrollbar in IE 8/9/10/11.
+ */
+
+textarea {
+  overflow: auto;
+}
+
+/**
+ * Don't inherit the `font-weight` (applied by a rule above).
+ * NOTE: the default cannot safely be changed in Chrome and Safari on OS X.
+ */
+
+optgroup {
+  font-weight: bold;
+}
+
+/* Tables
+   ========================================================================== */
+
+/**
+ * Remove most spacing between table cells.
+ */
+
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+td,
+th {
+  padding: 0;
+}
+
+
+/*
+* Skeleton V2.0.4
+* Copyright 2014, Dave Gamache
+* www.getskeleton.com
+* Free to use under the MIT license.
+* https://www.opensource.org/licenses/mit-license.php
+* 12/29/2014
+*/
+
+
+/* Table of contents
+––––––––––––––––––––––––––––––––––––––––––––––––––
+- Grid
+- Base Styles
+- Typography
+- Links
+- Buttons
+- Forms
+- Lists
+- Code
+- Tables
+- Spacing
+- Utilities
+- Clearing
+- Media Queries
+*/
+
+
+/* Grid
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+.container {
+  position: relative;
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 20px;
+  box-sizing: border-box; }
+.column,
+.columns {
+  width: 100%;
+  float: left;
+  box-sizing: border-box; }
+
+/* For devices larger than 400px */
+@media (min-width: 400px) {
+  .container {
+    width: 85%;
+    padding: 0; }
+}
+
+/* For devices larger than 550px */
+@media (min-width: 550px) {
+  .container {
+    width: 80%; }
+  .column,
+  .columns {
+    margin-left: 4%; }
+  .column:first-child,
+  .columns:first-child {
+    margin-left: 0; }
+
+  .one.column,
+  .one.columns                    { width: 4.66666666667%; }
+  .two.columns                    { width: 13.3333333333%; }
+  .three.columns                  { width: 22%;            }
+  .four.columns                   { width: 30.6666666667%; }
+  .five.columns                   { width: 39.3333333333%; }
+  .six.columns                    { width: 48%;            }
+  .seven.columns                  { width: 56.6666666667%; }
+  .eight.columns                  { width: 65.3333333333%; }
+  .nine.columns                   { width: 74.0%;          }
+  .ten.columns                    { width: 82.6666666667%; }
+  .eleven.columns                 { width: 91.3333333333%; }
+  .twelve.columns                 { width: 100%; margin-left: 0; }
+
+  .one-third.column               { width: 30.6666666667%; }
+  .two-thirds.column              { width: 65.3333333333%; }
+
+  .one-half.column                { width: 48%; }
+
+  /* Offsets */
+  .offset-by-one.column,
+  .offset-by-one.columns          { margin-left: 8.66666666667%; }
+  .offset-by-two.column,
+  .offset-by-two.columns          { margin-left: 17.3333333333%; }
+  .offset-by-three.column,
+  .offset-by-three.columns        { margin-left: 26%;            }
+  .offset-by-four.column,
+  .offset-by-four.columns         { margin-left: 34.6666666667%; }
+  .offset-by-five.column,
+  .offset-by-five.columns         { margin-left: 43.3333333333%; }
+  .offset-by-six.column,
+  .offset-by-six.columns          { margin-left: 52%;            }
+  .offset-by-seven.column,
+  .offset-by-seven.columns        { margin-left: 60.6666666667%; }
+  .offset-by-eight.column,
+  .offset-by-eight.columns        { margin-left: 69.3333333333%; }
+  .offset-by-nine.column,
+  .offset-by-nine.columns         { margin-left: 78.0%;          }
+  .offset-by-ten.column,
+  .offset-by-ten.columns          { margin-left: 86.6666666667%; }
+  .offset-by-eleven.column,
+  .offset-by-eleven.columns       { margin-left: 95.3333333333%; }
+
+  .offset-by-one-third.column,
+  .offset-by-one-third.columns    { margin-left: 34.6666666667%; }
+  .offset-by-two-thirds.column,
+  .offset-by-two-thirds.columns   { margin-left: 69.3333333333%; }
+
+  .offset-by-one-half.column,
+  .offset-by-one-half.columns     { margin-left: 52%; }
+
+}
+
+
+/* Base Styles
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+/* NOTE
+html is set to 62.5% so that all the REM measurements throughout Skeleton
+are based on 10px sizing. So basically 1.5rem = 15px :) */
+html {
+  font-size: 62.5%; }
+body {
+  font-size: 1.5em; /* currently ems cause chrome bug misinterpreting rems on body element */
+  line-height: 1.6;
+  font-weight: 400;
+  font-family: "Roboto", "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  color: #222; }
+
+
+/* Typography
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+h1, h2, h3, h4, h5, h6 {
+  margin-top: 0;
+  margin-bottom: 2rem;
+  font-weight: 300; }
+h1 { font-size: 4.0rem; line-height: 1.2;  letter-spacing: -.1rem;}
+h2 { font-size: 3.3rem; line-height: 1.25; letter-spacing: -.1rem; }
+h3 { font-size: 2.8rem; line-height: 1.3;  letter-spacing: -.1rem; }
+h4 { font-size: 2.4rem; line-height: 1.35; letter-spacing: -.08rem; }
+h5 { font-size: 1.9rem; line-height: 1.5;  letter-spacing: -.05rem; }
+h6 { font-size: 1.2rem; line-height: 1.6;  letter-spacing: 0; }
+
+p {
+  margin-top: 0; }
+
+
+/* Links
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+a {
+  color: #1EAEDB; }
+a:hover {
+  color: #0FA0CE; }
+
+/* Lists
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+ol, ul {
+  padding-left: 1.8em;
+  margin-top:0.5em;
+}
+
+/* Code
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+code {
+  padding: .2rem .5rem;
+  margin: 0 .2rem;
+  font-size: 90%;
+  white-space: nowrap;
+  background: #F1F1F1;
+  border: 1px solid #E1E1E1;
+  border-radius: 4px; }
+pre > code {
+  display: block;
+  padding: 1rem 1.5rem;
+  white-space: pre; }
+
+
+/* Tables
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+th,
+td {
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid #E1E1E1; }
+th:first-child,
+td:first-child {
+  padding-left: 0; }
+th:last-child,
+td:last-child {
+  padding-right: 0; }
+
+
+/* Spacing
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+button,
+.button {
+  margin-bottom: 1rem; }
+input,
+textarea,
+select,
+fieldset {
+  margin-bottom: 1.5rem; }
+pre,
+blockquote,
+dl,
+figure,
+table,
+p,
+form {
+  margin-bottom: 1.5rem; }
+
+
+/* Utilities
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+.u-full-width {
+  width: 100%;
+  box-sizing: border-box; }
+.u-max-full-width {
+  max-width: 100%;
+  box-sizing: border-box; }
+.u-pull-right {
+  float: right; }
+.u-pull-left {
+  float: left; }
+
+
+/* Misc
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+hr {
+  margin-top: 3rem;
+  margin-bottom: 3.5rem;
+  border-width: 0;
+  border-top: 1px solid #E1E1E1; }
+
+
+/* Clearing
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+
+/* Self Clearing Goodness */
+.container:after,
+.row:after,
+.u-cf {
+  content: "";
+  display: table;
+  clear: both; }
+</style>
+
+<style type="text/css">
+    /*
+* Free to use under the MIT license.
+* https://www.opensource.org/licenses/mit-license.php
+*/
+
+
+html,body {
+  height: 97%;
+  margin: 0;
+}
+
+#fullpage, .section {
+  height: 100%;
+}
+
+.slide {
+  height: 100%;
+  min-height: 100%;
+  display: none;
+}
+
+.active {
+  display: block;
+}
+
+html>body .slide {
+  height: auto;
+}
+
+/* #Blockquotes
+================================================== */
+blockquote {
+  border-left: 5px solid #ccc;
+  margin: 1.5em 10px;
+  padding: 0.5em 10px;
+}
+blockquote:before {
+  color: #ccc;
+  font-size: 4em;
+  line-height: 0.1em;
+  margin-right: 0.25em;
+  vertical-align: -0.4em;
+}
+
+/* #Code
+================================================== */
+.code-block {
+	background:#F1F1F1;
+	border: 1px solid #E1E1E1;
+	border-radius: 4px;
+	font-size: 90%;
+	padding: .2rem .5rem;
+	font-family: 'Roboto Mono', 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace;
+}
+
+
+/* sweet-alert customization
+================================================== */
+.sa-button-container {
+    display: none;
+}
+.sweet-alert {
+    top: 30%;
+}
+
+/* #General
+================================================== */
+.center {
+	text-align: center;
+}
+
+.custom-hr {
+	border-top: 3px solid #E1E1E1;
+    margin-top: 1rem;
+}
+
+p {
+	margin-bottom: 1.5em;
+}
+
+.container {
+	margin-top: 2em;
+}
+
+.noselect {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.six.columns label {
+    color: #999;
+    font-weight: normal;
+    font-size: 0.8em;
+    margin-top: 5px;
+}
+
+input[type="checkbox"] {
+    vertical-align: -2px;
+}
+
+.spaces {
+    color:#888;
+}
+
+/* format the editors for the exercises */
+.editor {
+	width: 100%;
+    max-width: 100%;
+	height: 11.7em;
+	border: 1px #666 solid;
+	margin-bottom: 0em;
+}
+code, kbd, pre, samp, .editor, .html-pad, .preformatted {
+	font: 1em/normal 'Roboto Mono', 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace;
+}
+.preformatted {
+    font-size: 0.9em;
+}
+
+.render-pad, .html-pad {
+	font-size: 0.9em;
+	height: 13em;
+	border: 1px #999 dotted; 
+	overflow: auto;
+	padding: 0.5em;
+}
+.html-pad { 
+	display: none;
+}
+.muted {
+    color: #aaa;
+}
+
+.muted a {
+    color: #aaa;
+}
+
+/* mobile modifications */
+@media (max-width: 737px) {
+	.editor {
+		height: 9em;
+        font-size: 0.9em;
+	}
+	.render-pad, .html-pad {
+		height: 10em;
+	}
+   
+    .rowspacer {
+        display: none;
+    }
+    .container {
+        margin-top: 0.5em;
+        padding: 0 10px;
+    }
+    h1 {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+    h2 {        
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+    }
+    .generated-check {
+        display: none;
+    }
+    .button-answer {
+        margin-top: 1em;
+        margin-bottom: -1em;
+    }
+    .button-reset {
+        margin-top: 1em;
+        margin-bottom: -1em;
+    }
+    .row.exercise-instructions p {
+        margin-bottom: 0.4em;
+    }
+    .cd-container {
+        margin: 0;
+    }
+    .second-example {
+        display: none;
+    }
+}
+
+
+/* iPhone 6 height */
+@media (min-height: 570px) and (max-width: 737px) {
+    .editor {
+        height: 180px;
+        font-size: 1em;
+    }
+    .render-pad, .html-pad {
+        height: 180px;
+        font-size: 1em;
+    }
+}
+
+/* iPhone 6 plus height */
+@media (min-height: 730px) and (max-width: 737px) {
+    .editor {
+        height: 230px;
+        font-size: 1em;
+    }
+    .render-pad, .html-pad {
+        height: 230px;
+        font-size: 1em;
+    }
+}
+
+
+/* tiny desktop height */
+@media (min-height: 550px) and (min-width:820px) {
+    .editor {
+        height: 240px;
+    }
+    .render-pad, .html-pad {
+        height: 240px;
+    }
+}
+
+
+/* small desktop height */
+@media (min-height: 650px) and (min-width:820px) {
+    .editor {
+        height: 340px;
+        font-size: 1em;
+    }
+    .render-pad, .html-pad {
+        height: 340px;
+        font-size: 1em;
+    }
+}
+
+
+/* regular desktop height */
+@media (min-height: 750px) and (min-width:820px) {
+    .editor {
+        height: 440px;
+        font-size: 1em;
+    }
+    .render-pad, .html-pad {
+        height: 440px;
+        font-size: 1em;
+    }
+}
+
+
+/* fixed footer */
+#footer{
+	position:fixed;
+	height: 40px;
+	display:block;
+	width: 100%;
+	background: rgba(255, 255, 255, 1.0);
+	z-index:9;
+	text-align:center;
+	color: #333;
+	padding: 15px 0 0 0;
+}
+
+#footer {
+	bottom:0px;
+}
+
+.touch #footer {
+	display: none;
+}
+.render-pad li > pre, .render-pad li > preblockquote { 
+	margin-left: 1em;
+}
+.render-pad li > p:not(:first-child) { 
+	margin-left: 1em;
+}
+
+.render-pad h1,h2,h3,h4,h5,h6 {
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+/* headers are ridiculously friggin' big in skeleton */
+.render-pad h1 {
+    font-size:2.2rem;
+}
+.render-pad h2 {
+    font-size:1.9rem;
+}
+.render-pad h3 {
+    font-size:1.7rem;
+}
+.render-pad h4 {
+    font-size:1.5rem;
+}
+.render-pad h5 {
+    font-size:1.4rem;    
+}
+.render-pad h6 {
+    font-size: 1.4rem;    
+}
+
+
+.render-pad p {
+    margin-bottom: 1em;
+}
+
+/* reference card fixups */
+
+.smaller-h1 {
+    font-size:2.2rem;
+}
+
+.smaller-h2 {
+    font-size:2rem;
+    font-weight: normal;
+}
+
+.markdown-reference {
+    width: 100%;
+}
+
+/* fixup for list exercise with long ol number */
+#render_pad_8-3 ol {
+    padding-left: 40px;
+}
+
+.olog-table {
+  font-family: Arial, Helvetica, sans-serif;
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.olog-table td, .olog-table th {
+  border: 1px solid #ddd;
+  padding: 8px;
+  display: table-cell;
+}
+
+.olog-table tr:nth-child(even){background-color: #f2f2f2;}
+
+.olog-table tr:hover {background-color: #ddd;}
+
+.olog-table th {
+  padding-top: 12px;
+  padding-bottom: 12px;
+  text-align: left;
+  background-color: #4CAF50;
+  color: white;
+}
+</style>
+</html>

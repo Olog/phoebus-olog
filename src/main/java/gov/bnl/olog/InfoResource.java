@@ -6,8 +6,6 @@ import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.logging.Level;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 import org.elasticsearch.Version;
 import org.elasticsearch.action.main.MainResponse;

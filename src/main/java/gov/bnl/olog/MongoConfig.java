@@ -3,11 +3,14 @@ package gov.bnl.olog;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.mongodb.client.gridfs.GridFSBucket;
+import com.mongodb.client.gridfs.GridFSBuckets;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
+
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 
 import com.mongodb.client.MongoClient;
@@ -29,7 +32,12 @@ public class MongoConfig extends AbstractMongoClientConfiguration
     @Bean
     public GridFsTemplate gridFsTemplate() throws Exception
     {
-        return new GridFsTemplate(mongoDbFactory(), mappingMongoConverter());
+      return new GridFsTemplate(mongoDbFactory(), mappingMongoConverter());
+    }
+
+    @Bean
+    public GridFSBucket gridFSBucket(){
+        return GridFSBuckets.create(mongoClient().getDatabase(mongoDbName));
     }
 
     @Override

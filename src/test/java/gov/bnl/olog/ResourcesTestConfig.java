@@ -19,6 +19,7 @@
 package gov.bnl.olog;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mongodb.client.gridfs.GridFSBucket;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.mockito.Mockito;
 import org.springframework.boot.autoconfigure.h2.H2ConsoleProperties;
@@ -84,7 +85,6 @@ public class ResourcesTestConfig {
         return new ObjectMapper();
     }
 
-
     @Bean
     public PlatformTransactionManager platformTransactionManager() {
         return Mockito.mock(PlatformTransactionManager.class);
@@ -103,5 +103,10 @@ public class ResourcesTestConfig {
     @Bean
     public TagRepository tagRepository(){
         return Mockito.mock(TagRepository.class);
+    }
+
+    @Bean
+    public GridFSBucket gridFSBucket(){
+        return Mockito.mock(GridFSBucket.class);
     }
 }
