@@ -18,6 +18,9 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import gov.bnl.olog.entity.Tag;
+import gov.bnl.olog.entity.preprocess.CommonmarkPreprocessor;
+import gov.bnl.olog.entity.preprocess.DefaultPreprocessor;
+import gov.bnl.olog.entity.preprocess.LogPreprocessor;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
@@ -63,6 +66,10 @@ public class LogResource
     private LogbookRepository logbookRepository;
     @Autowired
     private TagRepository tagRepository;
+    @Autowired
+    private DefaultPreprocessor defaultPreprocessor;
+    @Autowired
+    private CommonmarkPreprocessor commonmarkPreprocessor;
 
     @GetMapping("{logId}")
     public Log getLog(@PathVariable String logId) {
@@ -121,7 +128,8 @@ public class LogResource
      * @return
      */
     @PutMapping()
-    public Log createLog(@Valid @RequestBody Log log,
+    public Log createLog(@RequestParam(value = "markup", required = false, defaultValue="none") String markup,
+                         @Valid @RequestBody Log log,
                          @AuthenticationPrincipal Principal principal) {
         log.setOwner(principal.getName());
         Set<String> logbookNames = log.getLogbooks().stream().map(l -> l.getName()).collect(Collectors.toSet());
@@ -138,6 +146,15 @@ public class LogResource
             if(!CollectionUtils.containsAll(persistedTags, tagNames)){
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "One or more invalid tag name(s)");
             }
+        }
+        switch(markup){
+            case "none":
+            default:
+                log = defaultPreprocessor.process(log);
+                break;
+            case "commonmark":
+                log = commonmarkPreprocessor.process(log);
+                break;
         }
         return logRepository.save(log);
     }
