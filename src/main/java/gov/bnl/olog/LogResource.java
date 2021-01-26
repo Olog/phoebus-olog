@@ -6,9 +6,12 @@
 package gov.bnl.olog;
 
 import static gov.bnl.olog.OlogResourceDescriptors.LOG_RESOURCE_URI;
+import static org.phoebus.util.time.TimestampFormats.MILLI_FORMAT;
 
 import java.io.IOException;
 import java.security.Principal;
+import java.time.Instant;
+import java.time.temporal.TemporalAmount;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -22,6 +25,7 @@ import gov.bnl.olog.entity.preprocess.CommonmarkPreprocessor;
 import gov.bnl.olog.entity.preprocess.DefaultPreprocessor;
 import gov.bnl.olog.entity.preprocess.LogPreprocessor;
 import org.apache.commons.collections4.CollectionUtils;
+import org.phoebus.util.time.TimeParser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
@@ -117,8 +121,28 @@ public class LogResource
         return null;
     }
 
+    /**
+     * Finds matching log entries based on the specified search parameters.
+     * @param allRequestParams A map of search query parameters. Note that this method supports date/time expressions
+     *                         like "12 hours" or "2 days" as well as formatted strings like "2021-01-20 12:00:00.123".
+     * @return A {@link List} of {@link Log} objects matching the query parameters, or an
+     *  empty list if no matching logs are found.
+     */
     @GetMapping()
     public List<Log> findLogs(@RequestParam MultiValueMap<String, String> allRequestParams) {
+        for(String key : allRequestParams.keySet()){
+            if("start".equalsIgnoreCase(key.toLowerCase()) || "end".equalsIgnoreCase(key.toLowerCase())){
+                String value = allRequestParams.get(key).get(0);
+                Object time = TimeParser.parseInstantOrTemporalAmount(value);
+                if (time instanceof Instant) {
+                    allRequestParams.get(key).clear();
+                    allRequestParams.get(key).add(MILLI_FORMAT.format((Instant)time));
+                } else if (time instanceof TemporalAmount) {
+                    allRequestParams.get(key).clear();
+                    allRequestParams.get(key).add(MILLI_FORMAT.format(Instant.now().minus((TemporalAmount)time)));
+                }
+            }
+        }
         return logRepository.search(allRequestParams);
     }
     
