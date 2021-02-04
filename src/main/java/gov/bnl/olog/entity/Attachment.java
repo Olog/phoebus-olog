@@ -45,6 +45,21 @@ public class Attachment
     }
 
     /**
+     * Creates a new instance of Attachment.
+     * @param id The unique attachment id.
+     * @param attachment - {@link InputStreamSource} to the attachment file
+     * @param filename - the attachment file name
+     * @param fileMetadataDescription - the attachment file metadata
+     */
+    public Attachment(String id, InputStreamSource attachment, String filename, String fileMetadataDescription)
+    {
+        this.id = id;
+        this.attachment = attachment;
+        this.filename = filename;
+        this.fileMetadataDescription = fileMetadataDescription;
+    }
+
+    /**
      * Getter for attachment id
      * 
      * @return attachment id
