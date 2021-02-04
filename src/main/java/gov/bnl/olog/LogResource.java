@@ -187,6 +187,7 @@ public class LogResource
     public Log uploadAttachment(@PathVariable String logId,
                                 @RequestPart("file") MultipartFile file,
                                 @RequestPart("filename") String filename,
+                                @RequestPart(value = "id", required = false) String id,
                                 @RequestPart(value = "fileMetadataDescription", required = false) String fileMetadataDescription) {
         Optional<Log> foundLog = logRepository.findById(logId);
         if (logRepository.findById(logId).isPresent())
@@ -195,7 +196,7 @@ public class LogResource
             fileMetadataDescription = fileMetadataDescription == null || fileMetadataDescription.isEmpty()
                     ? file.getContentType()
                     : fileMetadataDescription;
-            Attachment attachment = new Attachment(file, filename, fileMetadataDescription);
+            Attachment attachment = new Attachment(id, file, filename, fileMetadataDescription);
             // Store the attachment
             Attachment createdAttachement = attachmentRepository.save(attachment);
             // Update the log entry with the id of the stored attachment
@@ -212,7 +213,7 @@ public class LogResource
 
     /**
      * Endpoint supporting upload of multiple files, i.e. saving the client from sending one POST request per file.
-     * Calls {@link #uploadAttachment(String, MultipartFile, String, String)} internally, using the original file's
+     * Calls {@link #uploadAttachment(String, MultipartFile, String, String, String)} internally, using the original file's
      * name and content type.
      * @param logId
      * @param files
@@ -223,7 +224,7 @@ public class LogResource
                                          @RequestPart("file") MultipartFile[] files) {
         if (logRepository.findById(logId).isPresent()) {
             for (MultipartFile file : files) {
-                uploadAttachment(logId, file, file.getOriginalFilename(), file.getContentType());
+                uploadAttachment(logId, file, file.getOriginalFilename(), file.getName(), file.getContentType());
             }
             return logRepository.findById(logId).get();
         } else {

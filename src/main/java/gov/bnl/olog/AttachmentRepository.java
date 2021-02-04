@@ -8,6 +8,8 @@ package gov.bnl.olog;
 import java.io.IOException;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.model.GridFSFile;
@@ -55,7 +57,7 @@ public class AttachmentRepository implements CrudRepository<Attachment, String>
             GridFSUploadOptions options = new GridFSUploadOptions()
                     .metadata(new Document("meta-data", entity.getFileMetadataDescription()));
             if(entity.getId() != null && !entity.getId().isEmpty()){
-                BsonString id = new BsonString(UUID.randomUUID().toString());
+                BsonString id = new BsonString(entity.getId());
                 gridFSBucket.uploadFromStream(id, entity.getFilename(), entity.getAttachment().getInputStream(), options);
             }
             else{
@@ -65,7 +67,8 @@ public class AttachmentRepository implements CrudRepository<Attachment, String>
             return entity;
         } catch (IOException e)
         {
-            e.printStackTrace();
+            Logger.getLogger(AttachmentRepository.class.getName())
+                    .log(Level.WARNING, String.format("Unable to persist attachment %s", entity.getFilename()), e);
         }
         return null;
     }
