@@ -7,6 +7,33 @@
 <body>
 
     <div class="container">
+        <div>
+            <h3>Olog Markup Quick Reference</h3>
+            <p>Markup support in Olog is based on the <a href="https://commonmark.org/">Commonmark specification</a>.
+            Olog supports additional markup features: image size and tables.
+            </p>
+            <p>
+                The below list is a quick reference for the supported markup features. However, there are a few
+                things to keep in mind when editing a log entry text:
+                <ol>
+                    <li>To begin a new line you need two blank characters at the end of the preceding line.
+                    <b>Or</b> an empty blank line, which will be rendered as a blank line.</li>
+                    <li>Markup for images can be created in either of the following manners:
+                        <ul>
+                            <li>
+                                Using a known and valid absolute URL:
+                                <span class="preformatted">![alt-text](http://foo.com/image.jpg)</span><br>
+                                File URLs are not supported.
+                            </li>
+                            <li>
+                                By letting the editor create the markup using the dedicated tool (Embed Image).
+                                The resulting markup must not be changed.
+                            </li>
+                        </ul>
+                    </li>
+                </ol>
+            </p>
+        </div>
         <div class="twelve columns center">
 
             <table class="markdown-reference">
@@ -66,11 +93,15 @@
                     <tr>
                         <td>
                             <p class="preformatted">
-                                ![Image](http://url/a.png){width=100 height=150}
+                                ![alt-text](http://url/a.png){width=100 height=150}
                             </p>
                             <p>
                                 NOTE: the <span class="preformatted">{width=100 height=150}</span></span><br> 
-                                size specification is optional.
+                                size specification is optional, as is the <span class="preformatted">alt-text</span>.
+                                The square brackets are mandatory.
+                            </p>
+                            <p>
+                                NOTE: no blank character between closing paranthesis and opening curly brace.
                             </p>
                         </td>
                         <td>
