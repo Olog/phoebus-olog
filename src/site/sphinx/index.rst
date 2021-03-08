@@ -9,7 +9,9 @@ Key features:
  - Integration with cs-studio, phoebus, bluesky, and other controls and data acquisition tools.
  - Tags & Logbooks provide an effective way to organize and sort log entries
  - Support for fuzzy searching
- - Markup support for creating rich log entries
+ - Markup support for creating rich text log entries. Markup is based on the Commonmark specification, extended
+   with support for image size and tables. Clients may request a HTML formatted quick reference (maintained
+   in the project) resource using an URL like http(s)://url.to.service/CommonmarkCheatsheet.html.
 
 
 A Log Entry:
