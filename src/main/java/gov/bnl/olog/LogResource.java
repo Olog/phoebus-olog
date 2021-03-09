@@ -20,10 +20,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import gov.bnl.olog.entity.Tag;
-import gov.bnl.olog.entity.preprocess.CommonmarkPreprocessor;
-import gov.bnl.olog.entity.preprocess.DefaultPreprocessor;
-import gov.bnl.olog.entity.preprocess.LogPreprocessor;
+import javax.validation.Valid;
+
 import org.apache.commons.collections4.CollectionUtils;
 import org.phoebus.util.time.TimeParser;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,8 +48,9 @@ import org.springframework.web.server.ResponseStatusException;
 
 import gov.bnl.olog.entity.Attachment;
 import gov.bnl.olog.entity.Log;
-
-import javax.validation.Valid;
+import gov.bnl.olog.entity.Tag;
+import gov.bnl.olog.entity.preprocess.CommonmarkPreprocessor;
+import gov.bnl.olog.entity.preprocess.DefaultPreprocessor;
 
 /**
  * Resource for handling the requests to ../logs

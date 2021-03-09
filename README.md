@@ -28,6 +28,13 @@ The configuration files for olog-es are present under `olog-es/tree/master/src/m
 mvn clean install
 ``` 
 
+* Build deployable jar
+
+To build a jar with dependencies and Tomcat server, use Maven profile `deployable-jar`, e.g.:
+```
+mvn -Pdeployable-jar clean install
+```
+
 #### Start the service  
 
 Using spring boot  
@@ -35,9 +42,12 @@ Using spring boot
 ```
 mvn org.springframework.boot:spring-boot-maven-plugin:run
 ```
-#### Build deployable jar
 
-To build a jar with dependencies and Tomcat server, use Maven profile `deployable-jar`, e.g.:
-```
-mvn -Pdeployable-jar clean install
-```
+#### Check if service is running
+
+Once the service is running, the service consists of a welcome page `http://localhost:8080/Olog` 
+which will provide information about the version of the Olog service running,
+ along with information about the version and connection status of the elastic and mongo
+backends.
+
+
