@@ -10,5 +10,6 @@ RUN mkdir olog-es
 WORKDIR /olog-es
 COPY . .
 RUN mvn clean install -DskipTests=true -Pdeployable-jar
+EXPOSE 8080
 EXPOSE 8181
 CMD java -jar target/olog-es*.jar

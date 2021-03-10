@@ -4,6 +4,7 @@ services:
   olog:
     build: .
     ports:
+      - "8080:8080"
       - "8181:8181"
     depends_on:
       - mongo
