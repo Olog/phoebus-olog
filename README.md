@@ -1,6 +1,6 @@
 # olog-es   [![Build Status](https://travis-ci.org/Olog/olog-es.svg?branch=master)](https://travis-ci.org/Olog/olog-es)
 
-An online logbook for recroding logs 
+An online logbook service that allows for the creation and retrieval of log entries.
 
 [Olog-es Documentation](https://olog-es.readthedocs.io/)
 
@@ -47,7 +47,18 @@ mvn org.springframework.boot:spring-boot-maven-plugin:run
 
 Once the service is running, the service consists of a welcome page `http://localhost:8080/Olog` 
 which will provide information about the version of the Olog service running,
- along with information about the version and connection status of the elastic and mongo
+along with information about the version and connection status of the elastic and mongo
 backends.
 
+### Running using Docker Compose
 
+**Prerequisites**
+
+* Docker Compose
+* Adequate 'mmap count': https://www.elastic.co/guide/en/elasticsearch/reference/current/vm-max-map-count.html
+  * On linux, you can run `sysctl -w vm.max_map_count=262144` to set this
+
+**Run**
+
+* Build the image: `docker-compose build`
+* Run the containers: `docker-compose up`
