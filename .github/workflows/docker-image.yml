@@ -2,6 +2,7 @@ name: build docker image
 
 on:
   push:
+  pull_request:
 
 jobs:
   docker:
