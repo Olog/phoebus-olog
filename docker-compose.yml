@@ -20,10 +20,10 @@ services:
   elastic:
     image: elasticsearch:6.8.13
     environment:
-      - cluster.name=elasticsearch
+      cluster.name: elasticsearch
       # I see errors with this set to true.
-      - bootstrap.memory_lock=false
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      bootstrap.memory_lock: "false"
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
     ports:
       - 9200:9200
     volumes:
