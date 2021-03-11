@@ -4,12 +4,13 @@ services:
   olog:
     build: .
     ports:
+      - "8080:8080"
       - "8181:8181"
     depends_on:
       - mongo
       - elastic
     # Ensure that the elastic server is up before starting olog.
-    command: ["wait-for-it", "-t", "30", "elastic:9200", "--", "java", "-jar", "target/olog-es-2.0.jar", "--spring.config.name=application-docker"]
+    command: wait-for-it -t 30 elastic:9200 -- /bin/sh -c "java -jar olog-es-*.jar --spring.config.name=application-docker"
   mongo:
     image: mongo
     ports:
@@ -19,10 +20,9 @@ services:
   elastic:
     image: elasticsearch:6.8.13
     environment:
-      - cluster.name=elasticsearch
-      # I see errors with this set to true.
-      - bootstrap.memory_lock=false
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      cluster.name: elasticsearch
+      bootstrap.memory_lock: "true"
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
     ports:
       - 9200:9200
     volumes:
