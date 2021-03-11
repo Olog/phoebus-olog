@@ -55,8 +55,10 @@ backends.
 **Prerequisites**
 
 * Docker Compose
-* Adequate 'mmap count': https://www.elastic.co/guide/en/elasticsearch/reference/current/vm-max-map-count.html
+* Adequate 'mmap count' for ElasticSearch: https://www.elastic.co/guide/en/elasticsearch/reference/current/vm-max-map-count.html
   * On linux, you can run `sysctl -w vm.max_map_count=262144` to set this
+* Adequate memory lock limit for ElasticSearch
+  * You can check this with `ulimit -l` - you can set it to `unlimited` but the command varies
 
 **Run**
 
