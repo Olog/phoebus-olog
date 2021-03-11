@@ -1,9 +1,5 @@
-FROM ubuntu:latest
-RUN apt update
-# Avoid prompt for locale.
-RUN DEBIAN_FRONTEND="noninteractive" apt install -y tzdata
-RUN apt install -y git netcat wget
-RUN apt install -y openjdk-11-jdk maven
+FROM maven:3.6.3-openjdk-11
+RUN apt update && apt clean
 # Used for waiting for services before starting Olog.
 RUN apt install -y wait-for-it
 RUN mkdir olog-es
