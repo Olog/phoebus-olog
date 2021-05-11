@@ -16,28 +16,24 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
-package gov.bnl.olog.entity.preprocess;
+package org.phoebus.olog.security;
 
-import gov.bnl.olog.entity.Log;
-import gov.bnl.olog.entity.Log.LogBuilder;
-import gov.bnl.olog.entity.preprocess.DefaultPreprocessor;
-import org.junit.Test;
+import org.mockito.Mockito;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.session.FindByIndexNameSessionRepository;
 
-import static org.junit.Assert.*;
+@TestConfiguration
+public class SessionFilterTestConfig {
 
-public class DefaultPreprocessorTest {
+    @Bean
+    public AuthenticationManager authenticationManager() {
+        return Mockito.mock(AuthenticationManager.class);
+    }
 
-    private DefaultPreprocessor defaultPreprocessor = new DefaultPreprocessor();
-
-    @Test
-    public void testSourceNull(){
-        Log log = LogBuilder.createLog()
-                .description("description")
-                .source(null)
-                .build();
-
-        log = defaultPreprocessor.process(log);
-        assertEquals("description", log.getSource());
-        assertEquals("description", log.getDescription());
+    @Bean
+    public FindByIndexNameSessionRepository sessionRepository() {
+        return Mockito.mock(FindByIndexNameSessionRepository.class);
     }
 }

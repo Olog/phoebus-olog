@@ -20,7 +20,7 @@ import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @SpringBootApplication
-@ComponentScan(basePackages = { "gov.bnl.olog" })
+@ComponentScan(basePackages = { "org.phoebus.olog" })
 public class Application {
     static final Logger logger = Logger.getLogger("Olog");
 

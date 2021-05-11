@@ -22,7 +22,7 @@ import java.util.List;
 
 /**
  * Simple pojo used to convey user name and list of roles to a client upon
- * login or explicit request, see {@link gov.bnl.olog.AuthenticationResource}.
+ * login or explicit request, see {@link org.phoebus.olog.AuthenticationResource}.
  */
 public class UserData {
 

@@ -1,5 +1,8 @@
-package gov.bnl.olog;
+package org.phoebus.olog;
 
+import gov.bnl.olog.LogRepository;
+import gov.bnl.olog.LogResource;
+import gov.bnl.olog.LogbookRepository;
 import gov.bnl.olog.entity.Attachment;
 import gov.bnl.olog.entity.Log;
 import gov.bnl.olog.entity.Logbook;

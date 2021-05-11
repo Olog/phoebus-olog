@@ -1,4 +1,4 @@
-package gov.bnl.olog;
+package org.phoebus.olog;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -37,6 +37,11 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.mongodb.client.gridfs.model.GridFSFile;
 
+import gov.bnl.olog.ElasticConfig;
+import gov.bnl.olog.LogRepository;
+import gov.bnl.olog.LogbookRepository;
+import gov.bnl.olog.PropertyRepository;
+import gov.bnl.olog.TagRepository;
 import gov.bnl.olog.entity.Attachment;
 import gov.bnl.olog.entity.Attribute;
 import gov.bnl.olog.entity.Event;

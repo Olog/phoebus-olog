@@ -16,9 +16,15 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
-package gov.bnl.olog;
+package org.phoebus.olog;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+
+import gov.bnl.olog.LogRepository;
+import gov.bnl.olog.LogResource;
+import gov.bnl.olog.LogbookRepository;
+import gov.bnl.olog.OlogResourceDescriptors;
+import gov.bnl.olog.TagRepository;
 import gov.bnl.olog.entity.Log;
 import gov.bnl.olog.entity.Log.LogBuilder;
 import gov.bnl.olog.entity.Logbook;
@@ -54,7 +60,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Tests {@link gov.bnl.olog.entity.Log} resource endpoints. The authentication scheme used is the
+ * Tests {@link org.phoebus.olog.entity.Log} resource endpoints. The authentication scheme used is the
  * hard coded user/userPass credentials. The {@link LogRepository} is mocked.
  */
 @RunWith(SpringRunner.class)

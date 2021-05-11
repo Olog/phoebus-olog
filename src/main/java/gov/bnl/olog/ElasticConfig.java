@@ -34,7 +34,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  *
  */
 @Configuration
-@ComponentScan(basePackages = { "gov.bnl.olog" })
+@ComponentScan(basePackages = { "org.phoebus.olog" })
 @PropertySource("classpath:application.properties")
 public class ElasticConfig
 {

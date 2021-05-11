@@ -16,10 +16,19 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
-package gov.bnl.olog;
+package org.phoebus.olog;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mongodb.client.gridfs.GridFSBucket;
+
+import gov.bnl.olog.AttachmentRepository;
+import gov.bnl.olog.LogRepository;
+import gov.bnl.olog.LogSearchUtil;
+import gov.bnl.olog.LogbookRepository;
+import gov.bnl.olog.PropertyRepository;
+import gov.bnl.olog.TagRepository;
+import gov.bnl.olog.WebSecurityConfig;
+
 import org.elasticsearch.client.RestHighLevelClient;
 import org.mockito.Mockito;
 import org.springframework.boot.autoconfigure.h2.H2ConsoleProperties;

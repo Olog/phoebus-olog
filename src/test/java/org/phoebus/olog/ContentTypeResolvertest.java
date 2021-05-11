@@ -16,10 +16,12 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
-package gov.bnl.olog;
+package org.phoebus.olog;
 
 import org.junit.Test;
 import org.springframework.http.MediaType;
+
+import gov.bnl.olog.ContentTypeResolver;
 
 import static org.junit.Assert.*;
 

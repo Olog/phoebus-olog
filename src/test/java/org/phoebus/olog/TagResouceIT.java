@@ -1,4 +1,4 @@
-package gov.bnl.olog;
+package org.phoebus.olog;
 
 import java.io.IOException;
 import java.util.List;
@@ -18,6 +18,8 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import gov.bnl.olog.ElasticConfig;
+import gov.bnl.olog.TagRepository;
 import gov.bnl.olog.entity.State;
 import gov.bnl.olog.entity.Tag;
 

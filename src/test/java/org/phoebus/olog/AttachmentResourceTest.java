@@ -16,9 +16,14 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
-package gov.bnl.olog;
+package org.phoebus.olog;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import gov.bnl.olog.AttachmentRepository;
+import gov.bnl.olog.AttachmentResource;
+import gov.bnl.olog.LogRepository;
+import gov.bnl.olog.OlogResourceDescriptors;
 import gov.bnl.olog.entity.Attachment;
 import gov.bnl.olog.entity.Log;
 import org.junit.Test;

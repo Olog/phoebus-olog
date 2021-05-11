@@ -1,4 +1,4 @@
-package gov.bnl.olog;
+package org.phoebus.olog;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertFalse;
@@ -26,6 +26,8 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import gov.bnl.olog.ElasticConfig;
+import gov.bnl.olog.PropertyRepository;
 import gov.bnl.olog.entity.Attribute;
 import gov.bnl.olog.entity.Property;
 import gov.bnl.olog.entity.State;

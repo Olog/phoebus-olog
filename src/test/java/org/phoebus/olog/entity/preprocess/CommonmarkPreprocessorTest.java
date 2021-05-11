@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
-package gov.bnl.olog.entity.preprocess;
+package org.phoebus.olog.entity.preprocess;
 
 import gov.bnl.olog.entity.Log;
 import gov.bnl.olog.entity.Log.LogBuilder;

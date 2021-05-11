@@ -16,9 +16,11 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
-package gov.bnl.olog.security;
+package org.phoebus.olog.security;
 
 import gov.bnl.olog.WebSecurityConfig;
+import gov.bnl.olog.security.SessionFilter;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;

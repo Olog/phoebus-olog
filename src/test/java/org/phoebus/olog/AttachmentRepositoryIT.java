@@ -1,4 +1,4 @@
-package gov.bnl.olog;
+package org.phoebus.olog;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -23,6 +23,9 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.mongodb.client.gridfs.model.GridFSFile;
 
+import gov.bnl.olog.AttachmentRepository;
+import gov.bnl.olog.ElasticConfig;
+import gov.bnl.olog.LogRepository;
 import gov.bnl.olog.entity.Attachment;
 import junitx.framework.FileAssert;
 
