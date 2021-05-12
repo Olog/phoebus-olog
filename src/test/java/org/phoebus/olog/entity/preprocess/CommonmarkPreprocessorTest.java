@@ -18,10 +18,10 @@
 
 package org.phoebus.olog.entity.preprocess;
 
-import gov.bnl.olog.entity.Log;
-import gov.bnl.olog.entity.Log.LogBuilder;
-import gov.bnl.olog.entity.preprocess.CommonmarkPreprocessor;
 import org.junit.Test;
+import org.phoebus.olog.entity.Log;
+import org.phoebus.olog.entity.Log.LogBuilder;
+import org.phoebus.olog.entity.preprocess.CommonmarkPreprocessor;
 
 import static org.junit.Assert.assertEquals;
 

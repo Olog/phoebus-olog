@@ -20,6 +20,7 @@ package org.phoebus.olog;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.phoebus.olog.AuthenticationResource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -33,8 +34,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
-import gov.bnl.olog.AuthenticationResource;
-
 import javax.servlet.http.Cookie;
 import java.util.HashSet;
 import java.util.Set;
@@ -43,7 +42,7 @@ import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static gov.bnl.olog.OlogResourceDescriptors.OLOG_SERVICE;
+import static org.phoebus.olog.OlogResourceDescriptors.OLOG_SERVICE;
 
 @RunWith(SpringRunner.class)
 @ContextHierarchy({@ContextConfiguration(classes = {AuthenticationResourceTestConfig.class})})

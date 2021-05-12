@@ -20,13 +20,13 @@ package org.phoebus.olog;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 
-import gov.bnl.olog.OlogResourceDescriptors;
-import gov.bnl.olog.PropertyRepository;
-import gov.bnl.olog.entity.Property;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatcher;
+import org.phoebus.olog.OlogResourceDescriptors;
+import org.phoebus.olog.PropertyRepository;
+import org.phoebus.olog.entity.Property;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.HttpHeaders;

@@ -16,28 +16,23 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
-package org.phoebus.olog.entity.preprocess;
+package org.phoebus.olog;
 
-import org.junit.Test;
-import org.phoebus.olog.entity.Log;
-import org.phoebus.olog.entity.Log.LogBuilder;
+import org.phoebus.olog.entity.preprocess.CommonmarkPreprocessor;
 import org.phoebus.olog.entity.preprocess.DefaultPreprocessor;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
-import static org.junit.Assert.*;
+@Configuration
+public class PreProcessorConfig {
 
-public class DefaultPreprocessorTest {
+    @Bean
+    public DefaultPreprocessor defaultPreprocessor(){
+        return new DefaultPreprocessor();
+    }
 
-    private DefaultPreprocessor defaultPreprocessor = new DefaultPreprocessor();
-
-    @Test
-    public void testSourceNull(){
-        Log log = LogBuilder.createLog()
-                .description("description")
-                .source(null)
-                .build();
-
-        log = defaultPreprocessor.process(log);
-        assertEquals("description", log.getSource());
-        assertEquals("description", log.getDescription());
+    @Bean
+    public CommonmarkPreprocessor commonmarkPreprocessor(){
+        return new CommonmarkPreprocessor();
     }
 }

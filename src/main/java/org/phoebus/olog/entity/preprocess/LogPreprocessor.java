@@ -18,26 +18,18 @@
 
 package org.phoebus.olog.entity.preprocess;
 
-import org.junit.Test;
 import org.phoebus.olog.entity.Log;
-import org.phoebus.olog.entity.Log.LogBuilder;
-import org.phoebus.olog.entity.preprocess.DefaultPreprocessor;
 
-import static org.junit.Assert.*;
+/**
+ * A pre-processor interface intended to ensure that all fields in the log entry have sensible values before
+ * the entry is persisted.
+ */
+public interface LogPreprocessor {
 
-public class DefaultPreprocessorTest {
-
-    private DefaultPreprocessor defaultPreprocessor = new DefaultPreprocessor();
-
-    @Test
-    public void testSourceNull(){
-        Log log = LogBuilder.createLog()
-                .description("description")
-                .source(null)
-                .build();
-
-        log = defaultPreprocessor.process(log);
-        assertEquals("description", log.getSource());
-        assertEquals("description", log.getDescription());
-    }
+    /**
+     * Processes the log entry and returns a processed value.
+     * @param log
+     * @return
+     */
+    Log process(Log log);
 }

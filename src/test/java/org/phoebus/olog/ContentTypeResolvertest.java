@@ -19,9 +19,8 @@
 package org.phoebus.olog;
 
 import org.junit.Test;
+import org.phoebus.olog.ContentTypeResolver;
 import org.springframework.http.MediaType;
-
-import gov.bnl.olog.ContentTypeResolver;
 
 import static org.junit.Assert.*;
 

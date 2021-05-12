@@ -19,9 +19,10 @@
 package org.phoebus.olog;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import gov.bnl.olog.entity.UserData;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.phoebus.olog.entity.UserData;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -52,7 +53,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import static gov.bnl.olog.OlogResourceDescriptors.OLOG_SERVICE;
+import static org.phoebus.olog.OlogResourceDescriptors.OLOG_SERVICE;
 
 @RunWith(SpringRunner.class)
 @ContextHierarchy({@ContextConfiguration(classes = {AuthenticationResourceTestConfig.class})})

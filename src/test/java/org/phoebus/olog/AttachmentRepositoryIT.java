@@ -11,6 +11,10 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.phoebus.olog.AttachmentRepository;
+import org.phoebus.olog.ElasticConfig;
+import org.phoebus.olog.LogRepository;
+import org.phoebus.olog.entity.Attachment;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -23,10 +27,6 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.mongodb.client.gridfs.model.GridFSFile;
 
-import gov.bnl.olog.AttachmentRepository;
-import gov.bnl.olog.ElasticConfig;
-import gov.bnl.olog.LogRepository;
-import gov.bnl.olog.entity.Attachment;
 import junitx.framework.FileAssert;
 
 @RunWith(SpringJUnit4ClassRunner.class)

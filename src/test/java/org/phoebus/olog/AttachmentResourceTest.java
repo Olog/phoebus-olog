@@ -20,15 +20,15 @@ package org.phoebus.olog;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import gov.bnl.olog.AttachmentRepository;
-import gov.bnl.olog.AttachmentResource;
-import gov.bnl.olog.LogRepository;
-import gov.bnl.olog.OlogResourceDescriptors;
-import gov.bnl.olog.entity.Attachment;
-import gov.bnl.olog.entity.Log;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
+import org.phoebus.olog.AttachmentRepository;
+import org.phoebus.olog.AttachmentResource;
+import org.phoebus.olog.LogRepository;
+import org.phoebus.olog.OlogResourceDescriptors;
+import org.phoebus.olog.entity.Attachment;
+import org.phoebus.olog.entity.Log;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.core.io.InputStreamSource;

@@ -1,18 +1,18 @@
 package org.phoebus.olog;
 
-import gov.bnl.olog.LogRepository;
-import gov.bnl.olog.LogResource;
-import gov.bnl.olog.LogbookRepository;
-import gov.bnl.olog.entity.Attachment;
-import gov.bnl.olog.entity.Log;
-import gov.bnl.olog.entity.Logbook;
-import gov.bnl.olog.entity.State;
 import junitx.framework.FileAssert;
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.phoebus.olog.LogRepository;
+import org.phoebus.olog.LogResource;
+import org.phoebus.olog.LogbookRepository;
+import org.phoebus.olog.entity.Attachment;
+import org.phoebus.olog.entity.Log;
+import org.phoebus.olog.entity.Logbook;
+import org.phoebus.olog.entity.State;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;

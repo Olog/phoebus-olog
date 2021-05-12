@@ -17,17 +17,16 @@ import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.phoebus.olog.ElasticConfig;
+import org.phoebus.olog.TagRepository;
+import org.phoebus.olog.entity.State;
+import org.phoebus.olog.entity.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-
-import gov.bnl.olog.ElasticConfig;
-import gov.bnl.olog.TagRepository;
-import gov.bnl.olog.entity.State;
-import gov.bnl.olog.entity.Tag;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = ElasticConfig.class)

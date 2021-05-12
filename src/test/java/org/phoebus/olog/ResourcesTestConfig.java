@@ -21,16 +21,15 @@ package org.phoebus.olog;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mongodb.client.gridfs.GridFSBucket;
 
-import gov.bnl.olog.AttachmentRepository;
-import gov.bnl.olog.LogRepository;
-import gov.bnl.olog.LogSearchUtil;
-import gov.bnl.olog.LogbookRepository;
-import gov.bnl.olog.PropertyRepository;
-import gov.bnl.olog.TagRepository;
-import gov.bnl.olog.WebSecurityConfig;
-
 import org.elasticsearch.client.RestHighLevelClient;
 import org.mockito.Mockito;
+import org.phoebus.olog.AttachmentRepository;
+import org.phoebus.olog.LogRepository;
+import org.phoebus.olog.LogSearchUtil;
+import org.phoebus.olog.LogbookRepository;
+import org.phoebus.olog.PropertyRepository;
+import org.phoebus.olog.TagRepository;
+import org.phoebus.olog.WebSecurityConfig;
 import org.springframework.boot.autoconfigure.h2.H2ConsoleProperties;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;

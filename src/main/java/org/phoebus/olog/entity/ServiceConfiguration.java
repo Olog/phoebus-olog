@@ -16,28 +16,22 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
-package org.phoebus.olog.entity.preprocess;
+package org.phoebus.olog.entity;
 
-import org.junit.Test;
-import org.phoebus.olog.entity.Log;
-import org.phoebus.olog.entity.Log.LogBuilder;
-import org.phoebus.olog.entity.preprocess.DefaultPreprocessor;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-import static org.junit.Assert.*;
+import java.util.List;
 
-public class DefaultPreprocessorTest {
+@Builder
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class ServiceConfiguration {
 
-    private DefaultPreprocessor defaultPreprocessor = new DefaultPreprocessor();
-
-    @Test
-    public void testSourceNull(){
-        Log log = LogBuilder.createLog()
-                .description("description")
-                .source(null)
-                .build();
-
-        log = defaultPreprocessor.process(log);
-        assertEquals("description", log.getSource());
-        assertEquals("description", log.getDescription());
-    }
+    private Iterable<Logbook> logbooks;
+    private Iterable<Tag> tags;
+    private List<String> levels;
 }

@@ -18,13 +18,12 @@
 
 package org.phoebus.olog.security;
 
-import gov.bnl.olog.WebSecurityConfig;
-import gov.bnl.olog.security.SessionFilter;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
+import org.phoebus.olog.WebSecurityConfig;
+import org.phoebus.olog.security.SessionFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;

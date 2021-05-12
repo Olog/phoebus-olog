@@ -20,19 +20,19 @@ package org.phoebus.olog;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 
-import gov.bnl.olog.LogRepository;
-import gov.bnl.olog.LogResource;
-import gov.bnl.olog.LogbookRepository;
-import gov.bnl.olog.OlogResourceDescriptors;
-import gov.bnl.olog.TagRepository;
-import gov.bnl.olog.entity.Log;
-import gov.bnl.olog.entity.Log.LogBuilder;
-import gov.bnl.olog.entity.Logbook;
-import gov.bnl.olog.entity.Tag;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatcher;
+import org.phoebus.olog.LogRepository;
+import org.phoebus.olog.LogResource;
+import org.phoebus.olog.LogbookRepository;
+import org.phoebus.olog.OlogResourceDescriptors;
+import org.phoebus.olog.TagRepository;
+import org.phoebus.olog.entity.Log;
+import org.phoebus.olog.entity.Logbook;
+import org.phoebus.olog.entity.Tag;
+import org.phoebus.olog.entity.Log.LogBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.HttpHeaders;

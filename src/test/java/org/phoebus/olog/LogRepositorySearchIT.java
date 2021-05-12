@@ -3,8 +3,8 @@
  */
 package org.phoebus.olog;
 
-import static gov.bnl.olog.LogSearchUtil.MILLI_FORMAT;
 import static org.junit.Assert.assertTrue;
+import static org.phoebus.olog.LogSearchUtil.MILLI_FORMAT;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -17,6 +17,19 @@ import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.phoebus.olog.ElasticConfig;
+import org.phoebus.olog.LogRepository;
+import org.phoebus.olog.LogbookRepository;
+import org.phoebus.olog.OlogResourceDescriptors;
+import org.phoebus.olog.PropertyRepository;
+import org.phoebus.olog.TagRepository;
+import org.phoebus.olog.entity.Attribute;
+import org.phoebus.olog.entity.Event;
+import org.phoebus.olog.entity.Log;
+import org.phoebus.olog.entity.Logbook;
+import org.phoebus.olog.entity.Property;
+import org.phoebus.olog.entity.State;
+import org.phoebus.olog.entity.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.test.context.ContextConfiguration;
@@ -27,20 +40,6 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-
-import gov.bnl.olog.ElasticConfig;
-import gov.bnl.olog.LogRepository;
-import gov.bnl.olog.LogbookRepository;
-import gov.bnl.olog.OlogResourceDescriptors;
-import gov.bnl.olog.PropertyRepository;
-import gov.bnl.olog.TagRepository;
-import gov.bnl.olog.entity.Attribute;
-import gov.bnl.olog.entity.Event;
-import gov.bnl.olog.entity.Log;
-import gov.bnl.olog.entity.Logbook;
-import gov.bnl.olog.entity.Property;
-import gov.bnl.olog.entity.State;
-import gov.bnl.olog.entity.Tag;
 
 /**
  * @author kunal

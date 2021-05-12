@@ -18,26 +18,23 @@
 
 package org.phoebus.olog.entity.preprocess;
 
-import org.junit.Test;
 import org.phoebus.olog.entity.Log;
-import org.phoebus.olog.entity.Log.LogBuilder;
-import org.phoebus.olog.entity.preprocess.DefaultPreprocessor;
 
-import static org.junit.Assert.*;
+/**
+ * Default implementation of {@link LogPreprocessor}.
+ */
+public class DefaultPreprocessor implements LogPreprocessor{
 
-public class DefaultPreprocessorTest {
-
-    private DefaultPreprocessor defaultPreprocessor = new DefaultPreprocessor();
-
-    @Test
-    public void testSourceNull(){
-        Log log = LogBuilder.createLog()
-                .description("description")
-                .source(null)
-                .build();
-
-        log = defaultPreprocessor.process(log);
-        assertEquals("description", log.getSource());
-        assertEquals("description", log.getDescription());
+    /**
+     * Processes the log entry under the assumption that the source field of a {@link Log} object
+     * as posted by client is always null, i.e. client does not set the field. Consequently this
+     * method copies the description field to the source field.
+     * @param log
+     * @return The processed log record.
+     */
+    @Override
+    public Log process(Log log){
+        log.setSource(log.getDescription());
+        return log;
     }
 }

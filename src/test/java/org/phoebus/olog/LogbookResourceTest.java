@@ -19,12 +19,12 @@ package org.phoebus.olog;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 
-import gov.bnl.olog.LogbookRepository;
-import gov.bnl.olog.OlogResourceDescriptors;
-import gov.bnl.olog.entity.Logbook;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.phoebus.olog.LogbookRepository;
+import org.phoebus.olog.OlogResourceDescriptors;
+import org.phoebus.olog.entity.Logbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.HttpHeaders;

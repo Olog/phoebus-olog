@@ -16,28 +16,41 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
-package org.phoebus.olog.entity.preprocess;
+package org.phoebus.olog.entity;
 
-import org.junit.Test;
-import org.phoebus.olog.entity.Log;
-import org.phoebus.olog.entity.Log.LogBuilder;
-import org.phoebus.olog.entity.preprocess.DefaultPreprocessor;
+import java.util.List;
 
-import static org.junit.Assert.*;
+/**
+ * Simple pojo used to convey user name and list of roles to a client upon
+ * login or explicit request, see {@link org.phoebus.olog.AuthenticationResource}.
+ */
+public class UserData {
 
-public class DefaultPreprocessorTest {
+    private String userName;
+    private List<String> roles;
 
-    private DefaultPreprocessor defaultPreprocessor = new DefaultPreprocessor();
+    public UserData(){
 
-    @Test
-    public void testSourceNull(){
-        Log log = LogBuilder.createLog()
-                .description("description")
-                .source(null)
-                .build();
+    }
 
-        log = defaultPreprocessor.process(log);
-        assertEquals("description", log.getSource());
-        assertEquals("description", log.getDescription());
+    public UserData(String userName, List<String> roles){
+        this.userName = userName;
+        this.roles = roles;
+    }
+
+    public String getUserName() {
+        return userName;
+    }
+
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
+
+    public List<String> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(List<String> roles) {
+        this.roles = roles;
     }
 }

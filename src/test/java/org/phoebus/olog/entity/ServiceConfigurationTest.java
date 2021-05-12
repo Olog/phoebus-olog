@@ -19,10 +19,9 @@
 package org.phoebus.olog.entity;
 
 import org.junit.Test;
-
-import gov.bnl.olog.entity.Logbook;
-import gov.bnl.olog.entity.ServiceConfiguration;
-import gov.bnl.olog.entity.Tag;
+import org.phoebus.olog.entity.Logbook;
+import org.phoebus.olog.entity.ServiceConfiguration;
+import org.phoebus.olog.entity.Tag;
 
 import java.util.Arrays;
 
