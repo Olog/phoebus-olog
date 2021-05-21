@@ -28,10 +28,12 @@ import org.phoebus.olog.entity.Log;
 import org.phoebus.olog.entity.Tag;
 import org.phoebus.olog.entity.preprocess.CommonmarkPreprocessor;
 import org.phoebus.olog.entity.preprocess.DefaultPreprocessor;
+import org.phoebus.olog.notification.LogEntryNotifier;
 import org.phoebus.util.time.TimeParser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -72,6 +74,10 @@ public class LogResource
     private DefaultPreprocessor defaultPreprocessor;
     @Autowired
     private CommonmarkPreprocessor commonmarkPreprocessor;
+    @Autowired
+    private List<LogEntryNotifier> logEntryNotifiers;
+    @Autowired
+    private TaskExecutor taskExecutor;
 
     @GetMapping("{logId}")
     public Log getLog(@PathVariable String logId) {
@@ -178,7 +184,9 @@ public class LogResource
                 log = commonmarkPreprocessor.process(log);
                 break;
         }
-        return logRepository.save(log);
+        Log newLogEntry = logRepository.save(log);
+        sendToNotifiers(newLogEntry);
+        return newLogEntry;
     }
 
     @PostMapping("/attachments/{logId}")
@@ -228,5 +236,26 @@ public class LogResource
         } else {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to retrieve log with id " + logId);
         }
+    }
+
+    /**
+     * {@link LogEntryNotifier} providers are called for the specified log entry. Since a provider
+     * implementation may need some time to do it's job, calling them is done asynchronously. Any
+     * error handling or logging has to be done in the {@link LogEntryNotifier}, but exceptions are
+     * handled here in order to not abort if any of the providers fails.
+     * @param log
+     */
+    private void sendToNotifiers(Log log){
+        if(logEntryNotifiers.isEmpty()){
+            return;
+        }
+        taskExecutor.execute(() -> logEntryNotifiers.stream().forEach(n -> {
+            try {
+                n.notify(log);
+            } catch (Exception e) {
+                Logger.getLogger(LogResource.class.getName())
+                        .log(Level.WARNING, "LogEntryNotifier " + n.getClass().getName() + " throws exception", e);
+            }
+        }));
     }
 }

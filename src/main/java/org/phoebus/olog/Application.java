@@ -4,16 +4,24 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.ServiceLoader;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.phoebus.olog.notification.LogEntryNotifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.core.task.TaskExecutor;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.util.FileCopyUtils;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
@@ -80,5 +88,35 @@ public class Application {
                         .allowedOrigins(corsAllowedOrigins);
             }
         };
+    }
+
+    /**
+     * List of {@link LogEntryNotifier} implementations called when a new log entry
+     * has been created.
+     * @return
+     */
+    @Bean
+    public List<LogEntryNotifier> logEntryNotifiers(){
+        List<LogEntryNotifier> notifiers = new ArrayList<>();
+        ServiceLoader<LogEntryNotifier> loader = ServiceLoader.load(LogEntryNotifier.class);
+        loader.stream().forEach(p -> {
+            LogEntryNotifier notifier = p.get();
+            notifiers.add(notifier);
+        });
+        return notifiers;
+    }
+
+    /**
+     * {@link TaskExecutor} used when calling {@link LogEntryNotifier}s.
+     * @return
+     */
+    @Bean
+    public TaskExecutor taskExecutor(){
+        ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
+        taskExecutor.setCorePoolSize(3);
+        taskExecutor.setMaxPoolSize(10);
+        taskExecutor.setQueueCapacity(25);
+
+        return taskExecutor;
     }
 }
