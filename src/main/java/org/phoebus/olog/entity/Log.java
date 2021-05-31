@@ -384,6 +384,7 @@ public class Log implements Serializable
 
         private Long id;
         private Instant createDate;
+        private Instant modifyDate;
         private List<Event> events = new ArrayList<Event>();
 
         private String owner;
@@ -412,6 +413,7 @@ public class Log implements Serializable
         {
             this.id = log.getId();
             this.createDate = log.getCreatedDate();
+            this.modifyDate = log.getModifyDate();
             this.owner = log.getOwner();
             if (log.getSource() != null)
             {
@@ -600,6 +602,11 @@ public class Log implements Serializable
             return this;
         }
 
+        public LogBuilder modifyDate(Instant modifyDate){
+            this.modifyDate = modifyDate;
+            return this;
+        }
+
         /**
          * Create the log entry
          * 
@@ -613,6 +620,9 @@ public class Log implements Serializable
             if (this.createDate != null)
             {
                 log.setCreatedDate(createDate);
+            }
+            if(this.modifyDate != null){
+                log.setModifyDate(modifyDate);
             }
             log.setEvents(events);
             log.setDescription(this.description.toString());

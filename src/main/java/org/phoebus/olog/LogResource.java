@@ -218,6 +218,60 @@ public class LogResource
     }
 
     /**
+     * Updates existing log record. Data sent by client is saved, i.e. if client specifies a shorter list
+     * of logbooks or tags, the updated log record will reflect that. However, the following data is NOT updated:
+     * <ul>
+     *     <li>Attachments</li>
+     *     <li>Owner (author)</li>
+     *     <li>Created date</li>
+     *     <li>Events</li>
+     * </ul>
+     * Notifiers - if such have been registered - are not called.
+     *
+     * @param logId  The log id of the entry subject to update. It must exist, i.e. it is not created of not found.
+     * @param markup Markup strategy, if any.
+     * @param log    The log record data as sent by client.
+     * @return The updated log record, or HTTP status 404 if the log record does not exist. If the path
+     * variable does not match the id in the log record, HTTP status 400 (bad request) is returned.
+     */
+    @PostMapping("/{logId}")
+    public Log updateLog(@PathVariable String logId,
+                         @RequestParam(value = "markup", required = false, defaultValue = "none") String markup,
+                         @Valid @RequestBody Log log) {
+
+        Optional<Log> foundLog = logRepository.findById(logId);
+        if (foundLog.isPresent()) {
+            Log persistedLog = foundLog.get();
+            // In case a client sends a log record where the id does not match the path variable, return HTTP 400 (bad request)
+            if (!logId.equals(Long.toString(log.getId()))) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Log entry id does not match path variable");
+            }
+            persistedLog.setDescription(log.getDescription());
+            persistedLog.setLevel(log.getLevel());
+            persistedLog.setProperties(log.getProperties());
+            persistedLog.setModifyDate(Instant.now());
+            persistedLog.setDescription(log.getDescription());
+            persistedLog.setTags(log.getTags());
+            persistedLog.setLogbooks(log.getLogbooks());
+            persistedLog.setTitle(log.getTitle());
+            switch (markup) {
+                case "none":
+                default:
+                    persistedLog = defaultPreprocessor.process(persistedLog);
+                    break;
+                case "commonmark":
+                    persistedLog = commonmarkPreprocessor.process(persistedLog);
+                    break;
+            }
+            Log newLogEntry = logRepository.update(persistedLog);
+            return newLogEntry;
+        } else {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to retrieve log with id " + logId);
+        }
+    }
+
+
+    /**
      * Endpoint supporting upload of multiple files, i.e. saving the client from sending one POST request per file.
      * Calls {@link #uploadAttachment(String, MultipartFile, String, String, String)} internally, using the original file's
      * name and content type.
