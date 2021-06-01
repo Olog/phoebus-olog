@@ -19,20 +19,17 @@
 package org.phoebus.olog;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatcher;
-import org.phoebus.olog.LogRepository;
-import org.phoebus.olog.LogResource;
-import org.phoebus.olog.LogbookRepository;
-import org.phoebus.olog.OlogResourceDescriptors;
-import org.phoebus.olog.TagRepository;
+import org.mockito.internal.util.collections.Sets;
+import org.phoebus.olog.entity.Attribute;
 import org.phoebus.olog.entity.Log;
-import org.phoebus.olog.entity.Logbook;
-import org.phoebus.olog.entity.Tag;
 import org.phoebus.olog.entity.Log.LogBuilder;
+import org.phoebus.olog.entity.Logbook;
+import org.phoebus.olog.entity.Property;
+import org.phoebus.olog.entity.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.HttpHeaders;
@@ -56,8 +53,13 @@ import java.util.Optional;
 import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.argThat;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -185,6 +187,7 @@ public class LogResourceTest extends ResourcesTestBase {
                 .withTags(Set.of(tag1, tag2))
                 .description("description1")
                 .createDate(now)
+                .modifyDate(now)
                 .level("Urgent")
                 .build();
         when(logbookRepository.findAll()).thenReturn(Arrays.asList(logbook1, logbook2));
@@ -202,8 +205,73 @@ public class LogResourceTest extends ResourcesTestBase {
         reset(logRepository);
     }
 
+    /**
+     * Basically only test the endpoint...
+     *
+     * @throws Exception
+     */
     @Test
-    public void testCreateLogInvalidLogbook() throws Exception{
+    public void testUpdateExisting() throws Exception {
+
+        Property property1 = new Property();
+        property1.setName("prop1");
+        property1.addAttributes(new Attribute("name1", "value1"));
+
+        Log log = LogBuilder.createLog()
+                .id(1L)
+                .owner("user")
+                .title("title")
+                .withLogbooks(Set.of(logbook1, logbook2))
+                .withTags(Set.of(tag1, tag2))
+                .description("description1")
+                .createDate(now)
+                .level("Urgent")
+                .setProperties(Sets.newSet(property1))
+                .build();
+
+        when(logRepository.findById("1")).thenReturn(Optional.of(log));
+        when(logRepository.update(log)).thenReturn(log);
+
+        MockHttpServletRequestBuilder request = post("/" + OlogResourceDescriptors.LOG_RESOURCE_URI + "/1")
+                .content(objectMapper.writeValueAsString(log))
+                .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
+                .contentType(JSON);
+        MvcResult result = mockMvc.perform(request).andExpect(status().isOk()).andReturn();
+        Log savedLog = objectMapper.readValue(result.getResponse().getContentAsString(), Log.class);
+        assertEquals(Long.valueOf(1L), savedLog.getId());
+    }
+
+    @Test
+    public void testUpdateBadRequest() throws Exception {
+
+        Property property1 = new Property();
+        property1.setName("prop1");
+        property1.addAttributes(new Attribute("name1", "value1"));
+
+        Log log = LogBuilder.createLog()
+                .id(2L)
+                .owner("user")
+                .title("title")
+                .withLogbooks(Set.of(logbook1, logbook2))
+                .withTags(Set.of(tag1, tag2))
+                .description("description1")
+                .createDate(now)
+                .level("Urgent")
+                .setProperties(Sets.newSet(property1))
+                .build();
+
+        when(logRepository.findById("1")).thenReturn(Optional.of(log));
+        when(logRepository.update(log)).thenReturn(log);
+
+        MockHttpServletRequestBuilder request = post("/" + OlogResourceDescriptors.LOG_RESOURCE_URI + "/1")
+                .content(objectMapper.writeValueAsString(log))
+                .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
+                .contentType(JSON);
+        mockMvc.perform(request).andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void testCreateLogInvalidLogbook() throws Exception {
         Logbook logbook = new Logbook("bad", "owner");
         Log log = LogBuilder.createLog()
                 .id(1L)
@@ -224,7 +292,7 @@ public class LogResourceTest extends ResourcesTestBase {
     }
 
     @Test
-    public void testCreateLogInvalidTag() throws Exception{
+    public void testCreateLogInvalidTag() throws Exception {
         Tag tag = new Tag("bad");
         Log log = LogBuilder.createLog()
                 .id(1L)
@@ -246,7 +314,7 @@ public class LogResourceTest extends ResourcesTestBase {
     }
 
     @Test
-    public void testCreateLogNoLogbooks() throws Exception{
+    public void testCreateLogNoLogbooks() throws Exception {
         Log log = LogBuilder.createLog()
                 .id(1L)
                 .title("title")
@@ -267,7 +335,7 @@ public class LogResourceTest extends ResourcesTestBase {
     }
 
     @Test
-    public void testCreateLogNoTitle() throws Exception{
+    public void testCreateLogNoTitle() throws Exception {
         Log log = LogBuilder.createLog()
                 .id(1L)
                 .owner("user")

@@ -127,12 +127,11 @@ public class LogRepository implements CrudRepository<Log, String>
 
             IndexResponse response = client.index(indexRequest, RequestOptions.DEFAULT);
 
-            if (response.getResult().equals(Result.CREATED))
+            if (response.getResult().equals(Result.UPDATED))
             {
                 BytesReference ref = client
                         .get(new GetRequest(ES_LOG_INDEX, ES_LOG_TYPE, response.getId()), RequestOptions.DEFAULT)
                         .getSourceAsBytesRef();
-
                 Log createdLog = mapper.readValue(ref.streamInput(), Log.class);
                 return createdLog;
             }
