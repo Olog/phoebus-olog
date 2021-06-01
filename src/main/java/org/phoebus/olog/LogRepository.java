@@ -151,6 +151,9 @@ public class LogRepository implements CrudRepository<Log, String>
         try
         {
             GetResponse result = client.get(new GetRequest(ES_LOG_INDEX, ES_LOG_TYPE, id), RequestOptions.DEFAULT);
+            if(!result.isExists()){
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Log with id " + id + " not found.");
+            }
             Log createdLog = mapper.readValue(result.getSourceAsBytesRef().streamInput(), Log.class);
             return Optional.of(createdLog);
         } catch (IOException e)

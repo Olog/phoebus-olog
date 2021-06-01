@@ -36,6 +36,7 @@ import org.phoebus.olog.entity.Log.LogBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.ContextHierarchy;
@@ -46,6 +47,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
 import java.util.Arrays;
@@ -129,6 +131,16 @@ public class LogResourceTest extends ResourcesTestBase {
                 .andReturn();
         Log log = objectMapper.readValue(result.getResponse().getContentAsString(), Log.class);
         assertEquals("description1", log.getDescription());
+        verify(logRepository, times(1)).findById("1");
+        reset(logRepository);
+    }
+
+    @Test
+    public void testGetLogByIdRepositoryThrowsException() throws Exception{
+        when(logRepository.findById("1")).thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, ""));
+
+        MockHttpServletRequestBuilder request = get("/" + OlogResourceDescriptors.LOG_RESOURCE_URI + "/1");
+        mockMvc.perform(request).andExpect(status().isNotFound());
         verify(logRepository, times(1)).findById("1");
         reset(logRepository);
     }
