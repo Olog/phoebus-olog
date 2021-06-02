@@ -28,7 +28,11 @@ public class InstanceDeserializer extends StdDeserializer<Instant>
     @Override
     public Instant deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException
     {
-        String instance = p.getText();
+        String[] split = p.getText().split("\\.");
+        String instance = split[0];
+        if(split.length == 2){ // If string contains period then assume the instant is represented as seconds.nanos
+            instance = split[0] + split[1].substring(0, 3);
+        }
         Number n = Long.parseLong(instance);
         return Instant.ofEpochMilli(n.longValue());
     }
