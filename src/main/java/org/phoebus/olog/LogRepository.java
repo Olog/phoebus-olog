@@ -62,6 +62,9 @@ public class LogRepository implements CrudRepository<Log, String>
     @Autowired
     AttachmentRepository attachmentRepository;
 
+    @Autowired
+    SequenceGenerator generator;
+
     private static final ObjectMapper mapper = new ObjectMapper();
 
     @Override
@@ -69,7 +72,7 @@ public class LogRepository implements CrudRepository<Log, String>
     {
         try
         {
-            Long id = SequenceGenerator.getID();
+            Long id = generator.getID();
             LogBuilder validatedLog = LogBuilder.createLog(log).id(id).createDate(Instant.now());
             if (log.getAttachments() != null && !log.getAttachments().isEmpty())
             {
