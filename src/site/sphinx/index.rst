@@ -1,12 +1,12 @@
 Olog Service Documentation!
 ===========================
 
-Olog-es is an online logbook service which allows for the creation and retrieval of log entries.
+Olog is an online logbook service which allows for the creation and retrieval of log entries.
 
 The service was developed to address the needs of operators, engineers, and users of large scientific facilities.
 
 Key features:
- - Integration with cs-studio, phoebus, bluesky, and other controls and data acquisition tools.
+ - Integration with CS-Studio, Phoebus, Bluesky, and other controls and data acquisition tools.
  - Tags & Logbooks provide an effective way to organize and sort log entries
  - Support for fuzzy searching
  - Markup support for creating rich text log entries. Markup is based on the Commonmark specification, extended
@@ -135,7 +135,7 @@ Download and install elasticsearch (verision 6.3) from elastic.com
 Download and install mongodb from mongodb
 
 Configure the service
-The configuration files for olog-es are present under olog-es/tree/master/src/main/resources/applications.properties
+The configuration files for Phoebus Olog are present under phoebus-olog/tree/master/src/main/resources/applications.properties
 
 Build
 ::
@@ -148,7 +148,7 @@ Start the service
    mvn org.springframework.boot:spring-boot-maven-plugin:run
 
 Detailed Installation Instructions:
-`Install Olog-es <https://github.com/Olog/olog-es#olog-es--->`_.
+`Install Phoebus Olog <https://github.com/Olog/phoebus-olog#installation>`_.
 
 REST API 
 #########
