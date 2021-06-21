@@ -71,7 +71,7 @@ public class Application {
 
     /**
      * Configures CORS policy in order to allow clients (web front-end) to do CORS requests if
-     * needed. Without a suitable configuration a client deployed to a different server than the olog-es service will not
+     * needed. Without a suitable configuration a client deployed to a different server than the Phoebus Olog service will not
      * be able to request resources.
      * Note: configuring this in {@link WebSecurityConfig#configure(HttpSecurity)}, it will have no effect. Not sure why,
      * but probably related to the order in which Spring Security loads stuff.

@@ -10,7 +10,7 @@ services:
       - mongo
       - elastic
     # Ensure that the elastic server is up before starting olog.
-    command: wait-for-it -t 30 elastic:9200 -- /bin/sh -c "java -jar olog-es-*.jar --spring.config.name=application-docker"
+    command: wait-for-it -t 30 elastic:9200 -- /bin/sh -c "java -jar service-olog-*.jar --spring.config.name=application-docker"
   mongo:
     image: mongo
     ports:

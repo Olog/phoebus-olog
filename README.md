@@ -1,8 +1,8 @@
-# olog-es   [![Build Status](https://travis-ci.org/Olog/olog-es.svg?branch=master)](https://travis-ci.org/Olog/olog-es)
+# Olog   [![Build Status](https://travis-ci.org/Olog/olog-es.svg?branch=master)](https://travis-ci.org/Olog/olog-es)
 
 An online logbook service that allows for the creation and retrieval of log entries.
 
-[Olog-es Documentation](https://olog-es.readthedocs.io/)
+[Phoebus Olog Documentation](https://olog.readthedocs.io/)
 
 ### Installation
 Olog 
