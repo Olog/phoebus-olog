@@ -14,6 +14,7 @@ import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 /**
@@ -24,13 +25,15 @@ import org.springframework.stereotype.Service;
 public class SequenceGenerator
 {
 
-    public static final String seqIndex = "olog_sequence";
+    @Value("${elasticsearch.sequence.index:olog_sequence}")
+    private String ES_SEQUENCE_INDEX;
+    @Value("${elasticsearch.sequence.type:olog_sequence}")
+    private String ES_SEQUENCE_TYPE;
 
     @Autowired
     @Qualifier("indexClient")
     RestHighLevelClient indexClient;
 
-//    private static SequenceGenerator instance = new SequenceGenerator();
     private static RestHighLevelClient client;
 
 
@@ -47,10 +50,10 @@ public class SequenceGenerator
      * @return a new unique id for a olog entry
      * @throws IOException 
      */
-    public static long getID() throws IOException
+    public long getID() throws IOException
     {
         IndexResponse response = client.index(
-                new IndexRequest("olog_sequence", "olog_sequence", "id").source(0, XContentType.class),
+                new IndexRequest(ES_SEQUENCE_INDEX, ES_SEQUENCE_TYPE, "id").source(0, XContentType.class),
                 RequestOptions.DEFAULT);
         return response.getVersion();
     }
