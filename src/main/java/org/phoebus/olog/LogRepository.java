@@ -70,7 +70,7 @@ public class LogRepository implements CrudRepository<Log, String>
         try
         {
             Long id = SequenceGenerator.getID();
-            LogBuilder validatedLog = LogBuilder.createLog(log).id(id).createDate(Instant.now());
+            LogBuilder validatedLog = LogBuilder.createLog(log).id(id);
             if (log.getAttachments() != null && !log.getAttachments().isEmpty())
             {
                 Set<Attachment> createdAttachments = new HashSet<Attachment>();
@@ -79,7 +79,7 @@ public class LogRepository implements CrudRepository<Log, String>
                 }).forEach(attachment -> {
                     createdAttachments.add(attachmentRepository.save(attachment));
                 });
-                validatedLog = validatedLog.setAttachments(createdAttachments);
+                log.setAttachments(createdAttachments);
             }
 
             IndexRequest indexRequest = new IndexRequest(ES_LOG_INDEX, ES_LOG_TYPE, String.valueOf(id))

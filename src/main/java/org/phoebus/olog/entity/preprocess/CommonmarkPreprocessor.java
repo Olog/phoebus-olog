@@ -30,9 +30,9 @@ public class CommonmarkPreprocessor implements LogPreprocessor{
 
     /**
      * Processes the log entry under the assumption that the source field of a {@link Log} object
-     * as posted by client is always null, i.e. client does not set the field. This method treats the
-     * description field as a Commonmark source and copies it to the source field. Then the same
-     * string is processed to set the description field to a "plain text" variant of the Commonmark source.
+     * as posted by client is null (e.g. new log entry) or may be overwritten (e.g. log entry to be updated).
+     * This method treats the description field as a Commonmark source and copies it to the source field. Then the same
+     * string is processed to remove markup in order to get a plain text representation of the log entry body.
      * @param log
      * @return The processed log record.
      */

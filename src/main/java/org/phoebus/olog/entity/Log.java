@@ -412,7 +412,12 @@ public class Log implements Serializable
         LogBuilder(Log log)
         {
             this.id = log.getId();
-            this.createDate = log.getCreatedDate();
+            if (log.getCreatedDate() != null) {
+                this.createDate = log.getCreatedDate();
+            }
+            else {
+                this.createDate = Instant.now();
+            }
             this.modifyDate = log.getModifyDate();
             this.owner = log.getOwner();
             if (log.getSource() != null)
