@@ -16,6 +16,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.action.search.SearchRequest;
@@ -46,6 +48,10 @@ public class LogSearchUtil
     private String ES_LOG_INDEX;
     @Value("${elasticsearch.log.type:olog_log}")
     private String ES_LOG_TYPE;
+    @Value("${elasticsearch.result.size.search.default:100}")
+    private int defaultSearchSize;
+    @Value("${elasticsearch.result.size.search.max:1000}")
+    private int maxSearchSize;
 
     /**
      * 
@@ -66,6 +72,8 @@ public class LogSearchUtil
         Instant start = Instant.EPOCH;
         Instant end = Instant.now();
         boolean includeEvents = false;
+
+        int searchResultSize = defaultSearchSize;
 
         for (Entry<String, List<String>> parameter : searchParameters.entrySet())
         {
@@ -195,6 +203,14 @@ public class LogSearchUtil
                     }
                 }
                 break;
+            case "limit":
+                try {
+                    searchResultSize = Integer.parseInt(parameter.getValue().get(0));
+                } catch (Exception e) {
+                    Logger.getLogger(LogSearchUtil.class.getName())
+                            .log(Level.WARNING, "Encountered unparsable 'limit' value", e);
+                }
+                break;
             case "default":
                 // Unsupported search parameters are ignored
                 break;
@@ -276,7 +292,7 @@ public class LogSearchUtil
 
         searchSourceBuilder.query(boolQuery);
         searchSourceBuilder.from(0);
-        searchSourceBuilder.size(100);
+        searchSourceBuilder.size(Math.min(searchResultSize, maxSearchSize));
 
         searchSourceBuilder.timeout(new TimeValue(60, TimeUnit.SECONDS));
 
