@@ -40,6 +40,8 @@ import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.engine.DocumentMissingException;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.elasticsearch.search.sort.SortBuilders;
+import org.elasticsearch.search.sort.SortOrder;
 import org.phoebus.olog.entity.Property;
 import org.phoebus.olog.entity.State;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -91,7 +93,8 @@ public class PropertyRepository implements CrudRepository<Property, String>
             }
         } catch (Exception e)
         {
-            logger.log(Level.SEVERE, e.getMessage(), e);
+            logger.log(Level.SEVERE, "Failed to create property: " + property, e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to create property: " + property);
         }
         return null;
     }
@@ -107,7 +110,8 @@ public class PropertyRepository implements CrudRepository<Property, String>
                         .source(mapper.writeValueAsBytes(property), XContentType.JSON));
             } catch (JsonProcessingException e)
             {
-                logger.log(Level.SEVERE, e.getMessage(), e);
+                logger.log(Level.SEVERE, "Failed to create property: " + property, e);
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to create property: " + property);
             }
         });
         BulkResponse bulkResponse;
@@ -126,16 +130,17 @@ public class PropertyRepository implements CrudRepository<Property, String>
                                 response.getFailure().getCause());
                     }
                 });
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                        "Failed to create properties: " + properties);
             } else
             {
                 return properties;
             }
         } catch (IOException e)
         {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            logger.log(Level.SEVERE, "Failed to create properties: " + properties, e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to create properties: " + properties);
         }
-        return null;
     }
 
     @Override
@@ -154,9 +159,9 @@ public class PropertyRepository implements CrudRepository<Property, String>
             }
         } catch (Exception e)
         {
-            logger.log(Level.SEVERE, e.getMessage(), e);
+            logger.log(Level.SEVERE, "Failed to find property: " + propertyName, e);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to find property: " + propertyName);
         }
-        return Optional.empty();
     }
 
     @Override
@@ -167,8 +172,8 @@ public class PropertyRepository implements CrudRepository<Property, String>
             return client.exists(new GetRequest(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, propertyName), RequestOptions.DEFAULT);
         } catch (IOException e)
         {
-            logger.log(Level.SEVERE, e.getMessage(), e);
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to find property: " + propertyName, e);
+            logger.log(Level.SEVERE, "Failed to find property: " + propertyName, e);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to find property: " + propertyName);
         }
     }
 
@@ -181,7 +186,7 @@ public class PropertyRepository implements CrudRepository<Property, String>
     public Iterable<Property> findAll(boolean includeInactive)
     {
         try
-        { 
+        {
 
             SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
             if (!includeInactive)
@@ -190,6 +195,7 @@ public class PropertyRepository implements CrudRepository<Property, String>
             }
             sourceBuilder.timeout(new TimeValue(10, TimeUnit.SECONDS));
             sourceBuilder.size(propertiesResultSize);
+            sourceBuilder.sort(SortBuilders.fieldSort("name").order(SortOrder.ASC));
 
             SearchResponse response = client.search(
                     new SearchRequest(ES_PROPERTY_INDEX).types(ES_PROPERTY_TYPE).source(sourceBuilder), RequestOptions.DEFAULT);
@@ -208,11 +214,11 @@ public class PropertyRepository implements CrudRepository<Property, String>
             return result;
         } catch (Exception e)
         {
-            logger.log(Level.SEVERE, e.getMessage(), e);
+            logger.log(Level.SEVERE, "Failed to find properties", e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to find properties");
         }
-        return null;
     }
-    
+
     @Override
     public Iterable<Property> findAllById(Iterable<String> propertyNames)
     {
@@ -238,7 +244,7 @@ public class PropertyRepository implements CrudRepository<Property, String>
         } catch (Exception e)
         {
             logger.log(Level.SEVERE, "Failed to find properties: " + propertyNames, e);
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to find properties: " + propertyNames, null);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to find properties: " + propertyNames);
         }
     }
 
@@ -271,10 +277,12 @@ public class PropertyRepository implements CrudRepository<Property, String>
             }
         } catch (DocumentMissingException e)
         {
-            logger.log(Level.SEVERE, propertyName + " Does not exist and thus cannot be deleted");
+            logger.log(Level.SEVERE, "Failed to delete property: " + propertyName + " because it does not exist", e);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to delete property: " + propertyName + " because it does not exist");
         } catch (Exception e)
         {
-            logger.log(Level.SEVERE, e.getMessage(), e);
+            logger.log(Level.SEVERE, "Failed to delete property: " + propertyName, e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete property: " + propertyName);
         }
     }
 
@@ -333,7 +341,7 @@ public class PropertyRepository implements CrudRepository<Property, String>
     @Override
     public void deleteAll()
     {
-        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Deleteting all properties not allowed");
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Deleting all properties is not allowed");
     }
 
 }

@@ -22,8 +22,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.phoebus.olog.LogbookRepository;
-import org.phoebus.olog.OlogResourceDescriptors;
 import org.phoebus.olog.entity.Logbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -185,8 +183,7 @@ public class LogbookResourceTest extends ResourcesTestBase {
                 OlogResourceDescriptors.LOGBOOK_RESOURCE_URI +
                 "/name1")
                 .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION);
-        mockMvc.perform(request).andExpect(status().isOk());
-        verify(logbookRepository, times(1)).deleteById("name1");
+        mockMvc.perform(request).andExpect(status().isNotFound());
         reset(logbookRepository);
     }
 }

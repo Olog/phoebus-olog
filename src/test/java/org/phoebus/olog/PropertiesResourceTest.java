@@ -24,8 +24,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatcher;
-import org.phoebus.olog.OlogResourceDescriptors;
-import org.phoebus.olog.PropertyRepository;
 import org.phoebus.olog.entity.Property;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -114,9 +112,7 @@ public class PropertiesResourceTest extends ResourcesTestBase {
                 .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
                 .contentType(JSON)
                 .content(objectMapper.writeValueAsString(property1));
-        MvcResult result = mockMvc.perform(request).andExpect(status().isOk()).andReturn();
-        objectMapper.readValue(result.getResponse().getContentAsString(), Property.class);
-        verify(propertyRepository, times(1)).save(property);
+        mockMvc.perform(request).andExpect(status().isBadRequest()).andReturn();
         reset(propertyRepository);
     }
 
@@ -143,10 +139,7 @@ public class PropertiesResourceTest extends ResourcesTestBase {
                 .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
                 .contentType(JSON)
                 .content(objectMapper.writeValueAsString(Arrays.asList(property1)));
-        MvcResult result = mockMvc.perform(request).andExpect(status().isOk()).andReturn();
-        objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<Iterable<Property>>() {
-        });
-        verify(propertyRepository, times(1)).saveAll(Arrays.asList(property));
+        mockMvc.perform(request).andExpect(status().isBadRequest()).andReturn();
         reset(propertyRepository);
     }
 
@@ -164,8 +157,8 @@ public class PropertiesResourceTest extends ResourcesTestBase {
                 OlogResourceDescriptors.PROPERTY_RESOURCE_URI +
                 "/property1")
                 .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION);
-        mockMvc.perform(request).andExpect(status().isOk());
-        verify(propertyRepository, times(1)).deleteById("property1");
+        mockMvc.perform(request).andExpect(status().isNotFound());
+        reset(propertyRepository);
     }
 
 

@@ -33,7 +33,7 @@ import org.springframework.util.MultiValueMap;
 /**
  * A utility class for creating a search query for log entries based on time,
  * logbooks, tags, properties, description, etc.
- * 
+ *
  * @author Kunal Shroff
  *
  */
@@ -54,7 +54,7 @@ public class LogSearchUtil
     private int maxSearchSize;
 
     /**
-     * 
+     *
      * @param searchParameters - the various search parameters
      * @return A {@link SearchRequest} based on the provided search parameters
      */
@@ -211,7 +211,7 @@ public class LogSearchUtil
                             .log(Level.WARNING, "Encountered unparsable 'limit' value", e);
                 }
                 break;
-            case "default":
+            default:
                 // Unsupported search parameters are ignored
                 break;
             }

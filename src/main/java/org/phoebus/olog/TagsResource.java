@@ -8,10 +8,14 @@ package org.phoebus.olog;
 import static org.phoebus.olog.OlogResourceDescriptors.TAG_RESOURCE_URI;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.phoebus.olog.entity.State;
 import org.phoebus.olog.entity.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,6 +23,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 /**
  * Resource for handling the requests to ../tags
@@ -29,10 +34,10 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping(TAG_RESOURCE_URI)
 public class TagsResource {
 
+    private Logger log = Logger.getLogger(TagsResource.class.getName());
+
     @Autowired
     private TagRepository tagRepository;
-
-    private Logger log = Logger.getLogger(TagsResource.class.getName());
 
     /** Creates a new instance of TagsResource */
     public TagsResource()
@@ -52,14 +57,20 @@ public class TagsResource {
 
     /**
      * Get method for retrieving the tag with name matching tagName
-     * 
+     *
      * @param tagName - the name of the tag to be retrieved
      * @return the matching tag, or null
      */
     @GetMapping("/{tagName}")
     public Tag findByTitle(@PathVariable String tagName)
     {
-        return tagRepository.findById(tagName).orElseGet(null);
+        Optional<Tag> foundTag = tagRepository.findById(tagName);
+        if (foundTag.isPresent()) {
+            return foundTag.get();
+        } else {
+            log.log(Level.SEVERE, "Failed to find tag: " + tagName, new ResponseStatusException(HttpStatus.NOT_FOUND));
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to find tag: " + tagName);
+        }
     }
 
     /**
@@ -73,13 +84,25 @@ public class TagsResource {
     public Tag createTag(@PathVariable String tagName, @RequestBody final Tag tag)
     {
         // TODO Check permissions
-        // TODO Validate
+        // Validate
+
+        // Validate request parameters
+        validateTagRequest(tag);
+
+        // check if present
+        Optional<Tag> existingTag = tagRepository.findById(tagName);
+        if (existingTag.isPresent()) {
+            // delete existing tag
+            tagRepository.deleteById(tagName);
+        }
+
+        // create new tag
         return tagRepository.save(tag);
     }
 
     /**
      * PUT method for the tags resource to support the creation of a list of tags
-     * 
+     *
      * @param tags - the list of tags to be created
      * @return the list of tags created
      */
@@ -87,14 +110,78 @@ public class TagsResource {
     public Iterable<Tag> updateTag(@RequestBody final List<Tag> tags)
     {
         // TODO Check permissions
-        // TODO Validate
+        // Validate
+
+        // Validate request parameters
+        validateTagRequest(tags);
+
+        // delete existing tags
+        for(Tag tag: tags) {
+            if(tagRepository.existsById(tag.getName())) {
+                // delete existing tag
+                tagRepository.deleteById(tag.getName());
+            }
+        }
+
+        // create new tags
         return tagRepository.saveAll(tags);
     }
 
     @DeleteMapping("/{tagName}")
     public void deleteTag(@PathVariable String tagName)
     {
-        tagRepository.deleteById(tagName);
+        // TODO Check permissions
+
+        // check if present
+        Optional<Tag> existingTag = tagRepository.findById(tagName);
+        if (existingTag.isPresent()) {
+            // delete existing tag
+            tagRepository.deleteById(tagName);
+        } else {
+            log.log(Level.SEVERE, "The tag with the name " + tagName + " does not exist", new ResponseStatusException(HttpStatus.NOT_FOUND));
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "The tag with the name " + tagName + " does not exist");
+        }
+    }
+
+    /**
+     * Checks if all the tags included satisfy the following conditions:
+     *
+     * <ol>
+     * <li> the tag names are not null or empty
+     * <li> the tag states are not null or empty, and are either Active or Inactive
+     * </ol>
+     *
+     * @param tags the tags to be validated
+     */
+    public void validateTagRequest(Iterable<Tag> tags) {
+        for (Tag tag : tags) {
+            validateTagRequest(tag);
+        }
+    }
+
+    /**
+     * Checks if the tag satisfies the following conditions:
+     *
+     * <ol>
+     * <li> the tag name is not null or empty
+     * <li> the tag state is not null or empty, and is either Active or Inactive
+     * </ol>
+     *
+     * @param tag the tag to be validated
+     */
+    public void validateTagRequest(Tag tag) {
+        // 1
+        if (tag.getName() == null || tag.getName().isEmpty()) {
+            log.log(Level.SEVERE, "The tag name cannot be null or empty " + tag.toString(), new ResponseStatusException(HttpStatus.BAD_REQUEST));
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "The tag name cannot be null or empty " + tag.toString(), null);
+        }
+        // 2
+        if (tag.getState() == null || !(State.Active.equals(tag.getState()) || State.Inactive.equals(tag.getState()))) {
+            log.log(Level.SEVERE, "The tag state cannot be null or empty or not Active/Inactive " + tag.toString(), new ResponseStatusException(HttpStatus.BAD_REQUEST));
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "The tag state cannot be null or empty or not Active/Inactive " + tag.toString(), null);
+        }
     }
 
 }

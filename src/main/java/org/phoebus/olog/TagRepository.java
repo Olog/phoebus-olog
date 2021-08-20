@@ -39,6 +39,8 @@ import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.engine.DocumentMissingException;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.elasticsearch.search.sort.SortBuilders;
+import org.elasticsearch.search.sort.SortOrder;
 import org.phoebus.olog.entity.State;
 import org.phoebus.olog.entity.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,6 +57,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @Repository
 public class TagRepository implements CrudRepository<Tag, String> {
 
+    private Logger logger = Logger.getLogger(TagRepository.class.getName());
+
     @Value("${elasticsearch.tag.index:olog_tags}")
     private String ES_TAG_INDEX;
     @Value("${elasticsearch.tag.type:olog_tag}")
@@ -66,17 +70,15 @@ public class TagRepository implements CrudRepository<Tag, String> {
     @Autowired
     @Qualifier("indexClient")
     RestHighLevelClient client;
-    
+
     @Autowired
     @Qualifier("searchClient")
     RestHighLevelClient searchClient;
 
     private static final ObjectMapper mapper = new ObjectMapper();
 
-    private Logger logger = Logger.getLogger(TagRepository.class.getName());
-
     /**
-     * 
+     *
      */
     @Override
     public <S extends Tag> S save(S tag)
@@ -99,8 +101,8 @@ public class TagRepository implements CrudRepository<Tag, String> {
             return null;
         } catch (Exception e)
         {
-            logger.log(Level.SEVERE, e.getMessage(), e);
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to create tag: " + tag, e);
+            logger.log(Level.SEVERE, "Failed to create tag: " + tag, e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to create tag: " + tag);
         }
     }
 
@@ -115,8 +117,8 @@ public class TagRepository implements CrudRepository<Tag, String> {
                         .source(mapper.writeValueAsBytes(tag), XContentType.JSON));
             } catch (JsonProcessingException e)
             {
-                logger.log(Level.SEVERE, e.getMessage(), e);
-                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to create tags: " + tags, e);
+                logger.log(Level.SEVERE, "Failed to create tag: " + tag, e);
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to create tag: " + tag);
             }
         });
         BulkResponse bulkResponse;
@@ -142,7 +144,8 @@ public class TagRepository implements CrudRepository<Tag, String> {
             }
         } catch (IOException e)
         {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to create tags: " + tags, e);
+            logger.log(Level.SEVERE, "Failed to create tags: " + tags, e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to create tags: " + tags);
         }
     }
 
@@ -159,8 +162,8 @@ public class TagRepository implements CrudRepository<Tag, String> {
             return Optional.empty();
         } catch (Exception e)
         {
-            logger.log(Level.SEVERE, e.getMessage(), e);
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to find tag: " + tagName, e);
+            logger.log(Level.SEVERE, "Failed to find tag: " + tagName, e);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to find tag: " + tagName);
         }
     }
 
@@ -171,8 +174,8 @@ public class TagRepository implements CrudRepository<Tag, String> {
             return client.exists(new GetRequest(ES_TAG_INDEX, ES_TAG_TYPE, tagName), RequestOptions.DEFAULT);
         } catch (IOException e)
         {
-            logger.log(Level.SEVERE, e.getMessage(), e);
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to find tag: " + tagName, e);
+            logger.log(Level.SEVERE, "Failed to find tag: " + tagName, e);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to find tag: " + tagName);
         }
     }
 
@@ -184,6 +187,7 @@ public class TagRepository implements CrudRepository<Tag, String> {
             sourceBuilder.query(QueryBuilders.termQuery("state", State.Active.toString()));
             sourceBuilder.timeout(new TimeValue(10, TimeUnit.SECONDS));
             sourceBuilder.size(tagsResultSize);
+            sourceBuilder.sort(SortBuilders.fieldSort("name").order(SortOrder.ASC));
 
             SearchResponse response = client.search(
                     new SearchRequest(ES_TAG_INDEX).types(ES_TAG_TYPE).source(sourceBuilder), RequestOptions.DEFAULT);
@@ -198,8 +202,8 @@ public class TagRepository implements CrudRepository<Tag, String> {
             });
             return result;
         } catch (Exception e) {
-            logger.log(Level.SEVERE, e.getMessage(), e);
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to find tags: ", e);
+            logger.log(Level.SEVERE, "Failed to find tags", e);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to find tags");
         }
     }
 
@@ -227,7 +231,7 @@ public class TagRepository implements CrudRepository<Tag, String> {
         } catch (Exception e)
         {
             logger.log(Level.SEVERE, "Failed to find tags: " + tagNames, e);
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to find tags: " + tagNames, null);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to find tags: " + tagNames);
         }
     }
 
@@ -255,11 +259,11 @@ public class TagRepository implements CrudRepository<Tag, String> {
                 logger.log(Level.INFO, "Deleted tag " + deletedTag.toLogger());
             }
         } catch (DocumentMissingException e) {
-            logger.log(Level.SEVERE, tagName + " Does not exist and thus cannot be deleted");
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to delete tag: " + tagName + " because it does not exist", e);
+            logger.log(Level.SEVERE, "Failed to delete tag: " + tagName + " because it does not exist", e);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to delete tag: " + tagName + " because it does not exist");
         } catch (Exception e) {
-            logger.log(Level.SEVERE, e.getMessage(), e);
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to delete tag: " + tagName, e);
+            logger.log(Level.SEVERE, "Failed to delete tag: " + tagName, e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete tag: " + tagName);
         }
     }
 
@@ -278,7 +282,7 @@ public class TagRepository implements CrudRepository<Tag, String> {
     @Override
     public void deleteAll()
     {
-        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Deleteting all tags not allowed");
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Deleting all tags is not allowed");
     }
 
 }
