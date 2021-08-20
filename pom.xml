@@ -30,7 +30,7 @@
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-web</artifactId>
     </dependency>
-    <!-- <dependency> <groupId>org.springframework.boot</groupId> <artifactId>spring-boot-maven-plugin</artifactId> 
+    <!-- <dependency> <groupId>org.springframework.boot</groupId> <artifactId>spring-boot-maven-plugin</artifactId>
       </dependency> -->
     <!-- https://mvnrepository.com/artifact/org.springframework.data/spring-data-mongodb-parent -->
     <dependency>
@@ -135,6 +135,12 @@
       <version>1.4.200</version>
       <scope>runtime</scope>
     </dependency>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>testcontainers</artifactId>
+      <version>1.16.0</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
   <build>
     <plugins>
@@ -156,7 +162,7 @@
     </plugins>
   </build>
   <profiles>
-    <!-- a profile for generating javadocs and the website from the .rst 
+    <!-- a profile for generating javadocs and the website from the .rst
       files -->
     <profile>
       <id>docs</id>
