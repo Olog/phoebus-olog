@@ -6,3 +6,4 @@
 # The H2 database files
 **/*mv.db
 **/*trace.db
+docker-compose-local*
