@@ -102,8 +102,8 @@ public class LogRepository implements CrudRepository<Log, String>
             }
         } catch (Exception e)
         {
-            logger.log(Level.SEVERE, e.getMessage(), e);
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to save log enrty " + log.toString(), e);
+            logger.log(Level.SEVERE, "Failed to save log entry: " + log, e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to save log entry: " + log);
         }
         return null;
     }
@@ -140,13 +140,12 @@ public class LogRepository implements CrudRepository<Log, String>
             }
         } catch (Exception e)
         {
-            logger.log(Level.SEVERE, e.getMessage(), e);
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-                    "Failed to save log enrty " + log.toString(), e);
+            logger.log(Level.SEVERE, "Failed to save log entry: " + log, e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to save log entry: " + log);
         }
         return null;
     }
-    
+
     @Override
     public Optional<Log> findById(String id)
     {
@@ -158,10 +157,11 @@ public class LogRepository implements CrudRepository<Log, String>
             }
             Log createdLog = mapper.readValue(result.getSourceAsBytesRef().streamInput(), Log.class);
             return Optional.of(createdLog);
-        } catch (IOException e)
+        } catch (Exception e)
         {
             // https://www.baeldung.com/exception-handling-for-rest-with-spring#controlleradvice
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to retrieve log with id " + id, e);
+            logger.log(Level.SEVERE, "Failed to retrieve log with id: " + id, e);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to retrieve log with id: " + id);
         }
     }
 
@@ -173,7 +173,8 @@ public class LogRepository implements CrudRepository<Log, String>
             return client.exists(new GetRequest(ES_LOG_INDEX, ES_LOG_TYPE, logId), RequestOptions.DEFAULT);
         } catch (IOException e)
         {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to check existance of log with id " + logId, e);
+            logger.log(Level.SEVERE, "Failed to check existence of log with id: " + logId, e);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to check existence of log with id: " + logId);
         }
     }
 
@@ -208,7 +209,7 @@ public class LogRepository implements CrudRepository<Log, String>
         } catch (Exception e)
         {
             logger.log(Level.SEVERE, "Failed to find logs: " + logIds, e);
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to find logs: " + logIds, null);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to find logs: " + logIds);
         }
     }
 
@@ -260,15 +261,15 @@ public class LogRepository implements CrudRepository<Log, String>
                     result.add(mapper.readValue(hit.getSourceAsString(), Log.class));
                 } catch (IOException e)
                 {
-                    logger.log(Level.SEVERE, "Failed to parse result for search : " + searchParameters, e);
+                    logger.log(Level.SEVERE, "Failed to parse result for search : " + searchParameters + ", CAUSE: " + e.getMessage(), e);
                     throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-                            "Failed to parse result for search : " + searchParameters + ", CAUSE: " + e.getMessage(),
-                            e);
+                            "Failed to parse result for search : " + searchParameters + ", CAUSE: " + e.getMessage());
                 }
             });
             return result;
         } catch (IOException e)
         {
+            logger.log(Level.SEVERE, "Failed to complete search", e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to complete search");
         }
     }

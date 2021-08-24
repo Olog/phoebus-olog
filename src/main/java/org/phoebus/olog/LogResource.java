@@ -62,6 +62,9 @@ import org.springframework.web.server.ResponseStatusException;
 @RequestMapping(LOG_RESOURCE_URI)
 public class LogResource
 {
+
+    private Logger log = Logger.getLogger(LogResource.class.getName());
+
     @Autowired
     LogRepository logRepository;
     @Autowired
@@ -81,7 +84,13 @@ public class LogResource
 
     @GetMapping("{logId}")
     public Log getLog(@PathVariable String logId) {
-        return logRepository.findById(logId).get();
+        Optional<Log> foundLog = logRepository.findById(logId);
+        if (foundLog.isPresent()) {
+            return foundLog.get();
+        } else {
+            log.log(Level.SEVERE, "Failed to find log: " + logId, new ResponseStatusException(HttpStatus.NOT_FOUND));
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to find log: " + logId);
+        }
     }
 
     @GetMapping("/attachments/{logId}/{attachmentName}")
@@ -112,14 +121,13 @@ public class LogResource
                     return new ResponseEntity<>(resource, httpHeaders, HttpStatus.OK);
                 } catch (IOException e)
                 {
-                    Logger.getLogger(LogResource.class.getName()).log(Level.WARNING,
-                            String.format("Unable to retrieve attachment %s for log id %s", attachmentName, logId),
-                            e);
+                    Logger.getLogger(LogResource.class.getName())
+                        .log(Level.WARNING, String.format("Unable to retrieve attachment %s for log id %s", attachmentName, logId), e);
                 }
             } else
             {
-                Logger.getLogger(LogResource.class.getName()).log(Level.WARNING,
-                        String.format("Found %d attachments named %s for log id %s", attachments.size(), attachmentName, logId));
+                Logger.getLogger(LogResource.class.getName())
+                    .log(Level.WARNING, String.format("Found %d attachments named %s for log id %s", attachments.size(), attachmentName, logId));
             }
         }
         return null;
@@ -149,9 +157,9 @@ public class LogResource
         }
         return logRepository.search(allRequestParams);
     }
-    
+
     /**
-     * 
+     *
      * @param log
      * @return
      */
@@ -213,7 +221,7 @@ public class LogResource
             return logRepository.update(log);
         } else
         {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to retrieve log with id " + logId);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to retrieve log with id: " + logId);
         }
     }
 
@@ -266,7 +274,7 @@ public class LogResource
             Log newLogEntry = logRepository.update(persistedLog);
             return newLogEntry;
         } else {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to retrieve log with id " + logId);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to retrieve log with id: " + logId);
         }
     }
 
@@ -288,7 +296,7 @@ public class LogResource
             }
             return logRepository.findById(logId).get();
         } else {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to retrieve log with id " + logId);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to retrieve log with id: " + logId);
         }
     }
 

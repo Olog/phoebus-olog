@@ -1,5 +1,5 @@
 # Use the default network olog_default.
-version: "3.9"
+version: "3.7"
 services:
   olog:
     build: .
@@ -10,18 +10,29 @@ services:
       - mongo
       - elastic
     # Ensure that the elastic server is up before starting olog.
-    command: wait-for-it -t 30 elastic:9200 -- /bin/sh -c "java -jar service-olog-*.jar --spring.config.name=application-docker"
+    command: >
+      /bin/bash -c "
+          while ! curl -s -f elastic:9200;
+        do
+          echo Waiting for Elasticsearch;
+          sleep 1;
+        done;
+        java -jar service-olog-*.jar --spring.config.name=application-docker
+      "
+
   mongo:
     image: mongo
     ports:
       - 27017:27017
     volumes:
       - olog-mongodata:/etc/mongo
+
   elastic:
     image: elasticsearch:6.8.13
     environment:
       cluster.name: elasticsearch
       bootstrap.memory_lock: "true"
+      discovery.type: single-node
       ES_JAVA_OPTS: "-Xms512m -Xmx512m"
     ports:
       - 9200:9200

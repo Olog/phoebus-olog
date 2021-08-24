@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
 
 import static org.phoebus.olog.OlogResourceDescriptors.ATTACHMENT_URI;
 
@@ -66,15 +65,14 @@ public class AttachmentResource
                 return new ResponseEntity<>(resource, httpHeaders, HttpStatus.OK);
             }
             catch (IOException e) {
-                Logger.getLogger(LogResource.class.getName()).log(Level.SEVERE,
-                        String.format("Unable to retrieve attachment with id=%s", attachmentId),
-                        e);
+                Logger.getLogger(LogResource.class.getName())
+                    .log(Level.SEVERE, "Unable to retrieve attachment with id: " + attachmentId, e);
                 return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
             }
         }
         else{
-            Logger.getLogger(LogResource.class.getName()).log(Level.WARNING,
-                    String.format("Attachment with id=%s not found", attachmentId));
+            Logger.getLogger(LogResource.class.getName())
+                .log(Level.WARNING, "Attachment with id " + attachmentId + " not found");
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }

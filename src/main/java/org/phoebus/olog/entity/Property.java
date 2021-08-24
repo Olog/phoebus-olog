@@ -47,6 +47,18 @@ public class Property implements Serializable {
      * @param name - name property name
      * @param owner - the owner of this property
      * @param state - state property state
+     */
+    public Property(String name, String owner, State state) {
+        this.name = name;
+        this.setOwner(owner);
+        this.state = state;
+    }
+
+    /**
+     * Create a new instance of Property.
+     * @param name - name property name
+     * @param owner - the owner of this property
+     * @param state - state property state
      * @param attributes - attributes a set of attributes for this property
      */
     public Property(String name, String owner, State state, Set<Attribute> attributes) {
@@ -110,7 +122,7 @@ public class Property implements Serializable {
         this.state = state;
     }
 
-    
+
     /**
      * Getter for property attributes.
      * @return a set of the attributes
