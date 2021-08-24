@@ -12,7 +12,6 @@ import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.phoebus.olog.entity.State;
 import org.phoebus.olog.entity.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -148,7 +147,7 @@ public class TagsResource {
      *
      * <ol>
      * <li> the tag names are not null or empty
-     * <li> the tag states are not null or empty, and are either Active or Inactive
+     * <li> no validation for tag states
      * </ol>
      *
      * @param tags the tags to be validated
@@ -164,23 +163,16 @@ public class TagsResource {
      *
      * <ol>
      * <li> the tag name is not null or empty
-     * <li> the tag state is not null or empty, and is either Active or Inactive
+     * <li> no validation for tag state
      * </ol>
      *
      * @param tag the tag to be validated
      */
     public void validateTagRequest(Tag tag) {
-        // 1
         if (tag.getName() == null || tag.getName().isEmpty()) {
             log.log(Level.SEVERE, "The tag name cannot be null or empty " + tag.toString(), new ResponseStatusException(HttpStatus.BAD_REQUEST));
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "The tag name cannot be null or empty " + tag.toString(), null);
-        }
-        // 2
-        if (tag.getState() == null || !(State.Active.equals(tag.getState()) || State.Inactive.equals(tag.getState()))) {
-            log.log(Level.SEVERE, "The tag state cannot be null or empty or not Active/Inactive " + tag.toString(), new ResponseStatusException(HttpStatus.BAD_REQUEST));
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "The tag state cannot be null or empty or not Active/Inactive " + tag.toString(), null);
         }
     }
 

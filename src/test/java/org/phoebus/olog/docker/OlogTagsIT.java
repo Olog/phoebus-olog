@@ -222,7 +222,6 @@ public class OlogTagsIT {
         String json_incomplete3 = "{\"incomplete}";
         String json_incomplete4 = "{\"\"}";
         String json_incomplete5 = "{incomplete\"}";
-        // String json_incomplete6 = "\"incomplete\"}";
         String json_incomplete7 = "{";
         String json_incomplete8 = "}";
         String json_incomplete9 = "\"";
@@ -249,9 +248,6 @@ public class OlogTagsIT {
 
             response = ITUtil.runShellCommand(createCurlTagForAdmin("t1", json_incomplete5));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
-
-            // response = ITUtil.runShellCommand(createCurlTagForAdmin("t1", json_incomplete6));
-            // ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
             response = ITUtil.runShellCommand(createCurlTagForAdmin("t1", json_incomplete7));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
@@ -325,12 +321,6 @@ public class OlogTagsIT {
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
             tag_check.setName("");
-
-            response = ITUtil.runShellCommand(createCurlTagForAdmin("asdf", mapper.writeValueAsString(tag_check)));
-            ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
-
-            tag_check.setName("asdf");
-            tag_check.setState(null);
 
             response = ITUtil.runShellCommand(createCurlTagForAdmin("asdf", mapper.writeValueAsString(tag_check)));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
@@ -608,13 +598,6 @@ public class OlogTagsIT {
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
             tag_check.setName("");
-            tags[10] = tag_check;
-
-            response = ITUtil.runShellCommand(createCurlTagsForAdmin(mapper.writeValueAsString(tags)));
-            ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
-
-            tag_check.setName("asdf");
-            tag_check.setState(null);
             tags[10] = tag_check;
 
             response = ITUtil.runShellCommand(createCurlTagsForAdmin(mapper.writeValueAsString(tags)));

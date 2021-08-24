@@ -112,7 +112,9 @@ public class PropertiesResourceTest extends ResourcesTestBase {
                 .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
                 .contentType(JSON)
                 .content(objectMapper.writeValueAsString(property1));
-        mockMvc.perform(request).andExpect(status().isBadRequest()).andReturn();
+        MvcResult result = mockMvc.perform(request).andExpect(status().isOk()).andReturn();
+        objectMapper.readValue(result.getResponse().getContentAsString(), Property.class);
+        verify(propertyRepository, times(1)).save(property);
         reset(propertyRepository);
     }
 
@@ -139,7 +141,10 @@ public class PropertiesResourceTest extends ResourcesTestBase {
                 .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
                 .contentType(JSON)
                 .content(objectMapper.writeValueAsString(Arrays.asList(property1)));
-        mockMvc.perform(request).andExpect(status().isBadRequest()).andReturn();
+        MvcResult result = mockMvc.perform(request).andExpect(status().isOk()).andReturn();
+        objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<Iterable<Property>>() {
+        });
+        verify(propertyRepository, times(1)).saveAll(Arrays.asList(property));
         reset(propertyRepository);
     }
 

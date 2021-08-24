@@ -14,7 +14,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.phoebus.olog.entity.Logbook;
-import org.phoebus.olog.entity.State;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -125,8 +124,8 @@ public class LogbooksResource {
      *
      * <ol>
      * <li> the logbook names are not null or empty
-     * <li> the logbook owners are not null or empty
-     * <li> the logbook states are not null or empty, and are either Active or Inactive
+     * <li> no validation for logbook owners
+     * <li> no validation for logbook states
      * </ol>
      *
      * @param logbooks the logbooks to be validated
@@ -142,30 +141,17 @@ public class LogbooksResource {
      *
      * <ol>
      * <li> the logbook name is not null or empty
-     * <li> the logbook owner is not null or empty
-     * <li> the logbook state is not null or empty, and is either Active or Inactive
+     * <li> no validation for logbook owner
+     * <li> no validation for logbook state
      * </ol>
      *
      * @param logbook the logbook to be validated
      */
     public void validateLogbookRequest(Logbook logbook) {
-        // 1
         if (logbook.getName() == null || logbook.getName().isEmpty()) {
             log.log(Level.SEVERE, "The logbook name cannot be null or empty " + logbook.toString(), new ResponseStatusException(HttpStatus.BAD_REQUEST));
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "The logbook name cannot be null or empty " + logbook.toString(), null);
-        }
-        // 2
-        if (logbook.getOwner() == null || logbook.getOwner().isEmpty()) {
-            log.log(Level.SEVERE, "The logbook owner cannot be null or empty " + logbook.toString(), new ResponseStatusException(HttpStatus.BAD_REQUEST));
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "The logbook owner cannot be null or empty " + logbook.toString(), null);
-        }
-        // 3
-        if (logbook.getState() == null || !(State.Active.equals(logbook.getState()) || State.Inactive.equals(logbook.getState()))) {
-            log.log(Level.SEVERE, "The logbook state cannot be null or empty or not Active/Inactive " + logbook.toString(), new ResponseStatusException(HttpStatus.BAD_REQUEST));
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "The logbook state cannot be null or empty or not Active/Inactive " + logbook.toString(), null);
         }
     }
 

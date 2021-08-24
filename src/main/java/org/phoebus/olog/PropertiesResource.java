@@ -16,7 +16,6 @@ import java.util.logging.Logger;
 
 import org.phoebus.olog.entity.Attribute;
 import org.phoebus.olog.entity.Property;
-import org.phoebus.olog.entity.State;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -138,12 +137,12 @@ public class PropertiesResource {
     }
 
     /**
-     * Checks if all the logbooks included satisfy the following conditions:
+     * Checks if all the properties included satisfy the following conditions:
      *
      * <ol>
-     * <li> the logbook names are not null or empty
-     * <li> the logbook owners are not null or empty
-     * <li> the logbook states are not null or empty, and are either Active or Inactive
+     * <li> the property names are not null or empty
+     * <li> no validation for property owners
+     * <li> no validation for property states
      * </ol>
      *
      * @param logbooks the properties to be validated
@@ -159,30 +158,17 @@ public class PropertiesResource {
      *
      * <ol>
      * <li> the property name is not null or empty
-     * <li> the property owner is not null or empty
-     * <li> the property state is not null or empty, and is either Active or Inactive
+     * <li> no validation for property owner
+     * <li> no validation for property state
      * </ol>
      *
      * @param property the property to be validated
      */
     public void validatePropertyRequest(Property property) {
-        // 1
         if (property.getName() == null || property.getName().isEmpty()) {
             log.log(Level.SEVERE, "The property name cannot be null or empty " + property.toString(), new ResponseStatusException(HttpStatus.BAD_REQUEST));
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "The property name cannot be null or empty " + property.toString(), null);
-        }
-        // 2
-        if (property.getOwner() == null || property.getOwner().isEmpty()) {
-            log.log(Level.SEVERE, "The property owner cannot be null or empty " + property.toString(), new ResponseStatusException(HttpStatus.BAD_REQUEST));
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "The property owner cannot be null or empty " + property.toString(), null);
-        }
-        // 3
-        if (property.getState() == null || !(State.Active.equals(property.getState()) || State.Inactive.equals(property.getState()))) {
-            log.log(Level.SEVERE, "The property state cannot be null or empty or not Active/Inactive " + property.toString(), new ResponseStatusException(HttpStatus.BAD_REQUEST));
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "The property state cannot be null or empty or not Active/Inactive " + property.toString(), null);
         }
 
         validateAttributeRequest(property.getAttributes());
@@ -194,7 +180,7 @@ public class PropertiesResource {
      * <ol>
      * <li> the attribute names are not null or empty
      * <li> (no checks for attribute values)
-     * <li> the attribute states are not null or empty, and are either Active or Inactive
+     * <li> no validation for attribute states
      * </ol>
      *
      * @param attributes the attributes to be validated
@@ -211,24 +197,16 @@ public class PropertiesResource {
      * <ol>
      * <li> the attribute name is not null or empty
      * <li> (no checks for attribute value)
-     * <li> the attribute state is not null or empty, and is either Active or Inactive
+     * <li> no validation for attribute state
      * </ol>
      *
      * @param attribute the attribute to be validated
      */
     public void validateAttributeRequest(Attribute attribute) {
-        // 1
         if (attribute.getName() == null || attribute.getName().isEmpty()) {
             log.log(Level.SEVERE, "The attribute name cannot be null or empty " + attribute.toString(), new ResponseStatusException(HttpStatus.BAD_REQUEST));
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "The attribute name cannot be null or empty " + attribute.toString(), null);
-        }
-        // 2
-        // 3
-        if (attribute.getState() == null || !(State.Active.equals(attribute.getState()) || State.Inactive.equals(attribute.getState()))) {
-            log.log(Level.SEVERE, "The attribute state cannot be null or empty or not Active/Inactive " + attribute.toString(), new ResponseStatusException(HttpStatus.BAD_REQUEST));
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "The attribute state cannot be null or empty or not Active/Inactive " + attribute.toString(), null);
         }
     }
 

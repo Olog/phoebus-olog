@@ -229,9 +229,6 @@ public class OlogLogbooksIT {
         String json_incomplete9 = "\"";
 
         String json_logbook_l1_name_na     = "{\"na\":\"l1\",\"owner\":\"admin\",\"state\":\"Active\"}";
-        String json_logbook_l1_owner_ow    = "{\"name\":\"l1\",\"ow\":\"admin\",\"state\":\"Active\"}";
-        String json_logbook_l1_state_empty = "{\"name\":\"l1\",\"owner\":\"admin\",\"state\":\"\"}";
-        String json_logbook_l1_state_asdf  = "{\"name\":\"l1\",\"owner\":\"admin\",\"state\":\"asdf\"}";
 
         try {
             String[] response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_LOGBOOKS);
@@ -265,15 +262,6 @@ public class OlogLogbooksIT {
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
             response = ITUtil.runShellCommand(createCurlLogbookForAdmin("l1", json_logbook_l1_name_na));
-            ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
-
-            response = ITUtil.runShellCommand(createCurlLogbookForAdmin("l1", json_logbook_l1_owner_ow));
-            ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
-
-            response = ITUtil.runShellCommand(createCurlLogbookForAdmin("l1", json_logbook_l1_state_empty));
-            ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
-
-            response = ITUtil.runShellCommand(createCurlLogbookForAdmin("l1", json_logbook_l1_state_asdf));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_LOGBOOKS);
@@ -331,25 +319,6 @@ public class OlogLogbooksIT {
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
             logbook_check.setName("");
-
-            response = ITUtil.runShellCommand(createCurlLogbookForAdmin("asdf", mapper.writeValueAsString(logbook_check)));
-            ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
-
-            logbook_check.setName("asdf");
-            logbook_check.setOwner(null);
-
-            response = ITUtil.runShellCommand(createCurlLogbookForAdmin("asdf", mapper.writeValueAsString(logbook_check)));
-            ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
-
-            logbook_check.setName("asdf");
-            logbook_check.setOwner("");
-
-            response = ITUtil.runShellCommand(createCurlLogbookForAdmin("asdf", mapper.writeValueAsString(logbook_check)));
-            ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
-
-            logbook_check.setName("asdf");
-            logbook_check.setOwner("zxcv");
-            logbook_check.setState(null);
 
             response = ITUtil.runShellCommand(createCurlLogbookForAdmin("asdf", mapper.writeValueAsString(logbook_check)));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
@@ -628,28 +597,6 @@ public class OlogLogbooksIT {
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
             logbook_check.setName("");
-            logbooks[10] = logbook_check;
-
-            response = ITUtil.runShellCommand(createCurlLogbooksForAdmin(mapper.writeValueAsString(logbooks)));
-            ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
-
-            logbook_check.setName("asdf");
-            logbook_check.setOwner(null);
-            logbooks[10] = logbook_check;
-
-            response = ITUtil.runShellCommand(createCurlLogbooksForAdmin(mapper.writeValueAsString(logbooks)));
-            ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
-
-            logbook_check.setName("asdf");
-            logbook_check.setOwner("");
-            logbooks[10] = logbook_check;
-
-            response = ITUtil.runShellCommand(createCurlLogbooksForAdmin(mapper.writeValueAsString(logbooks)));
-            ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
-
-            logbook_check.setName("asdf");
-            logbook_check.setOwner("zxcv");
-            logbook_check.setState(null);
             logbooks[10] = logbook_check;
 
             response = ITUtil.runShellCommand(createCurlLogbooksForAdmin(mapper.writeValueAsString(logbooks)));

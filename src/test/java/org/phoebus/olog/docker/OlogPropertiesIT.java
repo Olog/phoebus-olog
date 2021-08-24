@@ -300,15 +300,11 @@ public class OlogPropertiesIT {
         String json_incomplete3 = "{\"incomplete}";
         String json_incomplete4 = "{\"\"}";
         String json_incomplete5 = "{incomplete\"}";
-        String json_incomplete6 = "\"incomplete\"}";
         String json_incomplete7 = "{";
         String json_incomplete8 = "}";
         String json_incomplete9 = "\"";
 
         String json_property_p1_name_na     = "{\"na\":\"p1\",\"owner\":\"admin\",\"state\":\"Active\",\"attributes\":[]}";
-        String json_property_p1_owner_ow    = "{\"name\":\"p1\",\"ow\":\"admin\",\"state\":\"Active\",\"attributes\":[]}";
-        String json_property_p1_state_empty = "{\"name\":\"p1\",\"owner\":\"admin\",\"state\":\"\",\"attributes\":[]}";
-        String json_property_p1_state_asdf  = "{\"name\":\"p1\",\"owner\":\"admin\",\"state\":\"asdf\",\"attributes\":[]}";
 
         String json_property_p1_attribute_0 = "{\"name\":\"p1\",\"owner\":\"admin\",\"state\":\"Active\",\"attributes\":[\"name\":\"a1\",\"value\":\"v1\",\"state\":\"Active\"]}";
 
@@ -333,9 +329,6 @@ public class OlogPropertiesIT {
             response = ITUtil.runShellCommand(createCurlPropertyForAdmin("p1", json_incomplete5));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
-            response = ITUtil.runShellCommand(createCurlPropertyForAdmin("p1", json_incomplete6));
-            ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
-
             response = ITUtil.runShellCommand(createCurlPropertyForAdmin("p1", json_incomplete7));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
@@ -346,15 +339,6 @@ public class OlogPropertiesIT {
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
             response = ITUtil.runShellCommand(createCurlPropertyForAdmin("p1", json_property_p1_name_na));
-            ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
-
-            response = ITUtil.runShellCommand(createCurlPropertyForAdmin("p1", json_property_p1_owner_ow));
-            ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
-
-            response = ITUtil.runShellCommand(createCurlPropertyForAdmin("p1", json_property_p1_state_empty));
-            ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
-
-            response = ITUtil.runShellCommand(createCurlPropertyForAdmin("p1", json_property_p1_state_asdf));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
             response = ITUtil.runShellCommand(createCurlPropertyForAdmin("p1", json_property_p1_attribute_0));
@@ -427,25 +411,6 @@ public class OlogPropertiesIT {
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
             property_check.setName("asdf");
-            property_check.setOwner(null);
-
-            response = ITUtil.runShellCommand(createCurlPropertyForAdmin("asdf", mapper.writeValueAsString(property_check)));
-            ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
-
-            property_check.setName("asdf");
-            property_check.setOwner("");
-
-            response = ITUtil.runShellCommand(createCurlPropertyForAdmin("asdf", mapper.writeValueAsString(property_check)));
-            ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
-
-            property_check.setName("asdf");
-            property_check.setOwner("zxcv");
-            property_check.setState(null);
-
-            response = ITUtil.runShellCommand(createCurlPropertyForAdmin("asdf", mapper.writeValueAsString(property_check)));
-            ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
-
-            property_check.setName("asdf");
             property_check.setOwner("zxcv");
             property_check.setState(State.Active);
             property_check.setAttributes(null);
@@ -472,26 +437,6 @@ public class OlogPropertiesIT {
             attribute_check.setName("");
             property_check.getAttributes().clear();
             property_check.addAttributes(attribute_check);
-
-            response = ITUtil.runShellCommand(createCurlPropertyForAdmin("asdf", mapper.writeValueAsString(property_check)));
-            ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
-
-            attribute_check.setName("asdf");
-            attribute_check.setState(null);
-            property_check.getAttributes().clear();
-            property_check.addAttributes(attribute_check);
-
-            response = ITUtil.runShellCommand(createCurlPropertyForAdmin("asdf", mapper.writeValueAsString(property_check)));
-            ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
-
-            attribute_check.setName("asdf");
-            attribute_check.setState(State.Active);
-            Attribute attribute_check2 = new Attribute();
-            attribute_check2.setName("zxcv");
-            attribute_check2.setState(null);
-            property_check.getAttributes().clear();
-            property_check.addAttributes(attribute_check);
-            property_check.addAttributes(attribute_check2);
 
             response = ITUtil.runShellCommand(createCurlPropertyForAdmin("asdf", mapper.writeValueAsString(property_check)));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
@@ -842,28 +787,6 @@ public class OlogPropertiesIT {
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
             property_check.setName("asdf");
-            property_check.setOwner(null);
-            properties[10] = property_check;
-
-            response = ITUtil.runShellCommand(createCurlPropertiesForAdmin(mapper.writeValueAsString(properties)));
-            ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
-
-            property_check.setName("asdf");
-            property_check.setOwner("");
-            properties[10] = property_check;
-
-            response = ITUtil.runShellCommand(createCurlPropertiesForAdmin(mapper.writeValueAsString(properties)));
-            ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
-
-            property_check.setName("asdf");
-            property_check.setOwner("zxcv");
-            property_check.setState(null);
-            properties[10] = property_check;
-
-            response = ITUtil.runShellCommand(createCurlPropertiesForAdmin(mapper.writeValueAsString(properties)));
-            ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
-
-            property_check.setName("asdf");
             property_check.setOwner("zxcv");
             property_check.setState(State.Active);
             property_check.setAttributes(null);
@@ -891,15 +814,6 @@ public class OlogPropertiesIT {
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
             attribute_check.setName("");
-            property_check.getAttributes().clear();
-            property_check.addAttributes(attribute_check);
-            properties[10] = property_check;
-
-            response = ITUtil.runShellCommand(createCurlPropertiesForAdmin(mapper.writeValueAsString(properties)));
-            ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
-
-            attribute_check.setName("asdf");
-            attribute_check.setState(null);
             property_check.getAttributes().clear();
             property_check.addAttributes(attribute_check);
             properties[10] = property_check;
