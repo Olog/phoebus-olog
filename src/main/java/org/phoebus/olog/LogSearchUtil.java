@@ -26,6 +26,7 @@ import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.DisMaxQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.MultiValueMap;
@@ -290,6 +291,7 @@ public class LogSearchUtil
             boolQuery.must(levelQuery);
         }
 
+        searchSourceBuilder.sort("createdDate", SortOrder.DESC);
         searchSourceBuilder.query(boolQuery);
         searchSourceBuilder.from(0);
         searchSourceBuilder.size(Math.min(searchResultSize, maxSearchSize));
