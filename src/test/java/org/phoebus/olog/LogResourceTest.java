@@ -23,6 +23,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatcher;
+import org.mockito.Mockito;
 import org.mockito.internal.util.collections.Sets;
 import org.phoebus.olog.entity.Attribute;
 import org.phoebus.olog.entity.Log;
@@ -53,6 +54,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.argThat;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
@@ -440,4 +442,43 @@ public class LogResourceTest extends ResourcesTestBase {
             return match;
         }
     }
+
+
+    @Test
+    public void testStepInvalidLogId() throws Exception{
+        when(logRepository.findById("invalid")).thenReturn(Optional.empty());
+        mockMvc.perform(MockMvcRequestBuilders.get("/" + OlogResourceDescriptors.LOG_RESOURCE_URI + "/invalid/step/1")
+                .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION))
+                .andExpect(status().is(404));
+        reset(logRepository);
+    }
+
+    @Test
+    public void testStepInvalidStep() throws Exception{
+        mockMvc.perform(MockMvcRequestBuilders.get("/" + OlogResourceDescriptors.LOG_RESOURCE_URI + "/1/step/invalid")
+                .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION))
+                .andExpect(status().is(404));
+    }
+
+    @Test
+    public void testStepZeroStep() throws Exception{
+        when(logRepository.findById("1")).thenReturn(Optional.of(log1));
+        MvcResult result =  mockMvc.perform(MockMvcRequestBuilders.get("/" + OlogResourceDescriptors.LOG_RESOURCE_URI + "/1/step/0")
+                .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION))
+                .andExpect(status().isOk()).andReturn();
+        Log log = objectMapper.readValue(result.getResponse().getContentAsString(), Log.class);
+        assertTrue(log.getId() == 1);
+        reset(logRepository);
+    }
+
+    @Test
+    public void testStepTooLarge() throws Exception{
+        when(logRepository.findById("1")).thenReturn(Optional.of(log1));
+        when(logRepository.search(Mockito.any())).thenReturn(Arrays.asList(log2));
+        mockMvc.perform(MockMvcRequestBuilders.get("/" + OlogResourceDescriptors.LOG_RESOURCE_URI + "/1/step/5")
+                .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION))
+                .andExpect(status().isNotFound());
+        reset(logRepository);
+    }
+
 }

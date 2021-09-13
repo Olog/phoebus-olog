@@ -11,7 +11,12 @@ import static org.phoebus.util.time.TimestampFormats.MILLI_FORMAT;
 import java.io.IOException;
 import java.security.Principal;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAmount;
+import java.time.temporal.TemporalUnit;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -20,6 +25,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import javax.swing.*;
 import javax.validation.Valid;
 
 import org.apache.commons.collections4.CollectionUtils;
@@ -30,6 +36,7 @@ import org.phoebus.olog.entity.preprocess.CommonmarkPreprocessor;
 import org.phoebus.olog.entity.preprocess.DefaultPreprocessor;
 import org.phoebus.olog.notification.LogEntryNotifier;
 import org.phoebus.util.time.TimeParser;
+import org.phoebus.util.time.TimestampFormats;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
@@ -90,6 +97,69 @@ public class LogResource
         } else {
             log.log(Level.SEVERE, "Failed to find log: " + logId, new ResponseStatusException(HttpStatus.NOT_FOUND));
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to find log: " + logId);
+        }
+    }
+
+    /**
+     * An endpoint supporting "navigation" from a given log entry. The <code>step</code> parameter specifies the
+     * offset from <code>logId</code>. It can be zero (which returns same entry), or a positive or negative integer.
+     * A search is performed based on created date relative to the created date of the log entry identified by <code>logId</code>.
+     * If a non-empty <code>allRequestParams</code> search request map is
+     * specified, the search will consider these, but ignore end date (<code>step > 0</code>) or start date
+     * (<code>step < 0</code>) if these are contained in <code>allRequestParams</code>.
+     *
+     * A HTTP status 404 is returned to client in the following cases
+     * <ul>
+     *     <li>No log entry is found matching <code>logId</code>.</li>
+     *     <li>Non-integer value for <code>logId</code> or <code>step</code> is specified.</li>
+     * </ul>
+     *
+     * @param logId The base log entry from which to step forwards or backwards in time.
+     * @param step The number of steps to navigate, must be integer value.
+     * @param allRequestParams Optional map of search request parameters.
+     * @return A matching log entry.
+     */
+    @GetMapping("{logId}/step/{step}")
+    public Log step(@PathVariable String logId, @PathVariable String step, @RequestParam MultiValueMap<String, String> allRequestParams) {
+        Integer stepCount = null;
+        try {
+            stepCount = Integer.parseInt(step);
+        } catch (NumberFormatException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Cannot use " + step + " as step specifier.");
+        }
+        Optional<Log> baseLog = logRepository.findById(logId);
+        if (baseLog.isPresent()) {
+            if(stepCount == 0){ // A bit pointless, but should result in the expected outcome...
+                return baseLog.get();
+            }
+            else if(stepCount > 0){
+                allRequestParams.remove("end");
+                String startDate = TimestampFormats.SECONDS_FORMAT.format(baseLog.get().getCreatedDate());
+                List<String> startDateValue = new ArrayList<>();
+                startDateValue.add(startDate);
+                allRequestParams.put("start", startDateValue);
+                // Add one since first element in result is the base log entry.
+                allRequestParams.put("limit", Arrays.asList(Integer.toString(stepCount + 1)));
+                List<String> sortOrderValue = new ArrayList<>();
+                sortOrderValue.add("ASC");
+                allRequestParams.put("sortorder", sortOrderValue);
+            }
+            else{
+                allRequestParams.remove("start");
+                String endDate = TimestampFormats.SECONDS_FORMAT.format(baseLog.get().getCreatedDate());
+                List<String> value = new ArrayList<>();
+                value.add(endDate);
+                allRequestParams.put("end", value);
+                allRequestParams.put("limit", Arrays.asList(Integer.toString(-stepCount)));
+            }
+            List<Log> logs = findLogs(allRequestParams);
+            if(logs.size() < stepCount){
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Unable to step " + step + " from log entry id " + logId);
+            }
+            return logs.get(logs.size() - 1);
+        } else {
+            log.log(Level.SEVERE, "Failed to find log: " + logId, new ResponseStatusException(HttpStatus.NOT_FOUND));
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to find log: " + logId + ". Cannot step from non-existing log entry.");
         }
     }
 

@@ -55,7 +55,8 @@ public class LogSearchUtil
     private int maxSearchSize;
 
     /**
-     *
+     * Compiles a {@link SearchRequest} based on the specified search parameters. Sorting is
+     * done on the createdDate field, using the specified sort order.
      * @param searchParameters - the various search parameters
      * @return A {@link SearchRequest} based on the provided search parameters
      */
@@ -73,8 +74,8 @@ public class LogSearchUtil
         Instant start = Instant.EPOCH;
         Instant end = Instant.now();
         boolean includeEvents = false;
-
         int searchResultSize = defaultSearchSize;
+        SortOrder sortOrder = SortOrder.DESC; // Default descending sort order, applied on createdDate
 
         for (Entry<String, List<String>> parameter : searchParameters.entrySet())
         {
@@ -212,6 +213,16 @@ public class LogSearchUtil
                             .log(Level.WARNING, "Encountered unparsable 'limit' value", e);
                 }
                 break;
+            case "sortorder":
+                try{
+                    if(parameter.getValue().get(0).toLowerCase().startsWith("asc")){
+                        sortOrder = SortOrder.ASC;
+                    }
+                }
+                catch (Exception e){
+                    Logger.getLogger(LogSearchUtil.class.getName())
+                            .log(Level.WARNING, "Encountered invalid sortorder value", e);
+                }
             default:
                 // Unsupported search parameters are ignored
                 break;
@@ -291,7 +302,7 @@ public class LogSearchUtil
             boolQuery.must(levelQuery);
         }
 
-        searchSourceBuilder.sort("createdDate", SortOrder.DESC);
+        searchSourceBuilder.sort("createdDate", sortOrder);
         searchSourceBuilder.query(boolQuery);
         searchSourceBuilder.from(0);
         searchSourceBuilder.size(Math.min(searchResultSize, maxSearchSize));
