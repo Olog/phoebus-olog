@@ -153,7 +153,7 @@ public class LogResource
                 allRequestParams.put("limit", Arrays.asList(Integer.toString(-stepCount)));
             }
             List<Log> logs = findLogs(allRequestParams);
-            if(logs.size() < stepCount){
+            if(logs.size() < stepCount || logs.get(logs.size() - 1).getId().equals(baseLog.get().getId())){
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Unable to step " + step + " from log entry id " + logId);
             }
             return logs.get(logs.size() - 1);
