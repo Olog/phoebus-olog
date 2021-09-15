@@ -238,12 +238,28 @@ Example:
 
 **GET** https://localhost:8181/Olog/logs?desc=dump&logbooks=Operations
 
-The above search request will return all log entires with the term "dump" in their 
+The above search request will return all log entries with the term "dump" in their
 descriptions and which are part of the Operations logbook.
 
 Retrieving an attachment of a log entry
  
 **GET** https://localhost:8181/Olog/logs/attachments/{logId}/{filename}
+
+Retrieve log entries
+********************
+
+A log entry may be retrieved if the id is known:
+
+**GET** https://localhost:8181/Olog/logs/{logId}
+
+Navigation forwards/backwards (in time) from given log entry, optionally using search parameters:
+
+**GET** https://localhost:8181/Olog/logs/{logId}/step/{step}[?desc=dump&logbooks=Operations]
+
+where {step} is positive or negative integer. HTTP status 404 is returned if no record is found.
+Example:
+**GET** https://localhost:8181/Olog/logs/n/step/1
+will return first entry created after log entry with id=n.
 
 
 Managing Logbooks & Tags
