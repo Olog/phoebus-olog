@@ -2,11 +2,11 @@ package org.phoebus.olog;
 
 import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
 import static org.elasticsearch.index.query.QueryBuilders.disMaxQuery;
+import static org.elasticsearch.index.query.QueryBuilders.fuzzyQuery;
+import static org.elasticsearch.index.query.QueryBuilders.matchPhraseQuery;
 import static org.elasticsearch.index.query.QueryBuilders.nestedQuery;
 import static org.elasticsearch.index.query.QueryBuilders.rangeQuery;
 import static org.elasticsearch.index.query.QueryBuilders.wildcardQuery;
-import static org.elasticsearch.index.query.QueryBuilders.matchPhraseQuery;
-import static org.elasticsearch.index.query.QueryBuilders.fuzzyQuery;
 
 import java.time.Instant;
 import java.time.ZoneId;
@@ -15,9 +15,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.action.search.SearchRequest;
@@ -75,6 +74,8 @@ public class LogSearchUtil
         boolean includeEvents = false;
 
         int searchResultSize = defaultSearchSize;
+        int size = defaultSearchSize;
+        int from = 0;
 
         for (Entry<String, List<String>> parameter : searchParameters.entrySet())
         {
@@ -205,12 +206,21 @@ public class LogSearchUtil
                     }
                 }
                 break;
+            case "size":
             case "limit":
-                try {
-                    searchResultSize = Integer.parseInt(parameter.getValue().get(0));
-                } catch (Exception e) {
-                    Logger.getLogger(LogSearchUtil.class.getName())
-                            .log(Level.WARNING, "Encountered unparsable 'limit' value", e);
+                Optional<String> maxSize = parameter.getValue().stream().max((o1, o2) -> {
+                    return Integer.valueOf(o1).compareTo(Integer.valueOf(o2));
+                });
+                if (maxSize.isPresent()) {
+                    searchResultSize = Integer.valueOf(maxSize.get());
+                }
+                break;
+            case "from":
+                Optional<String> maxFrom = parameter.getValue().stream().max((o1, o2) -> {
+                    return Integer.valueOf(o1).compareTo(Integer.valueOf(o2));
+                });
+                if (maxFrom.isPresent()) {
+                    from = Integer.valueOf(maxFrom.get());
                 }
                 break;
             default:
@@ -294,9 +304,14 @@ public class LogSearchUtil
 
         searchSourceBuilder.sort("createdDate", SortOrder.DESC);
         searchSourceBuilder.query(boolQuery);
-        searchSourceBuilder.from(0);
         searchSourceBuilder.size(Math.min(searchResultSize, maxSearchSize));
-
+        if (from >= 0)
+        {
+            searchSourceBuilder.from(from);
+        } else
+        {
+            searchSourceBuilder.from(0);
+        }
         searchSourceBuilder.timeout(new TimeValue(60, TimeUnit.SECONDS));
 
         searchRequest.source(searchSourceBuilder);
