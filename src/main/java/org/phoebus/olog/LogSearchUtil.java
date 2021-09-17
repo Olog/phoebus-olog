@@ -180,16 +180,17 @@ public class LogSearchUtil
                         {
                             bq.must(wildcardQuery("properties.name", propertySearchFields[0].trim()));
                         }
+
                         if (propertySearchFields[1] != null && !propertySearchFields[1].isEmpty())
                         {
-                            bq.must(nestedQuery("properties.attributes",
-                                    wildcardQuery("properties.attributes.name", propertySearchFields[1].trim()), ScoreMode.None));
+                            BoolQueryBuilder bq2 = boolQuery();
+                            bq2.must(wildcardQuery("properties.attributes.name", propertySearchFields[1].trim()));
+                            if (propertySearchFields[2] != null && !propertySearchFields[2].isEmpty()){
+                                bq2.must(wildcardQuery("properties.attributes.value", propertySearchFields[2].trim()));
+                            }
+                            bq.must(nestedQuery("properties.attributes", bq2, ScoreMode.None));
                         }
-                        if (propertySearchFields[2] != null && !propertySearchFields[2].isEmpty())
-                        {
-                            bq.must(nestedQuery("properties.attributes",
-                                    wildcardQuery("properties.attributes.value", propertySearchFields[2].trim()), ScoreMode.None));
-                        }
+                        
                         propertyQuery.add(nestedQuery("properties", bq, ScoreMode.None));
                     }
                 }
