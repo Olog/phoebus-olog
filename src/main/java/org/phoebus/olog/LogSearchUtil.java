@@ -9,7 +9,9 @@ import static org.elasticsearch.index.query.QueryBuilders.rangeQuery;
 import static org.elasticsearch.index.query.QueryBuilders.wildcardQuery;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -69,12 +71,11 @@ public class LogSearchUtil
         List<String> titleSearchTerms = new ArrayList<>();
         List<String> levelSearchTerms = new ArrayList<>();
         boolean temporalSearch = false;
-        Instant start = Instant.EPOCH;
-        Instant end = Instant.now();
+        ZonedDateTime start = ZonedDateTime.ofInstant(Instant.EPOCH, ZoneId.systemDefault());
+        ZonedDateTime end = ZonedDateTime.now();
         boolean includeEvents = false;
 
         int searchResultSize = defaultSearchSize;
-        int size = defaultSearchSize;
         int from = 0;
 
         for (Entry<String, List<String>> parameter : searchParameters.entrySet())
@@ -145,10 +146,10 @@ public class LogSearchUtil
                 break;
             case "start":
                 // If there are multiple start times submitted select the earliest
-                Instant earliestStartTime = Instant.now();
+                ZonedDateTime earliestStartTime = ZonedDateTime.now();
                 for (String value : parameter.getValue())
                 {
-                    Instant time = Instant.from(MILLI_FORMAT.parse(value));
+                    ZonedDateTime time = ZonedDateTime.from(MILLI_FORMAT.parse(value));
                     earliestStartTime = earliestStartTime.isBefore(time) ? earliestStartTime : time;
                 }
                 temporalSearch = true;
@@ -156,10 +157,10 @@ public class LogSearchUtil
                 break;
             case "end":
                 // If there are multiple end times submitted select the latest
-                Instant latestEndTime = Instant.MIN;
+                ZonedDateTime latestEndTime =  Instant.ofEpochMilli(Long.MIN_VALUE).atZone(ZoneId.systemDefault());
                 for (String value : parameter.getValue())
                 {
-                    Instant time = Instant.from(MILLI_FORMAT.parse(value));
+                    ZonedDateTime time = ZonedDateTime.from(MILLI_FORMAT.parse(value));
                     latestEndTime = latestEndTime.isBefore(time) ? time : latestEndTime;
                 }
                 temporalSearch = true;
@@ -238,15 +239,15 @@ public class LogSearchUtil
                 {
                     DisMaxQueryBuilder temporalQuery = disMaxQuery();
                     // Add a query based on the create time
-                    temporalQuery.add(rangeQuery("createdDate").from(start.toEpochMilli()).to(end.toEpochMilli()));
+                    temporalQuery.add(rangeQuery("createdDate").from(1000 * start.toEpochSecond()).to(1000 * end.toEpochSecond()));
                     // Add a query based on the time of the associated events
                     temporalQuery.add(nestedQuery("events",
-                                                  rangeQuery("events.instant").from(start.toEpochMilli()).to(end.toEpochMilli()),
+                                                  rangeQuery("events.instant").from(1000 * start.toEpochSecond()).to(1000 * end.toEpochSecond()),
                                                   ScoreMode.None));
                     boolQuery.must(temporalQuery);
                 }
                 else {
-                    boolQuery.must(rangeQuery("createdDate").from(start.toEpochMilli()).to(end.toEpochMilli()));
+                    boolQuery.must(rangeQuery("createdDate").from(1000 * start.toEpochSecond()).to(1000 * end.toEpochSecond()));
                 }
             }
         }
