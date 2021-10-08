@@ -5,32 +5,19 @@
  */
 package org.phoebus.olog;
 
-import static org.phoebus.olog.OlogResourceDescriptors.LOG_RESOURCE_URI;
-import static org.phoebus.util.time.TimestampFormats.MILLI_FORMAT;
-
-import java.io.IOException;
-import java.security.Principal;
-import java.time.Instant;
-import java.time.temporal.TemporalAmount;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.stream.Collectors;
-
-import javax.validation.Valid;
-
+import com.fasterxml.jackson.databind.annotation.JsonAppend.Prop;
 import org.apache.commons.collections4.CollectionUtils;
+import org.elasticsearch.common.recycler.Recycler.C;
 import org.phoebus.olog.entity.Attachment;
 import org.phoebus.olog.entity.Log;
+import org.phoebus.olog.entity.Property;
 import org.phoebus.olog.entity.Tag;
-import org.phoebus.olog.entity.preprocess.CommonmarkPreprocessor;
-import org.phoebus.olog.entity.preprocess.DefaultPreprocessor;
+import org.phoebus.olog.entity.preprocess.MarkupCleaner;
+import org.phoebus.olog.entity.preprocess.PropertyProvider;
 import org.phoebus.olog.notification.LogEntryNotifier;
 import org.phoebus.util.time.TimeParser;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.task.TaskExecutor;
@@ -53,16 +40,36 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import javax.validation.Valid;
+import java.io.IOException;
+import java.security.Principal;
+import java.time.Instant;
+import java.time.temporal.TemporalAmount;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
+
+import static org.phoebus.olog.OlogResourceDescriptors.LOG_RESOURCE_URI;
+import static org.phoebus.util.time.TimestampFormats.MILLI_FORMAT;
+
 /**
  * Resource for handling the requests to ../logs
- * @author kunal
  *
+ * @author kunal
  */
 @RestController
 @RequestMapping(LOG_RESOURCE_URI)
-public class LogResource
-{
-
+public class LogResource {
     private Logger log = Logger.getLogger(LogResource.class.getName());
 
     @Autowired
@@ -74,13 +81,19 @@ public class LogResource
     @Autowired
     private TagRepository tagRepository;
     @Autowired
-    private DefaultPreprocessor defaultPreprocessor;
-    @Autowired
-    private CommonmarkPreprocessor commonmarkPreprocessor;
+    private List<MarkupCleaner> markupCleaners;
     @Autowired
     private List<LogEntryNotifier> logEntryNotifiers;
     @Autowired
     private TaskExecutor taskExecutor;
+    @Autowired
+    private String defaultMarkup;
+    @Autowired
+    private List<PropertyProvider> propertyProviders;
+    @Autowired
+    private ExecutorService executorService;
+    @Autowired
+    private Long propertyProvidersTimeout;
 
     @GetMapping("{logId}")
     public Log getLog(@PathVariable String logId) {
@@ -94,20 +107,16 @@ public class LogResource
     }
 
     @GetMapping("/attachments/{logId}/{attachmentName}")
-    public ResponseEntity<Resource> findResources(@PathVariable String logId, @PathVariable String attachmentName)
-    {
+    public ResponseEntity<Resource> findResources(@PathVariable String logId, @PathVariable String attachmentName) {
         Optional<Log> log = logRepository.findById(logId);
-        if (log.isPresent())
-        {
+        if (log.isPresent()) {
             Set<Attachment> attachments = log.get().getAttachments().stream().filter(attachment -> {
                 return attachment.getFilename().equals(attachmentName);
             }).collect(Collectors.toSet());
-            if (attachments.size() == 1)
-            {
+            if (attachments.size() == 1) {
                 Attachment foundAttachment = attachmentRepository.findById(attachments.iterator().next().getId()).get();
                 InputStreamResource resource;
-                try
-                {
+                try {
                     resource = new InputStreamResource(foundAttachment.getAttachment().getInputStream());
                     ContentDisposition contentDisposition = ContentDisposition.builder("attachment")
                             .filename(attachmentName)
@@ -115,19 +124,17 @@ public class LogResource
                     HttpHeaders httpHeaders = new HttpHeaders();
                     httpHeaders.setContentDisposition(contentDisposition);
                     MediaType mediaType = ContentTypeResolver.determineMediaType(attachmentName);
-                    if(mediaType != null){
+                    if (mediaType != null) {
                         httpHeaders.setContentType(mediaType);
                     }
                     return new ResponseEntity<>(resource, httpHeaders, HttpStatus.OK);
-                } catch (IOException e)
-                {
+                } catch (IOException e) {
                     Logger.getLogger(LogResource.class.getName())
-                        .log(Level.WARNING, String.format("Unable to retrieve attachment %s for log id %s", attachmentName, logId), e);
+                            .log(Level.WARNING, String.format("Unable to retrieve attachment %s for log id %s", attachmentName, logId), e);
                 }
-            } else
-            {
+            } else {
                 Logger.getLogger(LogResource.class.getName())
-                    .log(Level.WARNING, String.format("Found %d attachments named %s for log id %s", attachments.size(), attachmentName, logId));
+                        .log(Level.WARNING, String.format("Found %d attachments named %s for log id %s", attachments.size(), attachmentName, logId));
             }
         }
         return null;
@@ -135,23 +142,24 @@ public class LogResource
 
     /**
      * Finds matching log entries based on the specified search parameters.
+     *
      * @param allRequestParams A map of search query parameters. Note that this method supports date/time expressions
      *                         like "12 hours" or "2 days" as well as formatted strings like "2021-01-20 12:00:00.123".
      * @return A {@link List} of {@link Log} objects matching the query parameters, or an
-     *  empty list if no matching logs are found.
+     * empty list if no matching logs are found.
      */
     @GetMapping()
     public List<Log> findLogs(@RequestParam MultiValueMap<String, String> allRequestParams) {
-        for(String key : allRequestParams.keySet()){
-            if("start".equalsIgnoreCase(key.toLowerCase()) || "end".equalsIgnoreCase(key.toLowerCase())){
+        for (String key : allRequestParams.keySet()) {
+            if ("start".equalsIgnoreCase(key.toLowerCase()) || "end".equalsIgnoreCase(key.toLowerCase())) {
                 String value = allRequestParams.get(key).get(0);
                 Object time = TimeParser.parseInstantOrTemporalAmount(value);
                 if (time instanceof Instant) {
                     allRequestParams.get(key).clear();
-                    allRequestParams.get(key).add(MILLI_FORMAT.format((Instant)time));
+                    allRequestParams.get(key).add(MILLI_FORMAT.format((Instant) time));
                 } else if (time instanceof TemporalAmount) {
                     allRequestParams.get(key).clear();
-                    allRequestParams.get(key).add(MILLI_FORMAT.format(Instant.now().minus((TemporalAmount)time)));
+                    allRequestParams.get(key).add(MILLI_FORMAT.format(Instant.now().minus((TemporalAmount) time)));
                 }
             }
         }
@@ -159,39 +167,31 @@ public class LogResource
     }
 
     /**
-     *
      * @param log
      * @return
      */
     @PutMapping()
-    public Log createLog(@RequestParam(value = "markup", required = false, defaultValue="none") String markup,
+    public Log createLog(@RequestParam(value = "markup", required = false) String markup,
                          @Valid @RequestBody Log log,
                          @AuthenticationPrincipal Principal principal) {
         log.setOwner(principal.getName());
         Set<String> logbookNames = log.getLogbooks().stream().map(l -> l.getName()).collect(Collectors.toSet());
         Set<String> persistedLogbookNames = new HashSet<>();
         logbookRepository.findAll().forEach(l -> persistedLogbookNames.add(l.getName()));
-        if(!CollectionUtils.containsAll(persistedLogbookNames, logbookNames)){
+        if (!CollectionUtils.containsAll(persistedLogbookNames, logbookNames)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "One or more invalid logbook name(s)");
         }
         Set<Tag> tags = log.getTags();
-        if(tags != null && !tags.isEmpty()){
+        if (tags != null && !tags.isEmpty()) {
             Set<String> tagNames = tags.stream().map(t -> t.getName()).collect(Collectors.toSet());
             Set<String> persistedTags = new HashSet<>();
             tagRepository.findAll().forEach(t -> persistedTags.add(t.getName()));
-            if(!CollectionUtils.containsAll(persistedTags, tagNames)){
+            if (!CollectionUtils.containsAll(persistedTags, tagNames)) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "One or more invalid tag name(s)");
             }
         }
-        switch(markup){
-            case "none":
-            default:
-                log = defaultPreprocessor.process(log);
-                break;
-            case "commonmark":
-                log = commonmarkPreprocessor.process(log);
-                break;
-        }
+        log = cleanMarkup(markup, log);
+        addPropertiesFromProviders(log);
         Log newLogEntry = logRepository.save(log);
         sendToNotifiers(newLogEntry);
         return newLogEntry;
@@ -204,8 +204,7 @@ public class LogResource
                                 @RequestPart(value = "id", required = false) String id,
                                 @RequestPart(value = "fileMetadataDescription", required = false) String fileMetadataDescription) {
         Optional<Log> foundLog = logRepository.findById(logId);
-        if (logRepository.findById(logId).isPresent())
-        {
+        if (logRepository.findById(logId).isPresent()) {
             filename = filename == null || filename.isEmpty() ? file.getName() : filename;
             fileMetadataDescription = fileMetadataDescription == null || fileMetadataDescription.isEmpty()
                     ? file.getContentType()
@@ -219,8 +218,7 @@ public class LogResource
             existingAttachments.add(createdAttachement);
             log.setAttachments(existingAttachments);
             return logRepository.update(log);
-        } else
-        {
+        } else {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to retrieve log with id: " + logId);
         }
     }
@@ -244,7 +242,7 @@ public class LogResource
      */
     @PostMapping("/{logId}")
     public Log updateLog(@PathVariable String logId,
-                         @RequestParam(value = "markup", required = false, defaultValue = "none") String markup,
+                         @RequestParam(value = "markup", required = false) String markup,
                          @Valid @RequestBody Log log) {
 
         Optional<Log> foundLog = logRepository.findById(logId);
@@ -262,15 +260,8 @@ public class LogResource
             persistedLog.setTags(log.getTags());
             persistedLog.setLogbooks(log.getLogbooks());
             persistedLog.setTitle(log.getTitle());
-            switch (markup) {
-                case "none":
-                default:
-                    persistedLog = defaultPreprocessor.process(persistedLog);
-                    break;
-                case "commonmark":
-                    persistedLog = commonmarkPreprocessor.process(persistedLog);
-                    break;
-            }
+
+            log = cleanMarkup(markup, log);
             Log newLogEntry = logRepository.update(persistedLog);
             return newLogEntry;
         } else {
@@ -283,6 +274,7 @@ public class LogResource
      * Endpoint supporting upload of multiple files, i.e. saving the client from sending one POST request per file.
      * Calls {@link #uploadAttachment(String, MultipartFile, String, String, String)} internally, using the original file's
      * name and content type.
+     *
      * @param logId
      * @param files
      * @return
@@ -305,10 +297,11 @@ public class LogResource
      * implementation may need some time to do it's job, calling them is done asynchronously. Any
      * error handling or logging has to be done in the {@link LogEntryNotifier}, but exceptions are
      * handled here in order to not abort if any of the providers fails.
+     *
      * @param log
      */
-    private void sendToNotifiers(Log log){
-        if(logEntryNotifiers.isEmpty()){
+    private void sendToNotifiers(Log log) {
+        if (logEntryNotifiers.isEmpty()) {
             return;
         }
         taskExecutor.execute(() -> logEntryNotifiers.stream().forEach(n -> {
@@ -319,5 +312,54 @@ public class LogResource
                         .log(Level.WARNING, "LogEntryNotifier " + n.getClass().getName() + " throws exception", e);
             }
         }));
+    }
+
+    private Log cleanMarkup(String markup, Log log) {
+        if (markup == null || markup.isEmpty()) {
+            markup = defaultMarkup;
+        }
+        for (MarkupCleaner cleaner : markupCleaners) {
+            if (markup.equals(cleaner.getName())) {
+                log = cleaner.process(log);
+            }
+        }
+        return log;
+    }
+
+    /**
+     * This will retrieve {@link Property}s from {@link PropertyProvider}s, if any are registered
+     * over SPI.
+     * @param log The log entry to which the provided {@link Property}s are added. However, if the log
+     *            entry already contains the a {@link Property} with the same name (case sensitive),
+     *            then it is not added.
+     */
+    private void addPropertiesFromProviders(Log log){
+        List<String> propertyNames = log.getProperties().stream().map(Property::getName).collect(Collectors.toList());
+        List<CompletableFuture<List<Property>>> completableFutures =
+            propertyProviders.stream()
+                .map(propertyProvider -> CompletableFuture.supplyAsync(() -> propertyProvider.getProperties(), executorService))
+                .collect(Collectors.toList());
+
+        CompletableFuture<Void> allFutures =
+                CompletableFuture.allOf(completableFutures.toArray(new CompletableFuture[completableFutures.size()]));
+
+        try {
+            allFutures.get(propertyProvidersTimeout, TimeUnit.MILLISECONDS);
+        } catch (Exception e) {
+            Logger.getLogger(LogResource.class.getName())
+                    .severe("A property provider failed to return in time or threw exception");
+        }
+        List<List<Property>> providedProperties =
+                completableFutures.stream()
+                .filter(future -> future.isDone() && !future.isCompletedExceptionally())
+                .map(CompletableFuture::join)
+                .collect(Collectors.toList());
+        providedProperties.stream().forEach(list -> {
+            list.stream().forEach(property -> {
+                if(!propertyNames.contains(property.getName())){
+                    log.getProperties().add(property);
+                }
+            });
+        });
     }
 }

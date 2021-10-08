@@ -16,20 +16,31 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
-package org.phoebus.olog.entity.preprocess;
+package org.phoebus.olog.entity.preprocess.impl;
 
 import org.phoebus.olog.entity.Log;
+import org.phoebus.olog.entity.preprocess.MarkupCleaner;
 
 /**
- * A pre-processor interface intended to ensure that all fields in the log entry have sensible values before
- * the entry is persisted.
+ * Default implementation of {@link MarkupCleaner}.
  */
-public interface LogPreprocessor {
+public class DefaultMarkupCleaner implements MarkupCleaner {
 
     /**
-     * Processes the log entry and returns a processed value.
+     * Processes the log entry under the assumption that the source field of a {@link Log} object
+     * as posted by client can be overwritten, if specified. This
+     * method copies the description field to the source field.
      * @param log
-     * @return
+     * @return The processed log record.
      */
-    Log process(Log log);
+    @Override
+    public Log process(Log log){
+        log.setSource(log.getDescription());
+        return log;
+    }
+
+    @Override
+    public String getName(){
+        return "none";
+    }
 }

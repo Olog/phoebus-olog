@@ -18,23 +18,22 @@
 
 package org.phoebus.olog.entity.preprocess;
 
-import org.phoebus.olog.entity.Log;
+import org.phoebus.olog.entity.Property;
+
+import java.util.List;
 
 /**
- * Default implementation of {@link LogPreprocessor}.
+ * Implementations of this pre-processor interface can specify {@link Property}s that may
+ * be added automatically to a log record before it is persisted. Note that addition is non-destructive, i.e. if
+ * a {@link PropertyProvider} returns a {@link Property} already present in the submitted log entry,
+ * the existing will not be overwritten. {@link Property}s are compared by name (case sensitive).
  */
-public class DefaultPreprocessor implements LogPreprocessor{
+public interface PropertyProvider {
 
     /**
-     * Processes the log entry under the assumption that the source field of a {@link Log} object
-     * as posted by client is always null, i.e. client does not set the field. Consequently this
-     * method copies the description field to the source field.
-     * @param log
-     * @return The processed log record.
+     * Implementations should take care to return quickly as clients would otherwise need to wait for
+     * the log submission response.
+     * @return
      */
-    @Override
-    public Log process(Log log){
-        log.setSource(log.getDescription());
-        return log;
-    }
+    List<Property> getProperties();
 }

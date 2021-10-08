@@ -21,13 +21,13 @@ package org.phoebus.olog.entity.preprocess;
 import org.junit.Test;
 import org.phoebus.olog.entity.Log;
 import org.phoebus.olog.entity.Log.LogBuilder;
-import org.phoebus.olog.entity.preprocess.CommonmarkPreprocessor;
+import org.phoebus.olog.entity.preprocess.impl.CommonmarkCleaner;
 
 import static org.junit.Assert.assertEquals;
 
 public class CommonmarkPreprocessorTest {
 
-    private CommonmarkPreprocessor commonmarkPreprocessor = new CommonmarkPreprocessor();
+    private CommonmarkCleaner commonmarkPreprocessor = new CommonmarkCleaner();
 
     @Test
     public void testDescriptionNonNull(){

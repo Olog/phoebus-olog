@@ -1,18 +1,5 @@
 package org.phoebus.olog;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.ServiceLoader;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import org.phoebus.olog.notification.LogEntryNotifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
@@ -27,8 +14,20 @@ import org.springframework.util.FileCopyUtils;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.ServiceLoader;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 @SpringBootApplication
-@ComponentScan(basePackages = { "org.phoebus.olog" })
+@ComponentScan(basePackages = {"org.phoebus.olog"})
 public class Application {
     static final Logger logger = Logger.getLogger("Olog");
 
@@ -39,8 +38,13 @@ public class Application {
     @Value("#{'${cors.allowed.origins:http://localhost:3000}'.split(',')}")
     private String[] corsAllowedOrigins;
 
-    public static void main(String[] args)
-    {
+    @Value("${defaultMarkup:commonmark}")
+    private String defaultMarkup;
+
+    @Value("${propertyProvidersTimeout:2000}")
+    private long propertyProvidersTimeout;
+
+    public static void main(String[] args) {
         logger.info("Starting Olog Service");
         configureTruststore();
         ConfigurableApplicationContext olog = SpringApplication.run(Application.class, args);
@@ -54,7 +58,7 @@ public class Application {
             logger.log(Level.INFO, "using default javax.net.ssl.trustStore");
             try (InputStream in = Application.class.getResourceAsStream("/keystore/cacerts")) {
                 // read input
-                File tempFile= File.createTempFile("olog-", "-truststore");
+                File tempFile = File.createTempFile("olog-", "-truststore");
                 FileOutputStream out = new FileOutputStream(tempFile);
                 FileCopyUtils.copy(in, out);
                 tempFile.deleteOnExit();
@@ -75,6 +79,7 @@ public class Application {
      * be able to request resources.
      * Note: configuring this in {@link WebSecurityConfig#configure(HttpSecurity)}, it will have no effect. Not sure why,
      * but probably related to the order in which Spring Security loads stuff.
+     *
      * @return
      */
     @Bean
@@ -93,10 +98,11 @@ public class Application {
     /**
      * List of {@link LogEntryNotifier} implementations called when a new log entry
      * has been created.
+     *
      * @return
      */
     @Bean
-    public List<LogEntryNotifier> logEntryNotifiers(){
+    public List<LogEntryNotifier> logEntryNotifiers() {
         List<LogEntryNotifier> notifiers = new ArrayList<>();
         ServiceLoader<LogEntryNotifier> loader = ServiceLoader.load(LogEntryNotifier.class);
         loader.stream().forEach(p -> {
@@ -108,15 +114,31 @@ public class Application {
 
     /**
      * {@link TaskExecutor} used when calling {@link LogEntryNotifier}s.
+     *
      * @return
      */
     @Bean
-    public TaskExecutor taskExecutor(){
+    public TaskExecutor taskExecutor() {
         ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
         taskExecutor.setCorePoolSize(3);
         taskExecutor.setMaxPoolSize(10);
         taskExecutor.setQueueCapacity(25);
 
         return taskExecutor;
+    }
+
+    @Bean
+    public String defaultMarkup() {
+        return defaultMarkup;
+    }
+
+    @Bean
+    public ExecutorService executorService() {
+        return Executors.newCachedThreadPool();
+    }
+
+    @Bean
+    public Long propertyProvidersTimeout(){
+        return propertyProvidersTimeout;
     }
 }
