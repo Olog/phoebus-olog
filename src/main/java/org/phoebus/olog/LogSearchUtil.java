@@ -85,6 +85,7 @@ public class LogSearchUtil
             switch (parameter.getKey().strip().toLowerCase()) {
             case "desc":
             case "description":
+            case "text":
                 for (String value : parameter.getValue())
                 {
                     for (String pattern : value.split("[\\|,;\\s+]"))
@@ -230,10 +231,10 @@ public class LogSearchUtil
                 List<String> sortList = parameter.getValue();
                 if(sortList != null && sortList.size() > 0){
                     String sort = sortList.get(0);
-                    if(sort.toUpperCase().startsWith("ASC")){
+                    if(sort.toUpperCase().startsWith("ASC") || sort.toUpperCase().startsWith("UP")){
                         sortOrder = SortOrder.ASC;
                     }
-                    else if(sort.toUpperCase().startsWith("DESC")){
+                    else if(sort.toUpperCase().startsWith("DESC") || sort.toUpperCase().startsWith("DOWN")){
                         sortOrder = SortOrder.DESC;
                     }
                 }

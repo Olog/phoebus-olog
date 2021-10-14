@@ -36,6 +36,8 @@ public class LogSearchUtilTest {
     @Test
     public void testSortOrder() {
         LogSearchUtil logSearchUtil = new LogSearchUtil();
+
+        // Test DESC and ASC
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.put("sort", Arrays.asList("asc"));
 
@@ -73,5 +75,39 @@ public class LogSearchUtilTest {
         fieldSortBuilder = (FieldSortBuilder) searchRequest.source().sorts().get(0);
         assertEquals(SortOrder.DESC, fieldSortBuilder.order());
         assertEquals("createdDate", fieldSortBuilder.getFieldName());
+
+        // test UP and DOWN
+
+        params = new LinkedMultiValueMap<>();
+        params.put("sort", Arrays.asList("up"));
+
+        // Explicit ascending
+        searchRequest = logSearchUtil.buildSearchRequest(params);
+        fieldSortBuilder = (FieldSortBuilder) searchRequest.source().sorts().get(0);
+        assertEquals(SortOrder.ASC, fieldSortBuilder.order());
+        assertEquals("createdDate", fieldSortBuilder.getFieldName());
+
+        params = new LinkedMultiValueMap<>();
+        params.put("sort", Arrays.asList("UPp"));
+        searchRequest = logSearchUtil.buildSearchRequest(params);
+        fieldSortBuilder = (FieldSortBuilder) searchRequest.source().sorts().get(0);
+        assertEquals(SortOrder.ASC, fieldSortBuilder.order());
+        assertEquals("createdDate", fieldSortBuilder.getFieldName());
+
+        //Explicit descending
+        params = new LinkedMultiValueMap<>();
+        params.put("sort", Arrays.asList("down"));
+        searchRequest = logSearchUtil.buildSearchRequest(params);
+        fieldSortBuilder = (FieldSortBuilder) searchRequest.source().sorts().get(0);
+        assertEquals(SortOrder.DESC, fieldSortBuilder.order());
+        assertEquals("createdDate", fieldSortBuilder.getFieldName());
+
+        params = new LinkedMultiValueMap<>();
+        params.put("sort", Arrays.asList("doWNunder"));
+        searchRequest = logSearchUtil.buildSearchRequest(params);
+        fieldSortBuilder = (FieldSortBuilder) searchRequest.source().sorts().get(0);
+        assertEquals(SortOrder.DESC, fieldSortBuilder.order());
+        assertEquals("createdDate", fieldSortBuilder.getFieldName());
+
     }
 }
