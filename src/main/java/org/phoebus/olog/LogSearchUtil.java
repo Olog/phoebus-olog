@@ -2,11 +2,11 @@ package org.phoebus.olog;
 
 import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
 import static org.elasticsearch.index.query.QueryBuilders.disMaxQuery;
+import static org.elasticsearch.index.query.QueryBuilders.fuzzyQuery;
+import static org.elasticsearch.index.query.QueryBuilders.matchPhraseQuery;
 import static org.elasticsearch.index.query.QueryBuilders.nestedQuery;
 import static org.elasticsearch.index.query.QueryBuilders.rangeQuery;
 import static org.elasticsearch.index.query.QueryBuilders.wildcardQuery;
-import static org.elasticsearch.index.query.QueryBuilders.matchPhraseQuery;
-import static org.elasticsearch.index.query.QueryBuilders.fuzzyQuery;
 
 import java.time.Instant;
 import java.time.ZoneId;
@@ -15,9 +15,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.action.search.SearchRequest;
@@ -75,13 +74,18 @@ public class LogSearchUtil
         Instant end = Instant.now();
         boolean includeEvents = false;
         int searchResultSize = defaultSearchSize;
+      
         SortOrder sortOrder = SortOrder.DESC; // Default descending sort order, applied on createdDate
+      
+        int size = defaultSearchSize;
+        int from = 0;
 
         for (Entry<String, List<String>> parameter : searchParameters.entrySet())
         {
             switch (parameter.getKey().strip().toLowerCase()) {
             case "desc":
             case "description":
+            case "text":
                 for (String value : parameter.getValue())
                 {
                     for (String pattern : value.split("[\\|,;\\s+]"))
@@ -181,16 +185,17 @@ public class LogSearchUtil
                         {
                             bq.must(wildcardQuery("properties.name", propertySearchFields[0].trim()));
                         }
+
                         if (propertySearchFields[1] != null && !propertySearchFields[1].isEmpty())
                         {
-                            bq.must(nestedQuery("properties.attributes",
-                                    wildcardQuery("properties.attributes.name", propertySearchFields[1].trim()), ScoreMode.None));
+                            BoolQueryBuilder bq2 = boolQuery();
+                            bq2.must(wildcardQuery("properties.attributes.name", propertySearchFields[1].trim()));
+                            if (propertySearchFields[2] != null && !propertySearchFields[2].isEmpty()){
+                                bq2.must(wildcardQuery("properties.attributes.value", propertySearchFields[2].trim()));
+                            }
+                            bq.must(nestedQuery("properties.attributes", bq2, ScoreMode.None));
                         }
-                        if (propertySearchFields[2] != null && !propertySearchFields[2].isEmpty())
-                        {
-                            bq.must(nestedQuery("properties.attributes",
-                                    wildcardQuery("properties.attributes.value", propertySearchFields[2].trim()), ScoreMode.None));
-                        }
+                        
                         propertyQuery.add(nestedQuery("properties", bq, ScoreMode.None));
                     }
                 }
@@ -205,12 +210,33 @@ public class LogSearchUtil
                     }
                 }
                 break;
+            case "size":
             case "limit":
-                try {
-                    searchResultSize = Integer.parseInt(parameter.getValue().get(0));
-                } catch (Exception e) {
-                    Logger.getLogger(LogSearchUtil.class.getName())
-                            .log(Level.WARNING, "Encountered unparsable 'limit' value", e);
+                Optional<String> maxSize = parameter.getValue().stream().max((o1, o2) -> {
+                    return Integer.valueOf(o1).compareTo(Integer.valueOf(o2));
+                });
+                if (maxSize.isPresent()) {
+                    searchResultSize = Integer.valueOf(maxSize.get());
+                }
+                break;
+            case "from":
+                Optional<String> maxFrom = parameter.getValue().stream().max((o1, o2) -> {
+                    return Integer.valueOf(o1).compareTo(Integer.valueOf(o2));
+                });
+                if (maxFrom.isPresent()) {
+                    from = Integer.valueOf(maxFrom.get());
+                }
+                break;
+            case "sort": // Honor sort order if client specifies it
+                List<String> sortList = parameter.getValue();
+                if(sortList != null && sortList.size() > 0){
+                    String sort = sortList.get(0);
+                    if(sort.toUpperCase().startsWith("ASC") || sort.toUpperCase().startsWith("UP")){
+                        sortOrder = SortOrder.ASC;
+                    }
+                    else if(sort.toUpperCase().startsWith("DESC") || sort.toUpperCase().startsWith("DOWN")){
+                        sortOrder = SortOrder.DESC;
+                    }
                 }
                 break;
             case "sortorder":
@@ -304,9 +330,14 @@ public class LogSearchUtil
 
         searchSourceBuilder.sort("createdDate", sortOrder);
         searchSourceBuilder.query(boolQuery);
-        searchSourceBuilder.from(0);
         searchSourceBuilder.size(Math.min(searchResultSize, maxSearchSize));
-
+        if (from >= 0)
+        {
+            searchSourceBuilder.from(from);
+        } else
+        {
+            searchSourceBuilder.from(0);
+        }
         searchSourceBuilder.timeout(new TimeValue(60, TimeUnit.SECONDS));
 
         searchRequest.source(searchSourceBuilder);
