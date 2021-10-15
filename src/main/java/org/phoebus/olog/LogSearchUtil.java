@@ -77,11 +77,15 @@ public class LogSearchUtil
         int size = defaultSearchSize;
         int from = 0;
 
+        // Default sort order
+        SortOrder sortOrder = SortOrder.DESC;
+
         for (Entry<String, List<String>> parameter : searchParameters.entrySet())
         {
             switch (parameter.getKey().strip().toLowerCase()) {
             case "desc":
             case "description":
+            case "text":
                 for (String value : parameter.getValue())
                 {
                     for (String pattern : value.split("[\\|,;\\s+]"))
@@ -223,6 +227,18 @@ public class LogSearchUtil
                     from = Integer.valueOf(maxFrom.get());
                 }
                 break;
+            case "sort": // Honor sort order if client specifies it
+                List<String> sortList = parameter.getValue();
+                if(sortList != null && sortList.size() > 0){
+                    String sort = sortList.get(0);
+                    if(sort.toUpperCase().startsWith("ASC") || sort.toUpperCase().startsWith("UP")){
+                        sortOrder = SortOrder.ASC;
+                    }
+                    else if(sort.toUpperCase().startsWith("DESC") || sort.toUpperCase().startsWith("DOWN")){
+                        sortOrder = SortOrder.DESC;
+                    }
+                }
+                break;
             default:
                 // Unsupported search parameters are ignored
                 break;
@@ -302,7 +318,7 @@ public class LogSearchUtil
             boolQuery.must(levelQuery);
         }
 
-        searchSourceBuilder.sort("createdDate", SortOrder.DESC);
+        searchSourceBuilder.sort("createdDate", sortOrder);
         searchSourceBuilder.query(boolQuery);
         searchSourceBuilder.size(Math.min(searchResultSize, maxSearchSize));
         if (from >= 0)
