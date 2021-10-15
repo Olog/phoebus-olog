@@ -20,20 +20,18 @@ package org.phoebus.olog.entity.preprocess;
 
 import org.phoebus.olog.entity.Property;
 
-import java.util.List;
-
 /**
- * Implementations of this pre-processor interface can specify {@link Property}s that may
+ * Implementations of this pre-processor interface can specify a {@link Property} that will
  * be added automatically to a log record before it is persisted. Note that addition is non-destructive, i.e. if
- * a {@link PropertyProvider} returns a {@link Property} already present in the submitted log entry,
- * the existing will not be overwritten. {@link Property}s are compared by name (case sensitive).
+ * a {@link LogPropertyProvider} returns a {@link Property} already present in the submitted log entry,
+ * the existing {@link Property} will not be overwritten. {@link Property}s are compared by name (case sensitive).
  */
-public interface PropertyProvider {
+public interface LogPropertyProvider {
 
     /**
      * Implementations should take care to return quickly as clients would otherwise need to wait for
      * the log submission response.
      * @return
      */
-    List<Property> getProperties();
+    Property getProperty();
 }

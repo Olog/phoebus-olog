@@ -18,8 +18,8 @@
 
 package org.phoebus.olog;
 
+import org.phoebus.olog.entity.preprocess.LogPropertyProvider;
 import org.phoebus.olog.entity.preprocess.MarkupCleaner;
-import org.phoebus.olog.entity.preprocess.PropertyProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -42,11 +42,11 @@ public class PreProcessorConfig {
     }
 
     @Bean
-    public List<PropertyProvider> propertyProviders() {
-        List<PropertyProvider> providers = new ArrayList<>();
-        ServiceLoader<PropertyProvider> loader = ServiceLoader.load(PropertyProvider.class);
+    public List<LogPropertyProvider> propertyProviders() {
+        List<LogPropertyProvider> providers = new ArrayList<>();
+        ServiceLoader<LogPropertyProvider> loader = ServiceLoader.load(LogPropertyProvider.class);
         loader.stream().forEach(p -> {
-            PropertyProvider provider = p.get();
+            LogPropertyProvider provider = p.get();
             providers.add(provider);
         });
         return providers;

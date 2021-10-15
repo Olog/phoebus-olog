@@ -5,19 +5,16 @@
  */
 package org.phoebus.olog;
 
-import com.fasterxml.jackson.databind.annotation.JsonAppend.Prop;
 import org.apache.commons.collections4.CollectionUtils;
-import org.elasticsearch.common.recycler.Recycler.C;
 import org.phoebus.olog.entity.Attachment;
 import org.phoebus.olog.entity.Log;
 import org.phoebus.olog.entity.Property;
 import org.phoebus.olog.entity.Tag;
 import org.phoebus.olog.entity.preprocess.MarkupCleaner;
-import org.phoebus.olog.entity.preprocess.PropertyProvider;
+import org.phoebus.olog.entity.preprocess.LogPropertyProvider;
 import org.phoebus.olog.notification.LogEntryNotifier;
 import org.phoebus.util.time.TimeParser;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.task.TaskExecutor;
@@ -45,16 +42,13 @@ import java.io.IOException;
 import java.security.Principal;
 import java.time.Instant;
 import java.time.temporal.TemporalAmount;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -89,7 +83,7 @@ public class LogResource {
     @Autowired
     private String defaultMarkup;
     @Autowired
-    private List<PropertyProvider> propertyProviders;
+    private List<LogPropertyProvider> propertyProviders;
     @Autowired
     private ExecutorService executorService;
     @Autowired
@@ -327,17 +321,16 @@ public class LogResource {
     }
 
     /**
-     * This will retrieve {@link Property}s from {@link PropertyProvider}s, if any are registered
+     * This will retrieve {@link Property}s from {@link LogPropertyProvider}s, if any are registered
      * over SPI.
-     * @param log The log entry to which the provided {@link Property}s are added. However, if the log
-     *            entry already contains the a {@link Property} with the same name (case sensitive),
-     *            then it is not added.
+     * @param log The log entry to which the provided {@link Property}s are added. However, it is <i>not</i>
+     *            added if a {@link Property} with the same name (case sensitive) is present in the log entry.
      */
     private void addPropertiesFromProviders(Log log){
         List<String> propertyNames = log.getProperties().stream().map(Property::getName).collect(Collectors.toList());
-        List<CompletableFuture<List<Property>>> completableFutures =
+        List<CompletableFuture<Property>> completableFutures =
             propertyProviders.stream()
-                .map(propertyProvider -> CompletableFuture.supplyAsync(() -> propertyProvider.getProperties(), executorService))
+                .map(propertyProvider -> CompletableFuture.supplyAsync(() -> propertyProvider.getProperty(), executorService))
                 .collect(Collectors.toList());
 
         CompletableFuture<Void> allFutures =
@@ -347,19 +340,17 @@ public class LogResource {
             allFutures.get(propertyProvidersTimeout, TimeUnit.MILLISECONDS);
         } catch (Exception e) {
             Logger.getLogger(LogResource.class.getName())
-                    .severe("A property provider failed to return in time or threw exception");
+                    .log(Level.SEVERE, "A property provider failed to return in time or threw exception", e);
         }
-        List<List<Property>> providedProperties =
+        List<Property> providedProperties =
                 completableFutures.stream()
                 .filter(future -> future.isDone() && !future.isCompletedExceptionally())
                 .map(CompletableFuture::join)
                 .collect(Collectors.toList());
-        providedProperties.stream().forEach(list -> {
-            list.stream().forEach(property -> {
-                if(!propertyNames.contains(property.getName())){
-                    log.getProperties().add(property);
-                }
-            });
+        providedProperties.stream().forEach(property -> {
+            if(property != null && !propertyNames.contains(property.getName())){
+                log.getProperties().add(property);
+            }
         });
     }
 }
