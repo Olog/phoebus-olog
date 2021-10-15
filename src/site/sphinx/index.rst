@@ -240,7 +240,7 @@ Search Parameters
 +---------------+------------------------------------------------------------------+
 |*Sorting Search Results*                                                          |
 +---------------+------------------------------------------------------------------+
-|*sort*         | `asc|desc` order the search results based on create time         |
+|*sort*         | `up|down` order the search results based on create time          |
 +---------------+------------------------------------------------------------------+
 
 Example:
