@@ -18,18 +18,20 @@
 
 package org.phoebus.olog.entity.preprocess;
 
-import org.phoebus.olog.entity.Log;
+import org.phoebus.olog.entity.Property;
 
 /**
- * A pre-processor interface intended to ensure that all fields in the log entry have sensible values before
- * the entry is persisted.
+ * Implementations of this pre-processor interface can specify a {@link Property} that will
+ * be added automatically to a log record before it is persisted. Note that addition is non-destructive, i.e. if
+ * a {@link LogPropertyProvider} returns a {@link Property} already present in the submitted log entry,
+ * the existing {@link Property} will not be overwritten. {@link Property}s are compared by name (case sensitive).
  */
-public interface LogPreprocessor {
+public interface LogPropertyProvider {
 
     /**
-     * Processes the log entry and returns a processed value.
-     * @param log
+     * Implementations should take care to return quickly as clients would otherwise need to wait for
+     * the log submission response.
      * @return
      */
-    Log process(Log log);
+    Property getProperty();
 }

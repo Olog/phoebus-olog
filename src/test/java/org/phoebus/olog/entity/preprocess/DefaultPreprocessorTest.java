@@ -21,13 +21,13 @@ package org.phoebus.olog.entity.preprocess;
 import org.junit.Test;
 import org.phoebus.olog.entity.Log;
 import org.phoebus.olog.entity.Log.LogBuilder;
-import org.phoebus.olog.entity.preprocess.DefaultPreprocessor;
+import org.phoebus.olog.entity.preprocess.impl.DefaultMarkupCleaner;
 
 import static org.junit.Assert.*;
 
 public class DefaultPreprocessorTest {
 
-    private DefaultPreprocessor defaultPreprocessor = new DefaultPreprocessor();
+    private DefaultMarkupCleaner defaultPreprocessor = new DefaultMarkupCleaner();
 
     @Test
     public void testSourceNull(){

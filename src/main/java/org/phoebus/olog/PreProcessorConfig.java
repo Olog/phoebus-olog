@@ -18,21 +18,37 @@
 
 package org.phoebus.olog;
 
-import org.phoebus.olog.entity.preprocess.CommonmarkPreprocessor;
-import org.phoebus.olog.entity.preprocess.DefaultPreprocessor;
+import org.phoebus.olog.entity.preprocess.LogPropertyProvider;
+import org.phoebus.olog.entity.preprocess.MarkupCleaner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.ServiceLoader;
 
 @Configuration
 public class PreProcessorConfig {
 
     @Bean
-    public DefaultPreprocessor defaultPreprocessor(){
-        return new DefaultPreprocessor();
+    public List<MarkupCleaner> markupCleaners() {
+        List<MarkupCleaner> cleaners = new ArrayList<>();
+        ServiceLoader<MarkupCleaner> loader = ServiceLoader.load(MarkupCleaner.class);
+        loader.stream().forEach(p -> {
+            MarkupCleaner cleaner = p.get();
+            cleaners.add(cleaner);
+        });
+        return cleaners;
     }
 
     @Bean
-    public CommonmarkPreprocessor commonmarkPreprocessor(){
-        return new CommonmarkPreprocessor();
+    public List<LogPropertyProvider> propertyProviders() {
+        List<LogPropertyProvider> providers = new ArrayList<>();
+        ServiceLoader<LogPropertyProvider> loader = ServiceLoader.load(LogPropertyProvider.class);
+        loader.stream().forEach(p -> {
+            LogPropertyProvider provider = p.get();
+            providers.add(provider);
+        });
+        return providers;
     }
 }

@@ -16,21 +16,22 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
-package org.phoebus.olog.entity.preprocess;
+package org.phoebus.olog.entity.preprocess.impl;
 
 import org.commonmark.node.Node;
 import org.commonmark.parser.Parser;
 import org.commonmark.renderer.text.TextContentRenderer;
 import org.phoebus.olog.entity.Log;
+import org.phoebus.olog.entity.preprocess.MarkupCleaner;
 
-public class CommonmarkPreprocessor implements LogPreprocessor{
+public class CommonmarkCleaner implements MarkupCleaner {
 
     private TextContentRenderer textContentRenderer = TextContentRenderer.builder().build();
     private Parser parser = Parser.builder().build();
 
     /**
      * Processes the log entry under the assumption that the source field of a {@link Log} object
-     * as posted by client is always null, i.e. client does not set the field. This method treats the
+     * as posted by client can be overwritten, if specified. This method treats the
      * description field as a Commonmark source and copies it to the source field. Then the same
      * string is processed to set the description field to a "plain text" variant of the Commonmark source.
      * @param log
@@ -46,5 +47,10 @@ public class CommonmarkPreprocessor implements LogPreprocessor{
             return log;
         }
         return log;
+    }
+
+    @Override
+    public String getName(){
+        return "commonmark";
     }
 }
