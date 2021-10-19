@@ -78,8 +78,6 @@ public class LogbooksResource {
             logbookRepository.deleteById(logbookName);
         }
 
-        logbook.setOwner(principal.getName());
-
         // create new logbook
         return logbookRepository.save(logbook);
     }

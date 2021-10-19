@@ -87,8 +87,6 @@ public class PropertiesResource {
             propertyRepository.deleteById(propertyName);
         }
 
-        property.setOwner(principal.getName());
-
         // create new property
         return propertyRepository.save(property);
     }
@@ -145,7 +143,7 @@ public class PropertiesResource {
      * <li> no validation for property states
      * </ol>
      *
-     * @param logbooks the properties to be validated
+     * @param properties the properties to be validated
      */
     public void validatePropertyRequest(Iterable<Property> properties) {
         for (Property property : properties) {
