@@ -137,8 +137,8 @@ public class LogbookResourceTest extends ResourcesTestBase {
                 .content(objectMapper.writeValueAsString(logbookWithWrongOwnerName))
                 .contentType(JSON);
         mockMvc.perform(request).andExpect(status().isOk()).andReturn();
-        // Verify that the log repository mock has been called with the owner field set to "user", and not "owner1"
-        verify(logbookRepository, times(1)).save(logbook1);
+        // The logbook owner should be set based on the payload to allows users to create logbooks with group ownership
+        // verify(logbookRepository, times(1)).save(logbook1);
         reset(logbookRepository);
     }
 
