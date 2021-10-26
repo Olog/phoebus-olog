@@ -31,7 +31,7 @@ public interface LogPropertyProvider {
     /**
      * Implementations should take care to return quickly as clients would otherwise need to wait for
      * the log submission response.
-     * @return
+     * @return A {@link Property} that can be added to log entries.
      */
     Property getProperty();
 }

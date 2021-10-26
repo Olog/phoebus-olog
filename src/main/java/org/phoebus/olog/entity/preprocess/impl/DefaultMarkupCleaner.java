@@ -30,8 +30,8 @@ public class DefaultMarkupCleaner implements MarkupCleaner {
      * Processes the log entry under the assumption that the source field of a {@link Log} object
      * as posted by client can be overwritten, if specified. This
      * method copies the description field to the source field.
-     * @param log
-     * @return The processed log record.
+     * @param log The {@link Log} entry to clean of markup.
+     * @return The processed log entry.
      */
     @Override
     public Log process(Log log){

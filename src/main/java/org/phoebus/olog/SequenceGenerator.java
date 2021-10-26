@@ -48,7 +48,7 @@ public class SequenceGenerator
      * get a new unique id from the olog_sequnce index
      * 
      * @return a new unique id for a olog entry
-     * @throws IOException 
+     * @throws IOException The Elasticsearch client may throw this
      */
     public long getID() throws IOException
     {

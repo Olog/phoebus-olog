@@ -83,11 +83,11 @@ public class SessionFilter extends GenericFilterBean {
      *     to the security context, i.e. request is not authenticated.</li>
      * </ol>
      *
-     * @param request
-     * @param response
-     * @param filterChain
-     * @throws IOException
-     * @throws ServletException
+     * @param request A {@link ServletRequest}
+     * @param response A {@link ServletResponse}
+     * @param filterChain The {@link FilterChain} to which this implementation contributes.
+     * @throws IOException May be thrown by upstream filters.
+     * @throws ServletException May be thrown by upstream filters.
      */
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain filterChain) throws IOException, ServletException {
@@ -132,8 +132,8 @@ public class SessionFilter extends GenericFilterBean {
      * Returns a {@link Authentication} object if the <code>httpServletRequest</code> contains
      * a cookie associated with a non-expired session.
      *
-     * @param httpServletRequest
-     * @return
+     * @param httpServletRequest A {@link HttpServletRequest}
+     * @return Amn {@link Authentication} object if client has sent a valid session cookie.
      */
     protected Authentication getAuthenticationFromCookie(HttpServletRequest httpServletRequest) {
         Cookie[] cookies = httpServletRequest.getCookies();

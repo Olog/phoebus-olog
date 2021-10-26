@@ -45,8 +45,7 @@ public class AttachmentRepository implements CrudRepository<Attachment, String>
      *
      * If the client does not set the id of the entity (or if it is an empty string), the id of the persisted
      * entity will  be set by GridFs and then on the entity before it is returned.
-     * @param entity
-     * @param <S>
+     * @param entity The entity to persist.
      * @return The persisted entity with non-null and non-empty id.
      */
     @Override
@@ -83,7 +82,7 @@ public class AttachmentRepository implements CrudRepository<Attachment, String>
     /**
      *
      * @param id The unique GridFS id of an attachment.
-     * @return {@link Optional<Attachment>} or - if the specified id is invalid - {@link Optional#empty()}.
+     * @return {@link Optional} or - if the specified id is invalid - {@link Optional#empty()}.
      */
     @Override
     public Optional<Attachment> findById(String id)

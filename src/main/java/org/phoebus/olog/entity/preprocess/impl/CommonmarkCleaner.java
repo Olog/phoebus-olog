@@ -34,8 +34,8 @@ public class CommonmarkCleaner implements MarkupCleaner {
      * as posted by client can be overwritten, if specified. This method treats the
      * description field as a Commonmark source and copies it to the source field. Then the same
      * string is processed to set the description field to a "plain text" variant of the Commonmark source.
-     * @param log
-     * @return The processed log record.
+     * @param log The {@link Log} entry to clean of markup.
+     * @return The processed log entry.
      */
     @Override
     public Log process(Log log){

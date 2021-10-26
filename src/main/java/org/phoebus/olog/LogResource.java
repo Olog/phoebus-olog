@@ -161,8 +161,10 @@ public class LogResource {
     }
 
     /**
-     * @param log
-     * @return
+     * @param log A {@link Log} object to be persisted.
+     * @param markup Optional string identifying the wanted markup scheme.
+     * @param principal The authenticated {@link Principal} of the request.
+     * @return The persisted {@link Log} object.
      */
     @PutMapping()
     public Log createLog(@RequestParam(value = "markup", required = false) String markup,
@@ -269,9 +271,9 @@ public class LogResource {
      * Calls {@link #uploadAttachment(String, MultipartFile, String, String, String)} internally, using the original file's
      * name and content type.
      *
-     * @param logId
-     * @param files
-     * @return
+     * @param logId A (numerical) id of a {@link Log}
+     * @param files The files subject to upload.
+     * @return The persisted {@link Log} object.
      */
     @PostMapping(value = "/attachments-multi/{logId}", consumes = "multipart/form-data")
     public Log uploadMultipleAttachments(@PathVariable String logId,
