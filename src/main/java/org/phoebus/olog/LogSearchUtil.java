@@ -60,7 +60,7 @@ public class LogSearchUtil
      * @param searchParameters - the various search parameters
      * @return A {@link SearchRequest} based on the provided search parameters
      */
-    public synchronized SearchRequest buildSearchRequest(MultiValueMap<String, String> searchParameters)
+    public SearchRequest buildSearchRequest(MultiValueMap<String, String> searchParameters)
     {
         SearchRequest searchRequest = new SearchRequest(ES_LOG_INDEX+"*");
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
