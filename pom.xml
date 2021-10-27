@@ -43,7 +43,7 @@
 
   <scm>
     <connection>scm:git:git://github.com/Olog/phoebus-olog.git</connection>
-    <developerConnection>scm:git:ssh://github.com/Olog/phoebus-olog.git</developerConnection>
+    <developerConnection>scm:git:https://github.com/Olog/phoebus-olog.git</developerConnection>
     <url>https://github.com/Olog/phoebus-olog/tree/master</url>
   </scm>
 
