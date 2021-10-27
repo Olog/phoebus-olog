@@ -80,7 +80,7 @@ public class Application {
      * Note: configuring this in {@link WebSecurityConfig#configure(HttpSecurity)}, it will have no effect. Not sure why,
      * but probably related to the order in which Spring Security loads stuff.
      *
-     * @return
+     * @return A {@link WebMvcConfigurer}
      */
     @Bean
     public WebMvcConfigurer corsConfigurer() {
@@ -99,7 +99,7 @@ public class Application {
      * List of {@link LogEntryNotifier} implementations called when a new log entry
      * has been created.
      *
-     * @return
+     * @return A list of {@link LogEntryNotifier}s, if any have been registered over SPI.
      */
     @Bean
     public List<LogEntryNotifier> logEntryNotifiers() {
@@ -115,7 +115,7 @@ public class Application {
     /**
      * {@link TaskExecutor} used when calling {@link LogEntryNotifier}s.
      *
-     * @return
+     * @return A {@link TaskExecutor}
      */
     @Bean
     public TaskExecutor taskExecutor() {

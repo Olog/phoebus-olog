@@ -112,8 +112,8 @@ public class AuthenticationResource {
 
     /**
      * Deletes a session identified by the session cookie, if present in the request.
-     *
-     * @param cookieValue
+     * @param cookieValue An optional cookie value.
+     * @return A {@link ResponseEntity} with empty body.
      */
     @GetMapping(value = "logout")
     public ResponseEntity<String> logout(@CookieValue(value = WebSecurityConfig.SESSION_COOKIE_NAME, required = false) String cookieValue) {
@@ -127,8 +127,8 @@ public class AuthenticationResource {
      * Returns a {@link UserData} object populated with user name and roles. If the session cookie
      * is missing from the request, the {@link UserData} object fields are set to <code>null</code>.
      *
-     * @param cookieValue
-     * @return
+     * @param cookieValue An optional cookie value.
+     * @return A {@link ResponseEntity} containing {@link UserData}, if any is found.
      */
     @GetMapping(value = "user")
     public ResponseEntity<UserData> getCurrentUser(@CookieValue(value = WebSecurityConfig.SESSION_COOKIE_NAME,
@@ -149,9 +149,9 @@ public class AuthenticationResource {
      * Creates a session or returns an existing one if a non-expired one is found in the session repository.
      * This is synchronized so that a user name is always associated with one session, irrespective of the
      * number of logins from clients.
-     * @param userName
-     * @param roles
-     * @return
+     * @param userName A user name
+     * @param roles List of user roles
+     * @return A {@link Session} object.
      */
     protected synchronized Session findOrCreateSession(String userName, List<String> roles){
         Session session;

@@ -38,8 +38,8 @@ public interface MarkupCleaner {
     /**
      * Processes the log entry and returns a processed value where the <code>description</code> field
      * is free of markup.
-     * @param log
-     * @return
+     * @param log The {@link Log} to clean of markup.
+     * @return The processed {@link Log} entry.
      */
     Log process(Log log);
 

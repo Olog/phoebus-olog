@@ -266,7 +266,7 @@ public class TimeParser {
     }
 
     /** Try to parse text as absolute or relative time
-     *  @param text
+     *  @param text The text to parse
      *  @return {@link Instant}, {@link TemporalAmount} or <code>null</code>
      */
     public static Object parseInstantOrTemporalAmount(final String text)

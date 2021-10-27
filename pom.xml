@@ -6,6 +6,35 @@
   <groupId>org.phoebus</groupId>
   <artifactId>service-olog</artifactId>
   <version>2.0</version>
+  <name>Phoebus Olog</name>
+  <description>An online logbook service that allows for the creation and retrieval of log entries.</description>
+  <url>https://github.com/Olog/phoebus-olog</url>
+  <licenses>
+    <license>
+      <name>Eclipse Public License 1.0</name>
+      <url>https://www.eclipse.org/legal/epl-v10.html</url>
+    </license>
+  </licenses>
+  <developers>
+    <developer>
+      <name>Kunal Shroff</name>
+      <email>kunalshroff9@gmail.com</email>
+      <organization>Brookhaven National Lab</organization>
+      <organizationUrl>https://github.com/shroffk</organizationUrl>
+    </developer>
+    <developer>
+      <name>Georg Weiss</name>
+      <email>georg.weiss@ess.eu</email>
+      <organization>European Spallation Source</organization>
+      <organizationUrl>https://github.com/georgweiss</organizationUrl>
+    </developer>
+  </developers>
+
+  <scm>
+    <connection>scm:git:git://github.com/Olog/phoebus-olog.git</connection>
+    <developerConnection>scm:git:ssh://github.com/Olog/phoebus-olog.git</developerConnection>
+    <url>https://github.com/Olog/phoebus-olog/tree/master</url>
+  </scm>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -158,6 +187,32 @@
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
         <version>2.4.1</version>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <version>3.2.0</version>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <goals>
+              <goal>jar-no-fork</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>3.1.1</version>
+        <executions>
+          <execution>
+            <id>attach-javadocs</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>

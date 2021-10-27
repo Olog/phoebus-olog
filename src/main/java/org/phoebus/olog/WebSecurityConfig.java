@@ -199,7 +199,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     /**
      * The {@link DataSource} for the session repository.
      *
-     * @return
+     * @return A {@link DataSource} used to manage sessions.
      */
     @Bean
     @Profile("!ITtest")
@@ -216,7 +216,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
      * A session repository managing the sessions created when user logs in though the
      * dedicated endpoint.
      *
-     * @return
+     * @return a {@link FindByIndexNameSessionRepository} to manage sessions.
      */
     @Bean
     @Profile("!ITtest")

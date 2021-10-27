@@ -48,7 +48,8 @@ public class PropertiesResource {
 
     /**
      * GET method to retrieve the list of all active properties. If the inactive flag is set true
-     * @return a list of all
+     * @param inactive Whether to include inactive {@link Property}s.
+     * @return a list of all {@link Property}s
      */
     @GetMapping
     public Iterable<Property> findAll(@RequestParam(required=false) boolean inactive) {
@@ -96,7 +97,6 @@ public class PropertiesResource {
      *
      * @param properties a list of properties to be created
      * @return The list of successfully created properties
-     * @throws IOException when audit or log fail
      */
     @PutMapping
     public Iterable<Property> updateProperty(@RequestBody final List<Property> properties) {

@@ -41,7 +41,7 @@ public class AttachmentResource
     /**
      *
      * @param attachmentId The unique GridFS id set by client or by GridFS during upload.
-     * @return A {@link ResponseEntity<Resource>} if found, otherwise client will get HTTP 404 response. If
+     * @return A {@link ResponseEntity} if found, otherwise client will get HTTP 404 response. If
      * an {@link IOException} is thrown when the input stream of the GridFS resource is requested,
      * a HTTP 500 response is returned.
      */
