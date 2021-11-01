@@ -8,10 +8,11 @@ package org.phoebus.olog;
 import org.apache.commons.collections4.CollectionUtils;
 import org.phoebus.olog.entity.Attachment;
 import org.phoebus.olog.entity.Log;
+import org.phoebus.olog.entity.LogEntryGroupHelper;
 import org.phoebus.olog.entity.Property;
 import org.phoebus.olog.entity.Tag;
-import org.phoebus.olog.entity.preprocess.MarkupCleaner;
 import org.phoebus.olog.entity.preprocess.LogPropertyProvider;
+import org.phoebus.olog.entity.preprocess.MarkupCleaner;
 import org.phoebus.olog.notification.LogEntryNotifier;
 import org.phoebus.util.time.TimeParser;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -161,15 +162,26 @@ public class LogResource {
     }
 
     /**
-     * @param log A {@link Log} object to be persisted.
-     * @param markup Optional string identifying the wanted markup scheme.
+     * Creates a new log entry. If the <code>inReplyTo</code> parameters identifies an existing log entry,
+     * this method will treat the new log entry as a reply.
+     * <p>
+     * This may return a HTTP 400 if for instance <code>inReplyTo</code> does not identify an existing log entry,
+     * or if the logbooks listed in the {@link Log} object contains invalid (i.e. non-existing) logbooks.
+     *
+     * @param log       A {@link Log} object to be persisted.
+     * @param markup    Optional string identifying the wanted markup scheme.
+     * @param inReplyTo Optional log entry id specifying to which log entry the new log entry is a response.
      * @param principal The authenticated {@link Principal} of the request.
      * @return The persisted {@link Log} object.
      */
     @PutMapping()
     public Log createLog(@RequestParam(value = "markup", required = false) String markup,
                          @Valid @RequestBody Log log,
+                         @RequestParam(value = "inReplyTo", required = false, defaultValue = "-1") String inReplyTo,
                          @AuthenticationPrincipal Principal principal) {
+        if (!inReplyTo.equals("-1")) {
+            handleReply(inReplyTo, log);
+        }
         log.setOwner(principal.getName());
         Set<String> logbookNames = log.getLogbooks().stream().map(l -> l.getName()).collect(Collectors.toSet());
         Set<String> persistedLogbookNames = new HashSet<>();
@@ -325,15 +337,16 @@ public class LogResource {
     /**
      * This will retrieve {@link Property}s from {@link LogPropertyProvider}s, if any are registered
      * over SPI.
+     *
      * @param log The log entry to which the provided {@link Property}s are added. However, it is <i>not</i>
      *            added if a {@link Property} with the same name (case sensitive) is present in the log entry.
      */
-    private void addPropertiesFromProviders(Log log){
+    private void addPropertiesFromProviders(Log log) {
         List<String> propertyNames = log.getProperties().stream().map(Property::getName).collect(Collectors.toList());
         List<CompletableFuture<Property>> completableFutures =
-            propertyProviders.stream()
-                .map(propertyProvider -> CompletableFuture.supplyAsync(() -> propertyProvider.getProperty(), executorService))
-                .collect(Collectors.toList());
+                propertyProviders.stream()
+                        .map(propertyProvider -> CompletableFuture.supplyAsync(() -> propertyProvider.getProperty(), executorService))
+                        .collect(Collectors.toList());
 
         CompletableFuture<Void> allFutures =
                 CompletableFuture.allOf(completableFutures.toArray(new CompletableFuture[completableFutures.size()]));
@@ -346,13 +359,42 @@ public class LogResource {
         }
         List<Property> providedProperties =
                 completableFutures.stream()
-                .filter(future -> future.isDone() && !future.isCompletedExceptionally())
-                .map(CompletableFuture::join)
-                .collect(Collectors.toList());
+                        .filter(future -> future.isDone() && !future.isCompletedExceptionally())
+                        .map(CompletableFuture::join)
+                        .collect(Collectors.toList());
         providedProperties.stream().forEach(property -> {
-            if(property != null && !propertyNames.contains(property.getName())){
+            if (property != null && !propertyNames.contains(property.getName())) {
                 log.getProperties().add(property);
             }
         });
+    }
+
+    /**
+     * Deals with the log entry group property such that if the original log entry (to which user
+     * replies) does not already contain the property it is added and the original log entry is updated.
+     * Then the reply entry is augmented with the log entry property.
+     *
+     * @param originalLogEntryId The (Elastic) id of the log entry user wants to reply to.
+     * @param log                The contents of the reply entry.
+     * @throws {@link ResponseStatusException} if <code>originalLogEntryId</code> does not identify an
+     *                existing log entry. This will result in the client receiving a HTTP 400 status.
+     */
+    private void handleReply(String originalLogEntryId, Log log) {
+        try {
+            Log originalLogEntry = logRepository.findById(originalLogEntryId).get();
+            // Check if the original entry already contains the log entry group property
+            Property logEntryGroupProperty = LogEntryGroupHelper.getLogEntryGroupProperty(originalLogEntry);
+            if (logEntryGroupProperty == null) {
+                logEntryGroupProperty = LogEntryGroupHelper.createNewLogEntryProperty(originalLogEntry);
+                originalLogEntry.getProperties().add(logEntryGroupProperty);
+                // Update the original log entry
+                logRepository.update(originalLogEntry);
+            }
+            // Add the log entry group property to the reply entry (i.e. the new entry)
+            log.getProperties().add(logEntryGroupProperty);
+        } catch (ResponseStatusException exception) {
+            // Log entry not found, return HTTP 400
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot reply to log entry " + originalLogEntryId + " as it does not exist");
+        }
     }
 }

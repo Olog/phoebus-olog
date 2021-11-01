@@ -440,4 +440,18 @@ public class LogResourceTest extends ResourcesTestBase {
             return match;
         }
     }
+
+    @Test
+    public void testReplyInvalidLogEntryId() throws Exception{
+        when(logbookRepository.findAll()).thenReturn(Arrays.asList(logbook1, logbook2));
+        when(tagRepository.findAll()).thenReturn(Arrays.asList(tag1, tag2));
+        when(logRepository.findById("7"))
+                .thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to retrieve log"));
+        MockHttpServletRequestBuilder request = put("/" + OlogResourceDescriptors.LOG_RESOURCE_URI + "?inReplyTo=7")
+                .content(objectMapper.writeValueAsString(log1))
+                .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
+                .contentType(JSON);
+        mockMvc.perform(request).andExpect(status().isBadRequest());
+        reset(logRepository);
+    }
 }
