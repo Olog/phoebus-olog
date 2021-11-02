@@ -107,18 +107,8 @@ public class LogEntryGroupHelperTest {
                 .withProperties(Set.of(property1))
                 .build();
 
-        Property logEntryGroupProperty = LogEntryGroupHelper.createNewLogEntryProperty(originalLog);
+        Property logEntryGroupProperty = LogEntryGroupHelper.createNewLogEntryProperty();
         originalLog.getProperties().add(logEntryGroupProperty);
-
-        Log reply = LogBuilder.createLog()
-                .owner("user")
-                .title("title")
-                .withLogbooks(Set.of(logbook1, logbook2))
-                .withTags(Set.of(tag1, tag2))
-                .description("description2")
-                .createDate(Instant.now())
-                .level("Urgent")
-                .build();
 
         Property prop = LogEntryGroupHelper.getLogEntryGroupProperty(originalLog);
         assertNotNull(prop);

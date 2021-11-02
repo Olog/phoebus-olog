@@ -28,6 +28,7 @@ import java.util.UUID;
 public class LogEntryGroupHelper {
 
     public static final String LOG_ENTRY_GROUP = "Log Entry Group";
+    public static final String ATTRIBUTE_ID = "id";
 
     /**
      * @param originalLogEntry The log entry to which a user wishes to reply.
@@ -46,13 +47,11 @@ public class LogEntryGroupHelper {
     }
 
     /**
-     * @param originalLogEntry The log entry to which a user wishes to reply.
      * @return A {@link Property} containing two {@link Attribute}s: one with the unique log entry group id,
      * one with the title of the original entry.
      */
-    public static Property createNewLogEntryProperty(Log originalLogEntry){
-        Attribute idAttribute = new Attribute("id", UUID.randomUUID().toString());
-        Attribute titleAttribute = new Attribute("title", originalLogEntry.getTitle());
-        return new Property(LOG_ENTRY_GROUP, Set.of(idAttribute, titleAttribute));
+    public static Property createNewLogEntryProperty(){
+        Attribute idAttribute = new Attribute(ATTRIBUTE_ID, UUID.randomUUID().toString());
+        return new Property(LOG_ENTRY_GROUP, Set.of(idAttribute));
     }
 }

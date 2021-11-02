@@ -385,7 +385,7 @@ public class LogResource {
             // Check if the original entry already contains the log entry group property
             Property logEntryGroupProperty = LogEntryGroupHelper.getLogEntryGroupProperty(originalLogEntry);
             if (logEntryGroupProperty == null) {
-                logEntryGroupProperty = LogEntryGroupHelper.createNewLogEntryProperty(originalLogEntry);
+                logEntryGroupProperty = LogEntryGroupHelper.createNewLogEntryProperty();
                 originalLogEntry.getProperties().add(logEntryGroupProperty);
                 // Update the original log entry
                 logRepository.update(originalLogEntry);
