@@ -14,6 +14,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -25,6 +26,7 @@ import java.io.IOException;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
  * Resource for handling the requests to ../attachment
@@ -38,6 +40,8 @@ public class AttachmentResource
     @Autowired
     AttachmentRepository attachmentRepository;
 
+    private Logger log = Logger.getLogger(AttachmentResource.class.getName());
+
     /**
      *
      * @param attachmentId The unique GridFS id set by client or by GridFS during upload.
@@ -47,6 +51,7 @@ public class AttachmentResource
      */
     @GetMapping("{attachmentId}")
     public ResponseEntity<Resource> getAttachment(@PathVariable String attachmentId) {
+        log.log(Level.INFO, "Requesting attachment " + attachmentId);
         Optional<Attachment> attachment = attachmentRepository.findById(attachmentId);
         if(attachment.isPresent()){
             InputStreamResource resource;

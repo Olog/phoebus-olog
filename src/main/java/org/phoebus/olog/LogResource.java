@@ -10,8 +10,8 @@ import org.phoebus.olog.entity.Attachment;
 import org.phoebus.olog.entity.Log;
 import org.phoebus.olog.entity.Property;
 import org.phoebus.olog.entity.Tag;
-import org.phoebus.olog.entity.preprocess.MarkupCleaner;
 import org.phoebus.olog.entity.preprocess.LogPropertyProvider;
+import org.phoebus.olog.entity.preprocess.MarkupCleaner;
 import org.phoebus.olog.notification.LogEntryNotifier;
 import org.phoebus.util.time.TimeParser;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -108,7 +108,9 @@ public class LogResource {
                 return attachment.getFilename().equals(attachmentName);
             }).collect(Collectors.toSet());
             if (attachments.size() == 1) {
-                Attachment foundAttachment = attachmentRepository.findById(attachments.iterator().next().getId()).get();
+                Attachment attachment = attachments.iterator().next();
+                this.log.log(Level.INFO, "Requesting attachment " + attachment.getId() + ": " + attachment.getFilename());
+                Attachment foundAttachment = attachmentRepository.findById(attachment.getId()).get();
                 InputStreamResource resource;
                 try {
                     resource = new InputStreamResource(foundAttachment.getAttachment().getInputStream());
@@ -144,6 +146,7 @@ public class LogResource {
      */
     @GetMapping()
     public List<Log> findLogs(@RequestParam MultiValueMap<String, String> allRequestParams) {
+        logSearchRequest(allRequestParams);
         for (String key : allRequestParams.keySet()) {
             if ("start".equalsIgnoreCase(key.toLowerCase()) || "end".equalsIgnoreCase(key.toLowerCase())) {
                 String value = allRequestParams.get(key).get(0);
@@ -161,8 +164,8 @@ public class LogResource {
     }
 
     /**
-     * @param log A {@link Log} object to be persisted.
-     * @param markup Optional string identifying the wanted markup scheme.
+     * @param log       A {@link Log} object to be persisted.
+     * @param markup    Optional string identifying the wanted markup scheme.
      * @param principal The authenticated {@link Principal} of the request.
      * @return The persisted {@link Log} object.
      */
@@ -325,15 +328,16 @@ public class LogResource {
     /**
      * This will retrieve {@link Property}s from {@link LogPropertyProvider}s, if any are registered
      * over SPI.
+     *
      * @param log The log entry to which the provided {@link Property}s are added. However, it is <i>not</i>
      *            added if a {@link Property} with the same name (case sensitive) is present in the log entry.
      */
-    private void addPropertiesFromProviders(Log log){
+    private void addPropertiesFromProviders(Log log) {
         List<String> propertyNames = log.getProperties().stream().map(Property::getName).collect(Collectors.toList());
         List<CompletableFuture<Property>> completableFutures =
-            propertyProviders.stream()
-                .map(propertyProvider -> CompletableFuture.supplyAsync(() -> propertyProvider.getProperty(), executorService))
-                .collect(Collectors.toList());
+                propertyProviders.stream()
+                        .map(propertyProvider -> CompletableFuture.supplyAsync(() -> propertyProvider.getProperty(), executorService))
+                        .collect(Collectors.toList());
 
         CompletableFuture<Void> allFutures =
                 CompletableFuture.allOf(completableFutures.toArray(new CompletableFuture[completableFutures.size()]));
@@ -346,13 +350,26 @@ public class LogResource {
         }
         List<Property> providedProperties =
                 completableFutures.stream()
-                .filter(future -> future.isDone() && !future.isCompletedExceptionally())
-                .map(CompletableFuture::join)
-                .collect(Collectors.toList());
+                        .filter(future -> future.isDone() && !future.isCompletedExceptionally())
+                        .map(CompletableFuture::join)
+                        .collect(Collectors.toList());
         providedProperties.stream().forEach(property -> {
-            if(property != null && !propertyNames.contains(property.getName())){
+            if (property != null && !propertyNames.contains(property.getName())) {
                 log.getProperties().add(property);
             }
         });
+    }
+
+    /**
+     * Logs a search request. This may serve the purpose of analysis, i.e. what kind of search queries
+     * are actually used (default?, custom?, completely unexpected?).
+     *
+     * @param allSearchParameters The list of all search parameters as provided by client.
+     */
+    private void logSearchRequest(MultiValueMap<String, String> allSearchParameters) {
+        String toLog = allSearchParameters.entrySet().stream()
+                .map((e) -> e.getKey().trim() + "=" + e.getValue().stream().collect(Collectors.joining(",")))
+                .collect(Collectors.joining("&"));
+        log.log(Level.INFO, "Query " + toLog);
     }
 }
