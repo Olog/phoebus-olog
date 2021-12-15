@@ -90,27 +90,27 @@ public class LogRepositorySearchIT  implements TestExecutionListener
     public void searchByTitle(){
         MultiValueMap<String, String> searchParameters = new LinkedMultiValueMap<String, String>();
         searchParameters.put("title", List.of("title2"));
-        List<Log> foundLogs = logRepository.search(searchParameters);
+        List<Log> foundLogs = logRepository.search(searchParameters).getLogs();
         assertTrue("Failed to search for log entries based on title.",
                 foundLogs.size() == 1 && foundLogs.contains(createdLog2));
 
         searchParameters = new LinkedMultiValueMap<String, String>();
         searchParameters.put("title", List.of("le"));
-        foundLogs = logRepository.search(searchParameters);
+        foundLogs = logRepository.search(searchParameters).getLogs();
         assertTrue("Failed to search for log entries based on title.",
                 foundLogs.size() == 1 && foundLogs.contains(createdLog1));
 
         // Search using wildcards in title
         searchParameters = new LinkedMultiValueMap<String, String>();
         searchParameters.put("title", List.of("tit*"));
-        foundLogs = logRepository.search(searchParameters);
+        foundLogs = logRepository.search(searchParameters).getLogs();
         assertTrue("Failed to search for log entries based on title.",
                 foundLogs.size() == 2 && foundLogs.contains(createdLog1) && foundLogs.contains(createdLog2));
         
         // check case insensitive searches
         searchParameters = new LinkedMultiValueMap<String, String>();
         searchParameters.put("title", List.of("TITLE2"));
-        foundLogs = logRepository.search(searchParameters);
+        foundLogs = logRepository.search(searchParameters).getLogs();
         assertTrue("Failed case insensitive search for log entries based on title.",
                 foundLogs.size() == 1 && foundLogs.contains(createdLog2));
     }
@@ -123,19 +123,19 @@ public class LogRepositorySearchIT  implements TestExecutionListener
     {
         MultiValueMap<String, String> searchParameters = new LinkedMultiValueMap<String, String>();
         searchParameters.put("level", List.of("level2"));
-        List<Log> foundLogs = logRepository.search(searchParameters);
+        List<Log> foundLogs = logRepository.search(searchParameters).getLogs();
         assertTrue("Failed to search for log entries based on level.",
                 foundLogs.size() == 1 && foundLogs.contains(createdLog2));
 
         searchParameters = new LinkedMultiValueMap<String, String>();
         searchParameters.put("level", List.of("el"));
-        foundLogs = logRepository.search(searchParameters);
+        foundLogs = logRepository.search(searchParameters).getLogs();
         assertTrue("Failed to search for log entries based on level.",
                 foundLogs.size() == 1 && foundLogs.contains(createdLog1));
 
         searchParameters = new LinkedMultiValueMap<String, String>();
         searchParameters.put("level", List.of("lev*"));
-        foundLogs = logRepository.search(searchParameters);
+        foundLogs = logRepository.search(searchParameters).getLogs();
         assertTrue("Failed to search for log entries based on level.",
                 foundLogs.size() == 2 && foundLogs.contains(createdLog1) && foundLogs.contains(createdLog2));
     }
@@ -148,12 +148,12 @@ public class LogRepositorySearchIT  implements TestExecutionListener
     {
         MultiValueMap<String, String> searchParameters = new LinkedMultiValueMap<String, String>();
         searchParameters.put("desc", List.of("quick"));
-        List<Log> foundLogs = logRepository.search(searchParameters);
+        List<Log> foundLogs = logRepository.search(searchParameters).getLogs();
         assertTrue("Failed to search for log entries based on a single keyword.",
                    foundLogs.size() == 2 && foundLogs.contains(createdLog1) && foundLogs.contains(createdLog2));
 
         searchParameters.put("desc", List.of("jumped"));
-        foundLogs = logRepository.search(searchParameters);
+        foundLogs = logRepository.search(searchParameters).getLogs();
         assertTrue("Failed to search for log entries based on a single keyword.",
                 foundLogs.size() == 1 &&  foundLogs.contains(createdLog2));
     }
@@ -166,7 +166,7 @@ public class LogRepositorySearchIT  implements TestExecutionListener
     {
         MultiValueMap<String, String> searchParameters = new LinkedMultiValueMap<String, String>();
         searchParameters.put("desc", List.of("jump*"));
-        List<Log> foundLogs = logRepository.search(searchParameters);
+        List<Log> foundLogs = logRepository.search(searchParameters).getLogs();
         assertTrue("Failed to search for log entries based on a single keyword.",
                    foundLogs.size() == 2 && foundLogs.contains(createdLog1) && foundLogs.contains(createdLog2));
     }
@@ -179,11 +179,11 @@ public class LogRepositorySearchIT  implements TestExecutionListener
     {
         MultiValueMap<String, String> searchParameters = new LinkedMultiValueMap<String, String>();
         searchParameters.put("desc", List.of("brown quick"));
-        List<Log> foundLogs = logRepository.search(searchParameters);
+        List<Log> foundLogs = logRepository.search(searchParameters).getLogs();
         assertTrue("Failed to search for log entries based on a set of keywords",
                    foundLogs.size() == 2 && foundLogs.contains(createdLog1) && foundLogs.contains(createdLog2));
         searchParameters.put("desc", List.of("brown", "quick"));
-        foundLogs = logRepository.search(searchParameters);
+        foundLogs = logRepository.search(searchParameters).getLogs();
         assertTrue("Failed to search for log entries based on a set of keywords",
                    foundLogs.size() == 2 && foundLogs.contains(createdLog1) && foundLogs.contains(createdLog2));
     }
@@ -196,12 +196,12 @@ public class LogRepositorySearchIT  implements TestExecutionListener
     {
         MultiValueMap<String, String> searchParameters = new LinkedMultiValueMap<String, String>();
         searchParameters.put("phrase", List.of("brown quick"));
-        List<Log> foundLogs = logRepository.search(searchParameters);
+        List<Log> foundLogs = logRepository.search(searchParameters).getLogs();
         assertTrue("Failed to search for log entries based on exact ordered match of key words, expected 0 but found " + foundLogs.size(),
                    foundLogs.size() == 0);
         
         searchParameters.put("phrase", List.of("quick brown"));
-        foundLogs = logRepository.search(searchParameters);
+        foundLogs = logRepository.search(searchParameters).getLogs();
         assertTrue("Failed to search for log entries based on exact ordered match of key words",
                    foundLogs.size() == 2 && foundLogs.contains(createdLog1) && foundLogs.contains(createdLog2));
     }
@@ -214,12 +214,12 @@ public class LogRepositorySearchIT  implements TestExecutionListener
     {
         MultiValueMap<String, String> searchParameters = new LinkedMultiValueMap<String, String>();
         searchParameters.put("owner", List.of(testOwner1));
-        List<Log> foundLogs = logRepository.search(searchParameters);
+        List<Log> foundLogs = logRepository.search(searchParameters).getLogs();
         assertTrue("Failed to search for log entries based on owner.",
                    foundLogs.size() == 1 && foundLogs.contains(createdLog1));
 
         searchParameters.put("owner", List.of(testOwner1, testOwner2));
-        foundLogs = logRepository.search(searchParameters);
+        foundLogs = logRepository.search(searchParameters).getLogs();
         assertTrue("Failed to search for log entries based on owner.",
                 foundLogs.size() == 2 && foundLogs.contains(createdLog1) && foundLogs.contains(createdLog2));
     }
@@ -233,7 +233,7 @@ public class LogRepositorySearchIT  implements TestExecutionListener
         // simple search based on the tag name
         MultiValueMap<String, String> searchParameters = new LinkedMultiValueMap<String, String>();
         searchParameters.put("tags", List.of(testTag1.getName()));
-        List<Log> foundLogs = logRepository.search(searchParameters);
+        List<Log> foundLogs = logRepository.search(searchParameters).getLogs();
         assertTrue("Failed to search for log entries based on a tag name : "+ testTag1.getName(),
                 foundLogs.size() == 1 &&  foundLogs.contains(createdLog1));
 
@@ -241,13 +241,13 @@ public class LogRepositorySearchIT  implements TestExecutionListener
         // log entries that match at least one of the tag names
         searchParameters = new LinkedMultiValueMap<String, String>();
         searchParameters.put("tags", List.of(testTag1.getName(), testTag2.getName()));
-        foundLogs = logRepository.search(searchParameters);
+        foundLogs = logRepository.search(searchParameters).getLogs();
         assertTrue("Failed to search for log entries based on tags name " + testTag1.getName() +" and " + testTag2.getName(),
                 foundLogs.size() == 2 && foundLogs.contains(createdLog1) && foundLogs.contains(createdLog2));
 
         // search based on a tag name with wildcards
         searchParameters.put("tags", List.of("testTag*"));
-        foundLogs = logRepository.search(searchParameters);
+        foundLogs = logRepository.search(searchParameters).getLogs();
         assertTrue("Failed to search for log entries based on tag names with wildcards : testTag*",
                 foundLogs.size() == 2 && foundLogs.contains(createdLog1) && foundLogs.contains(createdLog2));
     }
@@ -261,7 +261,7 @@ public class LogRepositorySearchIT  implements TestExecutionListener
         // simple search based on the logbook name
         MultiValueMap<String, String> searchParameters = new LinkedMultiValueMap<String, String>();
         searchParameters.put("logbooks", List.of(testLogbook1.getName()));
-        List<Log> foundLogs = logRepository.search(searchParameters);
+        List<Log> foundLogs = logRepository.search(searchParameters).getLogs();
         assertTrue("Failed to search for log entries based on logbook name " + testLogbook1.getName(),
                 foundLogs.size() == 1 &&  foundLogs.contains(createdLog1));
 
@@ -269,13 +269,13 @@ public class LogRepositorySearchIT  implements TestExecutionListener
         // log entries that match at least one of the logbook names
         searchParameters = new LinkedMultiValueMap<String, String>();
         searchParameters.put("logbooks", List.of(testLogbook1.getName(), testLogbook2.getName()));
-        foundLogs = logRepository.search(searchParameters);
+        foundLogs = logRepository.search(searchParameters).getLogs();
         assertTrue("Failed to search for log entries based on logbook name " + testLogbook1.getName() +" and " + testLogbook2.getName(),
                 foundLogs.size() == 2 && foundLogs.contains(createdLog1) && foundLogs.contains(createdLog2));
 
         // search based on a logbook name with wildcards
         searchParameters.put("logbooks", List.of("testLogbook*"));
-        foundLogs = logRepository.search(searchParameters);
+        foundLogs = logRepository.search(searchParameters).getLogs();
         assertTrue("Failed to search for log entries based on logbook names with wildcard cahrs : testLogbook*",
                 foundLogs.size() == 2 && foundLogs.contains(createdLog1) && foundLogs.contains(createdLog2));
     }
@@ -287,23 +287,23 @@ public class LogRepositorySearchIT  implements TestExecutionListener
         // simple search based on the property name
         MultiValueMap<String, String> searchParameters = new LinkedMultiValueMap<String, String>();
         searchParameters.put("properties", List.of(testProperty1.getName()));
-        List<Log> foundLogs = logRepository.search(searchParameters);
+        List<Log> foundLogs = logRepository.search(searchParameters).getLogs();
         assertTrue("Failed to search for log entries based on property name " + testProperty1.getName(),
                    foundLogs.size() == 1 && foundLogs.contains(createdLog1));
         searchParameters.put("properties", List.of(testProperty2.getName()));
-        foundLogs = logRepository.search(searchParameters);
+        foundLogs = logRepository.search(searchParameters).getLogs();
         assertTrue("Failed to search for log entries based on property name " + testProperty2.getName(),
                    foundLogs.size() == 1 && foundLogs.contains(createdLog2));
 
         // search based on a property name with wildcards
         searchParameters.put("properties", List.of("testProperty*"));
-        foundLogs = logRepository.search(searchParameters);
+        foundLogs = logRepository.search(searchParameters).getLogs();
         assertTrue("Failed to search for log entries based on logbook names with wildcard cahrs : testLogbook*",
                    foundLogs.size() == 2 && foundLogs.contains(createdLog1) && foundLogs.contains(createdLog2));
 
         // search for a non existing property
         searchParameters.put("properties", List.of("noProperty"));
-        foundLogs = logRepository.search(searchParameters);
+        foundLogs = logRepository.search(searchParameters).getLogs();
         assertTrue("Failed to search for log entries based on logbook names with wildcard cahrs : testLogbook*",
                    foundLogs.size() == 0);
     }
@@ -315,33 +315,33 @@ public class LogRepositorySearchIT  implements TestExecutionListener
         // simple search based on the property attribute
         MultiValueMap<String, String> searchParameters = new LinkedMultiValueMap<String, String>();
         searchParameters.put("properties", List.of(testProperty1.getName() + "." + testAttribute1.getName()));
-        List<Log> foundLogs = logRepository.search(searchParameters);
+        List<Log> foundLogs = logRepository.search(searchParameters).getLogs();
         assertTrue("Failed to search for log entries based on property atrribute name " + testProperty1.getName() + "."
                 + testAttribute1.getName(), foundLogs.size() == 1 && foundLogs.contains(createdLog1));
         searchParameters.put("properties", List.of(testProperty2.getName() + "." + testAttribute1.getName()));
-        foundLogs = logRepository.search(searchParameters);
+        foundLogs = logRepository.search(searchParameters).getLogs();
         assertTrue("Failed to search for log entries based on property name " + testProperty2.getName() + "."
                 + testAttribute1.getName(), foundLogs.size() == 1 && foundLogs.contains(createdLog2));
 
         // search based on a property name with wildcards and an attribute name
         searchParameters.put("properties", List.of("testProperty*.testAttribute1"));
-        foundLogs = logRepository.search(searchParameters);
+        foundLogs = logRepository.search(searchParameters).getLogs();
         assertTrue("Failed to search for log entries based on logbook names with wildcard cahrs : testLogbook*",
                    foundLogs.size() == 2 && foundLogs.contains(createdLog1) && foundLogs.contains(createdLog2));
         searchParameters.put("properties", List.of("testProperty*.testAttribute2"));
-        foundLogs = logRepository.search(searchParameters);
+        foundLogs = logRepository.search(searchParameters).getLogs();
         assertTrue("Failed to search for log entries based on logbook names with wildcard cahrs : testLogbook*",
                    foundLogs.size() == 1 && foundLogs.contains(createdLog1));
         
         // search based on a property name and attribute name with wildcards
         searchParameters.put("properties", List.of("testProperty*.testAttribute*"));
-        foundLogs = logRepository.search(searchParameters);
+        foundLogs = logRepository.search(searchParameters).getLogs();
         assertTrue("Failed to search for log entries based on logbook names with wildcard cahrs : testLogbook*",
                    foundLogs.size() == 2 && foundLogs.contains(createdLog1) && foundLogs.contains(createdLog2));
 
         // search for a non existing property
         searchParameters.put("properties", List.of(testProperty1.getName() + ".noAttribute"));
-        foundLogs = logRepository.search(searchParameters);
+        foundLogs = logRepository.search(searchParameters).getLogs();
         assertTrue("Failed to search for log entries based on logbook names with wildcard cahrs : testLogbook*",
                    foundLogs.size() == 0);
     }
@@ -354,13 +354,13 @@ public class LogRepositorySearchIT  implements TestExecutionListener
         // simple search based on the property attribute
         MultiValueMap<String, String> searchParameters = new LinkedMultiValueMap<String, String>();
         searchParameters.put("properties", List.of(testProperty1.getName() + "." + testAttribute1.getName() + ".log1"));
-        List<Log> foundLogs = logRepository.search(searchParameters);
+        List<Log> foundLogs = logRepository.search(searchParameters).getLogs();
         assertTrue("Failed to search for log entries based on property atrribute name "
                                                         + testProperty1.getName() + "."
                                                         + testAttribute1.getName() +".log1",
                    foundLogs.size() == 1 && foundLogs.contains(createdLog1));
         searchParameters.put("properties", List.of(testProperty2.getName() + "." + testAttribute1.getName() + ".log2"));
-        foundLogs = logRepository.search(searchParameters);
+        foundLogs = logRepository.search(searchParameters).getLogs();
         assertTrue("Failed to search for log entries based on property name "
                                             + testProperty2.getName() + "."
                                             + testAttribute1.getName() + ".log2"
@@ -368,28 +368,28 @@ public class LogRepositorySearchIT  implements TestExecutionListener
 
         // search based on a property name with wildcards and an attribute name
         searchParameters.put("properties", List.of("testProperty*.testAttribute1.*"));
-        foundLogs = logRepository.search(searchParameters);
+        foundLogs = logRepository.search(searchParameters).getLogs();
         assertTrue("Failed to search for log entries based on logbook names with wildcard cahrs : testLogbook*",
                    foundLogs.size() == 2 && foundLogs.contains(createdLog1) && foundLogs.contains(createdLog2));
         searchParameters.put("properties", List.of("testProperty*.testAttribute1.*1"));
-        foundLogs = logRepository.search(searchParameters);
+        foundLogs = logRepository.search(searchParameters).getLogs();
         assertTrue("Failed to search for log entries based on logbook names with wildcard cahrs : testLogbook*",
                    foundLogs.size() == 1 && foundLogs.contains(createdLog1));
         
         // search based on a property name and attribute name with wildcards
         searchParameters.put("properties", List.of("testProperty*.testAttribute*.log*"));
-        foundLogs = logRepository.search(searchParameters);
+        foundLogs = logRepository.search(searchParameters).getLogs();
         assertTrue("Failed to search for log entries based on logbook names with wildcard cahrs : testLogbook*",
                    foundLogs.size() == 2 && foundLogs.contains(createdLog1) && foundLogs.contains(createdLog2));
 
         searchParameters.put("properties", List.of("testProperty*.testAttribute1.log*"));
-        foundLogs = logRepository.search(searchParameters);
+        foundLogs = logRepository.search(searchParameters).getLogs();
         assertTrue("Failed to search for log entries based on logbook names with wildcard cahrs : testLogbook*",
                    foundLogs.size() == 2 && foundLogs.contains(createdLog1) && foundLogs.contains(createdLog2));
 
         // search for a non existing property
         searchParameters.put("properties", List.of(testProperty1.getName() + ".testAttribute1.noValue"));
-        foundLogs = logRepository.search(searchParameters);
+        foundLogs = logRepository.search(searchParameters).getLogs();
         assertTrue("Failed to search for log entries based on logbook names with wildcard cahrs : testLogbook*",
                    foundLogs.size() == 0);
     }
@@ -402,7 +402,7 @@ public class LogRepositorySearchIT  implements TestExecutionListener
 
         searchParameters.put("start", List.of(MILLI_FORMAT.format(createdLog1.getCreatedDate().minusMillis(1000))));
         searchParameters.put("end",   List.of(MILLI_FORMAT.format(createdLog1.getCreatedDate().plusMillis(1000))));
-        List<Log> foundLogs = logRepository.search(searchParameters);
+        List<Log> foundLogs = logRepository.search(searchParameters).getLogs();
         assertTrue("Failed to search for log entries based on log entry create time",
                    foundLogs.size() == 1 && foundLogs.contains(createdLog1));
     }
@@ -415,11 +415,11 @@ public class LogRepositorySearchIT  implements TestExecutionListener
 
         searchParameters.put("start", List.of(MILLI_FORMAT.format(event1.getInstant().minusMillis(1000))));
         searchParameters.put("end",   List.of(MILLI_FORMAT.format(event1.getInstant().plusMillis(1000))));
-        List<Log> foundLogs = logRepository.search(searchParameters);
+        List<Log> foundLogs = logRepository.search(searchParameters).getLogs();
         assertTrue("Failed to search for log entries based on log event times", foundLogs.size() == 0);
 
         searchParameters.put("includeEvents", null);
-        foundLogs = logRepository.search(searchParameters);
+        foundLogs = logRepository.search(searchParameters).getLogs();
         assertTrue("Failed to search for log entries based on log event times. Expected 1 log entry but found " + foundLogs.size(),
                 foundLogs.size() == 1 && foundLogs.contains(createdLog1));
     }
@@ -435,7 +435,7 @@ public class LogRepositorySearchIT  implements TestExecutionListener
         searchParameters.put("tags", List.of(testTag1.getName()));
         searchParameters.put("logbooks", List.of(testLogbook1.getName()));
         searchParameters.put("desc", List.of("quick"));
-        List<Log> foundLogs = logRepository.search(searchParameters);
+        List<Log> foundLogs = logRepository.search(searchParameters).getLogs();
 
         assertTrue("Failed to search for log entries based on desc, tag, and logbook",
                    foundLogs.size() == 1 && foundLogs.contains(createdLog1));
@@ -446,7 +446,7 @@ public class LogRepositorySearchIT  implements TestExecutionListener
         searchParameters.put("tags", List.of(testTag2.getName()));
         searchParameters.put("logbooks", List.of(testLogbook1.getName()));
         searchParameters.put("desc", List.of("quick"));
-        foundLogs = logRepository.search(searchParameters);
+        foundLogs = logRepository.search(searchParameters).getLogs();
 
         assertTrue("Failed to search for log entries based on desc, tag, and logbook", foundLogs.size() == 0);
         
@@ -459,7 +459,7 @@ public class LogRepositorySearchIT  implements TestExecutionListener
         searchParameters.put("tags", List.of(testTag1.getName()));
         searchParameters.put("logbooks", List.of(testLogbook1.getName()));
         searchParameters.put("desc", List.of("quick"));
-        foundLogs = logRepository.search(searchParameters);
+        foundLogs = logRepository.search(searchParameters).getLogs();
 
         assertTrue("Failed to search for log entries based on desc, tag, logbook, and time",
                    foundLogs.size() == 1 && foundLogs.contains(createdLog1));

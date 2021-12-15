@@ -34,6 +34,7 @@ import org.elasticsearch.common.xcontent.XContentType;
 import org.phoebus.olog.entity.Attachment;
 import org.phoebus.olog.entity.Log;
 import org.phoebus.olog.entity.Log.LogBuilder;
+import org.phoebus.olog.entity.SearchResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -246,7 +247,7 @@ public class LogRepository implements CrudRepository<Log, String>
     @Autowired
     LogSearchUtil logSearchUtil;
 
-    public List<Log> search(MultiValueMap<String, String> searchParameters)
+    public SearchResult search(MultiValueMap<String, String> searchParameters)
     {
         SearchRequest searchRequest = logSearchUtil.buildSearchRequest(searchParameters);
         try
@@ -266,12 +267,14 @@ public class LogRepository implements CrudRepository<Log, String>
                             "Failed to parse result for search : " + searchParameters + ", CAUSE: " + e.getMessage());
                 }
             });
-            return result;
+            SearchResult searchResult = new SearchResult();
+            searchResult.setHitCount(searchResponse.getHits().getTotalHits());
+            searchResult.setLogs(result);
+            return searchResult;
         } catch (IOException e)
         {
             logger.log(Level.SEVERE, "Failed to complete search", e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to complete search");
         }
     }
-
 }
