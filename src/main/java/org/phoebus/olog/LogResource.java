@@ -9,6 +9,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.phoebus.olog.entity.Attachment;
 import org.phoebus.olog.entity.Log;
 import org.phoebus.olog.entity.Property;
+import org.phoebus.olog.entity.SearchResult;
 import org.phoebus.olog.entity.Tag;
 import org.phoebus.olog.entity.preprocess.LogPropertyProvider;
 import org.phoebus.olog.entity.preprocess.MarkupCleaner;
@@ -145,6 +146,7 @@ public class LogResource {
      * empty list if no matching logs are found.
      */
     @GetMapping()
+    @Deprecated
     public List<Log> findLogs(@RequestParam MultiValueMap<String, String> allRequestParams) {
         logSearchRequest(allRequestParams);
         for (String key : allRequestParams.keySet()) {
@@ -160,7 +162,27 @@ public class LogResource {
                 }
             }
         }
-        return logRepository.search(allRequestParams);
+        return logRepository.search(allRequestParams).getLogs();
+    }
+
+    @GetMapping("/search")
+    public SearchResult search(@RequestParam MultiValueMap<String, String> allRequestParams) {
+        logSearchRequest(allRequestParams);
+        for (String key : allRequestParams.keySet()) {
+            if ("start".equalsIgnoreCase(key.toLowerCase()) || "end".equalsIgnoreCase(key.toLowerCase())) {
+                String value = allRequestParams.get(key).get(0);
+                Object time = TimeParser.parseInstantOrTemporalAmount(value);
+                if (time instanceof Instant) {
+                    allRequestParams.get(key).clear();
+                    allRequestParams.get(key).add(MILLI_FORMAT.format((Instant) time));
+                } else if (time instanceof TemporalAmount) {
+                    allRequestParams.get(key).clear();
+                    allRequestParams.get(key).add(MILLI_FORMAT.format(Instant.now().minus((TemporalAmount) time)));
+                }
+            }
+        }
+        SearchResult searchResult = logRepository.search(allRequestParams);
+        return searchResult;
     }
 
     /**
