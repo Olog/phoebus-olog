@@ -29,6 +29,7 @@ import org.phoebus.olog.entity.Log;
 import org.phoebus.olog.entity.Log.LogBuilder;
 import org.phoebus.olog.entity.Logbook;
 import org.phoebus.olog.entity.Property;
+import org.phoebus.olog.entity.SearchResult;
 import org.phoebus.olog.entity.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -152,7 +153,7 @@ public class LogResourceTest extends ResourcesTestBase {
         MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
         map.put("a", Arrays.asList("b"));
 
-        when(logRepository.search(map)).thenAnswer(invocationOnMock -> Arrays.asList(log1, log2));
+        when(logRepository.search(map)).thenAnswer(invocationOnMock -> new SearchResult(2, Arrays.asList(log1, log2)));
 
         MockHttpServletRequestBuilder request = get("/" + OlogResourceDescriptors.LOG_RESOURCE_URI)
                 .params(map)
@@ -164,6 +165,28 @@ public class LogResourceTest extends ResourcesTestBase {
                 new TypeReference<Iterable<Log>>() {
                 });
         assertEquals(Long.valueOf(1L), logs.iterator().next().getId());
+
+        verify(logRepository, times(1)).search(map);
+        reset(logRepository);
+    }
+
+    @Test
+    public void testSearchLogs() throws Exception {
+        MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
+        map.put("a", Arrays.asList("b"));
+
+        when(logRepository.search(map)).thenAnswer(invocationOnMock -> new SearchResult(2, Arrays.asList(log1, log2)));
+
+        MockHttpServletRequestBuilder request = get("/" + OlogResourceDescriptors.LOG_RESOURCE_URI + "/search")
+                .params(map)
+                .contentType(JSON);
+        MvcResult result = mockMvc.perform(request).andExpect(status().isOk())
+                .andReturn();
+
+        SearchResult searchResult = objectMapper.readValue(result.getResponse().getContentAsString(), SearchResult.class);
+        assertEquals(2, searchResult.getHitCount());
+        assertEquals(2, searchResult.getLogs().size());
+
         verify(logRepository, times(1)).search(map);
         reset(logRepository);
     }
