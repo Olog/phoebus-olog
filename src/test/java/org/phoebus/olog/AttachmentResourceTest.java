@@ -18,15 +18,9 @@
 
 package org.phoebus.olog;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
-import org.phoebus.olog.AttachmentRepository;
-import org.phoebus.olog.AttachmentResource;
-import org.phoebus.olog.LogRepository;
-import org.phoebus.olog.OlogResourceDescriptors;
 import org.phoebus.olog.entity.Attachment;
 import org.phoebus.olog.entity.Log;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,11 +35,9 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Optional;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;

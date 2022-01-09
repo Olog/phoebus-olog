@@ -20,7 +20,6 @@ package org.phoebus.olog;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.phoebus.olog.AuthenticationResource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -38,11 +37,13 @@ import javax.servlet.http.Cookie;
 import java.util.HashSet;
 import java.util.Set;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import static org.phoebus.olog.OlogResourceDescriptors.OLOG_SERVICE;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.phoebus.olog.OlogResourceDescriptors.OLOG_SERVICE;
 
 @RunWith(SpringRunner.class)
 @ContextHierarchy({@ContextConfiguration(classes = {AuthenticationResourceTestConfig.class})})
@@ -63,7 +64,7 @@ public class AuthenticationResourceInifiniteSessionTest extends ResourcesTestBas
         when(mockAuthentication.getAuthorities()).thenReturn(authorities);
         Authentication authentication = new UsernamePasswordAuthenticationToken("admin", "adminPass");
         when(authenticationManager.authenticate(authentication)).thenReturn(mockAuthentication);
-        MockHttpServletRequestBuilder request = post("/" + OLOG_SERVICE+ "/login?username=admin&password=adminPass");
+        MockHttpServletRequestBuilder request = post("/" + OLOG_SERVICE + "/login?username=admin&password=adminPass");
         MvcResult result = mockMvc.perform(request).andExpect(status().isOk())
                 .andReturn();
         Cookie cookie = result.getResponse().getCookie("SESSION");

@@ -20,16 +20,8 @@ package org.phoebus.olog;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mongodb.client.gridfs.GridFSBucket;
-
 import org.elasticsearch.client.RestHighLevelClient;
 import org.mockito.Mockito;
-import org.phoebus.olog.AttachmentRepository;
-import org.phoebus.olog.LogRepository;
-import org.phoebus.olog.LogSearchUtil;
-import org.phoebus.olog.LogbookRepository;
-import org.phoebus.olog.PropertyRepository;
-import org.phoebus.olog.TagRepository;
-import org.phoebus.olog.WebSecurityConfig;
 import org.springframework.boot.autoconfigure.h2.H2ConsoleProperties;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -109,12 +101,12 @@ public class ResourcesTestConfig {
     }
 
     @Bean
-    public TagRepository tagRepository(){
+    public TagRepository tagRepository() {
         return Mockito.mock(TagRepository.class);
     }
 
     @Bean
-    public GridFSBucket gridFSBucket(){
+    public GridFSBucket gridFSBucket() {
         return Mockito.mock(GridFSBucket.class);
     }
 }

@@ -1,24 +1,11 @@
 package org.phoebus.olog;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.phoebus.olog.ElasticConfig;
-import org.phoebus.olog.TagRepository;
 import org.phoebus.olog.entity.State;
 import org.phoebus.olog.entity.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,9 +15,20 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = ElasticConfig.class)
-@TestPropertySource(locations="classpath:test_application.properties")
+@TestPropertySource(locations = "classpath:test_application.properties")
 public class TagRepositoryIT {
 
     @Autowired
@@ -53,7 +51,8 @@ public class TagRepositoryIT {
 
     /**
      * Test the creation of a test tag
-     * @throws IOException 
+     *
+     * @throws IOException
      */
     @Test
     public void createTag() throws IOException {
@@ -67,7 +66,8 @@ public class TagRepositoryIT {
 
     /**
      * Test the deletion of a test tag
-     * @throws IOException 
+     *
+     * @throws IOException
      */
     @Test
     public void deleteTag() throws IOException {
@@ -86,14 +86,13 @@ public class TagRepositoryIT {
 
     /**
      * create a set of tags
-     * @throws IOException 
+     *
+     * @throws IOException
      */
     @Test
-    public void createTags() throws IOException
-    {
+    public void createTags() throws IOException {
         List<Tag> tags = Arrays.asList(testTag1, testTag2, testTag3, testTag4);
-        try
-        {
+        try {
             List<Tag> result = new ArrayList<Tag>();
             tagRepository.saveAll(tags).forEach(tag -> result.add(tag));
             assertThat("Failed to create multiple tags", result.containsAll(tags));
@@ -101,8 +100,7 @@ public class TagRepositoryIT {
             List<Tag> findAll = new ArrayList<Tag>();
             tagRepository.findAll().forEach(tag -> findAll.add(tag));
             assertThat("Failed to create multiple tags ", findAll.containsAll(tags));
-        } finally
-        {
+        } finally {
             // Manual cleanup
             cleanUp(tags);
         }
@@ -110,14 +108,13 @@ public class TagRepositoryIT {
 
     /**
      * delete a set of tags
-     * 
+     *
      * @throws IOException
      */
     @Test
     public void deleteTags() throws IOException {
         List<Tag> tags = Arrays.asList(testTag1, testTag2, testTag3, testTag4);
-        try
-        {
+        try {
             List<Tag> result = new ArrayList<Tag>();
             tagRepository.saveAll(tags).forEach(tag -> {
                 result.add(tag);
@@ -126,79 +123,67 @@ public class TagRepositoryIT {
             tagRepository.deleteAll(tags);
             List<Tag> inactiveTags = new ArrayList<Tag>();
             tagRepository.findAllById(tags.stream().map(Tag::getName).collect(Collectors.toList())).forEach(tag -> {
-                if (tag.getState().equals(State.Inactive))
-                {
+                if (tag.getState().equals(State.Inactive)) {
                     inactiveTags.add(tag);
                 }
             });
             assertThat("Failed to delete multiple tags ", inactiveTags.containsAll(tags));
-        } finally
-        {
+        } finally {
             // Manual cleanup
             cleanUp(tags);
         }
     }
 
     @Test
-    public void findAllTags() throws IOException
-    {
+    public void findAllTags() throws IOException {
         List<Tag> tags = Arrays.asList(testTag1, testTag2, testTag3, testTag4);
-        try
-        {
+        try {
             tagRepository.saveAll(tags);
             List<Tag> findAll = new ArrayList<Tag>();
             tagRepository.findAll().forEach(tag -> {
                 findAll.add(tag);
             });
             assertThat("Failed to list all tags", findAll.containsAll(tags));
-        } finally
-        {
+        } finally {
             // Manual cleanup
             cleanUp(tags);
         }
     }
 
     @Test
-    public void findAllTagsByIds() throws IOException
-    {
+    public void findAllTagsByIds() throws IOException {
         List<Tag> tags = Arrays.asList(testTag1, testTag2, testTag3, testTag4);
-        try
-        {
+        try {
             tagRepository.saveAll(tags);
 
             List<Tag> findAllById = new ArrayList<Tag>();
             tagRepository.findAllById(Arrays.asList("test-tag-1", "test-tag-2"))
-                                        .forEach(tag -> {
-                                            findAllById.add(tag);
-                                        });
+                    .forEach(tag -> {
+                        findAllById.add(tag);
+                    });
             assertTrue("Failed to search by id test-tag-1 and test-tag-2 ",
                     findAllById.size() == 2 && findAllById.contains(testTag1) && findAllById.contains(testTag2));
-        } finally
-        {
+        } finally {
             // Manual cleanup
             cleanUp(tags);
         }
     }
 
     @Test
-    public void findAllInactiveTags()
-    {
+    public void findAllInactiveTags() {
 
     }
 
     @Test
-    public void findTagById() throws IOException
-    {
+    public void findTagById() throws IOException {
         List<Tag> tags = Arrays.asList(testTag1, testTag2);
-        try
-        {
+        try {
             tagRepository.saveAll(tags);
             assertTrue("Failed to find by index tag: " + testTag1,
                     testTag1.equals(tagRepository.findById(testTag1.getName()).get()));
             assertTrue("Failed to find by index tag: " + testTag2,
                     testTag2.equals(tagRepository.findById(testTag2.getName()).get()));
-        } finally
-        {
+        } finally {
             // Manual cleanup
             cleanUp(tags);
         }
@@ -207,16 +192,14 @@ public class TagRepositoryIT {
     @Test
     public void checkTagExists() throws IOException {
         List<Tag> tags = Arrays.asList(testTag1, testTag2);
-        try
-        {
+        try {
             tagRepository.saveAll(tags);
 
             assertTrue("Failed to check if exists tag: " + testTag1, tagRepository.existsById(testTag1.getName()));
             assertTrue("Failed to check if exists tag: " + testTag2, tagRepository.existsById(testTag2.getName()));
 
             assertFalse("Failed to check if exists tag: non-existant-tag", tagRepository.existsById("non-existant-tag"));
-        } finally
-        {
+        } finally {
             // Manual cleanup
             cleanUp(tags);
         }
@@ -224,19 +207,17 @@ public class TagRepositoryIT {
 
     /**
      * Cleanup the given tags
+     *
      * @param tags
      */
-    private void cleanUp(List<Tag> tags)
-    {
-        try
-        {
+    private void cleanUp(List<Tag> tags) {
+        try {
             BulkRequest bulk = new BulkRequest();
             tags.forEach(tag -> {
                 bulk.add(new DeleteRequest(ES_TAG_INDEX, ES_TAG_TYPE, tag.getName()));
             });
             client.bulk(bulk, RequestOptions.DEFAULT);
-        } catch (IOException e)
-        {
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
