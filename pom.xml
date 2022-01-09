@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.phoebus</groupId>
     <artifactId>service-olog</artifactId>
-    <version>2.0.2</version>
+    <version>2.0.3-SNAPSHOT</version>
     <name>Phoebus Olog</name>
     <description>An online logbook service that allows for the creation and retrieval of log entries.</description>
     <url>https://github.com/Olog/phoebus-olog</url>
@@ -32,7 +32,7 @@
         <connection>scm:git:git://github.com/Olog/phoebus-olog.git</connection>
         <developerConnection>scm:git:https://github.com/Olog/phoebus-olog.git</developerConnection>
         <url>https://github.com/Olog/phoebus-olog/tree/master</url>
-      <tag>service-olog-2.0.2</tag>
+      <tag>HEAD</tag>
   </scm>
 
 
