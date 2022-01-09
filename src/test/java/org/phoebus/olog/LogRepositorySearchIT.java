@@ -3,26 +3,11 @@
  */
 package org.phoebus.olog;
 
-import static org.junit.Assert.assertTrue;
-import static org.phoebus.olog.LogSearchUtil.MILLI_FORMAT;
-
-import java.io.IOException;
-import java.time.Instant;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.phoebus.olog.ElasticConfig;
-import org.phoebus.olog.LogRepository;
-import org.phoebus.olog.LogbookRepository;
-import org.phoebus.olog.OlogResourceDescriptors;
-import org.phoebus.olog.PropertyRepository;
-import org.phoebus.olog.TagRepository;
 import org.phoebus.olog.entity.Attribute;
 import org.phoebus.olog.entity.Event;
 import org.phoebus.olog.entity.Log;
@@ -40,6 +25,15 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+
+import java.io.IOException;
+import java.time.Instant;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+
+import static org.junit.Assert.assertTrue;
+import static org.phoebus.olog.LogSearchUtil.MILLI_FORMAT;
 
 /**
  * @author kunal

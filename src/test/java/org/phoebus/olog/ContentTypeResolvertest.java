@@ -19,15 +19,16 @@
 package org.phoebus.olog;
 
 import org.junit.Test;
-import org.phoebus.olog.ContentTypeResolver;
 import org.springframework.http.MediaType;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 public class ContentTypeResolvertest {
 
     @Test
-    public void testDetermineMediaType(){
+    public void testDetermineMediaType() {
 
         assertNull(ContentTypeResolver.determineMediaType(null));
         assertNull(ContentTypeResolver.determineMediaType(""));

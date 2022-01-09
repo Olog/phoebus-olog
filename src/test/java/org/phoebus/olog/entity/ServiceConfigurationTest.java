@@ -19,18 +19,16 @@
 package org.phoebus.olog.entity;
 
 import org.junit.Test;
-import org.phoebus.olog.entity.Logbook;
-import org.phoebus.olog.entity.ServiceConfiguration;
-import org.phoebus.olog.entity.Tag;
 
 import java.util.Arrays;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 public class ServiceConfigurationTest {
 
     @Test
-    public void testBuilder(){
+    public void testBuilder() {
         ServiceConfiguration serviceConfiguration = ServiceConfiguration.builder().build();
         assertNull(serviceConfiguration.getLevels());
         assertNull(serviceConfiguration.getTags());
@@ -38,7 +36,7 @@ public class ServiceConfigurationTest {
     }
 
     @Test
-    public void testNoArgsConstructor(){
+    public void testNoArgsConstructor() {
         ServiceConfiguration serviceConfiguration = new ServiceConfiguration();
         assertNull(serviceConfiguration.getLevels());
         assertNull(serviceConfiguration.getTags());
@@ -46,7 +44,7 @@ public class ServiceConfigurationTest {
     }
 
     @Test
-    public void testAllArgsConstructor(){
+    public void testAllArgsConstructor() {
         ServiceConfiguration serviceConfiguration =
                 new ServiceConfiguration(Arrays.asList(new Logbook("name", "owner")),
                         Arrays.asList(new Tag("name")),

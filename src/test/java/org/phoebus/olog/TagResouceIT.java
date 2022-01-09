@@ -1,8 +1,5 @@
 package org.phoebus.olog;
 
-import java.io.IOException;
-import java.util.List;
-
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.client.RequestOptions;
@@ -11,8 +8,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
-import org.phoebus.olog.ElasticConfig;
-import org.phoebus.olog.TagRepository;
 import org.phoebus.olog.entity.State;
 import org.phoebus.olog.entity.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,9 +17,12 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import java.io.IOException;
+import java.util.List;
+
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = ElasticConfig.class)
-@TestPropertySource(locations="classpath:test_application.properties")
+@TestPropertySource(locations = "classpath:test_application.properties")
 public class TagResouceIT {
 
     @Autowired
@@ -33,10 +31,10 @@ public class TagResouceIT {
 
     @Autowired
     private TagRepository tagRepository;
-    
+
     @Rule
     public ExpectedException exceptionRule = ExpectedException.none();
-    
+
     private Tag testTag1 = new Tag("test-tag-1", State.Active);
     private Tag testTag2 = new Tag("test-tag-2", State.Active);
     private Tag testTag3 = new Tag("test-tag-3", State.Active);
@@ -50,7 +48,8 @@ public class TagResouceIT {
 
     /**
      * Test the creation of the same test tag fails
-     * @throws IOException 
+     *
+     * @throws IOException
      */
     @Test
     public void createSameTagTwice() throws IOException {
@@ -58,7 +57,8 @@ public class TagResouceIT {
 
     /**
      * Test the deletion of a non existing test tag
-     * @throws IOException 
+     *
+     * @throws IOException
      */
     @Test
     public void deleteTag() throws IOException {
@@ -67,19 +67,17 @@ public class TagResouceIT {
 
     /**
      * Cleanup the given tags
+     *
      * @param tags
      */
-    private void cleanUp(List<Tag> tags)
-    {
-        try
-        {
+    private void cleanUp(List<Tag> tags) {
+        try {
             BulkRequest bulk = new BulkRequest();
             tags.forEach(tag -> {
                 bulk.add(new DeleteRequest(ES_TAG_INDEX, ES_TAG_TYPE, tag.getName()));
             });
             client.bulk(bulk, RequestOptions.DEFAULT);
-        } catch (IOException e)
-        {
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }

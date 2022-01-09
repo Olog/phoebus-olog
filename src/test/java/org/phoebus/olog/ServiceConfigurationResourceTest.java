@@ -21,11 +21,6 @@ package org.phoebus.olog;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.phoebus.olog.LogResource;
-import org.phoebus.olog.LogbookRepository;
-import org.phoebus.olog.OlogResourceDescriptors;
-import org.phoebus.olog.TagRepository;
-import org.phoebus.olog.entity.Log;
 import org.phoebus.olog.entity.Logbook;
 import org.phoebus.olog.entity.ServiceConfiguration;
 import org.phoebus.olog.entity.Tag;
@@ -42,7 +37,7 @@ import java.util.Arrays;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -75,7 +70,7 @@ public class ServiceConfigurationResourceTest extends ResourcesTestBase {
     }
 
     @Test
-    public void testServiceConfiguration() throws Exception{
+    public void testServiceConfiguration() throws Exception {
         when(logbookRepository.findAll()).thenReturn(Arrays.asList(logbook1, logbook2));
         when(tagRepository.findAll()).thenReturn(Arrays.asList(tag1, tag2));
 
