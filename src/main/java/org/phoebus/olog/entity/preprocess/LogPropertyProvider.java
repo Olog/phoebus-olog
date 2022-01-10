@@ -18,6 +18,7 @@
 
 package org.phoebus.olog.entity.preprocess;
 
+import org.phoebus.olog.entity.Log;
 import org.phoebus.olog.entity.Property;
 
 /**
@@ -31,7 +32,10 @@ public interface LogPropertyProvider {
     /**
      * Implementations should take care to return quickly as clients would otherwise need to wait for
      * the log submission response.
-     * @return A {@link Property} that can be added to log entries.
+     * @param log The {@link Log} object as created by the client. Implementations can use this to apply filtering
+     *            based on the fields of the log entry.
+     * @return A {@link Property} added to a new log entry. An implementation should return <code>null</code>
+     * if it applies a filter that rules out the log entry.
      */
-    Property getProperty();
+    Property getProperty(Log log);
 }

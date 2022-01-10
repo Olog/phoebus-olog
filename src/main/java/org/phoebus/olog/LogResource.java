@@ -65,28 +65,37 @@ import static org.phoebus.util.time.TimestampFormats.MILLI_FORMAT;
 @RestController
 @RequestMapping(LOG_RESOURCE_URI)
 public class LogResource {
-    private Logger log = Logger.getLogger(LogResource.class.getName());
+    private final Logger log = Logger.getLogger(LogResource.class.getName());
 
     @Autowired
     LogRepository logRepository;
     @Autowired
     AttachmentRepository attachmentRepository;
+    @SuppressWarnings("unused")
     @Autowired
     private LogbookRepository logbookRepository;
+    @SuppressWarnings("unused")
     @Autowired
     private TagRepository tagRepository;
+    @SuppressWarnings("unused")
     @Autowired
     private List<MarkupCleaner> markupCleaners;
+    @SuppressWarnings("unused")
     @Autowired
     private List<LogEntryNotifier> logEntryNotifiers;
+    @SuppressWarnings("unused")
     @Autowired
     private TaskExecutor taskExecutor;
+    @SuppressWarnings("unused")
     @Autowired
     private String defaultMarkup;
+    @SuppressWarnings("unused")
     @Autowired
     private List<LogPropertyProvider> propertyProviders;
+    @SuppressWarnings("unused")
     @Autowired
     private ExecutorService executorService;
+    @SuppressWarnings("unused")
     @Autowired
     private Long propertyProvidersTimeout;
 
@@ -261,6 +270,7 @@ public class LogResource {
      * @return The updated log record, or HTTP status 404 if the log record does not exist. If the path
      * variable does not match the id in the log record, HTTP status 400 (bad request) is returned.
      */
+    @SuppressWarnings("unused")
     @PostMapping("/{logId}")
     public Log updateLog(@PathVariable String logId,
                          @RequestParam(value = "markup", required = false) String markup,
@@ -300,6 +310,7 @@ public class LogResource {
      * @param files The files subject to upload.
      * @return The persisted {@link Log} object.
      */
+    @SuppressWarnings("unused")
     @PostMapping(value = "/attachments-multi/{logId}", consumes = "multipart/form-data")
     public Log uploadMultipleAttachments(@PathVariable String logId,
                                          @RequestPart("file") MultipartFile[] files) {
@@ -358,7 +369,7 @@ public class LogResource {
         List<String> propertyNames = log.getProperties().stream().map(Property::getName).collect(Collectors.toList());
         List<CompletableFuture<Property>> completableFutures =
                 propertyProviders.stream()
-                        .map(propertyProvider -> CompletableFuture.supplyAsync(() -> propertyProvider.getProperty(), executorService))
+                        .map(propertyProvider -> CompletableFuture.supplyAsync(() -> propertyProvider.getProperty(log), executorService))
                         .collect(Collectors.toList());
 
         CompletableFuture<Void> allFutures =
@@ -375,7 +386,7 @@ public class LogResource {
                         .filter(future -> future.isDone() && !future.isCompletedExceptionally())
                         .map(CompletableFuture::join)
                         .collect(Collectors.toList());
-        providedProperties.stream().forEach(property -> {
+        providedProperties.forEach(property -> {
             if (property != null && !propertyNames.contains(property.getName())) {
                 log.getProperties().add(property);
             }
