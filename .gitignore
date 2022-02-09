@@ -7,3 +7,5 @@
 **/*mv.db
 **/*trace.db
 docker-compose-local*
+
+pom.xml.releaseBackup

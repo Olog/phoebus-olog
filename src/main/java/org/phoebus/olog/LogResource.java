@@ -31,6 +31,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
@@ -156,8 +157,8 @@ public class LogResource {
      */
     @GetMapping()
     @Deprecated
-    public List<Log> findLogs(@RequestParam MultiValueMap<String, String> allRequestParams) {
-        logSearchRequest(allRequestParams);
+    public List<Log> findLogs(@RequestHeader(value = "X-Olog-Client-Info", required = false, defaultValue = "n/a") String clientInfo, @RequestParam MultiValueMap<String, String> allRequestParams) {
+        logSearchRequest(clientInfo, allRequestParams);
         for (String key : allRequestParams.keySet()) {
             if ("start".equalsIgnoreCase(key.toLowerCase()) || "end".equalsIgnoreCase(key.toLowerCase())) {
                 String value = allRequestParams.get(key).get(0);
@@ -175,8 +176,8 @@ public class LogResource {
     }
 
     @GetMapping("/search")
-    public SearchResult search(@RequestParam MultiValueMap<String, String> allRequestParams) {
-        logSearchRequest(allRequestParams);
+    public SearchResult search(@RequestHeader(value = "X-Olog-Client-Info", required = false, defaultValue = "n/a") String clientInfo, @RequestParam MultiValueMap<String, String> allRequestParams) {
+        logSearchRequest(clientInfo, allRequestParams);
         for (String key : allRequestParams.keySet()) {
             if ("start".equalsIgnoreCase(key.toLowerCase()) || "end".equalsIgnoreCase(key.toLowerCase())) {
                 String value = allRequestParams.get(key).get(0);
@@ -201,7 +202,8 @@ public class LogResource {
      * @return The persisted {@link Log} object.
      */
     @PutMapping()
-    public Log createLog(@RequestParam(value = "markup", required = false) String markup,
+    public Log createLog(@RequestHeader(value = "X-Olog-Client-Info", required = false, defaultValue = "n/a") String clientInfo,
+            @RequestParam(value = "markup", required = false) String markup,
                          @Valid @RequestBody Log log,
                          @AuthenticationPrincipal Principal principal) {
         log.setOwner(principal.getName());
@@ -224,6 +226,9 @@ public class LogResource {
         addPropertiesFromProviders(log);
         Log newLogEntry = logRepository.save(log);
         sendToNotifiers(newLogEntry);
+
+        this.log.log(Level.INFO, "Entry id " + newLogEntry.getId() + " created from " + clientInfo);
+
         return newLogEntry;
     }
 
@@ -396,13 +401,13 @@ public class LogResource {
     /**
      * Logs a search request. This may serve the purpose of analysis, i.e. what kind of search queries
      * are actually used (default?, custom?, completely unexpected?).
-     *
+     * @param clientInfo String identifying client
      * @param allSearchParameters The list of all search parameters as provided by client.
      */
-    private void logSearchRequest(MultiValueMap<String, String> allSearchParameters) {
+    private void logSearchRequest(String clientInfo, MultiValueMap<String, String> allSearchParameters) {
         String toLog = allSearchParameters.entrySet().stream()
                 .map((e) -> e.getKey().trim() + "=" + e.getValue().stream().collect(Collectors.joining(",")))
                 .collect(Collectors.joining("&"));
-        log.log(Level.INFO, "Query " + toLog);
+        log.log(Level.INFO, "Query " + toLog + " from client " + clientInfo);
     }
 }
