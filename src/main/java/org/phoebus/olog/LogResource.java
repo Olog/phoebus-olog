@@ -8,6 +8,7 @@ package org.phoebus.olog;
 import org.apache.commons.collections4.CollectionUtils;
 import org.phoebus.olog.entity.Attachment;
 import org.phoebus.olog.entity.Log;
+import org.phoebus.olog.entity.LogEntryGroupHelper;
 import org.phoebus.olog.entity.Property;
 import org.phoebus.olog.entity.SearchResult;
 import org.phoebus.olog.entity.Tag;
@@ -196,16 +197,27 @@ public class LogResource {
     }
 
     /**
+     * Creates a new log entry. If the <code>inReplyTo</code> parameters identifies an existing log entry,
+     * this method will treat the new log entry as a reply.
+     * <p>
+     * This may return a HTTP 400 if for instance <code>inReplyTo</code> does not identify an existing log entry,
+     * or if the logbooks listed in the {@link Log} object contains invalid (i.e. non-existing) logbooks.
+     *
      * @param log       A {@link Log} object to be persisted.
      * @param markup    Optional string identifying the wanted markup scheme.
+     * @param inReplyTo Optional log entry id specifying to which log entry the new log entry is a response.
      * @param principal The authenticated {@link Principal} of the request.
      * @return The persisted {@link Log} object.
      */
     @PutMapping()
     public Log createLog(@RequestHeader(value = "X-Olog-Client-Info", required = false, defaultValue = "n/a") String clientInfo,
-            @RequestParam(value = "markup", required = false) String markup,
+                         @RequestParam(value = "markup", required = false) String markup,
                          @Valid @RequestBody Log log,
+                         @RequestParam(value = "inReplyTo", required = false, defaultValue = "-1") String inReplyTo,
                          @AuthenticationPrincipal Principal principal) {
+        if (!inReplyTo.equals("-1")) {
+            handleReply(inReplyTo, log);
+        }
         log.setOwner(principal.getName());
         Set<String> logbookNames = log.getLogbooks().stream().map(l -> l.getName()).collect(Collectors.toSet());
         Set<String> persistedLogbookNames = new HashSet<>();
@@ -391,6 +403,7 @@ public class LogResource {
                         .filter(future -> future.isDone() && !future.isCompletedExceptionally())
                         .map(CompletableFuture::join)
                         .collect(Collectors.toList());
+
         providedProperties.forEach(property -> {
             if (property != null && !propertyNames.contains(property.getName())) {
                 log.getProperties().add(property);
@@ -401,7 +414,8 @@ public class LogResource {
     /**
      * Logs a search request. This may serve the purpose of analysis, i.e. what kind of search queries
      * are actually used (default?, custom?, completely unexpected?).
-     * @param clientInfo String identifying client
+     *
+     * @param clientInfo          String identifying client
      * @param allSearchParameters The list of all search parameters as provided by client.
      */
     private void logSearchRequest(String clientInfo, MultiValueMap<String, String> allSearchParameters) {
@@ -409,5 +423,34 @@ public class LogResource {
                 .map((e) -> e.getKey().trim() + "=" + e.getValue().stream().collect(Collectors.joining(",")))
                 .collect(Collectors.joining("&"));
         log.log(Level.INFO, "Query " + toLog + " from client " + clientInfo);
+    }
+
+    /**
+     * Deals with the log entry group property such that if the original log entry (to which user
+     * replies) does not already contain the property it is added and the original log entry is updated.
+     * Then the reply entry is augmented with the log entry property.
+     *
+     * @param originalLogEntryId The (Elastic) id of the log entry user wants to reply to.
+     * @param log                The contents of the reply entry.
+     * @throws {@link ResponseStatusException} if <code>originalLogEntryId</code> does not identify an
+     *                existing log entry. This will result in the client receiving a HTTP 400 status.
+     */
+    private void handleReply(String originalLogEntryId, Log log) {
+        try {
+            Log originalLogEntry = logRepository.findById(originalLogEntryId).get();
+            // Check if the original entry already contains the log entry group property
+            Property logEntryGroupProperty = LogEntryGroupHelper.getLogEntryGroupProperty(originalLogEntry);
+            if (logEntryGroupProperty == null) {
+                logEntryGroupProperty = LogEntryGroupHelper.createNewLogEntryProperty();
+                originalLogEntry.getProperties().add(logEntryGroupProperty);
+                // Update the original log entry
+                logRepository.update(originalLogEntry);
+            }
+            // Add the log entry group property to the reply entry (i.e. the new entry)
+            log.getProperties().add(logEntryGroupProperty);
+        } catch (ResponseStatusException exception) {
+            // Log entry not found, return HTTP 400
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot reply to log entry " + originalLogEntryId + " as it does not exist");
+        }
     }
 }
