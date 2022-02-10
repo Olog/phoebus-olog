@@ -18,15 +18,18 @@
 
 package org.phoebus.olog;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatcher;
+import org.mockito.Mockito;
 import org.mockito.internal.util.collections.Sets;
 import org.phoebus.olog.entity.Attribute;
 import org.phoebus.olog.entity.Log;
 import org.phoebus.olog.entity.Log.LogBuilder;
+import org.phoebus.olog.entity.LogEntryGroupHelper;
 import org.phoebus.olog.entity.Logbook;
 import org.phoebus.olog.entity.Property;
 import org.phoebus.olog.entity.SearchResult;
@@ -50,6 +53,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -475,6 +479,114 @@ public class LogResourceTest extends ResourcesTestBase {
                 .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
                 .contentType(JSON);
         mockMvc.perform(request).andExpect(status().isBadRequest());
+        reset(logRepository);
+    }
+
+    @Test
+    public void testReplyValidLogEntryId() throws Exception{
+        when(logbookRepository.findAll()).thenReturn(Arrays.asList(logbook1, logbook2));
+        when(tagRepository.findAll()).thenReturn(Arrays.asList(tag1, tag2));
+        when(logRepository.findById("7"))
+                .thenReturn(Optional.of(Log.LogBuilder.createLog().id(7L).build()));
+        Log log = Log.LogBuilder.createLog().id(1L).build();
+        when(logRepository.save(Mockito.any(Log.class))).thenAnswer(invocationOnMock -> log);
+        MockHttpServletRequestBuilder request = put("/" + OlogResourceDescriptors.LOG_RESOURCE_URI + "?inReplyTo=7")
+                .content(objectMapper.writeValueAsString(log1))
+                .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
+                .contentType(JSON);
+        mockMvc.perform(request).andExpect(status().isOk());
+        reset(logRepository);
+    }
+
+    @Test
+    public void testGroupNonExistingLogEntryId() throws Exception{
+        when(logRepository.findById("1")).thenReturn(Optional.of(Log.LogBuilder.createLog().build()));
+        when(logRepository.findById("2")).thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Not found."));
+
+        List<Long> ids = Arrays.asList(1L, 2L);
+
+        MockHttpServletRequestBuilder request = post("/" + OlogResourceDescriptors.LOG_RESOURCE_URI + "/group")
+                .content(objectMapper.writeValueAsString(ids))
+                .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
+                .contentType(JSON);
+        mockMvc.perform(request).andExpect(status().isBadRequest());
+
+        reset(logRepository);
+    }
+
+    @Test
+    public void testGroupMultipleGroupIdsFound() throws Exception{
+        Property logEntryGroupProperty1 = LogEntryGroupHelper.createNewLogEntryProperty();
+        Log log1 = Log.LogBuilder.createLog().id(1L).setProperties(Set.of(logEntryGroupProperty1)).build();
+        Property logEntryGroupProperty2 = LogEntryGroupHelper.createNewLogEntryProperty();
+        Log log2 = Log.LogBuilder.createLog().id(2L).setProperties(Set.of(logEntryGroupProperty2)).build();
+        when(logRepository.findById("1")).thenReturn(Optional.of(log1));
+        when(logRepository.findById("2")).thenReturn(Optional.of(log2));
+
+        List<Long> ids = Arrays.asList(1L, 2L);
+
+        MockHttpServletRequestBuilder request = post("/" + OlogResourceDescriptors.LOG_RESOURCE_URI + "/group")
+                .content(objectMapper.writeValueAsString(ids))
+                .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
+                .contentType(JSON);
+        mockMvc.perform(request).andExpect(status().isBadRequest());
+
+        reset(logRepository);
+    }
+
+    @Test
+    public void testGroupWithExisting1() throws Exception{
+        Property logEntryGroupProperty1 = LogEntryGroupHelper.createNewLogEntryProperty();
+        Log log1 = Log.LogBuilder.createLog().id(1L).setProperties(Set.of(logEntryGroupProperty1)).build();
+        Log log2 = Log.LogBuilder.createLog().id(2L).setProperties(Set.of(logEntryGroupProperty1)).build();
+        when(logRepository.findById("1")).thenReturn(Optional.of(log1));
+        when(logRepository.findById("2")).thenReturn(Optional.of(log2));
+
+        List<Long> ids = Arrays.asList(1L, 2L);
+
+        MockHttpServletRequestBuilder request = post("/" + OlogResourceDescriptors.LOG_RESOURCE_URI + "/group")
+                .content(objectMapper.writeValueAsString(ids))
+                .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
+                .contentType(JSON);
+        mockMvc.perform(request).andExpect(status().isOk());
+
+        reset(logRepository);
+    }
+
+    @Test
+    public void testGroupWithExisting2() throws Exception{
+        Property logEntryGroupProperty1 = LogEntryGroupHelper.createNewLogEntryProperty();
+        Log log1 = Log.LogBuilder.createLog().id(1L).setProperties(Set.of(logEntryGroupProperty1)).build();
+        Log log2 = Log.LogBuilder.createLog().id(2L).build();
+        when(logRepository.findById("1")).thenReturn(Optional.of(log1));
+        when(logRepository.findById("2")).thenReturn(Optional.of(log2));
+
+        List<Long> ids = Arrays.asList(1L, 2L);
+
+        MockHttpServletRequestBuilder request = post("/" + OlogResourceDescriptors.LOG_RESOURCE_URI + "/group")
+                .content(objectMapper.writeValueAsString(ids))
+                .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
+                .contentType(JSON);
+        mockMvc.perform(request).andExpect(status().isOk());
+
+        reset(logRepository);
+    }
+
+    @Test
+    public void testGroupNoExisting() throws Exception{
+        Log log1 = Log.LogBuilder.createLog().id(1L).build();
+        Log log2 = Log.LogBuilder.createLog().id(2L).build();
+        when(logRepository.findById("1")).thenReturn(Optional.of(log1));
+        when(logRepository.findById("2")).thenReturn(Optional.of(log2));
+
+        List<Long> ids = Arrays.asList(1L, 2L);
+
+        MockHttpServletRequestBuilder request = post("/" + OlogResourceDescriptors.LOG_RESOURCE_URI + "/group")
+                .content(objectMapper.writeValueAsString(ids))
+                .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
+                .contentType(JSON);
+        mockMvc.perform(request).andExpect(status().isOk());
+
         reset(logRepository);
     }
 }
