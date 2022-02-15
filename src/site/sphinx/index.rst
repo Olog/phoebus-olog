@@ -174,6 +174,13 @@ Create a simple log entry
       ]
  }
 
+Reply to a log entry. This uses the same end point as when creating a log entry, but client must
+send the unique id of the log entry to which the new one is a reply.
+
+**PUT** https://localhost:8181/Olog/logs?inReplyTo=<id>
+
+If <id> does not identify an existing log entry, a HTTP 400 status is returned.
+
 Adding an attachment 
 
 **POST** https://localhost:8181/Olog/logs/attachments/{logId}

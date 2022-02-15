@@ -8,6 +8,7 @@ package org.phoebus.olog;
 import org.apache.commons.collections4.CollectionUtils;
 import org.phoebus.olog.entity.Attachment;
 import org.phoebus.olog.entity.Log;
+import org.phoebus.olog.entity.LogEntryGroupHelper;
 import org.phoebus.olog.entity.Property;
 import org.phoebus.olog.entity.SearchResult;
 import org.phoebus.olog.entity.Tag;
@@ -44,6 +45,7 @@ import java.io.IOException;
 import java.security.Principal;
 import java.time.Instant;
 import java.time.temporal.TemporalAmount;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -66,7 +68,7 @@ import static org.phoebus.util.time.TimestampFormats.MILLI_FORMAT;
 @RestController
 @RequestMapping(LOG_RESOURCE_URI)
 public class LogResource {
-    private final Logger log = Logger.getLogger(LogResource.class.getName());
+    private final Logger logger = Logger.getLogger(LogResource.class.getName());
 
     @Autowired
     LogRepository logRepository;
@@ -100,13 +102,17 @@ public class LogResource {
     @Autowired
     private Long propertyProvidersTimeout;
 
+    private static final String OLOG_CLIENT_INFO_HEADER = "X-Olog-Client-Info";
+
+    private final Object logGroupSyncObject = new Object();
+
     @GetMapping("{logId}")
     public Log getLog(@PathVariable String logId) {
         Optional<Log> foundLog = logRepository.findById(logId);
         if (foundLog.isPresent()) {
             return foundLog.get();
         } else {
-            log.log(Level.SEVERE, "Failed to find log: " + logId, new ResponseStatusException(HttpStatus.NOT_FOUND));
+            logger.log(Level.SEVERE, "Failed to find log: " + logId, new ResponseStatusException(HttpStatus.NOT_FOUND));
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to find log: " + logId);
         }
     }
@@ -120,7 +126,7 @@ public class LogResource {
             }).collect(Collectors.toSet());
             if (attachments.size() == 1) {
                 Attachment attachment = attachments.iterator().next();
-                this.log.log(Level.INFO, "Requesting attachment " + attachment.getId() + ": " + attachment.getFilename());
+                this.logger.log(Level.INFO, "Requesting attachment " + attachment.getId() + ": " + attachment.getFilename());
                 Attachment foundAttachment = attachmentRepository.findById(attachment.getId()).get();
                 InputStreamResource resource;
                 try {
@@ -149,7 +155,7 @@ public class LogResource {
 
     /**
      * Finds matching log entries based on the specified search parameters.
-     *
+     * @param clientInfo A string sent by client identifying it with respect to version and platform.
      * @param allRequestParams A map of search query parameters. Note that this method supports date/time expressions
      *                         like "12 hours" or "2 days" as well as formatted strings like "2021-01-20 12:00:00.123".
      * @return A {@link List} of {@link Log} objects matching the query parameters, or an
@@ -157,7 +163,7 @@ public class LogResource {
      */
     @GetMapping()
     @Deprecated
-    public List<Log> findLogs(@RequestHeader(value = "X-Olog-Client-Info", required = false, defaultValue = "n/a") String clientInfo, @RequestParam MultiValueMap<String, String> allRequestParams) {
+    public List<Log> findLogs(@RequestHeader(value = OLOG_CLIENT_INFO_HEADER, required = false, defaultValue = "n/a") String clientInfo, @RequestParam MultiValueMap<String, String> allRequestParams) {
         logSearchRequest(clientInfo, allRequestParams);
         for (String key : allRequestParams.keySet()) {
             if ("start".equalsIgnoreCase(key.toLowerCase()) || "end".equalsIgnoreCase(key.toLowerCase())) {
@@ -176,7 +182,7 @@ public class LogResource {
     }
 
     @GetMapping("/search")
-    public SearchResult search(@RequestHeader(value = "X-Olog-Client-Info", required = false, defaultValue = "n/a") String clientInfo, @RequestParam MultiValueMap<String, String> allRequestParams) {
+    public SearchResult search(@RequestHeader(value = OLOG_CLIENT_INFO_HEADER, required = false, defaultValue = "n/a") String clientInfo, @RequestParam MultiValueMap<String, String> allRequestParams) {
         logSearchRequest(clientInfo, allRequestParams);
         for (String key : allRequestParams.keySet()) {
             if ("start".equalsIgnoreCase(key.toLowerCase()) || "end".equalsIgnoreCase(key.toLowerCase())) {
@@ -196,16 +202,27 @@ public class LogResource {
     }
 
     /**
+     * Creates a new log entry. If the <code>inReplyTo</code> parameters identifies an existing log entry,
+     * this method will treat the new log entry as a reply.
+     * <p>
+     * This may return a HTTP 400 if for instance <code>inReplyTo</code> does not identify an existing log entry,
+     * or if the logbooks listed in the {@link Log} object contains invalid (i.e. non-existing) logbooks.
+     * @param clientInfo A string sent by client identifying it with respect to version and platform.
      * @param log       A {@link Log} object to be persisted.
      * @param markup    Optional string identifying the wanted markup scheme.
+     * @param inReplyTo Optional log entry id specifying to which log entry the new log entry is a response.
      * @param principal The authenticated {@link Principal} of the request.
      * @return The persisted {@link Log} object.
      */
     @PutMapping()
-    public Log createLog(@RequestHeader(value = "X-Olog-Client-Info", required = false, defaultValue = "n/a") String clientInfo,
-            @RequestParam(value = "markup", required = false) String markup,
+    public Log createLog(@RequestHeader(value = OLOG_CLIENT_INFO_HEADER, required = false, defaultValue = "n/a") String clientInfo,
+                         @RequestParam(value = "markup", required = false) String markup,
                          @Valid @RequestBody Log log,
+                         @RequestParam(value = "inReplyTo", required = false, defaultValue = "-1") String inReplyTo,
                          @AuthenticationPrincipal Principal principal) {
+        if (!inReplyTo.equals("-1")) {
+            handleReply(inReplyTo, log);
+        }
         log.setOwner(principal.getName());
         Set<String> logbookNames = log.getLogbooks().stream().map(l -> l.getName()).collect(Collectors.toSet());
         Set<String> persistedLogbookNames = new HashSet<>();
@@ -227,7 +244,7 @@ public class LogResource {
         Log newLogEntry = logRepository.save(log);
         sendToNotifiers(newLogEntry);
 
-        this.log.log(Level.INFO, "Entry id " + newLogEntry.getId() + " created from " + clientInfo);
+        logger.log(Level.INFO, "Entry id " + newLogEntry.getId() + " created from " + clientInfo);
 
         return newLogEntry;
     }
@@ -329,6 +346,52 @@ public class LogResource {
         }
     }
 
+    @SuppressWarnings("unused")
+    @PostMapping(value = "/group")
+    public void groupLogEntries(@RequestBody List<Long> logEntryIds) {
+        logger.log(Level.INFO, "Grouping log entries: " + logEntryIds.stream().map(id -> Long.toString(id)).collect(Collectors.joining(",")));
+        Property existingLogEntryGroupProperty = null;
+        List<Log> logs = new ArrayList<>();
+        // Check prerequisites: if two (or more) log entries are already contained in a group, they must all be contained in
+        // the same group. If not, throw exception.
+        synchronized (logGroupSyncObject) {
+            for (Long id : logEntryIds) {
+                Optional<Log> log = null;
+                try {
+                    log = logRepository.findById(Long.toString(id));
+                } catch (ResponseStatusException exception) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Log id " + id + " not found");
+                }
+                Property logEntryGroupProperty = LogEntryGroupHelper.getLogEntryGroupProperty(log.get());
+                if (logEntryGroupProperty != null && existingLogEntryGroupProperty != null &&
+                        !logEntryGroupProperty.getAttribute(LogEntryGroupHelper.ATTRIBUTE_ID).equals(existingLogEntryGroupProperty.getAttribute(LogEntryGroupHelper.ATTRIBUTE_ID))) {
+                    logger.log(Level.INFO, "Grouping not allowed due to conflicting log entry groups.");
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot group: at least two entries already contained in different groups");
+                }
+                if(logEntryGroupProperty != null){
+                    existingLogEntryGroupProperty = logEntryGroupProperty;
+                }
+                logs.add(log.get());
+            }
+
+            final Property logEntryGroupProperty;
+            // If no existing log entry group was found, create a new.
+            if (existingLogEntryGroupProperty == null) {
+                logEntryGroupProperty = LogEntryGroupHelper.createNewLogEntryProperty();
+            } else {
+                logEntryGroupProperty = existingLogEntryGroupProperty;
+            }
+
+            // Now update the log entries by adding the log group property. Except for those that already have it.
+            logs.forEach(log -> {
+                if (LogEntryGroupHelper.getLogEntryGroupProperty(log) == null) {
+                    log.getProperties().add(logEntryGroupProperty);
+                    logRepository.update(log);
+                }
+            });
+        }
+    }
+
     /**
      * {@link LogEntryNotifier} providers are called for the specified log entry. Since a provider
      * implementation may need some time to do it's job, calling them is done asynchronously. Any
@@ -391,6 +454,7 @@ public class LogResource {
                         .filter(future -> future.isDone() && !future.isCompletedExceptionally())
                         .map(CompletableFuture::join)
                         .collect(Collectors.toList());
+
         providedProperties.forEach(property -> {
             if (property != null && !propertyNames.contains(property.getName())) {
                 log.getProperties().add(property);
@@ -401,13 +465,45 @@ public class LogResource {
     /**
      * Logs a search request. This may serve the purpose of analysis, i.e. what kind of search queries
      * are actually used (default?, custom?, completely unexpected?).
-     * @param clientInfo String identifying client
+     *
+     * @param clientInfo          String identifying client
      * @param allSearchParameters The list of all search parameters as provided by client.
      */
     private void logSearchRequest(String clientInfo, MultiValueMap<String, String> allSearchParameters) {
         String toLog = allSearchParameters.entrySet().stream()
                 .map((e) -> e.getKey().trim() + "=" + e.getValue().stream().collect(Collectors.joining(",")))
                 .collect(Collectors.joining("&"));
-        log.log(Level.INFO, "Query " + toLog + " from client " + clientInfo);
+        logger.log(Level.INFO, "Query " + toLog + " from client " + clientInfo);
+    }
+
+    /**
+     * Deals with the log entry group property such that if the original log entry (to which user
+     * replies) does not already contain the property it is added and the original log entry is updated.
+     * Then the reply entry is augmented with the log entry property.
+     *
+     * @param originalLogEntryId The (Elastic) id of the log entry user wants to reply to.
+     * @param log                The contents of the reply entry.
+     * @throws {@link ResponseStatusException} if <code>originalLogEntryId</code> does not identify an
+     *                existing log entry. This will result in the client receiving a HTTP 400 status.
+     */
+    private void handleReply(String originalLogEntryId, Log log) {
+        try {
+            synchronized (logGroupSyncObject) {
+                Log originalLogEntry = logRepository.findById(originalLogEntryId).get();
+                // Check if the original entry already contains the log entry group property
+                Property logEntryGroupProperty = LogEntryGroupHelper.getLogEntryGroupProperty(originalLogEntry);
+                if (logEntryGroupProperty == null) {
+                    logEntryGroupProperty = LogEntryGroupHelper.createNewLogEntryProperty();
+                    originalLogEntry.getProperties().add(logEntryGroupProperty);
+                    // Update the original log entry
+                    logRepository.update(originalLogEntry);
+                }
+                // Add the log entry group property to the reply entry (i.e. the new entry)
+                log.getProperties().add(logEntryGroupProperty);
+            }
+        } catch (ResponseStatusException exception) {
+            // Log entry not found, return HTTP 400
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot reply to log entry " + originalLogEntryId + " as it does not exist");
+        }
     }
 }
