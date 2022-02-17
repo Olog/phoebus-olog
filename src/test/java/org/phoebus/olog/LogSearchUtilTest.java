@@ -25,10 +25,16 @@ import org.junit.Test;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.server.ResponseStatusException;
 
+import java.time.Instant;
 import java.util.Arrays;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.phoebus.olog.LogSearchUtil.MILLI_FORMAT;
 
 @TestPropertySource(locations = "classpath:no_ldap_test_application.properties")
 public class LogSearchUtilTest {
@@ -110,4 +116,26 @@ public class LogSearchUtilTest {
         assertEquals("createdDate", fieldSortBuilder.getFieldName());
 
     }
+
+    @Test
+    public void checkForInvalidTimeRanges() {
+
+        LogSearchUtil logSearchUtil = new LogSearchUtil();
+        String expectedMessage = "CAUSE: Invalid start and end times";
+
+        LinkedMultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        // start time is after the end time
+        Instant now = Instant.now();
+        params.put("start", List.of(MILLI_FORMAT.format(now.plusMillis(1000))));
+        params.put("end",   List.of(MILLI_FORMAT.format(now.minusMillis(1000))));
+
+        Exception exception = assertThrows(ResponseStatusException.class, () -> {
+            logSearchUtil.buildSearchRequest(params);
+        });
+
+        String actualMessage = exception.getMessage();
+        assertTrue(actualMessage.contains(expectedMessage));
+
+    }
+
 }
