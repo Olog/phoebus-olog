@@ -27,8 +27,10 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.server.ResponseStatusException;
 
 /**
  * A utility class for creating a search query for log entries based on time,
@@ -248,7 +250,7 @@ public class LogSearchUtil
         if(temporalSearch)
         {
             // check that the start is before the end
-            if (start.isBefore(end))
+            if (start.isBefore(end) || start.equals(end))
             {
                 if (includeEvents)
                 {
@@ -264,6 +266,9 @@ public class LogSearchUtil
                 else {
                     boolQuery.must(rangeQuery("createdDate").from(start.toEpochMilli()).to(end.toEpochMilli()));
                 }
+            } else {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Failed to parse search parameters: " + searchParameters + ", CAUSE: Invalid start and end times");
             }
         }
         // Add the description query
