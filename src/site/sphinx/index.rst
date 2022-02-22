@@ -382,3 +382,13 @@ Create multiple properties
  ]
  
 `Javadocs <apidocs/index.html>`_
+
+
+
+Developer Documentation:
+#########################
+
+.. toctree::
+   :maxdepth: 1
+
+   changelog
