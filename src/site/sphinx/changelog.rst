@@ -8,7 +8,7 @@ service-olog-2.0.3 (current development version)
 Date: TBD
 
 * Add support for initializing default logbooks, properties, and tags on service startup
-* Throw exception when invalid start and end time are requested in the log search parameters
+* Throw exception when invalid start and end time are requested in the log search parameters. Client will receive HTTP 400 (bad request) status.
 
 service-olog-2.0.3
 ------------------
