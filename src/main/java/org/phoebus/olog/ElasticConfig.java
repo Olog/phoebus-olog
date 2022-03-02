@@ -2,13 +2,10 @@ package org.phoebus.olog;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -29,9 +26,7 @@ import org.elasticsearch.client.indices.GetIndexTemplatesResponse;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.common.xcontent.XContentType;
-import org.phoebus.olog.entity.Logbook;
 import org.phoebus.olog.entity.Property;
-import org.phoebus.olog.entity.Tag;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -43,7 +38,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 /**
  * A element which creates the elastic rest clients used the olog service for
  * creating and retrieving logs and other resources
- * 
+ *
  * @author kunal
  *
  */
@@ -119,7 +114,7 @@ public class ElasticConfig
     /**
      * Checks for the existence of the elastic indices needed for Olog and creates
      * them with the appropriate mapping is they are missing.
-     * 
+     *
      * @param indexClient the elastic client instance used to validate and create
      *                    olog indices
      */
@@ -256,60 +251,6 @@ public class ElasticConfig
      * @param indexClient the elastic client instance used to create the default resources
      */
     private void elasticIndexInitialization(RestHighLevelClient indexClient) {
-        // Setup the default logbooks
-        String logbooksURL = defaultLogbooksURL;
-        if (logbooksURL.isEmpty())
-        {
-            final URL resource = getClass().getResource("/default_logbooks.json");
-            logbooksURL = resource.toExternalForm();
-        }
-        try (InputStream input = new URL(logbooksURL).openStream() ) {
-            List<Logbook> jsonLogbooks = mapper.readValue(input, new TypeReference<List<Logbook>>(){});
-
-            jsonLogbooks.stream().forEach(logbook -> {
-                try {
-                    if(!indexClient.exists(new GetRequest(ES_LOGBOOK_INDEX, ES_LOGBOOK_TYPE, logbook.getName()),
-                            RequestOptions.DEFAULT)) {
-                        IndexRequest indexRequest = new IndexRequest(ES_LOGBOOK_INDEX, ES_LOGBOOK_TYPE, logbook.getName())
-                                .source(mapper.writeValueAsBytes(logbook), XContentType.JSON)
-                                .setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE);
-                        IndexResponse response = indexClient.index(indexRequest, RequestOptions.DEFAULT);
-                    }
-                } catch (IOException e) {
-                    logger.log(Level.WARNING, "Failed to initialize logbook : " +logbook.getName(), e);
-                }
-            });
-        } catch (IOException ex) {
-            logger.log(Level.WARNING, "Failed to initialize logbooks ", ex);
-        }
-
-        // Setup the default tags
-        String tagsURL = defaultTagsURL;
-        if (defaultTagsURL.isEmpty())
-        {
-            final URL resource = getClass().getResource("/default_tags.json");
-            tagsURL = resource.toExternalForm();
-        }
-        try (InputStream input = new URL(tagsURL).openStream() ) {
-            List<Tag> jsonTags = mapper.readValue(input, new TypeReference<List<Tag>>(){});
-
-            jsonTags.stream().forEach(tag -> {
-                try {
-                    if(!indexClient.exists(new GetRequest(ES_TAG_INDEX, ES_TAG_TYPE, tag.getName()),
-                            RequestOptions.DEFAULT)) {
-                        IndexRequest indexRequest = new IndexRequest(ES_TAG_INDEX, ES_TAG_TYPE, tag.getName())
-                                .source(mapper.writeValueAsBytes(tag), XContentType.JSON)
-                                .setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE);
-                        IndexResponse response = indexClient.index(indexRequest, RequestOptions.DEFAULT);
-                    }
-                } catch (IOException e) {
-                    logger.log(Level.WARNING, "Failed to initialize tag : " +tag.getName(), e);
-                }
-            });
-        } catch (IOException ex) {
-            logger.log(Level.WARNING, "Failed to initialize tags ", ex);
-        }
-
         // Setup the default properties
         String propertiesURL = defaultPropertiesURL;
         if (propertiesURL.isEmpty())
@@ -327,7 +268,7 @@ public class ElasticConfig
                         IndexRequest indexRequest = new IndexRequest(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, property.getName())
                                 .source(mapper.writeValueAsBytes(property), XContentType.JSON)
                                 .setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE);
-                        IndexResponse response = indexClient.index(indexRequest, RequestOptions.DEFAULT);
+                        indexClient.index(indexRequest, RequestOptions.DEFAULT);
                     }
                 } catch (IOException e) {
                     logger.log(Level.WARNING, "Failed to initialize property : " +property.getName(), e);
@@ -337,5 +278,4 @@ public class ElasticConfig
             logger.log(Level.WARNING, "Failed to initialize properties ", ex);
         }
     }
-
 }
