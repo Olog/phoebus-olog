@@ -8,26 +8,26 @@
 
     <div class="container">
         <div>
-            <h3>Olog Markup Quick Reference</h3>
-            <p>Markup support in Olog is based on the <a href="https://commonmark.org/">Commonmark specification</a>.
-            Olog supports additional markup features: image size and tables.
+            <h3>Kortfattad hjälp för markup i Olog</h3>
+            <p>Stödet för markup i Olog bygger på specifikationen <a href="https://commonmark.org/">Commonmark</a>.
+            Därtill stöds även följande tillägg: bildstorlek och tabeller.
             </p>
             <p>
-                The below list is a quick reference for the supported markup features. However, there are a few
-                things to keep in mind when editing a log entry text:
+                Listan nedan är en kortfattad hjälp för markup-funktion i Olog. Det finns dock några
+                saker att tänka på när man skriver en loggtext:
                 <ol>
-                    <li>To begin a new line you need two blank characters at the end of the preceding line.
-                    <b>Or</b> an empty blank line, which will be rendered as a blank line.</li>
-                    <li>Markup for images can be created in either of the following manners:
+                    <li>En ny rad kan påbörjas genom två blanktecken i slutet av föregående rad.
+                    <b>Eller</b> en tom rad, som kommer renderas som tom rad.</li>
+                    <li>Markup för bilder kan skapas på något av följande sätt:
                         <ul>
                             <li>
-                                Using a known and valid absolute URL:
+                                En absolut URL till bild-resursen:
                                 <span class="preformatted">![alt-text](http://foo.com/image.jpg)</span><br>
-                                File URLs are not supported.
+                                Fil-URL:er på formen <span class="preformatted">file:///path/to/file.html</span> fungerar ej.
                             </li>
                             <li>
-                                By letting the editor create the markup using the dedicated tool (Embed Image).
-                                The resulting markup must not be changed.
+                                Genom att låta editorn skapa markup genom därför avsett verktyg (Embed Image).
+                                Den genererade texten inom parentesen skall ej ändras.
                             </li>
                         </ul>
                     </li>
@@ -39,9 +39,9 @@
             <table class="markdown-reference">
                 <thead>
                     <tr>
-                        <th>Type</th>
-                        <th class="second-example">Or</th>
-                        <th>… to Get</th>
+                        <th>Skriv</th>
+                        <th class="second-example">Eller</th>
+                        <th>...för att få</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -57,26 +57,26 @@
                     </tr>
                     <tr>
                         <td class="preformatted">
-                            # Heading 1
+                            # Rubrik 1
                         </td>
                         <td class="preformatted second-example">
-                            Heading 1<br>
+                            Rubrik 1<br>
                             =========
                         </td>
                         <td>
-                            <h1 class="smaller-h1">Heading 1</h1>
+                            <h1 class="smaller-h1">Rubrik 1</h1>
                         </td>
                     </tr>
                     <tr>
                         <td class="preformatted">
-                            ## Heading 2
+                            ## Rubrik 2
                         </td>
                         <td class="preformatted second-example">
-                            Heading 2<br>
+                            Rubrik 2<br>
                             ---------
                         </td>
                         <td>
-                            <h2 class="smaller-h2">Heading 2</h2>
+                            <h2 class="smaller-h2">Rubrik 2</h2>
                         </td>
                     </tr>
                     <tr>                        
@@ -88,7 +88,7 @@
                             ⋮<br>
                             [1]: http://b.org
                         </td>
-                        <td><a href="https://commonmark.org/">Link</a></td>
+                        <td><a href="https://commonmark.org/">Länk</a></td>
                     </tr>
                     <tr>
                         <td>
@@ -96,12 +96,12 @@
                                 ![alt-text](http://url/a.png){width=100 height=150}
                             </p>
                             <p>
-                                NOTE: the <span class="preformatted">{width=100 height=150}</span></span><br> 
-                                size specification is optional, as is the <span class="preformatted">alt-text</span>.
-                                The square brackets are mandatory.
+                                NOTERA: storleksangivelsen <span class="preformatted">{width=100 height=150}</span></span><br>
+                                är frivillig, liksom <span class="preformatted">alt-text</span>.
+                                Hakparentesen får dock ej utelämnas.
                             </p>
                             <p>
-                                NOTE: no blank character between closing paranthesis and opening curly bracket.
+                                NOTERA: inga blanktecken får förekomma mellan högerparentes ")" och vänster klammerparentes "{".
                             </p>
                         </td>
                         <td>
@@ -111,8 +111,8 @@
                                 [1]: http://url/b.jpg
                             </p>
                             <p>
-                                NOTE: this variant does not support<br>
-                                size specification.
+                                NOTERA: denna variant stödjer ej<br>
+                                storleksangivelse.
                             </p>
                         </td>
                         <td>
@@ -133,92 +133,92 @@
                     <tr>
                         <td class="preformatted">
                             <p>
-                                * List<br>
-                                * List<br>
-                                * List
+                                * Lista<br>
+                                * Lista<br>
+                                * Lista
                             </p>
                         </td>
                         <td class="preformatted second-example">
                             <p>
-                                - List<br>
-                                - List<br>
-                                - List<br>
+                                - Lista<br>
+                                - Lista<br>
+                                - Lista<br>
                             </p>
                         </td>
                         <td>
                             <ul>
-                                <li>List</li>
-                                <li>List</li>
-                                <li>List</li>
+                                <li>Lista</li>
+                                <li>Lista</li>
+                                <li>Lista</li>
                             </ul>
                         </td>
                     </tr>
                     <tr>
                         <td class="preformatted">
                             <p>
-                                1. One<br>
-                                2. Two<br>
-                                3. Three
+                                1. Ett<br>
+                                2. Två<br>
+                                3. Tre
                             </p>
                         </td>
                         <td class="preformatted second-example">
                             <p>
-                                1) One<br>
-                                2) Two<br>
-                                3) Three
+                                1) Ett<br>
+                                2) Två<br>
+                                3) Tre
                             </p>
                         </td>
                         <td>
                             <ol>
-                                <li>One</li>
-                                <li>Two</li>
-                                <li>Three</li>
+                                <li>Ett</li>
+                                <li>Två</li>
+                                <li>Tre</li>
                             </ol>
                         </td>
                     </tr>
                     <tr>
                         <td class="preformatted">
-                            Horizontal Rule<br>
+                            Horisontell linje<br>
                             <br>
                             ---
                         </td>
                         <td class="preformatted second-example">
-                            Horizontal Rule<br>
+                            Horisontell linje<br>
                             <br>
                             ***
                         </td>
                         <td>
-                            Horizontal Rule
+                            Horisontell linje
                             <hr class="custom-hr">
                         </td>
                     </tr>
                     <tr>                        
                         <td class="preformatted">
-                            `Inline code` with backticks
+                            `Inline-kod` med backticks
                             </td>
                         <td class="preformatted second-example">
                             &nbsp;
                         </td>
                         <td>
-                            <code class="preformatted">Inline code</code> with backticks
+                            <code class="preformatted">Inline-kod</code> med backticks
                         </td>
                     </tr>
                     <tr>
                         <td class="preformatted">
                             ```<br>
-                            # code block<br>
-                            print '3 backticks or'<br> 
+                            # kodblock<br>
+                            print '3 backticks or'<br>
                             print 'indent 4 spaces'<br>                            
                             ```
                         </td>
                         <td class="preformatted second-example">
-                            <span class="spaces">····</span># code block<br> 
+                            <span class="spaces">····</span># kodblock<br>
                             <span class="spaces">····</span>print '3 backticks or'<br>
                             <span class="spaces">····</span>print 'indent 4 spaces'
                         </td>
                         <td>
                             <div class="code-block">
-                                # code block
+                                # kodblock
                                 <br> print '3 backticks or'
                                 <br> print 'indent 4 spaces'
                             </div>
@@ -226,10 +226,10 @@
                     </tr>  
                     <tr>
                         <td class="preformatted">
-                            | Table Header 1| Table Header 2|<br>
+                            | Tabellhuvud 1 | Tabellhuvud 2 |<br>
                             |---------------|---------------|<br>
-                            | Table Cell 11 | Table Cell 12 |<br>
-                            | Table Cell 21 | Table Cell 22 |<br>
+                            | Tabellcell 11 | Tabellcell 12 |<br>
+                            | Tabellcell 21 | Tabellcell 22 |<br>
                         </td>
                         <td class="preformatted second-example">
                             &nbsp;
@@ -238,13 +238,13 @@
                             <table class="olog-table">
                                 <tbody>
                                     <tr>
-                                        <th>Table Header 1</th><th>Table Header 2</th>
+                                        <th>Tabellhuvud 1</th><th>Tabellhuvud 2</th>
                                     </tr>
                                     <tr>
-                                        <td>Table Cell 11</td><td>Table Cell 12</td>
+                                        <td>Tabellcell 11</td><td>Tabellcell 12</td>
                                     </tr>
                                     <tr>
-                                        <td>Table Cell 21</td><td>Table Cell 22</td>
+                                        <td>Tabellcell 21</td><td>Tabellcell 22</td>
                                     </tr>
                                 </tbody>
                             </table>

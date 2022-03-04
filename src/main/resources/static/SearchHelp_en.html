@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>Olog Search Help</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+
+    <div class="container">
+        <div>
+            <h2>Olog Search Help Reference</h2>
+            <p>This document explains the search capabilities supported by the Olog service. Users are encouraged
+                to familiarize themselves with this content in order to be able to construct
+                efficient queries.
+            </p>
+            <p>
+               The query as edited in the Olog clients consists of a list of key/value pairs separated by an ampersand (&amp;)
+                character. Keys identify the various elements - i.e. text and meta-data - of a log entry. Key names
+                are <b>case insensitive</b>.
+            </p>
+
+            <h2>How to use search parameter keys</h2>
+
+            <h3>start and end</h3>
+
+            These are used to search for log entries created in the date/time range start - end. There are several ways
+            to specify a date/time value:
+            <ul>
+                <li>Date/time on any of the following formats:
+                    <ul>
+                        <li><code>yyyy-MM-dd HH:mm:ss</code></li>
+                        <li><code>yyyy-MM-dd HH:mm</code></li>
+                        <li><code>yyyy-MM-dd</code> - the time portion will be set to 00:00:00</li>
+                        <li><code>HH:mm:ss</code> - the date portion will be set to current date</li>
+                    </ul>
+                </li>
+                <li>A relative time specifier using any of the following <b>case insensitive</b> formats:
+                    <ul>
+                        <li><code>X w</code> - i.e. X weeks</li>
+                        <li><code>X d</code> - i.e. X days</li>
+                        <li><code>X h</code> - i.e. X hours</li>
+                        <li><code>X m</code> - i.e. X minutes</li>
+                        <li><code>X s</code> - i.e. X seconds</li>
+                        <li><code>now</code> - i.e. the current date/time</li>
+                    </ul>
+                    For the sake of clarity user may specify the full wording, e.g. weeks, days etc. It is also possible
+                    to combine w(eeks) and d(ays), e.g. <code>10 w 4 d</code>, but any additional elements will be ignored.
+                </li>
+            </ul>
+            If a time specifier cannot be parsed, or if it is omitted, the start date/time defaults to <code>1970-01-01 00:00:00</code>,
+            while the end date/time defaults to <code>now</code>.<br>
+
+            An invalid time range - e.g. start date/time after end date/time - will trigger an error. In such cases no search
+            is performed, i.e. the service will not fall back to a default time range.<br>
+
+            To help user compose a valid date/time string for a time range search, the advanced search view of the clients offers tools
+            where user may select date and time using suitable UI components.
+
+            <h3>owner</h3>
+            This is the author element of the log entry. The value for this key is <b>case sensitive</b>,
+            but wildcards can be used, e.g. <code>owner=John*</code>.<br>
+
+            Multiple values can be specified using a comma separator, e.g. <code>owner=John,Joanna</code>. This will match log
+            entries created by any of the authors.
+
+            <h3>title</h3>
+            This is the title of the log entry. A title is mandatory for a log entry, i.e. all log entries will
+            have a non-empty title. The value for this key is <b>case insensitive</b>.<br>
+
+            Wildcards need not be used for a substring match, e.g. <code>title=increased</code> will match a log entry with the
+            title <code>Temperature increased in tank X</code>.
+
+            <h3>desc</h3>
+            This is the body of the log entry. A body text is not mandatory for a log entry, i.e. it may
+            be empty. The value for this key is <b>case insensitive</b>.<br>
+
+            Wildcards need not be used for a substring match, e.g. <code>desc=increased</code> will match a log entry with the
+            body <code>Temperature increased in tank X</code>.<br>
+
+            <b>NOTE:</b> log entries with an empty body will <b>not</b> match queries containing the desc key, even if
+            wildcards are used, e.g. <code>desc=*</code>.
+
+            <h3>logbooks</h3>
+            This is the logbooks meta-data of a log entry. A log entry is contained in
+            one or multiple logbooks. The value for this key is <b>case sensitive</b>.<br>
+
+            Multiple logbook names can be specified using a comma separator, e.g. <code>logbooks=Operations,Commissioning</code>.
+            This will match log entries contained in any of the logbooks.
+
+            <h3>tags</h3>
+            This is the tags meta-data of a log entry. A log entry may contain zero or multiple
+            tags. The value for this key is <b>case sensitive</b>.<br>
+
+            Multiple values can be specified using a comma separator, e.g. <code>tags=Alarm,Cryo</code>. This will
+            match log entries tagged with any of the tags.
+
+            <h3>properties</h3>
+            This is the properties meta-data of a log entry. A log entry may contain zero or multiple
+            properties. The value for this key is <b>case sensitive</b>.<br>
+
+            A property is a named list of attributes, where each attribute is a key/value pair. Consequently the value
+            for this search key must be specified using a dot (.) separated string corresponding to the structure of
+            a property like so:<br>
+            <code>&lt;property name&gt;.&lt;attribute name&gt;.&lt;attribute value&gt;</code><br>
+
+            Example: suppose some log entries contain a property named <code>Shift Info</code> which in turn contains an attribute named
+            <code>Shift Lead</code>. A search query for log entries where the <code>Shift Lead</code>; is <code>John Doe</code>
+            would then use: <code>properties=Shift Info.Shift Lead.John Doe</code>. Wildcards can be used in any portion of
+            the value string.<br>
+
+            Not all elements need to be specified. A query like <code>properties=Shift Info</code> will match all log entries
+            containing such a property, irrespective of the attribute list it contains.<br>
+
+            <h3>Combining keys</h3>
+            If multiple keys are used in a search query, the service will consider all (valid) keys and return log
+            entries matching all criteria. In other words, search criteria are and:ed. However, as mentioned above,
+            the value string for keys owner, tags and logbooks will - if it contains multiple elements - be used to
+            create an or:ed query for those keys.<br>
+        </span>
+    </div>
+</body>
+<style type="text/css">
+/*! normalize.css v3.0.2 | MIT License | git.io/normalize */
+
+/**
+ * 1. Set default font family to sans-serif.
+ * 2. Prevent iOS text size adjust after orientation change, without disabling
+ *    user zoom.
+ */
+
+ html {
+  font-family: sans-serif; /* 1 */
+  -ms-text-size-adjust: 100%; /* 2 */
+  -webkit-text-size-adjust: 100%; /* 2 */
+}
+
+/**
+ * Remove default margin.
+ */
+
+body {
+  margin: 8px;
+}
+
+a {
+  background-color: transparent;
+}
+
+/**
+ * Improve readability when focused and also mouse hovered in all browsers.
+ */
+
+a:active,
+a:hover {
+  outline: 0;
+}
+
+b,
+strong {
+  font-weight: bold;
+}
+
+h1 {
+  font-size: 2em;
+  margin: 0.67em 0;
+}
+
+img {
+  border: 0;
+}
+
+/**
+ * Contain overflow in all browsers.
+ */
+
+pre {
+  overflow: auto;
+}
+
+button,
+input,
+optgroup,
+select,
+textarea {
+  color: inherit; /* 1 */
+  font: inherit; /* 2 */
+  margin: 0; /* 3 */
+}
+
+/* Tables
+   ========================================================================== */
+
+/**
+ * Remove most spacing between table cells.
+ */
+
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+td,
+th {
+  padding: 0;
+}
+
+
+/* Grid
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+.container {
+  position: relative;
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 20px;
+  box-sizing: border-box; }
+.column,
+.columns {
+  width: 100%;
+  float: left;
+  box-sizing: border-box; }
+
+/* For devices larger than 400px */
+@media (min-width: 400px) {
+  .container {
+    width: 85%;
+    padding: 0; }
+}
+
+/* For devices larger than 550px */
+@media (min-width: 550px) {
+  .container {
+    width: 80%; }
+}
+
+
+/* Base Styles
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+/* NOTE
+html is set to 62.5% so that all the REM measurements throughout Skeleton
+are based on 10px sizing. So basically 1.5rem = 15px :) */
+html {
+  font-size: 62.5%; }
+body {
+  font-size: 1.5em; /* currently ems cause chrome bug misinterpreting rems on body element */
+  line-height: 1.6;
+  font-weight: 400;
+  font-family: "Roboto", Helvetica, Arial, sans-serif;
+  color: #222; }
+
+
+/* Typography
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+h1, h2, h3, h4, h5, h6 {
+  margin-top: 1rem;
+  margin-bottom: 0rem;
+  font-weight: 300; }
+h1 { font-size: 4.0rem; line-height: 1.2;  letter-spacing: -.1rem;}
+h2 { font-size: 3.3rem; line-height: 1.25; letter-spacing: -.1rem; }
+h3 { font-size: 2.8rem; line-height: 1.3;  letter-spacing: -.1rem; }
+h4 { font-size: 2.4rem; line-height: 1.35; letter-spacing: -.08rem; }
+h5 { font-size: 1.9rem; line-height: 1.5;  letter-spacing: -.05rem; }
+h6 { font-size: 1.2rem; line-height: 1.6;  letter-spacing: 0; }
+
+p {
+  margin-top: 0; }
+
+
+/* Links
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+a {
+  color: #1EAEDB; }
+a:hover {
+  color: #0FA0CE; }
+
+/* Lists
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+ol, ul {
+  padding-left: 1.8em;
+  margin-top:0.5em;
+}
+
+/* Code
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+code {
+  padding: .2rem .5rem;
+  margin: 0 .2rem;
+  font-size: 110%;
+  white-space: nowrap;
+  background: #F1F1F1;
+  border: 1px solid #E1E1E1;
+  border-radius: 4px; }
+pre > code {
+  display: block;
+  padding: 1rem 1.5rem;
+  white-space: pre; }
+
+html,body {
+  height: 97%;
+  margin: 0;
+}
+
+p {
+	margin-bottom: 1.5em;
+}
+
+.container {
+	margin-top: 2em;
+}
+/* mobile modifications */
+@media (max-width: 737px) {
+	.editor {
+		height: 9em;
+        font-size: 0.9em;
+	}
+	.render-pad, .html-pad {
+		height: 10em;
+	}
+   
+    .rowspacer {
+        display: none;
+    }
+    .container {
+        margin-top: 0.5em;
+        padding: 0 10px;
+    }
+    h1 {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+    h2 {        
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+    }
+    .generated-check {
+        display: none;
+    }
+    .button-answer {
+        margin-top: 1em;
+        margin-bottom: -1em;
+    }
+    .button-reset {
+        margin-top: 1em;
+        margin-bottom: -1em;
+    }
+    .row.exercise-instructions p {
+        margin-bottom: 0.4em;
+    }
+    .cd-container {
+        margin: 0;
+    }
+    .second-example {
+        display: none;
+    }
+}
+
+.markdown-reference {
+    width: 100%;
+}
+
+</style>
+</html>
