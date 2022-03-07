@@ -19,12 +19,13 @@ Olog
  Download and install mongodb from [mongodb](https://www.mongodb.com/download-center/community)    
   
   
-* Configure the service   
-The configuration files for olog-es are present under `olog-es/tree/master/src/main/resources` 
+* Configure the service (optional)
+The configuration files for olog-es are present under `phoebus-olog/tree/master/src/main/resources` 
 
 
 * Build 
 ```
+cd phoebus-olog
 mvn clean install
 ``` 
 
@@ -32,6 +33,7 @@ mvn clean install
 
 To build a jar with dependencies and Tomcat server, use Maven profile `deployable-jar`, e.g.:
 ```
+cd phoebus-olog
 mvn -Pdeployable-jar clean install
 ```
 
