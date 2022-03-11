@@ -224,21 +224,6 @@ public class LogResource {
             handleReply(inReplyTo, log);
         }
         log.setOwner(principal.getName());
-        Set<String> logbookNames = log.getLogbooks().stream().map(l -> l.getName()).collect(Collectors.toSet());
-        Set<String> persistedLogbookNames = new HashSet<>();
-        logbookRepository.findAll().forEach(l -> persistedLogbookNames.add(l.getName()));
-        if (!CollectionUtils.containsAll(persistedLogbookNames, logbookNames)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "One or more invalid logbook name(s)");
-        }
-        Set<Tag> tags = log.getTags();
-        if (tags != null && !tags.isEmpty()) {
-            Set<String> tagNames = tags.stream().map(t -> t.getName()).collect(Collectors.toSet());
-            Set<String> persistedTags = new HashSet<>();
-            tagRepository.findAll().forEach(t -> persistedTags.add(t.getName()));
-            if (!CollectionUtils.containsAll(persistedTags, tagNames)) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "One or more invalid tag name(s)");
-            }
-        }
         log = cleanMarkup(markup, log);
         addPropertiesFromProviders(log);
         Log newLogEntry = logRepository.save(log);
@@ -314,7 +299,6 @@ public class LogResource {
             persistedLog.setLogbooks(log.getLogbooks());
             persistedLog.setTitle(log.getTitle());
 
-            log = cleanMarkup(markup, log);
             Log newLogEntry = logRepository.update(persistedLog);
             return newLogEntry;
         } else {

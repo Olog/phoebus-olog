@@ -298,6 +298,67 @@ public class LogResourceTest extends ResourcesTestBase {
     }
 
     @Test
+    public void testUpdateInvalidLogbook() throws Exception {
+
+        Property property1 = new Property();
+        property1.setName("prop1");
+        property1.addAttributes(new Attribute("name1", "value1"));
+
+        Log log = LogBuilder.createLog()
+                .id(2L)
+                .owner("user")
+                .title("title")
+                .withLogbooks(Set.of(new Logbook("invalid", "owner")))
+                .withTags(Set.of(tag1, tag2))
+                .description("description1")
+                .createDate(now)
+                .level("Urgent")
+                .setProperties(Sets.newSet(property1))
+                .build();
+
+        when(logbookRepository.findAll()).thenReturn(Arrays.asList(logbook1, logbook2));
+        when(logRepository.findById("1")).thenReturn(Optional.of(log));
+        when(logRepository.update(log)).thenReturn(log);
+
+        MockHttpServletRequestBuilder request = post("/" + OlogResourceDescriptors.LOG_RESOURCE_URI + "/1")
+                .content(objectMapper.writeValueAsString(log))
+                .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
+                .contentType(JSON);
+        mockMvc.perform(request).andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void testUpdateInvalidTag() throws Exception {
+
+        Property property1 = new Property();
+        property1.setName("prop1");
+        property1.addAttributes(new Attribute("name1", "value1"));
+
+        Log log = LogBuilder.createLog()
+                .id(2L)
+                .owner("user")
+                .title("title")
+                .withLogbooks(Set.of(logbook1))
+                .withTags(Set.of(new Tag("invalid")))
+                .description("description1")
+                .createDate(now)
+                .level("Urgent")
+                .setProperties(Sets.newSet(property1))
+                .build();
+
+        when(logbookRepository.findAll()).thenReturn(Arrays.asList(logbook1, logbook2));
+        when(tagRepository.findAll()).thenReturn(Arrays.asList(tag1, tag2));
+        when(logRepository.findById("1")).thenReturn(Optional.of(log));
+        when(logRepository.update(log)).thenReturn(log);
+
+        MockHttpServletRequestBuilder request = post("/" + OlogResourceDescriptors.LOG_RESOURCE_URI + "/1")
+                .content(objectMapper.writeValueAsString(log))
+                .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
+                .contentType(JSON);
+        mockMvc.perform(request).andExpect(status().isBadRequest());
+    }
+
+    @Test
     public void testCreateLogInvalidLogbook() throws Exception {
         Logbook logbook = new Logbook("bad", "owner");
         Log log = LogBuilder.createLog()
