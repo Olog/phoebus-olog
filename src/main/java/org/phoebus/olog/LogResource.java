@@ -5,13 +5,11 @@
  */
 package org.phoebus.olog;
 
-import org.apache.commons.collections4.CollectionUtils;
 import org.phoebus.olog.entity.Attachment;
 import org.phoebus.olog.entity.Log;
 import org.phoebus.olog.entity.LogEntryGroupHelper;
 import org.phoebus.olog.entity.Property;
 import org.phoebus.olog.entity.SearchResult;
-import org.phoebus.olog.entity.Tag;
 import org.phoebus.olog.entity.preprocess.LogPropertyProvider;
 import org.phoebus.olog.entity.preprocess.MarkupCleaner;
 import org.phoebus.olog.notification.LogEntryNotifier;
@@ -27,7 +25,9 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -46,7 +46,6 @@ import java.security.Principal;
 import java.time.Instant;
 import java.time.temporal.TemporalAmount;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -101,12 +100,30 @@ public class LogResource {
     @SuppressWarnings("unused")
     @Autowired
     private Long propertyProvidersTimeout;
+    @Autowired
+    @SuppressWarnings("unused")
+    private LogEntryValidator logEntryValidator;
 
+    /**
+     * Custom HTTP header that client may send in order to identify itself. This is logged for some of the
+     * endpoints in this controller.
+     */
     private static final String OLOG_CLIENT_INFO_HEADER = "X-Olog-Client-Info";
 
     private final Object logGroupSyncObject = new Object();
 
+    /**
+     * Configures the {@link LogEntryValidator} to be used by this controller.
+     * @param binder {@link WebDataBinder}
+     */
+    @InitBinder
+    @SuppressWarnings("unused")
+    protected void initBinder(WebDataBinder binder) {
+        binder.setValidator(logEntryValidator);
+    }
+
     @GetMapping("{logId}")
+    @SuppressWarnings("unused")
     public Log getLog(@PathVariable String logId) {
         Optional<Log> foundLog = logRepository.findById(logId);
         if (foundLog.isPresent()) {
@@ -224,21 +241,6 @@ public class LogResource {
             handleReply(inReplyTo, log);
         }
         log.setOwner(principal.getName());
-        Set<String> logbookNames = log.getLogbooks().stream().map(l -> l.getName()).collect(Collectors.toSet());
-        Set<String> persistedLogbookNames = new HashSet<>();
-        logbookRepository.findAll().forEach(l -> persistedLogbookNames.add(l.getName()));
-        if (!CollectionUtils.containsAll(persistedLogbookNames, logbookNames)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "One or more invalid logbook name(s)");
-        }
-        Set<Tag> tags = log.getTags();
-        if (tags != null && !tags.isEmpty()) {
-            Set<String> tagNames = tags.stream().map(t -> t.getName()).collect(Collectors.toSet());
-            Set<String> persistedTags = new HashSet<>();
-            tagRepository.findAll().forEach(t -> persistedTags.add(t.getName()));
-            if (!CollectionUtils.containsAll(persistedTags, tagNames)) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "One or more invalid tag name(s)");
-            }
-        }
         log = cleanMarkup(markup, log);
         addPropertiesFromProviders(log);
         Log newLogEntry = logRepository.save(log);
@@ -314,7 +316,6 @@ public class LogResource {
             persistedLog.setLogbooks(log.getLogbooks());
             persistedLog.setTitle(log.getTitle());
 
-            log = cleanMarkup(markup, log);
             Log newLogEntry = logRepository.update(persistedLog);
             return newLogEntry;
         } else {

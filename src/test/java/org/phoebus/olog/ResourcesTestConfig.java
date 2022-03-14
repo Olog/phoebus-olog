@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mongodb.client.gridfs.GridFSBucket;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.mockito.Mockito;
+import org.phoebus.olog.entity.Log;
 import org.springframework.boot.autoconfigure.h2.H2ConsoleProperties;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -30,13 +31,16 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.data.mongodb.gridfs.GridFsOperations;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.validation.Errors;
 
 import javax.sql.DataSource;
+
+import static org.mockito.Mockito.when;
 
 @TestConfiguration
 @Import(WebSecurityConfig.class)
 // Must exclude explicitly for IT tests. Documentation claims that TestConfigurations should not
-// contribute beans unless explicilty included, but component scan may (?) override this.
+// contribute beans unless explicitly included, but component scan may (?) override this.
 @Profile("!ITtest")
 public class ResourcesTestConfig {
 
@@ -108,5 +112,12 @@ public class ResourcesTestConfig {
     @Bean
     public GridFSBucket gridFSBucket() {
         return Mockito.mock(GridFSBucket.class);
+    }
+
+    @Bean
+    public LogEntryValidator logEntryValidator(){
+        LogEntryValidator logEntryValidator = Mockito.mock(LogEntryValidator.class);
+        when(logEntryValidator.supports(Mockito.any(Class.class))).thenReturn(true);
+        return logEntryValidator;
     }
 }
