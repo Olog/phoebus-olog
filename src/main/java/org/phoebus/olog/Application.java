@@ -146,4 +146,10 @@ public class Application {
     public AcceptHeaderResolver acceptHeaderResolver(){
         return new AcceptHeaderResolver();
     }
+
+    @Bean
+    public LogEntryValidator logEntryValidator(){
+        return new LogEntryValidator();
+    }
+
 }

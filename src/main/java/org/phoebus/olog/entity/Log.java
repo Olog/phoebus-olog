@@ -26,7 +26,6 @@ import javax.validation.constraints.Size;
  * 
  * @author Kunal Shroff
  */
-@ValidLog()
 public class Log implements Serializable
 {
 

@@ -16,45 +16,63 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
-package org.phoebus.olog.entity;
+package org.phoebus.olog;
 
-import org.phoebus.olog.LogbookRepository;
-import org.phoebus.olog.TagRepository;
+import org.phoebus.olog.entity.Log;
+import org.phoebus.olog.entity.Logbook;
+import org.phoebus.olog.entity.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.Errors;
+import org.springframework.validation.Validator;
 
-import javax.validation.ConstraintValidator;
-import javax.validation.ConstraintValidatorContext;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
  * Custom validator for a {@link Log} object.
  */
-public class LogEntryValidator implements ConstraintValidator<ValidLog, Log> {
+public class LogEntryValidator implements Validator {
 
     @Autowired
+    @SuppressWarnings("unused")
     private LogbookRepository logbookRepository;
 
     @Autowired
+    @SuppressWarnings("unused")
     private TagRepository tagRepository;
 
     private final Logger logger = Logger.getLogger(LogEntryValidator.class.getName());
 
-    /**
-     * Checks that the {@link Log}'s logbooks and tags are valid, i.e. that they exist in Elastic.
-     * @param log The {@link Log} entry to check.
-     * @param context Validation context
-     * @return <code>true</code> if the log entry is considered valid, otherwise <code>false</code>
-     */
-    public boolean isValid(Log log, ConstraintValidatorContext context) {
+    @Override
+    public boolean supports(Class clazz) {
+        return Log.class.equals(clazz);
+    }
+
+    @Override
+    public void validate(Object object, Errors errors){
+        Log log = (Log)object;
+
+        if(log.getTitle() == null || log.getTitle().isEmpty()){
+            logger.log(Level.INFO, "Log title empty.");
+            errors.rejectValue("logbooks", "no.title");
+        }
+
         List<String> existingLogbookNames = new ArrayList<>();
         logbookRepository.findAll().forEach(l -> existingLogbookNames.add(l.getName()));
+
+        Set<Logbook> logbooks = log.getLogbooks();
+        if(logbooks.isEmpty()){
+            logger.log(Level.INFO, "No logbooks specified.");
+            errors.rejectValue("logbooks", "no.logbooks");
+        }
+
         for(Logbook logbook : log.getLogbooks()){
             if(!existingLogbookNames.contains(logbook.getName())){
                 logger.log(Level.INFO, "Logbook '" + logbook.getName() + "' is invalid.");
-                return false;
+                errors.rejectValue("logbooks", "invalid.logbooks");
             }
         }
 
@@ -63,9 +81,8 @@ public class LogEntryValidator implements ConstraintValidator<ValidLog, Log> {
         for(Tag tag : log.getTags()){
             if(!existingTagNames.contains(tag.getName())){
                 logger.log(Level.INFO, "Tag '" + tag.getName() + "' is invalid.");
-                return false;
+                errors.rejectValue("tags", "invalid.tags");
             }
         }
-        return true;
     }
 }
