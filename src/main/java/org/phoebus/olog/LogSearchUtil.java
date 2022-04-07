@@ -7,7 +7,6 @@ import static org.elasticsearch.index.query.QueryBuilders.fuzzyQuery;
 import static org.elasticsearch.index.query.QueryBuilders.matchPhraseQuery;
 import static org.elasticsearch.index.query.QueryBuilders.nestedQuery;
 import static org.elasticsearch.index.query.QueryBuilders.rangeQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
 import static org.elasticsearch.index.query.QueryBuilders.wildcardQuery;
 
 import java.time.Instant;
@@ -258,14 +257,7 @@ public class LogSearchUtil
                     {
                         for (String pattern : value.split("[\\|,;]"))
                         {
-                            // only image* and plt types considered
-                            pattern = pattern.trim();
-                            if(pattern.startsWith("image")){
-                                attachmentsQuery.add(wildcardQuery("attachments.fileMetadataDescription", "image*"));
-                            }
-                            else if(pattern.equals("plt")){
-                                attachmentsQuery.add(termsQuery("attachments.fileMetadataDescription", "plt"));
-                            }
+                            attachmentsQuery.add(wildcardQuery("attachments.fileMetadataDescription", pattern.trim()));
                         }
                     }
                 }
