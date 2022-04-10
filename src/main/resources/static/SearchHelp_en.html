@@ -9,7 +9,7 @@
     <div class="container">
         <div>
             <h2>Olog Search Help Reference</h2>
-            <p>This document explains the search capabilities supported by the Olog service. Users are encouraged
+            <p>This document details the search capabilities supported by the Olog service. Users are encouraged
                 to familiarize themselves with this content in order to be able to construct
                 efficient queries.
             </p>
@@ -53,8 +53,8 @@
             An invalid time range - e.g. start date/time after end date/time - will trigger an error. In such cases no search
             is performed, i.e. the service will not fall back to a default time range.<br>
 
-            To help user compose a valid date/time string for a time range search, the advanced search view of the clients offers tools
-            where user may select date and time using suitable UI components.
+            To help user compose a valid date/time string for a time range search, the advanced search view of the clients offers
+            a date/time picker tool.
 
             <h3>owner</h3>
             This is the author element of the log entry. The value for this key is <b>case sensitive</b>,
@@ -77,8 +77,9 @@
             Wildcards need not be used for a substring match, e.g. <code>desc=increased</code> will match a log entry with the
             body <code>Temperature increased in tank X</code>.<br>
 
-            <b>NOTE:</b> log entries with an empty body will <b>not</b> match queries containing the desc key, even if
-            wildcards are used, e.g. <code>desc=*</code>.
+            <b>NOTE:</b> log entries with an empty body will <b>not</b> match queries containing the <code>desc</code> key, even if
+            wildcards are used, e.g. <code>desc=*</code>. In other words, to match all log entries irrespective of
+            body text length, the <code>desc</code> key must not be present in the query.
 
             <h3>logbooks</h3>
             This is the logbooks meta-data of a log entry. A log entry is contained in
@@ -104,7 +105,7 @@
             <code>&lt;property name&gt;.&lt;attribute name&gt;.&lt;attribute value&gt;</code><br>
 
             Example: suppose some log entries contain a property named <code>Shift Info</code> which in turn contains an attribute named
-            <code>Shift Lead</code>. A search query for log entries where the <code>Shift Lead</code>; is <code>John Doe</code>
+            <code>Shift Lead</code>. A search query for log entries where the <code>Shift Lead</code> is <code>John Doe</code>
             would then use: <code>properties=Shift Info.Shift Lead.John Doe</code>. Wildcards can be used in any portion of
             the value string.<br>
 
