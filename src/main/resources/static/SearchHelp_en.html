@@ -114,12 +114,13 @@
 
             <h3>attachments</h3>
             If this added to the search query, the service will return log entries that contain at least one file attachment.
-            The value for this key is <b>case sensitive</b>. If a value for this search parameter is omitted, all attachment types are considered. Using
+            The value for this key is <b>case sensitive</b>. Use <code>attachments=all</code> to search for log entries with attachments of any type.
             <code>attachments=image</code> will match entries with image attachments, while <code>attachments=plt</code>
-            will match entries with plot file attachments. To search for log entries that containing attachments any of type but <code>image</code>
+            will match entries with plot file attachments. To search for log entries that containing attachments any of type besides <code>image</code>
             or <code>plt</code>, use <code>attachments=file</code>.<br>
 
-            As with logbooks and tags, attachment type values can be combined, e.g. <code>attachments=image,plt</code>.
+            As with logbooks and tags, attachment type values can be combined, e.g. <code>attachments=image,plt</code>. If
+            'all' is specified in the value, all other attachment type specifiers are ignored.
 
             <h3>Combining keys</h3>
             If multiple keys are used in a search query, the service will consider all (valid) keys and return log

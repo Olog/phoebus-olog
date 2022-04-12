@@ -249,16 +249,26 @@ public class LogSearchUtil
             case "attachments":
                 DisMaxQueryBuilder attachmentsQuery = disMaxQuery();
                 List<String> parameterValues = parameter.getValue();
-                if(parameterValues.isEmpty()){ // user does not specify type -> all attachment types
-                    attachmentsQuery.add(existsQuery("attachments"));
-                }
-                else{
-                    for (String value : parameterValues)
+                boolean searchAll = false;
+                // If query string contains attachments= or attachments=all, then this overrides any
+                // other parameter values and results in a search for entries with at least one attachment.
+                for (String value : parameterValues)
+                {
+                    for (String pattern : value.split("[\\|,;]"))
                     {
-                        for (String pattern : value.split("[\\|,;]"))
-                        {
+                        String parameterValue = pattern.trim();
+                        if("all".equals(parameterValue) || parameterValue.isEmpty()){
+                            attachmentsQuery = disMaxQuery();
+                            attachmentsQuery.add(existsQuery("attachments"));
+                            searchAll = true;
+                            break;
+                        }
+                        else{
                             attachmentsQuery.add(wildcardQuery("attachments.fileMetadataDescription", pattern.trim()));
                         }
+                    }
+                    if(searchAll){ // search all -> ignore other parameter values
+                        break;
                     }
                 }
                 boolQuery.must(attachmentsQuery);
