@@ -238,6 +238,10 @@ Search Parameters
 +---------------+------------------------------------------------------------------+
 |*logbooks*     | Search for log entries with at least one of the given logbooks   |
 +---------------+------------------------------------------------------------------+
+| **Attachments searches**                                                         |
++---------------+------------------------------------------------------------------+
+|*attachments*  | To search for entries with at least one attachment               |
++---------------+------------------------------------------------------------------+
 | **Pagination searches**                                                          |
 +---------------+------------------------------------------------------------------+
 |*size*         | The number of log entries to be returned within each page        |
@@ -250,9 +254,10 @@ Search Parameters
 |*sort*         | `up|down` order the search results based on create time          |
 +---------------+------------------------------------------------------------------+
 
+
 Example:
 
-**GET** https://localhost:8181/Olog/logs?desc=dump&logbooks=Operations
+**GET** https://localhost:8181/Olog/logs/search?desc=dump&logbooks=Operations
 
 The above search request will return all log entires with the term "dump" in their 
 descriptions and which are part of the Operations logbook.
@@ -260,6 +265,10 @@ descriptions and which are part of the Operations logbook.
 Retrieving an attachment of a log entry
  
 **GET** https://localhost:8181/Olog/logs/attachments/{logId}/{filename}
+
+Find entries with at least one attachment of type 'image'
+
+**GET** https://localhost:8181/Olog/logs/search?attachments=image
 
 
 Managing Logbooks & Tags
