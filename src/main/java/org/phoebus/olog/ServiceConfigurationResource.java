@@ -44,10 +44,10 @@ public class ServiceConfigurationResource {
 
     @GetMapping
     public ServiceConfiguration serviceConfiguration(){
-        return ServiceConfiguration.builder()
-                .levels(levels)
-                .logbooks(logbookRepository.findAll())
-                .tags(tagRepository.findAll())
-                .build();
+        ServiceConfiguration serviceConfiguration = new ServiceConfiguration();
+        serviceConfiguration.setLevels(levels);
+        serviceConfiguration.setLogbooks(logbookRepository.findAll());
+        serviceConfiguration.setTags(tagRepository.findAll());
+        return serviceConfiguration;
     }
 }
