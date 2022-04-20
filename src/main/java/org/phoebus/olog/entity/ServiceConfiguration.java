@@ -18,20 +18,35 @@
 
 package org.phoebus.olog.entity;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.util.List;
 
-@Builder
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class ServiceConfiguration {
 
     private Iterable<Logbook> logbooks;
     private Iterable<Tag> tags;
     private List<String> levels;
+
+    public Iterable<Logbook> getLogbooks() {
+        return logbooks;
+    }
+
+    public void setLogbooks(Iterable<Logbook> logbooks) {
+        this.logbooks = logbooks;
+    }
+
+    public Iterable<Tag> getTags() {
+        return tags;
+    }
+
+    public void setTags(Iterable<Tag> tags) {
+        this.tags = tags;
+    }
+
+    public List<String> getLevels() {
+        return levels;
+    }
+
+    public void setLevels(List<String> levels) {
+        this.levels = levels;
+    }
 }
