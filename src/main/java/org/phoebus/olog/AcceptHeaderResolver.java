@@ -16,18 +16,28 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
-package org.phoebus.olog.entity;
+package org.phoebus.olog;
 
-import org.junit.Test;
-import static org.junit.Assert.assertNull;
+import org.springframework.web.servlet.i18n.AcceptHeaderLocaleResolver;
 
-public class ServiceConfigurationTest {
+import javax.servlet.http.HttpServletRequest;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Locale;
 
-    @Test
-    public void testNoArgsConstructor() {
-        ServiceConfiguration serviceConfiguration = new ServiceConfiguration();
-        assertNull(serviceConfiguration.getLevels());
-        assertNull(serviceConfiguration.getTags());
-        assertNull(serviceConfiguration.getLogbooks());
+/**
+ * Utility class mapping a http servlet request header (Accept-Language) to a {@link Locale}.
+ */
+public class AcceptHeaderResolver extends AcceptHeaderLocaleResolver {
+
+    List<Locale> LOCALES = Arrays.asList(Locale.getAvailableLocales());
+
+    @Override
+    public Locale resolveLocale(HttpServletRequest request) {
+        String headerLang = request.getHeader("Accept-Language");
+        return headerLang == null || headerLang.isEmpty()
+                ? Locale.getDefault()
+                : Locale.lookup(Locale.LanguageRange.parse(headerLang), LOCALES);
     }
 }
+

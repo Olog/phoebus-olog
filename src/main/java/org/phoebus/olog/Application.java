@@ -141,4 +141,15 @@ public class Application {
     public Long propertyProvidersTimeout(){
         return propertyProvidersTimeout;
     }
+
+    @Bean
+    public AcceptHeaderResolver acceptHeaderResolver(){
+        return new AcceptHeaderResolver();
+    }
+
+    @Bean
+    public LogEntryValidator logEntryValidator(){
+        return new LogEntryValidator();
+    }
+
 }

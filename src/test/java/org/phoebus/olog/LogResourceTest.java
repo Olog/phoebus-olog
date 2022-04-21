@@ -18,7 +18,6 @@
 
 package org.phoebus.olog;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.junit.Before;
 import org.junit.Test;
@@ -66,6 +65,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -86,6 +86,9 @@ public class LogResourceTest extends ResourcesTestBase {
 
     @Autowired
     private TagRepository tagRepository;
+
+    @Autowired
+    private LogEntryValidator logEntryValidator;
 
     private Log log1;
     private Log log2;
@@ -126,7 +129,6 @@ public class LogResourceTest extends ResourcesTestBase {
                 .createDate(now)
                 .level("Urgent")
                 .build();
-
     }
 
     @Test
@@ -228,7 +230,6 @@ public class LogResourceTest extends ResourcesTestBase {
 
         Log savedLog = objectMapper.readValue(result.getResponse().getContentAsString(), Log.class);
         assertEquals(Long.valueOf(1L), savedLog.getId());
-        verify(logRepository, times(1)).save(argThat(new LogMatcher(log)));
         reset(logRepository);
     }
 
@@ -297,90 +298,6 @@ public class LogResourceTest extends ResourcesTestBase {
         mockMvc.perform(request).andExpect(status().isBadRequest());
     }
 
-    @Test
-    public void testCreateLogInvalidLogbook() throws Exception {
-        Logbook logbook = new Logbook("bad", "owner");
-        Log log = LogBuilder.createLog()
-                .id(1L)
-                .owner("user")
-                .withLogbooks(Set.of(logbook, logbook1, logbook2))
-                .description("description1")
-                .createDate(now)
-                .level("Urgent")
-                .build();
-        when(logbookRepository.findAll()).thenReturn(Arrays.asList(logbook1, logbook2));
-        when(tagRepository.findAll()).thenReturn(Arrays.asList(tag1, tag2));
-        when(logRepository.save(argThat(new LogMatcher(log)))).thenReturn(log);
-        MockHttpServletRequestBuilder request = put("/" + OlogResourceDescriptors.LOG_RESOURCE_URI)
-                .content(objectMapper.writeValueAsString(log))
-                .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
-                .contentType(JSON);
-        mockMvc.perform(request).andExpect(status().isBadRequest());
-    }
-
-    @Test
-    public void testCreateLogInvalidTag() throws Exception {
-        Tag tag = new Tag("bad");
-        Log log = LogBuilder.createLog()
-                .id(1L)
-                .owner("user")
-                .withLogbooks(Set.of(logbook1, logbook2))
-                .withTags(Set.of(tag, tag1, tag2))
-                .description("description1")
-                .createDate(now)
-                .level("Urgent")
-                .build();
-        when(logbookRepository.findAll()).thenReturn(Arrays.asList(logbook1, logbook2));
-        when(tagRepository.findAll()).thenReturn(Arrays.asList(tag1, tag2));
-        when(logRepository.save(argThat(new LogMatcher(log)))).thenReturn(log);
-        MockHttpServletRequestBuilder request = put("/" + OlogResourceDescriptors.LOG_RESOURCE_URI)
-                .content(objectMapper.writeValueAsString(log))
-                .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
-                .contentType(JSON);
-        mockMvc.perform(request).andExpect(status().isBadRequest());
-    }
-
-    @Test
-    public void testCreateLogNoLogbooks() throws Exception {
-        Log log = LogBuilder.createLog()
-                .id(1L)
-                .title("title")
-                .owner("user")
-                .withLogbooks(Collections.emptySet())
-                .description("description1")
-                .createDate(now)
-                .level("Urgent")
-                .build();
-        when(logbookRepository.findAll()).thenReturn(Arrays.asList(logbook1, logbook2));
-        when(tagRepository.findAll()).thenReturn(Arrays.asList(tag1, tag2));
-        when(logRepository.save(argThat(new LogMatcher(log)))).thenReturn(log);
-        MockHttpServletRequestBuilder request = put("/" + OlogResourceDescriptors.LOG_RESOURCE_URI)
-                .content(objectMapper.writeValueAsString(log))
-                .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
-                .contentType(JSON);
-        mockMvc.perform(request).andExpect(status().isBadRequest());
-    }
-
-    @Test
-    public void testCreateLogNoTitle() throws Exception {
-        Log log = LogBuilder.createLog()
-                .id(1L)
-                .owner("user")
-                .withLogbooks(Set.of(logbook1, logbook2))
-                .description("description1")
-                .createDate(now)
-                .level("Urgent")
-                .build();
-        when(logbookRepository.findAll()).thenReturn(Arrays.asList(logbook1, logbook2));
-        when(tagRepository.findAll()).thenReturn(Arrays.asList(tag1, tag2));
-        when(logRepository.save(argThat(new LogMatcher(log)))).thenReturn(log);
-        MockHttpServletRequestBuilder request = put("/" + OlogResourceDescriptors.LOG_RESOURCE_URI)
-                .content(objectMapper.writeValueAsString(log))
-                .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
-                .contentType(JSON);
-        mockMvc.perform(request).andExpect(status().isBadRequest());
-    }
-
     /**
      * Tests only endpoint URL.
      *
@@ -407,6 +324,7 @@ public class LogResourceTest extends ResourcesTestBase {
      */
     @Test
     public void testCreateAttachment() throws Exception {
+
         when(logRepository.findById("1")).thenReturn(Optional.of(log1));
         MockMultipartFile file =
                 new MockMultipartFile("file", "filename.txt", "text/plain", "some xml".getBytes());

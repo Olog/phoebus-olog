@@ -2,6 +2,7 @@ package org.phoebus.olog;
 
 import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
 import static org.elasticsearch.index.query.QueryBuilders.disMaxQuery;
+import static org.elasticsearch.index.query.QueryBuilders.existsQuery;
 import static org.elasticsearch.index.query.QueryBuilders.fuzzyQuery;
 import static org.elasticsearch.index.query.QueryBuilders.matchPhraseQuery;
 import static org.elasticsearch.index.query.QueryBuilders.nestedQuery;
@@ -9,7 +10,6 @@ import static org.elasticsearch.index.query.QueryBuilders.rangeQuery;
 import static org.elasticsearch.index.query.QueryBuilders.wildcardQuery;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -49,12 +49,16 @@ public class LogSearchUtil
     final public static DateTimeFormatter MILLI_FORMAT = DateTimeFormatter.ofPattern(MILLI_PATTERN).withZone(ZoneId.systemDefault());
 
     @Value("${elasticsearch.log.index:olog_logs}")
+    @SuppressWarnings("unused")
     private String ES_LOG_INDEX;
     @Value("${elasticsearch.log.type:olog_log}")
+    @SuppressWarnings("unused")
     private String ES_LOG_TYPE;
     @Value("${elasticsearch.result.size.search.default:100}")
+    @SuppressWarnings("unused")
     private int defaultSearchSize;
     @Value("${elasticsearch.result.size.search.max:1000}")
+    @SuppressWarnings("unused")
     private int maxSearchSize;
 
     /**
@@ -242,6 +246,33 @@ public class LogSearchUtil
                     }
                 }
                 break;
+            case "attachments":
+                DisMaxQueryBuilder attachmentsQuery = disMaxQuery();
+                List<String> parameterValues = parameter.getValue();
+                boolean searchAll = false;
+                // If query string contains attachments= or attachments=all, then this overrides any
+                // other parameter values and results in a search for entries with at least one attachment.
+                for (String value : parameterValues)
+                {
+                    for (String pattern : value.split("[\\|,;]"))
+                    {
+                        String parameterValue = pattern.trim();
+                        if("all".equals(parameterValue) || parameterValue.isEmpty()){
+                            attachmentsQuery = disMaxQuery();
+                            attachmentsQuery.add(existsQuery("attachments"));
+                            searchAll = true;
+                            break;
+                        }
+                        else{
+                            attachmentsQuery.add(wildcardQuery("attachments.fileMetadataDescription", pattern.trim()));
+                        }
+                    }
+                    if(searchAll){ // search all -> ignore other parameter values
+                        break;
+                    }
+                }
+                boolQuery.must(attachmentsQuery);
+                break;
             default:
                 // Unsupported search parameters are ignored
                 break;
@@ -327,13 +358,7 @@ public class LogSearchUtil
         searchSourceBuilder.sort("createdDate", sortOrder);
         searchSourceBuilder.query(boolQuery);
         searchSourceBuilder.size(Math.min(searchResultSize, maxSearchSize));
-        if (from >= 0)
-        {
-            searchSourceBuilder.from(from);
-        } else
-        {
-            searchSourceBuilder.from(0);
-        }
+        searchSourceBuilder.from(Math.max(0, from));
         searchSourceBuilder.timeout(new TimeValue(60, TimeUnit.SECONDS));
 
         searchRequest.source(searchSourceBuilder);
