@@ -94,7 +94,7 @@ A full list of checks is documented [here](https://maven.apache.org/maven-releas
 **Perform the release**  
 `mvn release:perform`  
 Checkout the release tag, build, sign and push the build binaries to sonatype.
-**NOTE** Mac OS users should invoke `export GPG_TTY=$(tty)` prior to `mvn release:perform`.
+**NOTE:** Mac OS users should invoke `export GPG_TTY=$(tty)` prior to `mvn release:perform`.
 
 **Publish**  
 Open the staging repository in [sonatype](https://s01.oss.sonatype.org/#stagingRepositories) and hit the *publish* button
