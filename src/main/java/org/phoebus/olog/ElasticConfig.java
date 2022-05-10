@@ -12,7 +12,12 @@ import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.json.jackson.JacksonJsonpMapper;
+import co.elastic.clients.transport.ElasticsearchTransport;
+import co.elastic.clients.transport.rest_client.RestClientTransport;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.HttpHost;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.get.GetIndexRequest;
@@ -23,6 +28,7 @@ import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.support.WriteRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.indices.GetIndexTemplatesRequest;
 import org.elasticsearch.client.indices.GetIndexTemplatesResponse;
@@ -38,20 +44,17 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * A element which creates the elastic rest clients used the olog service for
  * creating and retrieving logs and other resources
- * 
- * @author kunal
  *
+ * @author kunal
  */
 @Configuration
-@ComponentScan(basePackages = { "org.phoebus.olog" })
+@ComponentScan(basePackages = {"org.phoebus.olog"})
 @PropertySource("classpath:application.properties")
-public class ElasticConfig
-{
+public class ElasticConfig {
 
     private static final Logger logger = Logger.getLogger(ElasticConfig.class.getName());
 
@@ -91,27 +94,44 @@ public class ElasticConfig
     @Value("${default.properties.url}")
     private String defaultPropertiesURL;
 
-    private RestHighLevelClient searchClient;
-    private RestHighLevelClient indexClient;
+    private ElasticsearchClient searchClient;
+    private ElasticsearchClient indexClient;
 
-    @Bean({ "searchClient" })
-    public RestHighLevelClient getSearchClient()
-    {
-        if (searchClient == null)
-        {
-            searchClient = new RestHighLevelClient(RestClient.builder(new HttpHost(host, port, "http")));
+    @Bean({"searchClient"})
+    public ElasticsearchClient getSearchClient() {
+        if (searchClient == null) {
+            // Create the low-level client
+            RestClient httpClient = RestClient.builder(new HttpHost(host, port)).build();
+
+            // Create the Java API Client with the same low level client
+            ElasticsearchTransport transport = new RestClientTransport(
+                    httpClient,
+                    new JacksonJsonpMapper()
+            );
+
+            searchClient = new ElasticsearchClient(transport);
         }
         return searchClient;
     }
 
-    @Bean({ "indexClient" })
-    public RestHighLevelClient getIndexClient()
-    {
-        if (indexClient == null)
-        {
-            indexClient = new RestHighLevelClient(RestClient.builder(new HttpHost(host, port, "http")));
-            elasticIndexValidation(indexClient);
-            elasticIndexInitialization(indexClient);
+    @Bean({"indexClient"})
+    public ElasticsearchClient getIndexClient() {
+        if (indexClient == null) {
+            // Create the low-level client
+            RestClient httpClient = RestClient.builder(new HttpHost(host, port)).build();
+
+            // Create the HLRC
+            RestHighLevelClient hlrc = new RestHighLevelClient(RestClient.builder(new HttpHost(host, port)));
+
+            elasticIndexValidation(hlrc);
+            elasticIndexInitialization(hlrc);
+
+            // Create the Java API Client with the same low level client
+            ElasticsearchTransport transport = new RestClientTransport(
+                    httpClient,
+                    new JacksonJsonpMapper()
+            );
+            indexClient = new ElasticsearchClient(transport);
         }
         return indexClient;
     }
@@ -119,18 +139,15 @@ public class ElasticConfig
     /**
      * Checks for the existence of the elastic indices needed for Olog and creates
      * them with the appropriate mapping is they are missing.
-     * 
+     *
      * @param indexClient the elastic client instance used to validate and create
      *                    olog indices
      */
-    private synchronized void elasticIndexValidation(RestHighLevelClient indexClient)
-    {
+    private synchronized void elasticIndexValidation(RestHighLevelClient indexClient) {
         // Create/migrate the tag index
 
-        try
-        {
-            if (!indexClient.indices().exists(new GetIndexRequest().indices(ES_TAG_INDEX), RequestOptions.DEFAULT))
-            {
+        try {
+            if (!indexClient.indices().exists(new GetIndexRequest().indices(ES_TAG_INDEX), RequestOptions.DEFAULT)) {
                 CreateIndexRequest createRequest = new CreateIndexRequest(ES_TAG_INDEX);
                 ObjectMapper mapper = new ObjectMapper();
                 InputStream is = ElasticConfig.class.getResourceAsStream("/tag_mapping.json");
@@ -140,15 +157,12 @@ public class ElasticConfig
                 indexClient.indices().create(createRequest, RequestOptions.DEFAULT);
                 logger.info("Successfully created index: " + ES_TAG_INDEX);
             }
-        } catch (IOException e)
-        {
+        } catch (IOException e) {
             logger.log(Level.WARNING, "Failed to create index " + ES_TAG_INDEX, e);
         }
         // Create/migrate the logbook index
-        try
-        {
-            if (!indexClient.indices().exists(new GetIndexRequest().indices(ES_LOGBOOK_INDEX), RequestOptions.DEFAULT))
-            {
+        try {
+            if (!indexClient.indices().exists(new GetIndexRequest().indices(ES_LOGBOOK_INDEX), RequestOptions.DEFAULT)) {
                 CreateIndexRequest createRequest = new CreateIndexRequest(ES_LOGBOOK_INDEX);
                 ObjectMapper mapper = new ObjectMapper();
                 InputStream is = ElasticConfig.class.getResourceAsStream("/logbook_mapping.json");
@@ -158,15 +172,12 @@ public class ElasticConfig
                 indexClient.indices().create(createRequest, RequestOptions.DEFAULT);
                 logger.info("Successfully created index: " + ES_LOGBOOK_INDEX);
             }
-        } catch (IOException e)
-        {
+        } catch (IOException e) {
             logger.log(Level.WARNING, "Failed to create index " + ES_LOGBOOK_INDEX, e);
         }
         // Create/migrate the property index
-        try
-        {
-            if (!indexClient.indices().exists(new GetIndexRequest().indices(ES_PROPERTY_INDEX), RequestOptions.DEFAULT))
-            {
+        try {
+            if (!indexClient.indices().exists(new GetIndexRequest().indices(ES_PROPERTY_INDEX), RequestOptions.DEFAULT)) {
                 CreateIndexRequest createRequest = new CreateIndexRequest(ES_PROPERTY_INDEX);
                 ObjectMapper mapper = new ObjectMapper();
                 InputStream is = ElasticConfig.class.getResourceAsStream("/property_mapping.json");
@@ -177,16 +188,13 @@ public class ElasticConfig
                 indexClient.indices().create(createRequest, RequestOptions.DEFAULT);
                 logger.info("Successfully created index: " + ES_PROPERTY_INDEX);
             }
-        } catch (IOException e)
-        {
+        } catch (IOException e) {
             logger.log(Level.WARNING, "Failed to create index " + ES_PROPERTY_INDEX, e);
         }
 
         // Create/migrate the sequence index
-        try
-        {
-            if (!indexClient.indices().exists(new GetIndexRequest().indices(ES_SEQ_INDEX), RequestOptions.DEFAULT))
-            {
+        try {
+            if (!indexClient.indices().exists(new GetIndexRequest().indices(ES_SEQ_INDEX), RequestOptions.DEFAULT)) {
                 CreateIndexRequest createRequest = new CreateIndexRequest(ES_SEQ_INDEX);
                 createRequest.settings(
                         Settings.builder().put("index.number_of_shards", 1).put("auto_expand_replicas", "0-all"));
@@ -196,19 +204,16 @@ public class ElasticConfig
                 createRequest.mapping(ES_SEQ_TYPE, jsonMap);
                 logger.info("Successfully created index: " + ES_SEQ_TYPE);
             }
-        } catch (IOException e)
-        {
+        } catch (IOException e) {
             logger.log(Level.WARNING, "Failed to create index " + ES_SEQ_INDEX, e);
         }
 
         // create/migrate log template
-        try
-        {
+        try {
             GetIndexTemplatesResponse templates = indexClient.indices().getIndexTemplate(new GetIndexTemplatesRequest("*"), RequestOptions.DEFAULT);
             if (!templates.getIndexTemplates().stream().anyMatch(i -> {
                 return i.name().equalsIgnoreCase(ES_LOG_INDEX + "_template");
-            }))
-            {
+            })) {
                 PutIndexTemplateRequest templateRequest = new PutIndexTemplateRequest(ES_LOG_INDEX + "_template");
 
                 templateRequest.patterns(Arrays.asList(ES_LOG_INDEX));
@@ -227,8 +232,7 @@ public class ElasticConfig
 
             if (templates.getIndexTemplates().stream().anyMatch(i -> {
                 return i.name().equalsIgnoreCase(ES_LOG_INDEX + "_template") && i.version() == null;
-            }))
-            {
+            })) {
                 PutIndexTemplateRequest templateRequest = new PutIndexTemplateRequest(ES_LOG_INDEX + "_template");
 
                 templateRequest.patterns(Arrays.asList(ES_LOG_INDEX));
@@ -241,42 +245,42 @@ public class ElasticConfig
                 templateRequest.create(false);
                 indexClient.indices().putTemplate(templateRequest, RequestOptions.DEFAULT);
             }
-        } catch (IOException e)
-        {
+        } catch (IOException e) {
             logger.log(Level.WARNING, "Failed to create template for index " + ES_LOG_TYPE, e);
         }
 
     }
 
 
-    private static final ObjectMapper mapper = new ObjectMapper();
+    private static final JacksonJsonpMapper mapper = new JacksonJsonpMapper();
 
     /**
      * Create the default logbooks, tags, and properties
+     *
      * @param indexClient the elastic client instance used to create the default resources
      */
     private void elasticIndexInitialization(RestHighLevelClient indexClient) {
         // Setup the default logbooks
         String logbooksURL = defaultLogbooksURL;
-        if (logbooksURL.isEmpty())
-        {
+        if (logbooksURL.isEmpty()) {
             final URL resource = getClass().getResource("/default_logbooks.json");
             logbooksURL = resource.toExternalForm();
         }
-        try (InputStream input = new URL(logbooksURL).openStream() ) {
-            List<Logbook> jsonLogbooks = mapper.readValue(input, new TypeReference<List<Logbook>>(){});
+        try (InputStream input = new URL(logbooksURL).openStream()) {
+            List<Logbook> jsonLogbooks = mapper.objectMapper().readValue(input, new TypeReference<List<Logbook>>() {
+            });
 
             jsonLogbooks.stream().forEach(logbook -> {
                 try {
-                    if(!indexClient.exists(new GetRequest(ES_LOGBOOK_INDEX, ES_LOGBOOK_TYPE, logbook.getName()),
+                    if (!indexClient.exists(new GetRequest(ES_LOGBOOK_INDEX, ES_LOGBOOK_TYPE, logbook.getName()),
                             RequestOptions.DEFAULT)) {
                         IndexRequest indexRequest = new IndexRequest(ES_LOGBOOK_INDEX, ES_LOGBOOK_TYPE, logbook.getName())
-                                .source(mapper.writeValueAsBytes(logbook), XContentType.JSON)
+                                .source(mapper.objectMapper().writeValueAsBytes(logbook), XContentType.JSON)
                                 .setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE);
                         IndexResponse response = indexClient.index(indexRequest, RequestOptions.DEFAULT);
                     }
                 } catch (IOException e) {
-                    logger.log(Level.WARNING, "Failed to initialize logbook : " +logbook.getName(), e);
+                    logger.log(Level.WARNING, "Failed to initialize logbook : " + logbook.getName(), e);
                 }
             });
         } catch (IOException ex) {
@@ -285,25 +289,25 @@ public class ElasticConfig
 
         // Setup the default tags
         String tagsURL = defaultTagsURL;
-        if (defaultTagsURL.isEmpty())
-        {
+        if (defaultTagsURL.isEmpty()) {
             final URL resource = getClass().getResource("/default_tags.json");
             tagsURL = resource.toExternalForm();
         }
-        try (InputStream input = new URL(tagsURL).openStream() ) {
-            List<Tag> jsonTags = mapper.readValue(input, new TypeReference<List<Tag>>(){});
+        try (InputStream input = new URL(tagsURL).openStream()) {
+            List<Tag> jsonTags = mapper.objectMapper().readValue(input, new TypeReference<List<Tag>>() {
+            });
 
             jsonTags.stream().forEach(tag -> {
                 try {
-                    if(!indexClient.exists(new GetRequest(ES_TAG_INDEX, ES_TAG_TYPE, tag.getName()),
+                    if (!indexClient.exists(new GetRequest(ES_TAG_INDEX, ES_TAG_TYPE, tag.getName()),
                             RequestOptions.DEFAULT)) {
                         IndexRequest indexRequest = new IndexRequest(ES_TAG_INDEX, ES_TAG_TYPE, tag.getName())
-                                .source(mapper.writeValueAsBytes(tag), XContentType.JSON)
+                                .source(mapper.objectMapper().writeValueAsBytes(tag), XContentType.JSON)
                                 .setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE);
                         IndexResponse response = indexClient.index(indexRequest, RequestOptions.DEFAULT);
                     }
                 } catch (IOException e) {
-                    logger.log(Level.WARNING, "Failed to initialize tag : " +tag.getName(), e);
+                    logger.log(Level.WARNING, "Failed to initialize tag : " + tag.getName(), e);
                 }
             });
         } catch (IOException ex) {
@@ -312,25 +316,25 @@ public class ElasticConfig
 
         // Setup the default properties
         String propertiesURL = defaultPropertiesURL;
-        if (propertiesURL.isEmpty())
-        {
+        if (propertiesURL.isEmpty()) {
             final URL resource = getClass().getResource("/default_properties.json");
             propertiesURL = resource.toExternalForm();
         }
-        try (InputStream input = new URL(propertiesURL).openStream() ) {
-            List<Property> jsonProperties = mapper.readValue(input, new TypeReference<List<Property>>(){});
+        try (InputStream input = new URL(propertiesURL).openStream()) {
+            List<Property> jsonProperties = mapper.objectMapper().readValue(input, new TypeReference<List<Property>>() {
+            });
 
             jsonProperties.stream().forEach(property -> {
                 try {
-                    if(!indexClient.exists(new GetRequest(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, property.getName()),
+                    if (!indexClient.exists(new GetRequest(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, property.getName()),
                             RequestOptions.DEFAULT)) {
                         IndexRequest indexRequest = new IndexRequest(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, property.getName())
-                                .source(mapper.writeValueAsBytes(property), XContentType.JSON)
+                                .source(mapper.objectMapper().writeValueAsBytes(property), XContentType.JSON)
                                 .setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE);
                         IndexResponse response = indexClient.index(indexRequest, RequestOptions.DEFAULT);
                     }
                 } catch (IOException e) {
-                    logger.log(Level.WARNING, "Failed to initialize property : " +property.getName(), e);
+                    logger.log(Level.WARNING, "Failed to initialize property : " + property.getName(), e);
                 }
             });
         } catch (IOException ex) {

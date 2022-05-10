@@ -7,6 +7,9 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.logging.Level;
 
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch._types.ElasticsearchVersionInfo;
+import co.elastic.clients.elasticsearch.core.InfoResponse;
 import org.elasticsearch.Version;
 import org.elasticsearch.action.main.MainResponse;
 import org.elasticsearch.client.RequestOptions;
@@ -51,15 +54,14 @@ public class InfoResource
         cfServiceInfo.put("name", "Olog Service");
         cfServiceInfo.put("version", version);
 
-        RestHighLevelClient client = esService.getSearchClient();
+        ElasticsearchClient client = esService.getSearchClient();
         Map<String, String> elasticInfo = new LinkedHashMap<String, String>();
         try {
-            MainResponse response = client.info(RequestOptions.DEFAULT);
-            
+            InfoResponse response = client.info();
             elasticInfo.put("status", "Connected");
-            elasticInfo.put("clusterName", response.getClusterName().value());
-            elasticInfo.put("clusterUuid", response.getClusterUuid());
-            Version version = response.getVersion();
+            elasticInfo.put("clusterName", response.clusterName());
+            elasticInfo.put("clusterUuid", response.clusterUuid());
+            ElasticsearchVersionInfo version = response.version();
             elasticInfo.put("version", version.toString());
         } catch (IOException e) {
             Application.logger.log(Level.WARNING, "Failed to create Olog service info resource.", e);
