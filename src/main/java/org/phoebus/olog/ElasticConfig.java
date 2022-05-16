@@ -95,10 +95,10 @@ public class ElasticConfig {
     private String defaultPropertiesURL;
 
     private ElasticsearchClient searchClient;
-    private ElasticsearchClient indexClient;
+    //private ElasticsearchClient indexClient;
 
-    @Bean({"searchClient"})
-    public ElasticsearchClient getSearchClient() {
+    @Bean({"client"})
+    public ElasticsearchClient getClient() {
         if (searchClient == null) {
             // Create the low-level client
             RestClient httpClient = RestClient.builder(new HttpHost(host, port)).build();
@@ -114,17 +114,23 @@ public class ElasticConfig {
         return searchClient;
     }
 
+    @Bean({"legacyClient"})
+    public RestHighLevelClient getLegacyClient(){
+        // Create the HLRC
+        RestHighLevelClient hlrc = new RestHighLevelClient(RestClient.builder(new HttpHost(host, port)));
+
+        //elasticIndexValidation(hlrc);
+        //elasticIndexInitialization(hlrc);
+
+        return hlrc;
+    }
+
+    /*
     @Bean({"indexClient"})
     public ElasticsearchClient getIndexClient() {
         if (indexClient == null) {
             // Create the low-level client
             RestClient httpClient = RestClient.builder(new HttpHost(host, port)).build();
-
-            // Create the HLRC
-            RestHighLevelClient hlrc = new RestHighLevelClient(RestClient.builder(new HttpHost(host, port)));
-
-            elasticIndexValidation(hlrc);
-            elasticIndexInitialization(hlrc);
 
             // Create the Java API Client with the same low level client
             ElasticsearchTransport transport = new RestClientTransport(
@@ -136,6 +142,8 @@ public class ElasticConfig {
         return indexClient;
     }
 
+
+     */
     /**
      * Checks for the existence of the elastic indices needed for Olog and creates
      * them with the appropriate mapping is they are missing.

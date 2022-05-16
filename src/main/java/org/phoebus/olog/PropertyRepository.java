@@ -16,9 +16,16 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch._types.Refresh;
+import co.elastic.clients.elasticsearch.core.BulkResponse;
+import co.elastic.clients.elasticsearch.core.MgetRequest;
+import co.elastic.clients.elasticsearch.core.MgetResponse;
+import co.elastic.clients.elasticsearch.core.bulk.BulkOperation;
+import co.elastic.clients.elasticsearch.core.bulk.IndexOperation;
+import co.elastic.clients.elasticsearch.core.mget.MultiGetResponseItem;
 import org.elasticsearch.action.DocWriteResponse.Result;
 import org.elasticsearch.action.bulk.BulkRequest;
-import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.get.MultiGetItemResponse;
@@ -42,13 +49,16 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
+import org.phoebus.olog.entity.Logbook;
 import org.phoebus.olog.entity.Property;
 import org.phoebus.olog.entity.State;
+import org.phoebus.olog.entity.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Repository;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -69,7 +79,11 @@ public class PropertyRepository implements CrudRepository<Property, String>
 
     @Autowired
     @Qualifier("indexClient")
-    RestHighLevelClient client;
+    ElasticsearchClient client;
+
+    @Autowired
+    @Qualifier("client")
+    RestHighLevelClient legacyClient;
 
     private static final ObjectMapper mapper = new ObjectMapper();
 
@@ -80,54 +94,54 @@ public class PropertyRepository implements CrudRepository<Property, String>
     {
         try
         {
-            IndexRequest indexRequest = new IndexRequest(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, property.getName())
-                    .source(mapper.writeValueAsBytes(property), XContentType.JSON);
-            IndexResponse response = client.index(indexRequest, RequestOptions.DEFAULT);
-            if (response.getResult().equals(Result.CREATED) ||
-                response.getResult().equals(Result.UPDATED))
+            co.elastic.clients.elasticsearch.core.IndexRequest indexRequest =
+                    co.elastic.clients.elasticsearch.core.IndexRequest.of(i ->
+                            i.index(ES_PROPERTY_INDEX)
+                                    .id(property.getName())
+                                    .document(property)
+                                    .refresh(Refresh.True));
+            co.elastic.clients.elasticsearch.core.IndexResponse response = client.index(indexRequest);
+
+            if (response.result().equals(Result.CREATED) ||
+                    response.result().equals(Result.UPDATED))
             {
-                BytesReference ref = client.get(new GetRequest(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, response.getId()),
-                        RequestOptions.DEFAULT).getSourceAsBytesRef();
-                Property createdProperty = mapper.readValue(ref.streamInput(), Property.class);
-                return (S) createdProperty;
+                co.elastic.clients.elasticsearch.core.GetRequest getRequest =
+                        co.elastic.clients.elasticsearch.core.GetRequest.of(g ->
+                                g.index(ES_PROPERTY_INDEX).id(response.id()));
+                co.elastic.clients.elasticsearch.core.GetResponse<Property> resp =
+                        client.get(getRequest, Property.class);
+                return (S) resp.source();
             }
+            return null;
         } catch (Exception e)
         {
             logger.log(Level.SEVERE, "Failed to create property: " + property, e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to create property: " + property);
         }
-        return null;
     }
 
     @Override
     public <S extends Property> Iterable<S> saveAll(Iterable<S> properties)
     {
-        BulkRequest bulk = new BulkRequest();
-        properties.forEach(property -> {
-            try
-            {
-                bulk.add(new IndexRequest(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, property.getName())
-                        .source(mapper.writeValueAsBytes(property), XContentType.JSON));
-            } catch (JsonProcessingException e)
-            {
-                logger.log(Level.SEVERE, "Failed to create property: " + property, e);
-                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to create property: " + property);
-            }
-        });
+        List<BulkOperation> bulkOperations = new ArrayList<>();
+        properties.forEach(property -> bulkOperations.add(IndexOperation.of(i ->
+                i.index(ES_PROPERTY_INDEX).document(property))._toBulkOperation()));
+
+        co.elastic.clients.elasticsearch.core.BulkRequest bulkRequest =
+                co.elastic.clients.elasticsearch.core.BulkRequest.of(r ->
+                        r.operations(bulkOperations).refresh(Refresh.True));
+
         BulkResponse bulkResponse;
         try
         {
-            bulk.setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE);
-            bulkResponse = client.bulk(bulk, RequestOptions.DEFAULT);
-
-            if (bulkResponse.hasFailures())
+            bulkResponse = client.bulk(bulkRequest);
+            if (bulkResponse.errors())
             {
                 // process failures by iterating through each bulk response item
-                bulkResponse.forEach(response -> {
-                    if (response.getFailure() != null)
+                bulkResponse.items().forEach(responseItem -> {
+                    if (responseItem.error() != null)
                     {
-                        logger.log(Level.SEVERE, response.getFailureMessage(),
-                                response.getFailure().getCause());
+                        logger.log(Level.SEVERE, responseItem.error().reason());
                     }
                 });
                 throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
@@ -136,7 +150,8 @@ public class PropertyRepository implements CrudRepository<Property, String>
             {
                 return properties;
             }
-        } catch (IOException e)
+        }
+        catch (IOException e)
         {
             logger.log(Level.SEVERE, "Failed to create properties: " + properties, e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to create properties: " + properties);
@@ -148,11 +163,14 @@ public class PropertyRepository implements CrudRepository<Property, String>
     {
         try
         {
-            GetResponse result = client.get(new GetRequest(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, propertyName),
-                                                           RequestOptions.DEFAULT);
-            if (result.isExists())
+            co.elastic.clients.elasticsearch.core.GetRequest getRequest =
+                    co.elastic.clients.elasticsearch.core.GetRequest.of(g ->
+                            g.index(ES_PROPERTY_INDEX).id(propertyName));
+            co.elastic.clients.elasticsearch.core.GetResponse<Property> resp =
+                    client.get(getRequest, Property.class);
+            if (resp.found())
             {
-                return Optional.of(mapper.readValue(result.getSourceAsBytesRef().streamInput(), Property.class));
+                return Optional.of(resp.source());
             } else
             {
                 return Optional.empty();
@@ -167,14 +185,8 @@ public class PropertyRepository implements CrudRepository<Property, String>
     @Override
     public boolean existsById(String propertyName)
     {
-        try
-        {
-            return client.exists(new GetRequest(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, propertyName), RequestOptions.DEFAULT);
-        } catch (IOException e)
-        {
-            logger.log(Level.SEVERE, "Failed to find property: " + propertyName, e);
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to find property: " + propertyName);
-        }
+        Optional<Property> propertyOptional = findById(propertyName);
+        return propertyOptional.isPresent();
     }
 
     @Override
@@ -197,7 +209,7 @@ public class PropertyRepository implements CrudRepository<Property, String>
             sourceBuilder.size(propertiesResultSize);
             sourceBuilder.sort(SortBuilders.fieldSort("name").order(SortOrder.ASC));
 
-            SearchResponse response = client.search(
+            SearchResponse response = legacyClient.search(
                     new SearchRequest(ES_PROPERTY_INDEX).types(ES_PROPERTY_TYPE).source(sourceBuilder), RequestOptions.DEFAULT);
 
             List<Property> result = new ArrayList<Property>();
@@ -222,22 +234,18 @@ public class PropertyRepository implements CrudRepository<Property, String>
     @Override
     public Iterable<Property> findAllById(Iterable<String> propertyNames)
     {
-        MultiGetRequest request = new MultiGetRequest();
-        for (String propertyName : propertyNames)
-        {
-            request.add(new MultiGetRequest.Item(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, propertyName));
-        }
+        List<String> ids = new ArrayList<>();
+        propertyNames.forEach(ids::add);
+        MgetRequest mgetRequest = MgetRequest.of(r -> r.ids(ids));
         try
         {
-            List<Property> foundProperties = new ArrayList<Property>();
-            MultiGetResponse response = client.mget(request, RequestOptions.DEFAULT);
-            for (MultiGetItemResponse multiGetItemResponse : response)
+            List<Property> foundProperties = new ArrayList<>();
+            MgetResponse<Property> resp = client.mget(mgetRequest, Property.class);
+            for (MultiGetResponseItem<Property> multiGetResponseItem : resp.docs())
             {
-                if (!multiGetItemResponse.isFailed())
+                if (!multiGetResponseItem.isFailure())
                 {
-                    GetResponse res = multiGetItemResponse.getResponse();
-                    StreamInput str = res.getSourceAsBytesRef().streamInput();
-                    foundProperties.add(mapper.readValue(str, Property.class));
+                    foundProperties.add(multiGetResponseItem.result().source());
                 }
             }
             return foundProperties;
@@ -260,20 +268,23 @@ public class PropertyRepository implements CrudRepository<Property, String>
     {
         try
         {
-
-            UpdateResponse response = client.update(
-                    new UpdateRequest(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, propertyName)
-                                        .doc(jsonBuilder().startObject().field("state", State.Inactive).endObject())
-                                        .setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE),
-                    RequestOptions.DEFAULT);
-
-            if (response.getResult().equals(Result.UPDATED))
-            {
-                BytesReference ref = client
-                        .get(new GetRequest(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, response.getId()), RequestOptions.DEFAULT)
-                        .getSourceAsBytesRef();
-                Property deletedProperty = mapper.readValue(ref.streamInput(), Property.class);
-                logger.log(Level.INFO, "Deleted property " + deletedProperty.toLogger());
+            co.elastic.clients.elasticsearch.core.GetRequest getRequest =
+                    co.elastic.clients.elasticsearch.core.GetRequest.of(g ->
+                            g.index(ES_PROPERTY_INDEX).id(propertyName));
+            co.elastic.clients.elasticsearch.core.GetResponse<Property> resp =
+                    client.get(getRequest, Property.class);
+            if(resp.found()){
+                Property property = resp.source();
+                property.setState(State.Inactive);
+                co.elastic.clients.elasticsearch.core.UpdateRequest updateRequest =
+                        co.elastic.clients.elasticsearch.core.UpdateRequest.of(u ->
+                                u.index(ES_PROPERTY_INDEX).id(propertyName)
+                                        .doc(property));
+                co.elastic.clients.elasticsearch.core.UpdateResponse updateResponse =
+                        client.update(updateRequest, Property.class);
+                if(updateResponse.result().equals(co.elastic.clients.elasticsearch._types.Result.Updated)){
+                    logger.log(Level.INFO, "Deleted property " + propertyName);
+                }
             }
         } catch (DocumentMissingException e)
         {
@@ -302,19 +313,21 @@ public class PropertyRepository implements CrudRepository<Property, String>
                 }).collect(Collectors.toSet()));
             }
 
+            co.elastic.clients.elasticsearch.core.UpdateRequest updateRequest =
+                    co.elastic.clients.elasticsearch.core.UpdateRequest.of(u ->
+                            u.index(ES_PROPERTY_INDEX).id(propertyName)
+                                    .doc(property));
+            co.elastic.clients.elasticsearch.core.UpdateResponse updateResponse =
+                    client.update(updateRequest, Property.class);
 
-            UpdateResponse response = client.update(
-                    new UpdateRequest(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, propertyName)
-                            .doc(mapper.writeValueAsBytes(property), XContentType.JSON)
-                            .setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE),
-                    RequestOptions.DEFAULT);
-
-            if (response.getResult().equals(Result.UPDATED))
+            if (updateResponse.result().equals(Result.UPDATED))
             {
-                BytesReference ref = client
-                        .get(new GetRequest(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, response.getId()), RequestOptions.DEFAULT)
-                        .getSourceAsBytesRef();
-                Property deletedProperty = mapper.readValue(ref.streamInput(), Property.class);
+                co.elastic.clients.elasticsearch.core.GetRequest getRequest =
+                        co.elastic.clients.elasticsearch.core.GetRequest.of(g ->
+                                g.index(ES_PROPERTY_INDEX).id(updateResponse.id()));
+                co.elastic.clients.elasticsearch.core.GetResponse<Property> resp =
+                        client.get(getRequest, Property.class);
+                Property deletedProperty = resp.source();
                 logger.log(Level.INFO, "Deleted property attribute" + deletedProperty.toLogger());
             }
         } catch (DocumentMissingException e)

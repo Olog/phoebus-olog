@@ -54,7 +54,7 @@ public class InfoResource
         cfServiceInfo.put("name", "Olog Service");
         cfServiceInfo.put("version", version);
 
-        ElasticsearchClient client = esService.getSearchClient();
+        ElasticsearchClient client = esService.getClient();
         Map<String, String> elasticInfo = new LinkedHashMap<String, String>();
         try {
             InfoResponse response = client.info();

@@ -18,48 +18,42 @@ curl -XPUT 'http://localhost:9200/olog_logbooks'
 #Set the mapping
 curl -XPUT 'http://localhost:9200/olog_logbooks/_mapping/logbook' -d'
 {
-  "logbook" : {
-    "properties" : {
-      "name"  : {"type" : "string", "analyzer" : "whitespace"},
-      "owner" : {"type" : "string", "analyzer" : "whitespace"},
-      "state" : {"type" : "string", "analyzer" : "whitespace"}
-    }
+  "properties" : {
+    "name"  : {"type" : "string", "analyzer" : "whitespace"},
+    "owner" : {"type" : "string", "analyzer" : "whitespace"},
+    "state" : {"type" : "string", "analyzer" : "whitespace"}
   }
 }'
 
-curl -XDELETE 'http://130.199.219.217:9200/olog_tags'
+curl -XDELETE 'http://localhost:9200/olog_tags'
 #Create the Index
 #Set the mapping
-curl -H 'Content-Type: application/json' -XPUT 'http://130.199.219.217:9200/olog_tags' -d'
+curl -H 'Content-Type: application/json' -XPUT 'http://localhost:9200/olog_tags' -d'
 {
   "mappings" : {
-  "olog_tag" : {
     "properties" : {
       "name"  : {"type" : "keyword"},
       "state" : {"type" : "keyword"}
     }
   }
-  }
 }'
 
 #Create the Index
-curl -XPUT 'http://130.199.219.217:9200/olog_properties'
+curl -XPUT 'http://localhost:9200/olog_properties'
 #Set the mapping
 curl -H 'Content-Type: application/json' -XPUT 'http://localhost:9200/olog_properties' -d'
 {
-  "property" : {
-    "properties" : {
-      "name" :  {"type" : "string", "analyzer" : "whitespace"},
-      "state" : {"type" : "string", "analyzer" : "whitespace"},
-      "attributes" : {
-                "type" : "nested",
-                "include_in_parent" : true,
-                "properties" : {
-                  "name" :  { "type" : "string", "analyzer" : "whitespace"},
-                  "value" : { "type" : "string", "analyzer" : "whitespace"},
-                  "state" : { "type" : "string", "analyzer" : "whitespace"}
-                 }
-      }
+  "properties" : {
+    "name" :  {"type" : "string", "analyzer" : "whitespace"},
+    "state" : {"type" : "string", "analyzer" : "whitespace"},
+    "attributes" : {
+              "type" : "nested",
+              "include_in_parent" : true,
+              "properties" : {
+                "name" :  { "type" : "string", "analyzer" : "whitespace"},
+                "value" : { "type" : "string", "analyzer" : "whitespace"},
+                "state" : { "type" : "string", "analyzer" : "whitespace"}
+               }
     }
   }
 }'
@@ -67,7 +61,7 @@ curl -H 'Content-Type: application/json' -XPUT 'http://localhost:9200/olog_prope
 #Create the Index
 curl -XPUT 'http://localhost:9200/olog_sequence'
 #Set the mappings
-curl -XPUT 'http://localhost:9200/olog_sequence/?pretty=true'  -d '
+curl -XPUT 'http://localhost:9200/olog_sequence/?pretty=1'  -d '
 {
    "settings" : {
       "number_of_shards"     : 1,

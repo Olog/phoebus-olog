@@ -5,36 +5,22 @@
  */
 package org.phoebus.olog;
 
-import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch._types.Refresh;
+import co.elastic.clients.elasticsearch.core.BulkResponse;
+import co.elastic.clients.elasticsearch.core.MgetRequest;
+import co.elastic.clients.elasticsearch.core.MgetResponse;
+import co.elastic.clients.elasticsearch.core.bulk.BulkOperation;
+import co.elastic.clients.elasticsearch.core.bulk.IndexOperation;
+import co.elastic.clients.elasticsearch.core.mget.MultiGetResponseItem;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.elasticsearch.action.DocWriteResponse.Result;
-import org.elasticsearch.action.bulk.BulkRequest;
-import org.elasticsearch.action.bulk.BulkResponse;
-import org.elasticsearch.action.get.GetRequest;
-import org.elasticsearch.action.get.GetResponse;
-import org.elasticsearch.action.get.MultiGetItemResponse;
-import org.elasticsearch.action.get.MultiGetRequest;
-import org.elasticsearch.action.get.MultiGetResponse;
-import org.elasticsearch.action.index.IndexRequest;
-import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.action.support.WriteRequest;
-import org.elasticsearch.action.update.UpdateRequest;
-import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.bytes.BytesReference;
 import org.elasticsearch.common.unit.TimeValue;
-import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.engine.DocumentMissingException;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
@@ -50,8 +36,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Repository;
 import org.springframework.web.server.ResponseStatusException;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Repository
 public class LogbookRepository implements CrudRepository<Logbook, String>
@@ -67,8 +58,12 @@ public class LogbookRepository implements CrudRepository<Logbook, String>
     private int logbooksResultSize;
 
     @Autowired
-    @Qualifier("indexClient")
-    RestHighLevelClient client;
+    @Qualifier("legacyClient")
+    RestHighLevelClient legacyClient;
+
+    @Autowired
+    @Qualifier("client")
+    ElasticsearchClient client;
 
     private static final ObjectMapper mapper = new ObjectMapper();
 
@@ -79,20 +74,23 @@ public class LogbookRepository implements CrudRepository<Logbook, String>
     {
         try
         {
-            IndexRequest indexRequest = new IndexRequest(ES_LOGBOOK_INDEX, ES_LOGBOOK_TYPE, logbook.getName())
-                    .source(mapper.writeValueAsBytes(logbook), XContentType.JSON)
-                    .setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE);
+            co.elastic.clients.elasticsearch.core.IndexRequest indexRequest =
+                    co.elastic.clients.elasticsearch.core.IndexRequest.of(i ->
+                            i.index(ES_LOGBOOK_INDEX)
+                                    .id(logbook.getName())
+                                    .document(logbook)
+                                    .refresh(Refresh.True));
+            co.elastic.clients.elasticsearch.core.IndexResponse response = client.index(indexRequest);
 
-            IndexResponse response = client.index(indexRequest, RequestOptions.DEFAULT);
-
-            if (response.getResult().equals(Result.CREATED) ||
-                response.getResult().equals(Result.UPDATED))
+            if (response.result().equals(Result.CREATED) ||
+                response.result().equals(Result.UPDATED))
             {
-                BytesReference ref = client
-                        .get(new GetRequest(ES_LOGBOOK_INDEX, ES_LOGBOOK_TYPE, response.getId()), RequestOptions.DEFAULT)
-                        .getSourceAsBytesRef();
-                Logbook createdLogbook = mapper.readValue(ref.streamInput(), Logbook.class);
-                return (S) createdLogbook;
+                co.elastic.clients.elasticsearch.core.GetRequest getRequest =
+                        co.elastic.clients.elasticsearch.core.GetRequest.of(g ->
+                                g.index(ES_LOGBOOK_INDEX).id(response.id()));
+                co.elastic.clients.elasticsearch.core.GetResponse<Logbook> resp =
+                        client.get(getRequest, Logbook.class);
+                return (S) resp.source();
             }
             return null;
         } catch (Exception e)
@@ -105,31 +103,23 @@ public class LogbookRepository implements CrudRepository<Logbook, String>
     @Override
     public <S extends Logbook> Iterable<S> saveAll(Iterable<S> logbooks)
     {
-        BulkRequest bulk = new BulkRequest();
-        logbooks.forEach(logbook -> {
-            try
-            {
-                bulk.add(new IndexRequest(ES_LOGBOOK_INDEX, ES_LOGBOOK_TYPE, logbook.getName())
-                        .source(mapper.writeValueAsBytes(logbook), XContentType.JSON));
-            } catch (JsonProcessingException e)
-            {
-                logger.log(Level.SEVERE, "Failed to create logbook: " + logbook, e);
-                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to create logbook: " + logbook);
-            }
-        });
-        bulk.setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE);
+        List<BulkOperation> bulkOperations = new ArrayList<>();
+        logbooks.forEach(logbook -> bulkOperations.add(IndexOperation.of(i ->
+                        i.index(ES_LOGBOOK_INDEX).document(logbook))._toBulkOperation()));
+        co.elastic.clients.elasticsearch.core.BulkRequest bulkRequest =
+                co.elastic.clients.elasticsearch.core.BulkRequest.of(r ->
+                        r.operations(bulkOperations).refresh(Refresh.True));
         BulkResponse bulkResponse;
         try
         {
-            bulkResponse = client.bulk(bulk, RequestOptions.DEFAULT);
-            if (bulkResponse.hasFailures())
+            bulkResponse = client.bulk(bulkRequest);
+            if (bulkResponse.errors())
             {
                 // process failures by iterating through each bulk response item
-                bulkResponse.forEach(response -> {
-                    if (response.getFailure() != null)
+                bulkResponse.items().forEach(responseItem -> {
+                    if (responseItem.error() != null)
                     {
-                        logger.log(Level.SEVERE, response.getFailureMessage(),
-                                response.getFailure().getCause());
+                        logger.log(Level.SEVERE, responseItem.error().reason());
                     }
                 });
                 throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
@@ -138,7 +128,8 @@ public class LogbookRepository implements CrudRepository<Logbook, String>
             {
                 return logbooks;
             }
-        } catch (IOException e)
+        }
+        catch (IOException e)
         {
             logger.log(Level.SEVERE, "Failed to create logbooks: " + logbooks, e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to create logbooks: " + logbooks);
@@ -150,11 +141,14 @@ public class LogbookRepository implements CrudRepository<Logbook, String>
     {
         try
         {
-            GetResponse result = client.get(new GetRequest(ES_LOGBOOK_INDEX, ES_LOGBOOK_TYPE, logbookName),
-                    RequestOptions.DEFAULT);
-            if (result.isExists())
+            co.elastic.clients.elasticsearch.core.GetRequest getRequest =
+                    co.elastic.clients.elasticsearch.core.GetRequest.of(g ->
+                            g.index(ES_LOGBOOK_INDEX).id(logbookName));
+            co.elastic.clients.elasticsearch.core.GetResponse<Logbook> resp =
+                    client.get(getRequest, Logbook.class);
+            if (resp.found())
             {
-                return Optional.of(mapper.readValue(result.getSourceAsBytesRef().streamInput(), Logbook.class));
+                return Optional.of(resp.source());
             } else
             {
                 return Optional.empty();
@@ -169,14 +163,8 @@ public class LogbookRepository implements CrudRepository<Logbook, String>
     @Override
     public boolean existsById(String logbookName)
     {
-        try
-        {
-            return client.exists(new GetRequest(ES_LOGBOOK_INDEX, ES_LOGBOOK_TYPE, logbookName), RequestOptions.DEFAULT);
-        } catch (IOException e)
-        {
-            logger.log(Level.SEVERE, "Failed to find logbook: " + logbookName, e);
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to find logbook: " + logbookName);
-        }
+        Optional<Logbook> logbookOptional = findById(logbookName);
+        return logbookOptional.isPresent();
     }
 
     public boolean existsByIds(List<String> logbookNames)
@@ -204,7 +192,7 @@ public class LogbookRepository implements CrudRepository<Logbook, String>
             sourceBuilder.size(logbooksResultSize);
             sourceBuilder.sort(SortBuilders.fieldSort("name").order(SortOrder.ASC));
 
-            SearchResponse response = client.search(
+            SearchResponse response = legacyClient.search(
                     new SearchRequest(ES_LOGBOOK_INDEX).types(ES_LOGBOOK_TYPE).source(sourceBuilder), RequestOptions.DEFAULT);
 
             List<Logbook> result = new ArrayList<Logbook>();
@@ -229,25 +217,22 @@ public class LogbookRepository implements CrudRepository<Logbook, String>
     @Override
     public Iterable<Logbook> findAllById(Iterable<String> logbookNames)
     {
-        MultiGetRequest request = new MultiGetRequest();
-        for (String logbookName : logbookNames)
-        {
-            request.add(new MultiGetRequest.Item(ES_LOGBOOK_INDEX, ES_LOGBOOK_TYPE, logbookName));
-        }
-        try
-        {
-            List<Logbook> foundLogbooks = new ArrayList<Logbook>();
-            MultiGetResponse response = client.mget(request, RequestOptions.DEFAULT);
-            for (MultiGetItemResponse multiGetItemResponse : response)
+        List<String> ids = new ArrayList<>();
+        logbookNames.forEach(ids::add);
+        MgetRequest mgetRequest = MgetRequest.of(r -> r.ids(ids));
+        try {
+            List<Logbook> foundLogbooks = new ArrayList<>();
+            MgetResponse<Logbook> resp = client.mget(mgetRequest, Logbook.class);
+            for (MultiGetResponseItem<Logbook> multiGetResponseItem : resp.docs())
             {
-                if (!multiGetItemResponse.isFailed())
+                if (!multiGetResponseItem.isFailure())
                 {
-                    foundLogbooks.add(mapper.readValue(
-                            multiGetItemResponse.getResponse().getSourceAsBytesRef().streamInput(), Logbook.class));
+                    foundLogbooks.add(multiGetResponseItem.result().source());
                 }
             }
             return foundLogbooks;
-        } catch (Exception e)
+        }
+        catch (Exception e)
         {
             logger.log(Level.SEVERE, "Failed to find logbooks: " + logbookNames, e);
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to find logbooks: " + logbookNames);
@@ -265,22 +250,26 @@ public class LogbookRepository implements CrudRepository<Logbook, String>
     {
         try
         {
-            UpdateResponse response = client.update(
-                    new UpdateRequest(ES_LOGBOOK_INDEX, ES_LOGBOOK_TYPE, logbookName)
-                            .doc(jsonBuilder().startObject().field("state", State.Inactive).endObject())
-                            .setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE),
-                    RequestOptions.DEFAULT);
-
-            if (response.getResult().equals(Result.UPDATED))
-            {
-                BytesReference ref = client
-                        .get(new GetRequest(ES_LOGBOOK_INDEX, ES_LOGBOOK_TYPE, response.getId()), RequestOptions.DEFAULT)
-                        .getSourceAsBytesRef();
-
-                Logbook deletedLogbook = mapper.readValue(ref.streamInput(), Logbook.class);
-                logger.log(Level.INFO, "Deleted logbook " + deletedLogbook.toLogger());
+            co.elastic.clients.elasticsearch.core.GetRequest getRequest =
+                    co.elastic.clients.elasticsearch.core.GetRequest.of(g ->
+                            g.index(ES_LOGBOOK_INDEX).id(logbookName));
+            co.elastic.clients.elasticsearch.core.GetResponse<Logbook> resp =
+                    client.get(getRequest, Logbook.class);
+            if (resp.found()) {
+                Logbook logbook = resp.source();
+                logbook.setState(State.Inactive);
+                co.elastic.clients.elasticsearch.core.UpdateRequest updateRequest =
+                        co.elastic.clients.elasticsearch.core.UpdateRequest.of(u ->
+                                u.index(ES_LOGBOOK_INDEX).id(logbookName)
+                                        .doc(logbook));
+                co.elastic.clients.elasticsearch.core.UpdateResponse updateResponse =
+                        client.update(updateRequest, Logbook.class);
+                if (updateResponse.result().equals(co.elastic.clients.elasticsearch._types.Result.Updated)) {
+                    logger.log(Level.INFO, "Deleted logbook " + logbookName);
+                }
             }
-        } catch (DocumentMissingException e)
+        }
+        catch (DocumentMissingException e)
         {
             logger.log(Level.SEVERE, "Failed to delete logbook: " + logbookName + " because it does not exist", e);
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to delete logbook: " + logbookName + " because it does not exist");
