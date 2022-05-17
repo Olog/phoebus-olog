@@ -28,9 +28,11 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import javax.servlet.http.HttpServletRequest;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -50,7 +52,6 @@ public class HelpResource {
     private AcceptHeaderResolver acceptHeaderResolver;
 
     private final Logger logger = Logger.getLogger(HelpResource.class.getName());
-
     private static final String CONTENT_TYPE = "text/html;charset=UTF-8";
 
     /**
@@ -64,20 +65,21 @@ public class HelpResource {
      */
     @SuppressWarnings("unused")
     @GetMapping(value = "{what}", produces = CONTENT_TYPE)
-    public String getCheatSheet(@RequestParam(name = "lang", required = false) String lang,
-                                                @PathVariable String what,
-                                                HttpServletRequest request) {
+    public String getHelpContent(@RequestParam(name = "lang", required = false) String lang,
+                                 @PathVariable String what,
+                                 HttpServletRequest request) {
         String language = determineLang(lang, request);
         String content;
         logger.log(Level.INFO, "Requesting " + what + " for language=" + language);
+        InputStream inputStream;
         try {
-            return Files.readString(Paths.get(getClass().getResource("/static/" + what + "_" + language + ".html").toURI()),
-                    StandardCharsets.UTF_8);
+            inputStream = getClass().getResourceAsStream("/static/" + what + "_" + language + ".html");
+            return readInputStream(inputStream);
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Unable to read " + what + " resource for language=" + language + ", defaulting to 'en'");
             try {
-                return Files.readString(Paths.get(getClass().getResource("/static/" + what + "_en.html").toURI()),
-                        StandardCharsets.UTF_8);
+                inputStream = getClass().getResourceAsStream("/static/" + what + "_en.html");
+                return readInputStream(inputStream);
             } catch (Exception ioException) {
                 logger.log(Level.SEVERE, "Unable to read find resource " + what + "_en.html");
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND);
@@ -100,5 +102,28 @@ public class HelpResource {
             return "en";
         }
         return locale.getLanguage();
+    }
+
+    /**
+     * Reads input stream to string
+     * @param inputStream The non-null {@link InputStream} to read.
+     * @return A {@link String} representation of the {@link InputStream} data
+     * @throws IOException If the {@link InputStream} cannot be read.
+     */
+    private String readInputStream(InputStream inputStream) throws IOException{
+        try{
+            String line;
+            StringBuilder stringBuilder = new StringBuilder();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
+            while((line = reader.readLine()) != null) {
+                stringBuilder.append(line);
+            }
+            return stringBuilder.toString();
+        }
+        finally {
+            if(inputStream != null){
+                inputStream.close();
+            }
+        }
     }
 }
