@@ -7,16 +7,12 @@ package org.phoebus.olog;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.Refresh;
+import co.elastic.clients.elasticsearch._types.Result;
 import co.elastic.clients.elasticsearch.core.MgetRequest;
 import co.elastic.clients.elasticsearch.core.MgetResponse;
 import co.elastic.clients.elasticsearch.core.mget.MultiGetResponseItem;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.elasticsearch.action.DocWriteResponse.Result;
-import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.RestHighLevelClient;
 import org.phoebus.olog.entity.Attachment;
 import org.phoebus.olog.entity.Log;
 import org.phoebus.olog.entity.Log.LogBuilder;
@@ -55,10 +51,6 @@ public class LogRepository implements CrudRepository<Log, String> {
     ElasticsearchClient client;
 
     @Autowired
-    @Qualifier("legacyClient")
-    RestHighLevelClient legacyClient;
-
-    @Autowired
     AttachmentRepository attachmentRepository;
 
     @Autowired
@@ -91,7 +83,7 @@ public class LogRepository implements CrudRepository<Log, String> {
                                     .refresh(Refresh.True));
             co.elastic.clients.elasticsearch.core.IndexResponse response = client.index(indexRequest);
 
-            if (response.result().equals(Result.CREATED)) {
+            if (response.result().equals(Result.Created)) {
                 co.elastic.clients.elasticsearch.core.GetRequest getRequest =
                         co.elastic.clients.elasticsearch.core.GetRequest.of(g ->
                                 g.index(ES_LOG_INDEX).id(response.id()));
@@ -127,7 +119,7 @@ public class LogRepository implements CrudRepository<Log, String> {
 
             co.elastic.clients.elasticsearch.core.IndexResponse response = client.index(indexRequest);
 
-            if (response.result().equals(Result.UPDATED)) {
+            if (response.result().equals(Result.Updated)) {
                 co.elastic.clients.elasticsearch.core.GetRequest getRequest =
                         co.elastic.clients.elasticsearch.core.GetRequest.of(g ->
                                 g.index(ES_LOG_INDEX).id(response.id()));
@@ -232,6 +224,7 @@ public class LogRepository implements CrudRepository<Log, String> {
     LogSearchUtil logSearchUtil;
 
     public SearchResult search(MultiValueMap<String, String> searchParameters) {
+        /*
         SearchRequest searchRequest = logSearchUtil.buildSearchRequest(searchParameters);
         try {
             final SearchResponse searchResponse = legacyClient.search(searchRequest, RequestOptions.DEFAULT);
@@ -248,12 +241,25 @@ public class LogRepository implements CrudRepository<Log, String> {
                 }
             });
             SearchResult searchResult = new SearchResult();
-            searchResult.setHitCount(searchResponse.getHits().getTotalHits());
+            searchResult.setHitCount(searchResponse.getHits().getTotalHits().value);
             searchResult.setLogs(result);
             return searchResult;
         } catch (IOException e) {
             logger.log(Level.SEVERE, "Failed to complete search", e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to complete search");
+        }
+
+         */
+        SearchResult searchResult = new SearchResult();
+        searchResult.setHitCount(0);
+
+        return searchResult;
+    }
+
+    @Override
+    public void deleteAllById(Iterable ids) {
+        while (ids.iterator().hasNext()) {
+            deleteById((String) ids.iterator().next());
         }
     }
 }

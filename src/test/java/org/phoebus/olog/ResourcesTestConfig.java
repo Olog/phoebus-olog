@@ -19,8 +19,6 @@
 package org.phoebus.olog;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mongodb.client.gridfs.GridFSBucket;
-import org.elasticsearch.client.RestHighLevelClient;
 import org.mockito.Mockito;
 import org.springframework.boot.autoconfigure.h2.H2ConsoleProperties;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -60,10 +58,10 @@ public class ResourcesTestConfig {
         return Mockito.mock(AttachmentRepository.class);
     }
 
-    @Bean("indexClient")
-    public RestHighLevelClient client() {
-        return Mockito.mock(RestHighLevelClient.class);
-    }
+    //@Bean("indexClient")
+    //public RestHighLevelClient client() {
+    //    return Mockito.mock(RestHighLevelClient.class);
+    //}
 
     @Bean
     public GridFsOperations gridOperation() {
@@ -105,8 +103,8 @@ public class ResourcesTestConfig {
         return Mockito.mock(TagRepository.class);
     }
 
-    @Bean
-    public GridFSBucket gridFSBucket() {
-        return Mockito.mock(GridFSBucket.class);
-    }
+    //@Bean
+    //public GridFSBucket gridFSBucket() {
+    //    return Mockito.mock(GridFSBucket.class);
+    //}
 }

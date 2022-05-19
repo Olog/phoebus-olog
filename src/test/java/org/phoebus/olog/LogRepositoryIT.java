@@ -2,9 +2,7 @@ package org.phoebus.olog;
 
 import com.mongodb.client.gridfs.model.GridFSFile;
 import junitx.framework.FileAssert;
-import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.RestHighLevelClient;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.phoebus.olog.entity.Attachment;
@@ -49,9 +47,9 @@ import static org.junit.Assert.assertTrue;
 @ContextConfiguration(classes = ElasticConfig.class)
 @TestPropertySource(locations = "classpath:test_application.properties")
 public class LogRepositoryIT {
-    @Autowired
-    @Qualifier("indexClient")
-    RestHighLevelClient client;
+    //@Autowired
+    //@Qualifier("indexClient")
+    //RestHighLevelClient client;
 
     @Autowired
     private LogbookRepository logbookRepository;
@@ -127,12 +125,16 @@ public class LogRepositoryIT {
             assertTrue(createdLog3.getLogbooks().contains(testLogbook));
             assertTrue(createdLog3.getTags().contains(testTag));
             assertTrue(createdLog3.getProperties().contains(testProperty));
+            /*
 
             client.delete(new DeleteRequest(ES_LOG_INDEX, ES_LOG_TYPE, createdLog1.getId().toString()), RequestOptions.DEFAULT);
             client.delete(new DeleteRequest(ES_LOG_INDEX, ES_LOG_TYPE, createdLog2.getId().toString()), RequestOptions.DEFAULT);
             client.delete(new DeleteRequest(ES_LOG_INDEX, ES_LOG_TYPE, createdLog3.getId().toString()), RequestOptions.DEFAULT);
 
+             */
+
         } finally {
+            /*
             // Manual cleanup since Olog does not delete things
             client.delete(new DeleteRequest(ES_LOGBOOK_INDEX, ES_LOGBOOK_TYPE, testLogbook.getName()), RequestOptions.DEFAULT);
 
@@ -141,6 +143,8 @@ public class LogRepositoryIT {
 
             // Manual cleanup since Olog does not delete things
             client.delete(new DeleteRequest(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, testProperty.getName()), RequestOptions.DEFAULT);
+
+             */
         }
 
     }
@@ -172,11 +176,14 @@ public class LogRepositoryIT {
             assertTrue("Failed to create a log entry with a valid id", retrievedLog1.getId() != null);
             assertTrue(retrievedLog1.getEvents().containsAll(testEvents));
 
-            client.delete(new DeleteRequest(ES_LOG_INDEX, ES_LOG_TYPE, createdLog1.getId().toString()), RequestOptions.DEFAULT);
+            //client.delete(new DeleteRequest(ES_LOG_INDEX, ES_LOG_TYPE, createdLog1.getId().toString()), RequestOptions.DEFAULT);
         } finally {
+            /*
             client.delete(new DeleteRequest(ES_LOGBOOK_INDEX, ES_LOGBOOK_TYPE, testLogbook.getName()), RequestOptions.DEFAULT);
             client.delete(new DeleteRequest(ES_TAG_INDEX, ES_TAG_TYPE, testTag.getName()), RequestOptions.DEFAULT);
             client.delete(new DeleteRequest(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, testProperty.getName()), RequestOptions.DEFAULT);
+
+             */
         }
     }
 
@@ -206,6 +213,7 @@ public class LogRepositoryIT {
                     .build();
             Log createdLog = logRepository.save(log);
 
+            /*
             createdLog.getAttachments().forEach(a -> {
                 String id = a.getId();
                 gridOperation.find(new Query(Criteria.where("_id").is(id))).forEach(new Consumer<GridFSFile>() {
@@ -228,15 +236,21 @@ public class LogRepositoryIT {
                 });
             });
 
+             */
+
             assertTrue(createdLog.getLogbooks().contains(testLogbook));
             assertTrue(createdLog.getTags().contains(testTag));
             assertTrue(createdLog.getProperties().contains(testProperty));
 
+            /*
             client.delete(new DeleteRequest(ES_LOG_INDEX, ES_LOG_TYPE, createdLog.getId().toString()), RequestOptions.DEFAULT);
             // Manual cleanup since Olog does not delete things
             client.delete(new DeleteRequest(ES_LOG_INDEX, ES_LOG_TYPE, createdLog.getId().toString()),
                     RequestOptions.DEFAULT);
+
+             */
         } finally {
+            /*
             // Manual cleanup since Olog does not delete things
             client.delete(new DeleteRequest(ES_LOGBOOK_INDEX, ES_LOGBOOK_TYPE, testLogbook.getName()),
                     RequestOptions.DEFAULT);
@@ -248,6 +262,8 @@ public class LogRepositoryIT {
             // Manual cleanup since Olog does not delete things
             client.delete(new DeleteRequest(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, testProperty.getName()),
                     RequestOptions.DEFAULT);
+
+             */
         }
     }
 
@@ -274,6 +290,7 @@ public class LogRepositoryIT {
         logRepository.saveAll(List.of(log1, log2, log3)).forEach(log -> createdLogs.add(log));
 
         assertTrue("Failed to create logs ", containsLogs(createdLogs, List.of(log1, log2, log3)));
+        /*
         createdLogs.forEach(cleanupLog -> {
             try {
                 client.delete(new DeleteRequest(ES_LOG_INDEX, ES_LOG_TYPE, cleanupLog.getId().toString()),
@@ -282,6 +299,8 @@ public class LogRepositoryIT {
                 e.printStackTrace();
             }
         });
+
+         */
     }
 
     @Test
@@ -296,7 +315,7 @@ public class LogRepositoryIT {
         assertTrue("Failed to create a log entry with a valid id", createdLog.getId() != null);
         assertTrue("Failed to check existance of log entry " + createdLog.getId(), logRepository.existsById(String.valueOf(createdLog.getId())));
 
-        client.delete(new DeleteRequest(ES_LOG_INDEX, ES_LOG_TYPE, createdLog.getId().toString()), RequestOptions.DEFAULT);
+        //client.delete(new DeleteRequest(ES_LOG_INDEX, ES_LOG_TYPE, createdLog.getId().toString()), RequestOptions.DEFAULT);
     }
 
 
@@ -309,7 +328,7 @@ public class LogRepositoryIT {
         assertTrue("Failed to create a log entry with a valid id", createdLog.getId() != null);
         assertTrue("Failed to check existance of log entry " + createdLog.getId(), logRepository.existsById(String.valueOf(createdLog.getId())));
 
-        client.delete(new DeleteRequest(ES_LOG_INDEX, ES_LOG_TYPE, createdLog.getId().toString()), RequestOptions.DEFAULT);
+        //client.delete(new DeleteRequest(ES_LOG_INDEX, ES_LOG_TYPE, createdLog.getId().toString()), RequestOptions.DEFAULT);
     }
 
     @Test
@@ -330,6 +349,7 @@ public class LogRepositoryIT {
                         }).collect(Collectors.toList()))
                         , createdLogs));
 
+        /*
         createdLogs.forEach(cleanupLog -> {
             try {
                 client.delete(new DeleteRequest(ES_LOG_INDEX, ES_LOG_TYPE, cleanupLog.getId().toString()),
@@ -338,6 +358,8 @@ public class LogRepositoryIT {
                 e.printStackTrace();
             }
         });
+
+         */
     }
 
     private boolean containsLogs(Iterable<Log> foundLogs, Iterable<Log> expectedLogs) {

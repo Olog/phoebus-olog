@@ -40,7 +40,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
-import javax.validation.Valid;
 import java.io.IOException;
 import java.security.Principal;
 import java.time.Instant;
@@ -155,7 +154,8 @@ public class LogResource {
 
     /**
      * Finds matching log entries based on the specified search parameters.
-     * @param clientInfo A string sent by client identifying it with respect to version and platform.
+     *
+     * @param clientInfo       A string sent by client identifying it with respect to version and platform.
      * @param allRequestParams A map of search query parameters. Note that this method supports date/time expressions
      *                         like "12 hours" or "2 days" as well as formatted strings like "2021-01-20 12:00:00.123".
      * @return A {@link List} of {@link Log} objects matching the query parameters, or an
@@ -207,17 +207,18 @@ public class LogResource {
      * <p>
      * This may return a HTTP 400 if for instance <code>inReplyTo</code> does not identify an existing log entry,
      * or if the logbooks listed in the {@link Log} object contains invalid (i.e. non-existing) logbooks.
+     *
      * @param clientInfo A string sent by client identifying it with respect to version and platform.
-     * @param log       A {@link Log} object to be persisted.
-     * @param markup    Optional string identifying the wanted markup scheme.
-     * @param inReplyTo Optional log entry id specifying to which log entry the new log entry is a response.
-     * @param principal The authenticated {@link Principal} of the request.
+     * @param log        A {@link Log} object to be persisted.
+     * @param markup     Optional string identifying the wanted markup scheme.
+     * @param inReplyTo  Optional log entry id specifying to which log entry the new log entry is a response.
+     * @param principal  The authenticated {@link Principal} of the request.
      * @return The persisted {@link Log} object.
      */
     @PutMapping()
     public Log createLog(@RequestHeader(value = OLOG_CLIENT_INFO_HEADER, required = false, defaultValue = "n/a") String clientInfo,
                          @RequestParam(value = "markup", required = false) String markup,
-                         @Valid @RequestBody Log log,
+                         @RequestBody Log log,
                          @RequestParam(value = "inReplyTo", required = false, defaultValue = "-1") String inReplyTo,
                          @AuthenticationPrincipal Principal principal) {
         if (!inReplyTo.equals("-1")) {
@@ -296,7 +297,7 @@ public class LogResource {
     @PostMapping("/{logId}")
     public Log updateLog(@PathVariable String logId,
                          @RequestParam(value = "markup", required = false) String markup,
-                         @Valid @RequestBody Log log) {
+                         @RequestBody Log log) {
 
         Optional<Log> foundLog = logRepository.findById(logId);
         if (foundLog.isPresent()) {
@@ -305,7 +306,6 @@ public class LogResource {
             if (!logId.equals(Long.toString(log.getId()))) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Log entry id does not match path variable");
             }
-            persistedLog.setDescription(log.getDescription());
             persistedLog.setLevel(log.getLevel());
             persistedLog.setProperties(log.getProperties());
             persistedLog.setModifyDate(Instant.now());
@@ -368,7 +368,7 @@ public class LogResource {
                     logger.log(Level.INFO, "Grouping not allowed due to conflicting log entry groups.");
                     throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot group: at least two entries already contained in different groups");
                 }
-                if(logEntryGroupProperty != null){
+                if (logEntryGroupProperty != null) {
                     existingLogEntryGroupProperty = logEntryGroupProperty;
                 }
                 logs.add(log.get());

@@ -1,9 +1,6 @@
 package org.phoebus.olog;
 
-import org.elasticsearch.action.bulk.BulkRequest;
-import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.RestHighLevelClient;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.phoebus.olog.entity.Attribute;
@@ -34,9 +31,9 @@ import static org.junit.Assert.assertTrue;
 @TestPropertySource(locations = "classpath:test_application.properties")
 public class PropertyRepositoryIT {
 
-    @Autowired
-    @Qualifier("indexClient")
-    RestHighLevelClient client;
+   // @Autowired
+    //@Qualifier("indexClient")
+    //RestHighLevelClient client;
 
     @Autowired
     private PropertyRepository propertyRepository;
@@ -245,7 +242,9 @@ public class PropertyRepositoryIT {
      *
      * @param properties
      */
+
     private void cleanupProperties(List<Property> properties) {
+        /*
         try {
             BulkRequest bulk = new BulkRequest();
             properties.forEach(property -> {
@@ -255,6 +254,8 @@ public class PropertyRepositoryIT {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+         */
     }
 
 }

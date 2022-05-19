@@ -1,9 +1,6 @@
 package org.phoebus.olog;
 
-import org.elasticsearch.action.bulk.BulkRequest;
-import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.RestHighLevelClient;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -25,9 +22,9 @@ import java.util.List;
 @TestPropertySource(locations = "classpath:test_application.properties")
 public class TagResouceIT {
 
-    @Autowired
-    @Qualifier("indexClient")
-    RestHighLevelClient client;
+    //@Autowired
+    //@Qualifier("indexClient")
+    //RestHighLevelClient client;
 
     @Autowired
     private TagRepository tagRepository;
@@ -71,6 +68,7 @@ public class TagResouceIT {
      * @param tags
      */
     private void cleanUp(List<Tag> tags) {
+        /*
         try {
             BulkRequest bulk = new BulkRequest();
             tags.forEach(tag -> {
@@ -80,6 +78,8 @@ public class TagResouceIT {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+         */
     }
 
 }

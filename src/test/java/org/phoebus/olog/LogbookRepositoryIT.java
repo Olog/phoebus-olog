@@ -1,9 +1,5 @@
 package org.phoebus.olog;
 
-import org.elasticsearch.action.bulk.BulkRequest;
-import org.elasticsearch.action.delete.DeleteRequest;
-import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.RestHighLevelClient;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -251,9 +247,9 @@ public class LogbookRepositoryIT {
         }
     }
 
-    @Autowired
-    @Qualifier("indexClient")
-    RestHighLevelClient client;
+    //@Autowired
+    //@Qualifier("indexClient")
+    //RestHighLevelClient client;
 
     /**
      * Cleanup up the logbooks
@@ -262,12 +258,15 @@ public class LogbookRepositoryIT {
      * @throws IOException
      */
     void cleanupLogbook(List<Logbook> logbooks) throws IOException {
+        /*
         // Manual cleanup since Olog does not delete things
         BulkRequest bulk = new BulkRequest();
         logbooks.forEach(logbook -> {
             bulk.add(new DeleteRequest(ES_LOGBOOK_INDEX, ES_LOGBOOK_TYPE, logbook.getName()));
         });
         client.bulk(bulk, RequestOptions.DEFAULT);
+
+         */
     }
 
 }

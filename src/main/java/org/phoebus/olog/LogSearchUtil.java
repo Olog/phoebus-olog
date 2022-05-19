@@ -1,12 +1,5 @@
 package org.phoebus.olog;
 
-import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
-import static org.elasticsearch.index.query.QueryBuilders.disMaxQuery;
-import static org.elasticsearch.index.query.QueryBuilders.fuzzyQuery;
-import static org.elasticsearch.index.query.QueryBuilders.matchPhraseQuery;
-import static org.elasticsearch.index.query.QueryBuilders.nestedQuery;
-import static org.elasticsearch.index.query.QueryBuilders.rangeQuery;
-import static org.elasticsearch.index.query.QueryBuilders.wildcardQuery;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -15,22 +8,21 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery.Builder;
 import co.elastic.clients.elasticsearch._types.query_dsl.DisMaxQuery;
-import co.elastic.clients.elasticsearch.core.search.SourceConfigBuilders;
-import org.apache.lucene.search.join.ScoreMode;
-import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.common.unit.TimeValue;
-import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.DisMaxQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.search.builder.SearchSourceBuilder;
-import org.elasticsearch.search.sort.SortOrder;
+import co.elastic.clients.elasticsearch._types.query_dsl.MatchPhraseQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.NestedQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
+import co.elastic.clients.elasticsearch._types.query_dsl.WildcardQuery;
+import co.elastic.clients.elasticsearch.core.SearchRequest;
+import co.elastic.clients.elasticsearch.core.search.ScoreMode;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -67,6 +59,77 @@ public class LogSearchUtil
      */
     public SearchRequest buildSearchRequest(MultiValueMap<String, String> searchParameters)
     {
+        BoolQuery.Builder boolQueryBuilder = new Builder();
+        List<Query> boolQueries = new ArrayList<>();
+        boolean fuzzySearch = false;
+        List<String> searchTerms = new ArrayList<>();
+        List<String> titleSearchTerms = new ArrayList<>();
+
+        for (Entry<String, List<String>> parameter : searchParameters.entrySet()) {
+            switch (parameter.getKey().strip().toLowerCase()) {
+                case "desc":
+                case "description":
+                case "text":
+                    for (String value : parameter.getValue()) {
+                        for (String pattern : value.split("[\\|,;\\s+]")) {
+                            searchTerms.add(pattern.trim().toLowerCase());
+                        }
+                    }
+                    break;
+                case "title":
+                    for (String value : parameter.getValue())
+                    {
+                        for (String pattern : value.split("[\\|,;\\s+]"))
+                        {
+                            titleSearchTerms.add(pattern.trim().toLowerCase());
+                        }
+                    }
+                    break;
+                case "fuzzy":
+                    fuzzySearch = true;
+                    break;
+                case "phrase":
+                    DisMaxQuery.Builder phraseQuery = new DisMaxQuery.Builder();
+                    List<Query> phraseQueries = new ArrayList<>();
+                    for (String value : parameter.getValue())
+                    {
+                        phraseQueries.add(MatchPhraseQuery.of(m -> m.field("description").query(value.trim().toLowerCase()))._toQuery());
+                    }
+                    phraseQuery.queries(phraseQueries);
+                    boolQueries.add(phraseQuery.build()._toQuery());
+                    break;
+                case "owner":
+                    DisMaxQuery.Builder ownerQuery = new DisMaxQuery.Builder();
+                    List<Query> ownerQueries = new ArrayList<>();
+                    for (String value : parameter.getValue())
+                    {
+                        for (String pattern : value.split("[\\|,;\\s+]"))
+                        {
+                            ownerQueries.add(WildcardQuery.of(w -> w.field("owner").value(pattern.trim()))._toQuery());
+                        }
+                    }
+                    ownerQuery.queries(ownerQueries);
+                    boolQueries.add(ownerQuery.build()._toQuery());
+                    break;
+                case "tags":
+                    DisMaxQuery.Builder tagQuery = new DisMaxQuery.Builder();
+                    List<Query> tagsQueries = new ArrayList<>();
+                    for (String value : parameter.getValue())
+                    {
+                        for (String pattern : value.split("[\\|,;]"))
+                        {
+                            tagsQueries.add(WildcardQuery.of(w -> w.field("tags.name").value(pattern.trim()))._toQuery());
+                        }
+                    }
+                    Query tagsQuery = tagQuery.queries(tagsQueries).build()._toQuery();
+                    NestedQuery nestedQuery = NestedQuery.of(n -> n.path("tags").query(tagsQuery));
+                    boolQueries.add(nestedQuery.query());
+                    //boolQuery.must(nestedQuery("tags", tagQuery, ScoreMode.None));
+                    break;
+            }
+        }
+
+        /*
         SearchRequest searchRequest = new SearchRequest(ES_LOG_INDEX+"*");
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
         BoolQueryBuilder boolQuery = QueryBuilders.boolQuery();
@@ -341,5 +404,9 @@ public class LogSearchUtil
 
         searchRequest.source(searchSourceBuilder);
         return searchRequest;
+
+         */
+
+        return null;
     }
 }

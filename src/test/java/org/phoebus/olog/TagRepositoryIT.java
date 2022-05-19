@@ -1,9 +1,6 @@
 package org.phoebus.olog;
 
-import org.elasticsearch.action.bulk.BulkRequest;
-import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.RestHighLevelClient;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.phoebus.olog.entity.State;
@@ -31,9 +28,6 @@ import static org.junit.Assert.assertTrue;
 @TestPropertySource(locations = "classpath:test_application.properties")
 public class TagRepositoryIT {
 
-    @Autowired
-    @Qualifier("indexClient")
-    RestHighLevelClient client;
 
     @Autowired
     private TagRepository tagRepository;
@@ -61,7 +55,7 @@ public class TagRepositoryIT {
         assertThat("Failed to create Tag " + testTag1, result.isPresent() && result.get().equals(testTag1));
 
         // Manual cleanup since Olog does not delete things
-        client.delete(new DeleteRequest(ES_TAG_INDEX, ES_TAG_TYPE, testTag1.getName()), RequestOptions.DEFAULT);
+        //client.delete(new DeleteRequest(ES_TAG_INDEX, ES_TAG_TYPE, testTag1.getName()), RequestOptions.DEFAULT);
     }
 
     /**
@@ -81,7 +75,7 @@ public class TagRepositoryIT {
         assertThat("Failed to delete Tag", result.isPresent() && result.get().equals(expectedTag));
 
         // Manual cleanup since Olog does not delete things
-        client.delete(new DeleteRequest(ES_TAG_INDEX, ES_TAG_TYPE, testTag2.getName()), RequestOptions.DEFAULT);
+        //client.delete(new DeleteRequest(ES_TAG_INDEX, ES_TAG_TYPE, testTag2.getName()), RequestOptions.DEFAULT);
     }
 
     /**
@@ -102,7 +96,7 @@ public class TagRepositoryIT {
             assertThat("Failed to create multiple tags ", findAll.containsAll(tags));
         } finally {
             // Manual cleanup
-            cleanUp(tags);
+            //cleanUp(tags);
         }
     }
 
@@ -130,7 +124,7 @@ public class TagRepositoryIT {
             assertThat("Failed to delete multiple tags ", inactiveTags.containsAll(tags));
         } finally {
             // Manual cleanup
-            cleanUp(tags);
+            //cleanUp(tags);
         }
     }
 
@@ -146,7 +140,7 @@ public class TagRepositoryIT {
             assertThat("Failed to list all tags", findAll.containsAll(tags));
         } finally {
             // Manual cleanup
-            cleanUp(tags);
+            //cleanUp(tags);
         }
     }
 
@@ -165,7 +159,7 @@ public class TagRepositoryIT {
                     findAllById.size() == 2 && findAllById.contains(testTag1) && findAllById.contains(testTag2));
         } finally {
             // Manual cleanup
-            cleanUp(tags);
+            //cleanUp(tags);
         }
     }
 
@@ -185,7 +179,7 @@ public class TagRepositoryIT {
                     testTag2.equals(tagRepository.findById(testTag2.getName()).get()));
         } finally {
             // Manual cleanup
-            cleanUp(tags);
+            //cleanUp(tags);
         }
     }
 
@@ -201,7 +195,7 @@ public class TagRepositoryIT {
             assertFalse("Failed to check if exists tag: non-existant-tag", tagRepository.existsById("non-existant-tag"));
         } finally {
             // Manual cleanup
-            cleanUp(tags);
+            //cleanUp(tags);
         }
     }
 
@@ -210,6 +204,7 @@ public class TagRepositoryIT {
      *
      * @param tags
      */
+    /*
     private void cleanUp(List<Tag> tags) {
         try {
             BulkRequest bulk = new BulkRequest();
@@ -221,5 +216,7 @@ public class TagRepositoryIT {
             e.printStackTrace();
         }
     }
+
+     */
 
 }
