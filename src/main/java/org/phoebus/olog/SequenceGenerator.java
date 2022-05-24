@@ -8,6 +8,7 @@ import java.io.IOException;
 import javax.annotation.PostConstruct;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch._types.ElasticsearchException;
 import co.elastic.clients.elasticsearch.core.IndexRequest;
 import co.elastic.clients.elasticsearch.core.IndexResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,9 +47,15 @@ public class SequenceGenerator
      */
     public long getID() throws IOException
     {
-
-        IndexRequest<Long> indexRequest = IndexRequest.of(i -> i.index(ES_SEQUENCE_INDEX));
-        IndexResponse response = client.index(indexRequest);
+        IndexRequest<Long> indexRequest = IndexRequest.of(i -> i.index(ES_SEQUENCE_INDEX).document(0L));
+        IndexResponse response = null;
+        try {
+            response = client.index(indexRequest);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ElasticsearchException e) {
+            e.printStackTrace();
+        }
         return response.version();
     }
 

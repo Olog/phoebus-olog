@@ -14,9 +14,13 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
+import co.elastic.clients.elasticsearch._types.FieldSort;
+import co.elastic.clients.elasticsearch._types.SortOptions;
+import co.elastic.clients.elasticsearch._types.SortOrder;
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery.Builder;
 import co.elastic.clients.elasticsearch._types.query_dsl.DisMaxQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.FuzzyQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.MatchPhraseQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.NestedQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
@@ -64,6 +68,16 @@ public class LogSearchUtil
         boolean fuzzySearch = false;
         List<String> searchTerms = new ArrayList<>();
         List<String> titleSearchTerms = new ArrayList<>();
+        boolean temporalSearch = false;
+        boolean includeEvents = false;
+        ZonedDateTime start = ZonedDateTime.ofInstant(Instant.EPOCH, ZoneId.systemDefault());
+        ZonedDateTime end = ZonedDateTime.now();
+        List<String> levelSearchTerms = new ArrayList<>();
+        int searchResultSize = defaultSearchSize;
+        int from = 0;
+
+        // Default sort order
+        SortOrder sortOrder = null;
 
         for (Entry<String, List<String>> parameter : searchParameters.entrySet()) {
             switch (parameter.getKey().strip().toLowerCase()) {
@@ -122,12 +136,205 @@ public class LogSearchUtil
                         }
                     }
                     Query tagsQuery = tagQuery.queries(tagsQueries).build()._toQuery();
-                    NestedQuery nestedQuery = NestedQuery.of(n -> n.path("tags").query(tagsQuery));
-                    boolQueries.add(nestedQuery.query());
+                    NestedQuery nestedTagsQuery = NestedQuery.of(n -> n.path("tags").query(tagsQuery));
+                    boolQueries.add(nestedTagsQuery.query());
                     //boolQuery.must(nestedQuery("tags", tagQuery, ScoreMode.None));
+                    break;
+                case "logbooks":
+                    DisMaxQuery.Builder logbookQuery = new DisMaxQuery.Builder();
+                    List<Query> logbooksQueries = new ArrayList<>();
+                    for (String value : parameter.getValue())
+                    {
+                        for (String pattern : value.split("[\\|,;]"))
+                        {
+                            logbooksQueries.add(WildcardQuery.of(w -> w.field("logbooks.name").value(pattern.trim()))._toQuery());
+                            //logbookQuery.add(wildcardQuery("logbooks.name", pattern.trim()));
+                        }
+                    }
+                    Query logbooksQuery = logbookQuery.queries(logbooksQueries).build()._toQuery();
+                    NestedQuery nestedLogbooksQuery = NestedQuery.of(n -> n.path("tags").query(logbooksQuery));
+                    boolQueries.add(nestedLogbooksQuery.query());
+                    //boolQuery.must(nestedQuery("logbooks", logbookQuery, ScoreMode.None));
+                    break;
+                case "start":
+                    // If there are multiple start times submitted select the earliest
+                    ZonedDateTime earliestStartTime = ZonedDateTime.now();
+                    for (String value : parameter.getValue())
+                    {
+                        ZonedDateTime time = ZonedDateTime.from(MILLI_FORMAT.parse(value));
+                        earliestStartTime = earliestStartTime.isBefore(time) ? earliestStartTime : time;
+                    }
+                    temporalSearch = true;
+                    start = earliestStartTime;
+                    break;
+                case "end":
+                    // If there are multiple end times submitted select the latest
+                    ZonedDateTime latestEndTime =  Instant.ofEpochMilli(Long.MIN_VALUE).atZone(ZoneId.systemDefault());
+                    for (String value : parameter.getValue())
+                    {
+                        ZonedDateTime time = ZonedDateTime.from(MILLI_FORMAT.parse(value));
+                        latestEndTime = latestEndTime.isBefore(time) ? time : latestEndTime;
+                    }
+                    temporalSearch = true;
+                    end = latestEndTime;
+                    break;
+                case "includeevents":
+                case "includeevent":
+                    includeEvents = true;
+                    break;
+                case "properties":
+                    DisMaxQuery.Builder propertyQuery = new DisMaxQuery.Builder();
+                    List<Query> propertyQueries = new ArrayList<>();
+                    for (String value : parameter.getValue()) {
+                        for (String pattern : value.split("[\\|,;]")) {
+                            String[] propertySearchFields;
+                            propertySearchFields = Arrays.copyOf(pattern.split("\\."), 3);
+                            BoolQuery.Builder bqb = new BoolQuery.Builder();
+                            //BoolQueryBuilder bq = boolQuery();
+                            if (propertySearchFields[0] != null && !propertySearchFields[0].isEmpty())
+                            {
+                                bqb.must(WildcardQuery.of(w -> w.field("properties.name").value(propertySearchFields[0].trim()))._toQuery());
+                                //bq.must(wildcardQuery("properties.name", propertySearchFields[0].trim()));
+                            }
+
+                            if (propertySearchFields[1] != null && !propertySearchFields[1].isEmpty())
+                            {
+                                BoolQuery.Builder bqb2 = new BoolQuery.Builder();
+                                //BoolQueryBuilder bq2 = boolQuery();
+                                List<Query> mustQueries = new ArrayList<>();
+                                mustQueries.add(WildcardQuery.of(w -> w.field("properties.attributes.name").value(propertySearchFields[1].trim()))._toQuery());
+                                //bq2.must(wildcardQuery("properties.attributes.name", propertySearchFields[1].trim()));
+                                if (propertySearchFields[2] != null && !propertySearchFields[2].isEmpty()){
+                                    mustQueries.add(WildcardQuery.of(w -> w.field("properties.attributes.value").value(propertySearchFields[2].trim()))._toQuery());
+                                    //bq2.must(wildcardQuery("properties.attributes.value", propertySearchFields[2].trim()));
+                                }
+                                bqb2.must(mustQueries);
+                                bqb.must(NestedQuery.of(n -> n.path("properties.attributes").query(bqb2.build()._toQuery())).query());
+                                //bq.must(nestedQuery("properties.attributes", bq2, ScoreMode.None));
+                            }
+                            propertyQueries.add(bqb.build()._toQuery());
+                            //propertyQuery.add(nestedQuery("properties", bq, ScoreMode.None));
+                        }
+                    }
+                    propertyQuery.queries(propertyQueries);
+                    boolQueries.add(propertyQuery.build()._toQuery());
+                    //boolQuery.must(propertyQuery);
+                    break;
+                case "level":
+                    for (String value : parameter.getValue())
+                    {
+                        for (String pattern : value.split("[\\|,;\\s+]"))
+                        {
+                            levelSearchTerms.add(pattern.trim().toLowerCase());
+                        }
+                    }
+                    break;
+                case "size":
+                case "limit":
+                    Optional<String> maxSize = parameter.getValue().stream().max((o1, o2) -> {
+                        return Integer.valueOf(o1).compareTo(Integer.valueOf(o2));
+                    });
+                    if (maxSize.isPresent()) {
+                        searchResultSize = Integer.valueOf(maxSize.get());
+                    }
+                    break;
+                case "from":
+                    Optional<String> maxFrom = parameter.getValue().stream().max((o1, o2) -> {
+                        return Integer.valueOf(o1).compareTo(Integer.valueOf(o2));
+                    });
+                    if (maxFrom.isPresent()) {
+                        from = Integer.valueOf(maxFrom.get());
+                    }
+                    break;
+                case "sort": // Honor sort order if client specifies it
+                    List<String> sortList = parameter.getValue();
+                    if(sortList != null && sortList.size() > 0){
+                        String sort = sortList.get(0);
+                        if(sort.toUpperCase().startsWith("ASC") || sort.toUpperCase().startsWith("UP")){
+                            sortOrder = SortOrder.Asc;
+                        }
+                        else if(sort.toUpperCase().startsWith("DESC") || sort.toUpperCase().startsWith("DOWN")){
+                            sortOrder = SortOrder.Desc;
+                        }
+                    }
+                    break;
+                default:
+                    // Unsupported search parameters are ignored
                     break;
             }
         }
+
+        // Add the description query
+        if (!searchTerms.isEmpty())
+        {
+            DisMaxQuery.Builder descQuery = new DisMaxQuery.Builder();
+            List<Query> descQueries = new ArrayList<>();
+            if (fuzzySearch) {
+                searchTerms.stream().forEach(searchTerm -> {
+                    descQueries.add(FuzzyQuery.of(f -> f.field("description").value(searchTerm))._toQuery());
+                });
+            }
+            else {
+                searchTerms.stream().forEach(searchTerm -> {
+                    descQueries.add(WildcardQuery.of(w -> w.field("description").value(searchTerm))._toQuery());
+                });
+            }
+            descQuery.queries(descQueries);
+            boolQueries.add(descQuery.build()._toQuery());
+            //boolQuery.must(descQuery);
+        }
+
+        // Add the title query
+        if (!titleSearchTerms.isEmpty())
+        {
+            DisMaxQuery.Builder titleQuery = new DisMaxQuery.Builder();
+            List<Query> titleQueries = new ArrayList<>();
+            if (fuzzySearch) {
+                searchTerms.stream().forEach(searchTerm -> {
+                    titleQueries.add(FuzzyQuery.of(f -> f.field("title").value(searchTerm))._toQuery());
+                });
+            }
+            else {
+                searchTerms.stream().forEach(searchTerm -> {
+                    titleQueries.add(WildcardQuery.of(w -> w.field("title").value(searchTerm))._toQuery());
+                });
+            }
+            titleQuery.queries(titleQueries);
+            boolQueries.add(titleQuery.build()._toQuery());
+        }
+
+        // Add the level query
+        if (!levelSearchTerms.isEmpty())
+        {
+            DisMaxQuery.Builder levelQuery = new DisMaxQuery.Builder();
+            List<Query> titleQueries = new ArrayList<>();
+            if (fuzzySearch) {
+                searchTerms.stream().forEach(searchTerm -> {
+                    titleQueries.add(FuzzyQuery.of(f -> f.field("title").value(searchTerm))._toQuery());
+                });
+            }
+            else {
+                searchTerms.stream().forEach(searchTerm -> {
+                    titleQueries.add(WildcardQuery.of(w -> w.field("title").value(searchTerm))._toQuery());
+                });
+            }
+            levelQuery.queries(titleQueries);
+            boolQueries.add(levelQuery.build()._toQuery());
+        }
+
+        boolQueryBuilder.must(boolQueries);
+
+        int _searchResultSize = searchResultSize;
+        int _from = from;
+        SortOrder _sortOrder = sortOrder;
+
+        SearchRequest searchRequest = SearchRequest.of(s -> s.index(ES_LOG_INDEX)
+                        .query(boolQueryBuilder.build()._toQuery())
+                        .timeout("60s")
+                        .sort(SortOptions.of(so -> so.field(FieldSort.of(f -> f.field("createdDate")))))
+                        .sort(SortOptions.of(so -> so.score(sc -> sc.order(_sortOrder))))
+                        .size(Math.min(_searchResultSize, maxSearchSize))
+                        .from(_from));
 
         /*
         SearchRequest searchRequest = new SearchRequest(ES_LOG_INDEX+"*");
@@ -407,6 +614,6 @@ public class LogSearchUtil
 
          */
 
-        return null;
+        return searchRequest;
     }
 }

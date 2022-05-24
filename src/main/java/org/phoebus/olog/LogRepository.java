@@ -10,12 +10,16 @@ import co.elastic.clients.elasticsearch._types.Refresh;
 import co.elastic.clients.elasticsearch._types.Result;
 import co.elastic.clients.elasticsearch.core.MgetRequest;
 import co.elastic.clients.elasticsearch.core.MgetResponse;
+import co.elastic.clients.elasticsearch.core.SearchRequest;
+import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.mget.MultiGetResponseItem;
+import co.elastic.clients.elasticsearch.core.search.Hit;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.phoebus.olog.entity.Attachment;
 import org.phoebus.olog.entity.Log;
 import org.phoebus.olog.entity.Log.LogBuilder;
+import org.phoebus.olog.entity.Logbook;
 import org.phoebus.olog.entity.SearchResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -35,6 +39,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 @Repository
 public class LogRepository implements CrudRepository<Log, String> {
@@ -224,36 +229,19 @@ public class LogRepository implements CrudRepository<Log, String> {
     LogSearchUtil logSearchUtil;
 
     public SearchResult search(MultiValueMap<String, String> searchParameters) {
-        /*
+
         SearchRequest searchRequest = logSearchUtil.buildSearchRequest(searchParameters);
         try {
-            final SearchResponse searchResponse = legacyClient.search(searchRequest, RequestOptions.DEFAULT);
-            List<Log> result = new ArrayList<Log>();
-            searchResponse.getHits().forEach(hit -> {
-                try {
-                    mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-
-                    result.add(mapper.readValue(hit.getSourceAsString(), Log.class));
-                } catch (IOException e) {
-                    logger.log(Level.SEVERE, "Failed to parse result for search : " + searchParameters + ", CAUSE: " + e.getMessage(), e);
-                    throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-                            "Failed to parse result for search : " + searchParameters + ", CAUSE: " + e.getMessage());
-                }
-            });
+            final SearchResponse<Log> searchResponse = client.search(searchRequest, Log.class);
+            List<Log> result = searchResponse.hits().hits().stream().map(Hit::source).collect(Collectors.toList());
             SearchResult searchResult = new SearchResult();
-            searchResult.setHitCount(searchResponse.getHits().getTotalHits().value);
+            searchResult.setHitCount(searchResponse.hits().total().value());
             searchResult.setLogs(result);
             return searchResult;
         } catch (IOException e) {
             logger.log(Level.SEVERE, "Failed to complete search", e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to complete search");
         }
-
-         */
-        SearchResult searchResult = new SearchResult();
-        searchResult.setHitCount(0);
-
-        return searchResult;
     }
 
     @Override

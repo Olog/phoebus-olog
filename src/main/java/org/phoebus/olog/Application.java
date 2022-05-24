@@ -11,8 +11,10 @@ import org.springframework.core.task.TaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.util.FileCopyUtils;
+import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.web.servlet.mvc.method.annotation.PrincipalMethodArgumentResolver;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -82,6 +84,7 @@ public class Application {
      *
      * @return A {@link WebMvcConfigurer}
      */
+    /*
     @Bean
     public WebMvcConfigurer corsConfigurer() {
         return new WebMvcConfigurer() {
@@ -92,8 +95,15 @@ public class Application {
                         .allowedMethods("HEAD", "GET", "POST", "PUT", "DELETE", "PATCH")
                         .allowedOrigins(corsAllowedOrigins);
             }
+
+            @Override
+            public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers){
+                resolvers.add(new PrincipalMethodArgumentResolver());
+            }
         };
     }
+
+     */
 
     /**
      * List of {@link LogEntryNotifier} implementations called when a new log entry

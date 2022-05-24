@@ -88,32 +88,25 @@ curl -H 'Content-Type: application/json' -XPUT 'http://localhost:9200/olog_prope
 }'
 
 # Delete in case it exists
-#curl -XDELETE 'http://localhost:9200/olog_sequence/?pretty=true'
+curl -XDELETE 'http://localhost:9200/olog_sequence/?pretty=true'
 #Create the Index
 #Set the mappings
-#curl -H 'Content-Type: application/json' -XPUT 'http://localhost:9200/olog_sequence/?pretty=true'  -d '
-#{
-#   "settings" : {
-#      "number_of_shards"     : 1,
-#      "auto_expand_replicas" : "0-all"
-#   }
-#}
-#'
+curl -H 'Content-Type: application/json' -XPUT 'http://localhost:9200/olog_sequence/?pretty=true'  -d '
+{
+   "settings" : {
+      "number_of_shards"     : 1,
+      "auto_expand_replicas" : "0-all"
+   },
 
-#curl -H 'Content-Type: application/json' -XPUT 'http://localhost:9200/olog_sequence/_mapping/?pretty=true'  -d '
-#{
-#   "properties" : {
-#        "_source": { "type": "nested",
-#               "enabled": false
-#            },
-#            "_all": {"type": "nested",
-#                "enabled": false
-#            },
-#            "enabled": false
-#     }
-#     }
-#
-#'
+   "mappings" : {
+           "_source": {
+                  "enabled": false
+               },
+               "enabled": false
+
+  }
+}
+'
 
 # Delete in case it exists
 curl -XDELETE 'http://localhost:9200/olog_logs/?pretty=true'
