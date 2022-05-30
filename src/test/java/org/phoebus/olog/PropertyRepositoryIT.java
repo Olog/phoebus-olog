@@ -1,6 +1,11 @@
 package org.phoebus.olog;
 
-import org.elasticsearch.client.RequestOptions;
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch._types.Refresh;
+import co.elastic.clients.elasticsearch.core.BulkRequest;
+import co.elastic.clients.elasticsearch.core.bulk.BulkOperation;
+import co.elastic.clients.elasticsearch.core.bulk.DeleteOperation;
+import co.elastic.clients.elasticsearch.core.bulk.IndexOperation;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.phoebus.olog.entity.Attribute;
@@ -31,17 +36,18 @@ import static org.junit.Assert.assertTrue;
 @TestPropertySource(locations = "classpath:test_application.properties")
 public class PropertyRepositoryIT {
 
-   // @Autowired
-    //@Qualifier("indexClient")
-    //RestHighLevelClient client;
+    @Autowired
+    @Qualifier("client")
+    ElasticsearchClient client;
+
 
     @Autowired
     private PropertyRepository propertyRepository;
 
 
     Set<Attribute> attributes = Stream.of(
-            new Attribute("test-attribute-1"),
-            new Attribute("test-attribute-2"))
+                    new Attribute("test-attribute-1"),
+                    new Attribute("test-attribute-2"))
             .collect(Collectors.toSet());
 
     Property testProperty1 = new Property("test-property-1", testOwner, State.Active, attributes);
@@ -51,18 +57,14 @@ public class PropertyRepositoryIT {
 
     @Value("${elasticsearch.property.index:olog_properties}")
     private String ES_PROPERTY_INDEX;
-    @Value("${elasticsearch.property.type:olog_property}")
-    private String ES_PROPERTY_TYPE;
 
     private static final String testOwner = "test-owner";
 
     /**
      * Test the creation of a test property
-     *
-     * @throws IOException
      */
     @Test
-    public void createProperty() throws IOException {
+    public void createProperty() {
         propertyRepository.save(testProperty1);
         Optional<Property> result = propertyRepository.findById(testProperty1.getName());
         assertThat("Failed to create Property " + testProperty1,
@@ -74,11 +76,9 @@ public class PropertyRepositoryIT {
 
     /**
      * create a set of properties
-     *
-     * @throws IOException
      */
     @Test
-    public void createProperties() throws IOException {
+    public void createProperties() {
         List<Property> properties = Arrays.asList(testProperty1, testProperty2, testProperty3, testProperty4);
         List<Property> result = new ArrayList<Property>();
         propertyRepository.saveAll(properties).forEach(property -> {
@@ -97,11 +97,9 @@ public class PropertyRepositoryIT {
 
     /**
      * Test the deletion of a test property
-     *
-     * @throws IOException
      */
     @Test
-    public void deleteProperty() throws IOException {
+    public void deleteProperty() {
         propertyRepository.save(testProperty2);
         Optional<Property> result = propertyRepository.findById(testProperty2.getName());
         assertThat("Failed to create Property " + testProperty2,
@@ -118,11 +116,9 @@ public class PropertyRepositoryIT {
 
     /**
      * Test the deletion of a test property
-     *
-     * @throws IOException
      */
     @Test
-    public void deletePropertyAttribute() throws IOException {
+    public void deletePropertyAttribute() {
         propertyRepository.save(testProperty2);
         Optional<Property> result = propertyRepository.findById(testProperty2.getName());
         assertThat("Failed to create Property " + testProperty2,
@@ -144,11 +140,9 @@ public class PropertyRepositoryIT {
 
     /**
      * delete a set of properties
-     *
-     * @throws IOException
      */
     @Test
-    public void deleteproperties() throws IOException {
+    public void deleteproperties() {
         List<Property> properties = Arrays.asList(testProperty1, testProperty2, testProperty3, testProperty4);
         try {
             List<Property> result = new ArrayList<Property>();
@@ -171,7 +165,7 @@ public class PropertyRepositoryIT {
     }
 
     @Test
-    public void findAllproperties() throws IOException {
+    public void findAllproperties() {
         List<Property> properties = Arrays.asList(testProperty1, testProperty2, testProperty3, testProperty4);
         try {
             propertyRepository.saveAll(properties);
@@ -187,7 +181,7 @@ public class PropertyRepositoryIT {
     }
 
     @Test
-    public void findAllpropertiesByIds() throws IOException {
+    public void findAllpropertiesByIds() {
         List<Property> properties = Arrays.asList(testProperty1, testProperty2, testProperty3, testProperty4);
         try {
             propertyRepository.saveAll(properties);
@@ -206,7 +200,7 @@ public class PropertyRepositoryIT {
     }
 
     @Test
-    public void findPropertyById() throws IOException {
+    public void findPropertyById() {
         List<Property> properties = Arrays.asList(testProperty1, testProperty2);
         try {
             propertyRepository.saveAll(properties);
@@ -221,7 +215,7 @@ public class PropertyRepositoryIT {
     }
 
     @Test
-    public void checkPropertyExists() throws IOException {
+    public void checkPropertyExists() {
         List<Property> properties = Arrays.asList(testProperty1, testProperty2);
         try {
             propertyRepository.saveAll(properties);
@@ -244,18 +238,17 @@ public class PropertyRepositoryIT {
      */
 
     private void cleanupProperties(List<Property> properties) {
-        /*
+        List<BulkOperation> bulkOperations = new ArrayList<>();
+        properties.forEach(property -> bulkOperations.add(DeleteOperation.of(i ->
+                i.index(ES_PROPERTY_INDEX).id(property.getName()))._toBulkOperation()));
+        BulkRequest bulkRequest =
+                BulkRequest.of(r ->
+                        r.operations(bulkOperations).refresh(Refresh.True));
         try {
-            BulkRequest bulk = new BulkRequest();
-            properties.forEach(property -> {
-                bulk.add(new DeleteRequest(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, property.getName()));
-            });
-            client.bulk(bulk, RequestOptions.DEFAULT);
+            client.bulk(bulkRequest);
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-         */
     }
 
 }

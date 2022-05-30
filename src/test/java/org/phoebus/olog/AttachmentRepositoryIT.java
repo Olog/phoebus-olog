@@ -61,7 +61,7 @@ public class AttachmentRepositoryIT {
 
             Attachment createdAttachment = attachmentRepository.save(testAttachment);
             // Directly retrieve the attached file to verify if it was recorded correctly
-            /*
+
             gridOperation.find(new Query(Criteria.where("_id").is(createdAttachment.getId()))).forEach(new Consumer<GridFSFile>() {
 
                 @Override
@@ -79,8 +79,6 @@ public class AttachmentRepositoryIT {
                     }
                 }
             });
-
-             */
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -102,7 +100,7 @@ public class AttachmentRepositoryIT {
             Attachment createdAttachment = attachmentRepository.save(testAttachment);
 
             // Directly retrieve the attached file to verify if it was recorded correctly
-            /*
+
             gridOperation.find(new Query(Criteria.where("_id").is(createdAttachment.getId()))).forEach(new Consumer<GridFSFile>() {
 
                 @Override
@@ -120,8 +118,6 @@ public class AttachmentRepositoryIT {
                     }
                 }
             });
-
-             */
         } catch (IOException e) {
             e.printStackTrace();
         }

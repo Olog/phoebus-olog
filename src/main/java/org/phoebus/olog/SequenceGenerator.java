@@ -47,6 +47,7 @@ public class SequenceGenerator
      */
     public long getID() throws IOException
     {
+        /*
         IndexRequest<Long> indexRequest = IndexRequest.of(i -> i.index(ES_SEQUENCE_INDEX).document(0L));
         IndexResponse response = null;
         try {
@@ -57,6 +58,10 @@ public class SequenceGenerator
             e.printStackTrace();
         }
         return response.version();
+
+         */
+
+        return Math.round(10000000 * Math.random());
     }
 
 }

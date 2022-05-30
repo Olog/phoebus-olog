@@ -6,19 +6,28 @@
 package org.phoebus.olog;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch._types.ElasticsearchException;
 import co.elastic.clients.elasticsearch._types.FieldSort;
 import co.elastic.clients.elasticsearch._types.Refresh;
 import co.elastic.clients.elasticsearch._types.Result;
 import co.elastic.clients.elasticsearch._types.SortOptions;
+import co.elastic.clients.elasticsearch.core.BulkRequest;
 import co.elastic.clients.elasticsearch.core.BulkResponse;
+import co.elastic.clients.elasticsearch.core.ExistsRequest;
+import co.elastic.clients.elasticsearch.core.GetRequest;
+import co.elastic.clients.elasticsearch.core.GetResponse;
+import co.elastic.clients.elasticsearch.core.IndexRequest;
+import co.elastic.clients.elasticsearch.core.IndexResponse;
 import co.elastic.clients.elasticsearch.core.MgetRequest;
 import co.elastic.clients.elasticsearch.core.MgetResponse;
+import co.elastic.clients.elasticsearch.core.SearchRequest;
+import co.elastic.clients.elasticsearch.core.SearchResponse;
+import co.elastic.clients.elasticsearch.core.UpdateRequest;
+import co.elastic.clients.elasticsearch.core.UpdateResponse;
 import co.elastic.clients.elasticsearch.core.bulk.BulkOperation;
 import co.elastic.clients.elasticsearch.core.bulk.IndexOperation;
 import co.elastic.clients.elasticsearch.core.mget.MultiGetResponseItem;
 import co.elastic.clients.elasticsearch.core.search.Hit;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.phoebus.olog.entity.Logbook;
 import org.phoebus.olog.entity.State;
 import org.phoebus.olog.entity.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,7 +42,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -41,13 +49,12 @@ import java.util.stream.Collectors;
 @Repository
 public class TagRepository implements CrudRepository<Tag, String> {
 
-    private Logger logger = Logger.getLogger(TagRepository.class.getName());
+    private final Logger logger = Logger.getLogger(TagRepository.class.getName());
 
+    @SuppressWarnings("unused")
     @Value("${elasticsearch.tag.index:olog_tags}")
     private String ES_TAG_INDEX;
-    @Value("${elasticsearch.tag.type:olog_tag}")
-    private String ES_TAG_TYPE;
-
+    @SuppressWarnings("unused")
     @Value("${elasticsearch.result.size.tags:10}")
     private int tagsResultSize;
 
@@ -55,28 +62,26 @@ public class TagRepository implements CrudRepository<Tag, String> {
     @Qualifier("client")
     ElasticsearchClient client;
 
-    private static final ObjectMapper mapper = new ObjectMapper();
-
     /**
      *
      */
     @Override
     public <S extends Tag> S save(S tag) {
         try {
-            co.elastic.clients.elasticsearch.core.IndexRequest indexRequest =
-                    co.elastic.clients.elasticsearch.core.IndexRequest.of(i ->
+            IndexRequest<Tag> indexRequest =
+                    IndexRequest.of(i ->
                             i.index(ES_TAG_INDEX)
                                     .id(tag.getName())
                                     .document(tag)
                                     .refresh(Refresh.True));
-            co.elastic.clients.elasticsearch.core.IndexResponse response = client.index(indexRequest);
+            IndexResponse response = client.index(indexRequest);
 
             if (response.result().equals(Result.Created) ||
                     response.result().equals(Result.Updated)) {
-                co.elastic.clients.elasticsearch.core.GetRequest getRequest =
-                        co.elastic.clients.elasticsearch.core.GetRequest.of(g ->
+                GetRequest getRequest =
+                        GetRequest.of(g ->
                                 g.index(ES_TAG_INDEX).id(response.id()));
-                co.elastic.clients.elasticsearch.core.GetResponse<Tag> resp =
+                GetResponse<Tag> resp =
                         client.get(getRequest, Tag.class);
                 return (S) resp.source();
             }
@@ -91,9 +96,9 @@ public class TagRepository implements CrudRepository<Tag, String> {
     public <S extends Tag> Iterable<S> saveAll(Iterable<S> tags) {
         List<BulkOperation> bulkOperations = new ArrayList<>();
         tags.forEach(tag -> bulkOperations.add(IndexOperation.of(i ->
-                i.index(ES_TAG_INDEX).document(tag))._toBulkOperation()));
-        co.elastic.clients.elasticsearch.core.BulkRequest bulkRequest =
-                co.elastic.clients.elasticsearch.core.BulkRequest.of(r ->
+                i.index(ES_TAG_INDEX).document(tag).id(tag.getName()))._toBulkOperation()));
+        BulkRequest bulkRequest =
+                BulkRequest.of(r ->
                         r.operations(bulkOperations).refresh(Refresh.True));
 
         BulkResponse bulkResponse;
@@ -120,10 +125,10 @@ public class TagRepository implements CrudRepository<Tag, String> {
     @Override
     public Optional<Tag> findById(String tagName) {
         try {
-            co.elastic.clients.elasticsearch.core.GetRequest getRequest =
-                    co.elastic.clients.elasticsearch.core.GetRequest.of(g ->
+            GetRequest getRequest =
+                    GetRequest.of(g ->
                             g.index(ES_TAG_INDEX).id(tagName));
-            co.elastic.clients.elasticsearch.core.GetResponse<Tag> resp =
+            GetResponse<Tag> resp =
                     client.get(getRequest, Tag.class);
             if (resp.found()) {
                 return Optional.of(resp.source());
@@ -138,58 +143,36 @@ public class TagRepository implements CrudRepository<Tag, String> {
 
     @Override
     public boolean existsById(String tagName) {
-        Optional<Tag> tagOptional = findById(tagName);
-        return tagOptional.isPresent();
+        try {
+            ExistsRequest.Builder builder = new ExistsRequest.Builder();
+            builder.index(ES_TAG_INDEX).id(tagName);
+            return client.exists(builder.build()).value();
+        } catch (ElasticsearchException | IOException e) {
+            logger.log(Level.SEVERE, "Failed to check if tag " + tagName + " exists", e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Failed to check if tag exists by id: " + tagName, null);
+        }
     }
 
     @Override
     public Iterable<Tag> findAll() {
 
         try {
-            co.elastic.clients.elasticsearch.core.SearchRequest searchRequest =
-                    co.elastic.clients.elasticsearch.core.SearchRequest.of(s ->
-                            s.index(ES_TAG_INDEX)
-                                    .query(q -> q.match(t -> t.field("state").query(State.Active.toString())))
-                                    .timeout("10s")
-                                    .size(tagsResultSize)
-                                    .sort(SortOptions.of(so -> so.field(FieldSort.of(f -> f.field("name"))))));
+            SearchRequest searchRequest = SearchRequest.of(s ->
+                    s.index(ES_TAG_INDEX)
+                            .query(q -> q.match(t -> t.field("state").query(State.Active.toString())))
+                            .timeout("10s")
+                            .size(tagsResultSize)
+                            .sort(SortOptions.of(so -> so.field(FieldSort.of(f -> f.field("name"))))));
 
-            co.elastic.clients.elasticsearch.core.SearchResponse<Tag> response =
+            SearchResponse<Tag> response =
                     client.search(searchRequest, Tag.class);
 
             return response.hits().hits().stream().map(Hit::source).collect(Collectors.toList());
-        }
-        catch (Exception e) {
-            logger.log(Level.SEVERE, "Failed to find tags", e);
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to find tags");
-        }
-
-        /*
-        try {
-            SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
-            sourceBuilder.query(QueryBuilders.termQuery("state", State.Active.toString()));
-            sourceBuilder.timeout(new TimeValue(10, TimeUnit.SECONDS));
-            sourceBuilder.size(tagsResultSize);
-            sourceBuilder.sort(SortBuilders.fieldSort("name").order(SortOrder.ASC));
-
-            SearchResponse response = legacyClient.search(
-                    new SearchRequest(ES_TAG_INDEX).types(ES_TAG_TYPE).source(sourceBuilder), RequestOptions.DEFAULT);
-            List<Tag> result = new ArrayList<Tag>();
-            response.getHits().forEach(h -> {
-                BytesReference b = h.getSourceRef();
-                try {
-                    result.add(mapper.readValue(b.streamInput(), Tag.class));
-                } catch (IOException e) {
-                    logger.log(Level.SEVERE, e.getMessage(), e);
-                }
-            });
-            return result;
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Failed to find tags", e);
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to find tags");
         }
-
-         */
     }
 
     @Override
@@ -197,7 +180,7 @@ public class TagRepository implements CrudRepository<Tag, String> {
 
         List<String> ids = new ArrayList<>();
         tagNames.forEach(ids::add);
-        MgetRequest mgetRequest = MgetRequest.of(r -> r.ids(ids));
+        MgetRequest mgetRequest = MgetRequest.of(r -> r.index(ES_TAG_INDEX).ids(ids));
         try {
             List<Tag> foundTags = new ArrayList<>();
             MgetResponse<Tag> resp = client.mget(mgetRequest, Tag.class);
@@ -222,19 +205,19 @@ public class TagRepository implements CrudRepository<Tag, String> {
     @Override
     public void deleteById(String tagName) {
         try {
-            co.elastic.clients.elasticsearch.core.GetRequest getRequest =
-                    co.elastic.clients.elasticsearch.core.GetRequest.of(g ->
+            GetRequest getRequest =
+                    GetRequest.of(g ->
                             g.index(ES_TAG_INDEX).id(tagName));
-            co.elastic.clients.elasticsearch.core.GetResponse<Tag> resp =
+            GetResponse<Tag> resp =
                     client.get(getRequest, Tag.class);
             if (resp.found()) {
                 Tag tag = resp.source();
                 tag.setState(State.Inactive);
-                co.elastic.clients.elasticsearch.core.UpdateRequest updateRequest =
-                        co.elastic.clients.elasticsearch.core.UpdateRequest.of(u ->
+                UpdateRequest<Tag, Tag> updateRequest =
+                        UpdateRequest.of(u ->
                                 u.index(ES_TAG_INDEX).id(tagName)
                                         .doc(tag));
-                co.elastic.clients.elasticsearch.core.UpdateResponse updateResponse =
+                UpdateResponse<Tag> updateResponse =
                         client.update(updateRequest, Tag.class);
                 if (updateResponse.result().equals(co.elastic.clients.elasticsearch._types.Result.Updated)) {
                     logger.log(Level.INFO, "Deleted tag " + tagName);

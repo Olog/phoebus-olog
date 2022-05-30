@@ -6,15 +6,24 @@
 package org.phoebus.olog;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch._types.ElasticsearchException;
 import co.elastic.clients.elasticsearch._types.FieldSort;
-import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.Refresh;
 import co.elastic.clients.elasticsearch._types.Result;
 import co.elastic.clients.elasticsearch._types.SortOptions;
-import co.elastic.clients.elasticsearch._types.query_dsl.TermsQuery;
+import co.elastic.clients.elasticsearch.core.BulkRequest;
 import co.elastic.clients.elasticsearch.core.BulkResponse;
+import co.elastic.clients.elasticsearch.core.ExistsRequest;
+import co.elastic.clients.elasticsearch.core.GetRequest;
+import co.elastic.clients.elasticsearch.core.GetResponse;
+import co.elastic.clients.elasticsearch.core.IndexRequest;
+import co.elastic.clients.elasticsearch.core.IndexResponse;
 import co.elastic.clients.elasticsearch.core.MgetRequest;
 import co.elastic.clients.elasticsearch.core.MgetResponse;
+import co.elastic.clients.elasticsearch.core.SearchRequest;
+import co.elastic.clients.elasticsearch.core.SearchResponse;
+import co.elastic.clients.elasticsearch.core.UpdateRequest;
+import co.elastic.clients.elasticsearch.core.UpdateResponse;
 import co.elastic.clients.elasticsearch.core.bulk.BulkOperation;
 import co.elastic.clients.elasticsearch.core.bulk.IndexOperation;
 import co.elastic.clients.elasticsearch.core.mget.MultiGetResponseItem;
@@ -31,53 +40,48 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 @Repository
 public class LogbookRepository implements CrudRepository<Logbook, String> {
 
-    // Read the elatic index and type from the application.properties
+    // Read the elastic index and type from the application.properties
+    @SuppressWarnings("unused")
     @Value("${elasticsearch.logbook.index:olog_logbooks}")
     private String ES_LOGBOOK_INDEX;
-    @Value("${elasticsearch.logbook.type:olog_logbook}")
-    private String ES_LOGBOOK_TYPE;
-
+    @SuppressWarnings("unused")
     @Value("${elasticsearch.result.size.logbooks:10}")
     private int logbooksResultSize;
 
-    //@Autowired
-    //@Qualifier("legacyClient")
-    //RestHighLevelClient legacyClient;
-
+    @SuppressWarnings("unused")
     @Autowired
     @Qualifier("client")
     private ElasticsearchClient client;
 
-    private Logger logger = Logger.getLogger(LogbookRepository.class.getName());
+    private final Logger logger = Logger.getLogger(LogbookRepository.class.getName());
 
     @Override
     public <S extends Logbook> S save(S logbook) {
         try {
-            co.elastic.clients.elasticsearch.core.IndexRequest indexRequest =
-                    co.elastic.clients.elasticsearch.core.IndexRequest.of(i ->
+            IndexRequest<Logbook> indexRequest =
+                    IndexRequest.of(i ->
                             i.index(ES_LOGBOOK_INDEX)
                                     .id(logbook.getName())
                                     .document(logbook)
                                     .refresh(Refresh.True));
-            co.elastic.clients.elasticsearch.core.IndexResponse response = client.index(indexRequest);
+            IndexResponse response = client.index(indexRequest);
 
             if (response.result().equals(Result.Created) ||
                     response.result().equals(Result.Updated)) {
-                co.elastic.clients.elasticsearch.core.GetRequest getRequest =
+                GetRequest getRequest =
                         co.elastic.clients.elasticsearch.core.GetRequest.of(g ->
                                 g.index(ES_LOGBOOK_INDEX).id(response.id()));
-                co.elastic.clients.elasticsearch.core.GetResponse<Logbook> resp =
+                GetResponse<Logbook> resp =
                         client.get(getRequest, Logbook.class);
                 return (S) resp.source();
             }
@@ -92,9 +96,9 @@ public class LogbookRepository implements CrudRepository<Logbook, String> {
     public <S extends Logbook> Iterable<S> saveAll(Iterable<S> logbooks) {
         List<BulkOperation> bulkOperations = new ArrayList<>();
         logbooks.forEach(logbook -> bulkOperations.add(IndexOperation.of(i ->
-                i.index(ES_LOGBOOK_INDEX).document(logbook))._toBulkOperation()));
-        co.elastic.clients.elasticsearch.core.BulkRequest bulkRequest =
-                co.elastic.clients.elasticsearch.core.BulkRequest.of(r ->
+                i.index(ES_LOGBOOK_INDEX).document(logbook).id(logbook.getName()))._toBulkOperation()));
+        BulkRequest bulkRequest =
+                BulkRequest.of(r ->
                         r.operations(bulkOperations).refresh(Refresh.True));
         BulkResponse bulkResponse;
         try {
@@ -120,10 +124,10 @@ public class LogbookRepository implements CrudRepository<Logbook, String> {
     @Override
     public Optional<Logbook> findById(String logbookName) {
         try {
-            co.elastic.clients.elasticsearch.core.GetRequest getRequest =
-                    co.elastic.clients.elasticsearch.core.GetRequest.of(g ->
+            GetRequest getRequest =
+                    GetRequest.of(g ->
                             g.index(ES_LOGBOOK_INDEX).id(logbookName));
-            co.elastic.clients.elasticsearch.core.GetResponse<Logbook> resp =
+            GetResponse<Logbook> resp =
                     client.get(getRequest, Logbook.class);
             if (resp.found()) {
                 return Optional.of(resp.source());
@@ -138,15 +142,21 @@ public class LogbookRepository implements CrudRepository<Logbook, String> {
 
     @Override
     public boolean existsById(String logbookName) {
-        Optional<Logbook> logbookOptional = findById(logbookName);
-        return logbookOptional.isPresent();
+        try {
+            ExistsRequest.Builder builder = new ExistsRequest.Builder();
+            builder.index(ES_LOGBOOK_INDEX).id(logbookName);
+            return client.exists(builder.build()).value();
+        } catch (ElasticsearchException | IOException e) {
+            logger.log(Level.SEVERE, "Failed to check if logbook " + logbookName + " exists", e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Failed to check if logbook exists by id: " + logbookName, null);
+        }
     }
 
     public boolean existsByIds(List<String> logbookNames) {
         try {
-            return logbookNames.stream().allMatch(logbook -> {
-                return existsById(logbook);
-            });
+            boolean b =  logbookNames.stream().allMatch(id -> existsById(id));
+            return  b;
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Failed to find logbooks: " + logbookNames, e);
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to find logbooks: " + logbookNames);
@@ -156,15 +166,15 @@ public class LogbookRepository implements CrudRepository<Logbook, String> {
     @Override
     public Iterable<Logbook> findAll() {
         try {
-            co.elastic.clients.elasticsearch.core.SearchRequest searchRequest =
-                    co.elastic.clients.elasticsearch.core.SearchRequest.of(s ->
+            SearchRequest searchRequest =
+                    SearchRequest.of(s ->
                             s.index(ES_LOGBOOK_INDEX)
                                     .query(q -> q.match(t -> t.field("state").query(State.Active.toString())))
                                     .timeout("10s")
                                     .size(logbooksResultSize)
                                     .sort(SortOptions.of(so -> so.field(FieldSort.of(f -> f.field("name"))))));
 
-            co.elastic.clients.elasticsearch.core.SearchResponse<Logbook> response =
+            SearchResponse<Logbook> response =
                     client.search(searchRequest, Logbook.class);
             return response.hits().hits().stream().map(Hit::source).collect(Collectors.toList());
         } catch (Exception e) {
@@ -177,7 +187,7 @@ public class LogbookRepository implements CrudRepository<Logbook, String> {
     public Iterable<Logbook> findAllById(Iterable<String> logbookNames) {
         List<String> ids = new ArrayList<>();
         logbookNames.forEach(ids::add);
-        MgetRequest mgetRequest = MgetRequest.of(r -> r.ids(ids));
+        MgetRequest mgetRequest = MgetRequest.of(r -> r.index(ES_LOGBOOK_INDEX).ids(ids));
         try {
             List<Logbook> foundLogbooks = new ArrayList<>();
             MgetResponse<Logbook> resp = client.mget(mgetRequest, Logbook.class);
@@ -201,32 +211,28 @@ public class LogbookRepository implements CrudRepository<Logbook, String> {
     @Override
     public void deleteById(String logbookName) {
         try {
-            co.elastic.clients.elasticsearch.core.GetRequest getRequest =
-                    co.elastic.clients.elasticsearch.core.GetRequest.of(g ->
+            GetRequest getRequest =
+                    GetRequest.of(g ->
                             g.index(ES_LOGBOOK_INDEX).id(logbookName));
-            co.elastic.clients.elasticsearch.core.GetResponse<Logbook> resp =
+            GetResponse<Logbook> resp =
                     client.get(getRequest, Logbook.class);
             if (resp.found()) {
                 Logbook logbook = resp.source();
                 logbook.setState(State.Inactive);
-                co.elastic.clients.elasticsearch.core.UpdateRequest updateRequest =
-                        co.elastic.clients.elasticsearch.core.UpdateRequest.of(u ->
+                UpdateRequest<Logbook, Logbook> updateRequest =
+                        UpdateRequest.of(u ->
                                 u.index(ES_LOGBOOK_INDEX).id(logbookName)
                                         .doc(logbook));
-                co.elastic.clients.elasticsearch.core.UpdateResponse updateResponse =
+                UpdateResponse<Logbook> updateResponse =
                         client.update(updateRequest, Logbook.class);
                 if (updateResponse.result().equals(co.elastic.clients.elasticsearch._types.Result.Updated)) {
                     logger.log(Level.INFO, "Deleted logbook " + logbookName);
                 }
             }
-        } /*catch (DocumentMissingException e) {
-            logger.log(Level.SEVERE, "Failed to delete logbook: " + logbookName + " because it does not exist", e);
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to delete logbook: " + logbookName + " because it does not exist");
-        } */catch (Exception e) {
+        } catch (Exception e) {
             logger.log(Level.SEVERE, "Failed to delete logbook: " + logbookName, e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete logbook: " + logbookName);
         }
-
     }
 
     @Override
@@ -250,5 +256,4 @@ public class LogbookRepository implements CrudRepository<Logbook, String> {
             deleteById((String) ids.iterator().next());
         }
     }
-
 }

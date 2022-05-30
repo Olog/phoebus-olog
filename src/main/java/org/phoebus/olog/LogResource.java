@@ -221,6 +221,12 @@ public class LogResource {
                          @RequestBody Log log,
                          @RequestParam(value = "inReplyTo", required = false, defaultValue = "-1") String inReplyTo,
                          @AuthenticationPrincipal Principal principal) {
+        if(log.getLogbooks().isEmpty()){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A log entry must specify at least one logbook");
+        }
+        if(log.getTitle().isEmpty()){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A log entry must specify a title");
+        }
         if (!inReplyTo.equals("-1")) {
             handleReply(inReplyTo, log);
         }

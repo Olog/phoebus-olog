@@ -8,18 +8,19 @@ package org.phoebus.olog;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.Refresh;
 import co.elastic.clients.elasticsearch._types.Result;
+import co.elastic.clients.elasticsearch.core.GetRequest;
+import co.elastic.clients.elasticsearch.core.GetResponse;
+import co.elastic.clients.elasticsearch.core.IndexRequest;
+import co.elastic.clients.elasticsearch.core.IndexResponse;
 import co.elastic.clients.elasticsearch.core.MgetRequest;
 import co.elastic.clients.elasticsearch.core.MgetResponse;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.mget.MultiGetResponseItem;
 import co.elastic.clients.elasticsearch.core.search.Hit;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.phoebus.olog.entity.Attachment;
 import org.phoebus.olog.entity.Log;
 import org.phoebus.olog.entity.Log.LogBuilder;
-import org.phoebus.olog.entity.Logbook;
 import org.phoebus.olog.entity.SearchResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -46,11 +47,11 @@ public class LogRepository implements CrudRepository<Log, String> {
 
     private static final Logger logger = Logger.getLogger(LogRepository.class.getName());
 
+    @SuppressWarnings("unused")
     @Value("${elasticsearch.log.index:olog_logs}")
     private String ES_LOG_INDEX;
-    @Value("${elasticsearch.log.type:olog_log}")
-    private String ES_LOG_TYPE;
 
+    @SuppressWarnings("unused")
     @Autowired
     @Qualifier("client")
     ElasticsearchClient client;
@@ -61,18 +62,14 @@ public class LogRepository implements CrudRepository<Log, String> {
     @Autowired
     SequenceGenerator generator;
 
-    private static final ObjectMapper mapper = new ObjectMapper();
-
     @Override
     public <S extends Log> S save(S log) {
         try {
             Long id = generator.getID();
             LogBuilder validatedLog = LogBuilder.createLog(log).id(id).createDate(Instant.now());
             if (log.getAttachments() != null && !log.getAttachments().isEmpty()) {
-                Set<Attachment> createdAttachments = new HashSet<Attachment>();
-                log.getAttachments().stream().filter(attachment -> {
-                    return attachment.getAttachment() != null;
-                }).forEach(attachment -> {
+                Set<Attachment> createdAttachments = new HashSet<>();
+                log.getAttachments().stream().filter(attachment -> attachment.getAttachment() != null).forEach(attachment -> {
                     createdAttachments.add(attachmentRepository.save(attachment));
                 });
                 validatedLog = validatedLog.setAttachments(createdAttachments);
@@ -80,19 +77,19 @@ public class LogRepository implements CrudRepository<Log, String> {
 
             Log document = validatedLog.build();
 
-            co.elastic.clients.elasticsearch.core.IndexRequest indexRequest =
-                    co.elastic.clients.elasticsearch.core.IndexRequest.of(i ->
+            IndexRequest<Object> indexRequest =
+                    IndexRequest.of(i ->
                             i.index(ES_LOG_INDEX)
                                     .id(String.valueOf(id))
                                     .document(document)
                                     .refresh(Refresh.True));
-            co.elastic.clients.elasticsearch.core.IndexResponse response = client.index(indexRequest);
+            IndexResponse response = client.index(indexRequest);
 
             if (response.result().equals(Result.Created)) {
-                co.elastic.clients.elasticsearch.core.GetRequest getRequest =
-                        co.elastic.clients.elasticsearch.core.GetRequest.of(g ->
+                GetRequest getRequest =
+                        GetRequest.of(g ->
                                 g.index(ES_LOG_INDEX).id(response.id()));
-                co.elastic.clients.elasticsearch.core.GetResponse<Log> resp =
+                GetResponse<Log> resp =
                         client.get(getRequest, Log.class);
                 return (S) resp.source();
             }
@@ -105,7 +102,7 @@ public class LogRepository implements CrudRepository<Log, String> {
 
     @Override
     public <S extends Log> Iterable<S> saveAll(Iterable<S> logs) {
-        List<S> createdLogs = new ArrayList<S>();
+        List<S> createdLogs = new ArrayList<>();
         logs.forEach(log -> {
             createdLogs.add(save(log));
         });
@@ -116,19 +113,19 @@ public class LogRepository implements CrudRepository<Log, String> {
         try {
             Log document = LogBuilder.createLog(log).build();
 
-            co.elastic.clients.elasticsearch.core.IndexRequest indexRequest =
-                    co.elastic.clients.elasticsearch.core.IndexRequest.of(i ->
+            IndexRequest<Log> indexRequest =
+                    IndexRequest.of(i ->
                             i.index(ES_LOG_INDEX)
                                     .id(String.valueOf(document.getId()))
                                     .document(document));
 
-            co.elastic.clients.elasticsearch.core.IndexResponse response = client.index(indexRequest);
+            IndexResponse response = client.index(indexRequest);
 
             if (response.result().equals(Result.Updated)) {
-                co.elastic.clients.elasticsearch.core.GetRequest getRequest =
-                        co.elastic.clients.elasticsearch.core.GetRequest.of(g ->
+                GetRequest getRequest =
+                        GetRequest.of(g ->
                                 g.index(ES_LOG_INDEX).id(response.id()));
-                co.elastic.clients.elasticsearch.core.GetResponse<Log> resp =
+                GetResponse<Log> resp =
                         client.get(getRequest, Log.class);
                 return resp.source();
             }
@@ -142,10 +139,10 @@ public class LogRepository implements CrudRepository<Log, String> {
     @Override
     public Optional<Log> findById(String id) {
         try {
-            co.elastic.clients.elasticsearch.core.GetRequest getRequest =
+            GetRequest getRequest =
                     co.elastic.clients.elasticsearch.core.GetRequest.of(g ->
                             g.index(ES_LOG_INDEX).id(id));
-            co.elastic.clients.elasticsearch.core.GetResponse<Log> resp =
+            GetResponse<Log> resp =
                     client.get(getRequest, Log.class);
 
             if (!resp.found()) {
@@ -162,10 +159,10 @@ public class LogRepository implements CrudRepository<Log, String> {
     @Override
     public boolean existsById(String logId) {
         try {
-            co.elastic.clients.elasticsearch.core.GetRequest getRequest =
-                    co.elastic.clients.elasticsearch.core.GetRequest.of(g ->
+            GetRequest getRequest =
+                    GetRequest.of(g ->
                             g.index(ES_LOG_INDEX).id(logId));
-            co.elastic.clients.elasticsearch.core.GetResponse<Log> resp =
+            GetResponse<Log> resp =
                     client.get(getRequest, Log.class);
             return resp.found();
         } catch (IOException e) {
@@ -184,7 +181,7 @@ public class LogRepository implements CrudRepository<Log, String> {
         List<String> ids = new ArrayList<>();
         logIds.forEach(ids::add);
         MgetRequest mgetRequest =
-                MgetRequest.of(r -> r.ids(ids));
+                MgetRequest.of(r -> r.index(ES_LOG_INDEX).ids(ids));
         try {
             List<Log> foundLogs = new ArrayList<>();
             MgetResponse<Log> resp = client.mget(mgetRequest, Log.class);

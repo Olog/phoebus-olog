@@ -1,5 +1,12 @@
 package org.phoebus.olog;
 
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch._types.Refresh;
+import co.elastic.clients.elasticsearch.core.BulkRequest;
+import co.elastic.clients.elasticsearch.core.DeleteRequest;
+import co.elastic.clients.elasticsearch.core.bulk.BulkOperation;
+import co.elastic.clients.elasticsearch.core.bulk.DeleteOperation;
+import co.elastic.clients.elasticsearch.core.bulk.IndexOperation;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -29,14 +36,16 @@ import static org.junit.Assert.assertTrue;
 @TestPropertySource(locations = "classpath:test_application.properties")
 public class LogbookRepositoryIT {
 
-    // Read the elatic index and type from the application.properties
+    // Read the elastic index and type from the application.properties
     @Value("${elasticsearch.logbook.index:olog_logbooks}")
     private String ES_LOGBOOK_INDEX;
-    @Value("${elasticsearch.logbook.type:olog_logbook}")
-    private String ES_LOGBOOK_TYPE;
 
     @Autowired
     private LogbookRepository logbookRepository;
+
+    @Autowired
+    @Qualifier("client")
+    ElasticsearchClient client;
 
     private Logbook testLogbook1 = new Logbook("test-logbook-1", testOwner, State.Active);
     private Logbook testLogbook2 = new Logbook("test-logbook-2", testOwner, State.Active);
@@ -57,11 +66,9 @@ public class LogbookRepositoryIT {
 
     /**
      * Test the creation of a test logbook
-     *
-     * @throws IOException
      */
     @Test
-    public void createLogbook() throws IOException {
+    public void createLogbook() {
         try {
             logbookRepository.save(testLogbook1);
             Optional<Logbook> result = logbookRepository.findById(testLogbook1.getName());
@@ -73,11 +80,9 @@ public class LogbookRepositoryIT {
 
     /**
      * create a set of logbooks
-     *
-     * @throws IOException
      */
     @Test
-    public void createLogbooks() throws IOException {
+    public void createLogbooks() {
         List<Logbook> logbooks = Arrays.asList(testLogbook1, testLogbook2, testLogbook3, testLogbook4);
         try {
             List<Logbook> result = new ArrayList<Logbook>();
@@ -99,11 +104,9 @@ public class LogbookRepositoryIT {
 
     /**
      * Test the deletion of a logbook
-     *
-     * @throws IOException
      */
     @Test
-    public void deleteLogbook() throws IOException {
+    public void deleteLogbook(){
         try {
             logbookRepository.save(testLogbook2);
             Optional<Logbook> result = logbookRepository.findById(testLogbook2.getName());
@@ -121,11 +124,9 @@ public class LogbookRepositoryIT {
 
     /**
      * Delete a set of logbooks
-     *
-     * @throws IOException
      */
     @Test
-    public void deteleLogbooks() throws IOException {
+    public void deteleLogbooks(){
         List<Logbook> logbooks = Arrays.asList(testLogbook1, testLogbook2, testLogbook3, testLogbook4);
         try {
             List<Logbook> result = new ArrayList<Logbook>();
@@ -149,11 +150,9 @@ public class LogbookRepositoryIT {
 
     /**
      * Find all logbooks that are still Active
-     *
-     * @throws IOException
      */
     @Test
-    public void findAllLogbooks() throws IOException {
+    public void findAllLogbooks(){
         List<Logbook> logbooks = Arrays.asList(testLogbook1, testLogbook2, testLogbook3, testLogbook4);
         try {
             logbookRepository.saveAll(logbooks);
@@ -170,11 +169,9 @@ public class LogbookRepositoryIT {
 
     /**
      * Find a logbook with the given Id, the logbook is found irrespective of its State
-     *
-     * @throws IOException
      */
     @Test
-    public void findLogbooksById() throws IOException {
+    public void findLogbooksById(){
         List<Logbook> logbooks = Arrays.asList(testLogbook1, testLogbook2);
         try {
             logbookRepository.saveAll(logbooks);
@@ -190,11 +187,9 @@ public class LogbookRepositoryIT {
 
     /**
      * Find logbooks with the given Ids, the logbooks are found irrespective of its State
-     *
-     * @throws IOException
      */
     @Test
-    public void findAllLogbooksByIds() throws IOException {
+    public void findAllLogbooksByIds(){
         List<Logbook> logbooks = Arrays.asList(testLogbook1, testLogbook2, testLogbook3, testLogbook4);
         try {
             logbookRepository.saveAll(logbooks);
@@ -213,7 +208,7 @@ public class LogbookRepositoryIT {
     }
 
     @Test
-    public void checkLogbookExist() throws IOException {
+    public void checkLogbookExist(){
         List<Logbook> logbooks = Arrays.asList(testLogbook1, testLogbook2);
         try {
             logbookRepository.saveAll(logbooks);
@@ -230,7 +225,7 @@ public class LogbookRepositoryIT {
     }
 
     @Test
-    public void checkLogbooksExist() throws IOException {
+    public void checkLogbooksExist() {
         List<Logbook> logbooks = Arrays.asList(testLogbook1, testLogbook2);
         try {
             logbookRepository.saveAll(logbooks);
@@ -247,26 +242,24 @@ public class LogbookRepositoryIT {
         }
     }
 
-    //@Autowired
-    //@Qualifier("indexClient")
-    //RestHighLevelClient client;
 
     /**
      * Cleanup up the logbooks
      *
      * @param logbooks
-     * @throws IOException
      */
-    void cleanupLogbook(List<Logbook> logbooks) throws IOException {
-        /*
-        // Manual cleanup since Olog does not delete things
-        BulkRequest bulk = new BulkRequest();
-        logbooks.forEach(logbook -> {
-            bulk.add(new DeleteRequest(ES_LOGBOOK_INDEX, ES_LOGBOOK_TYPE, logbook.getName()));
-        });
-        client.bulk(bulk, RequestOptions.DEFAULT);
-
-         */
+    void cleanupLogbook(List<Logbook> logbooks) {
+        List<BulkOperation> bulkOperations = new ArrayList<>();
+        logbooks.forEach(logbook -> bulkOperations.add(DeleteOperation.of(i ->
+                i.index(ES_LOGBOOK_INDEX).id(logbook.getName()))._toBulkOperation()));
+        BulkRequest bulkRequest =
+                BulkRequest.of(r ->
+                        r.operations(bulkOperations).refresh(Refresh.True));
+        try {
+            client.bulk(bulkRequest);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
 }

@@ -6,21 +6,33 @@
 package org.phoebus.olog;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch._types.ElasticsearchException;
 import co.elastic.clients.elasticsearch._types.FieldSort;
 import co.elastic.clients.elasticsearch._types.Refresh;
 import co.elastic.clients.elasticsearch._types.Result;
 import co.elastic.clients.elasticsearch._types.SortOptions;
+import co.elastic.clients.elasticsearch._types.query_dsl.MatchAllQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.MatchQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
+import co.elastic.clients.elasticsearch.core.BulkRequest;
 import co.elastic.clients.elasticsearch.core.BulkResponse;
+import co.elastic.clients.elasticsearch.core.ExistsRequest;
+import co.elastic.clients.elasticsearch.core.GetRequest;
+import co.elastic.clients.elasticsearch.core.GetResponse;
+import co.elastic.clients.elasticsearch.core.IndexRequest;
+import co.elastic.clients.elasticsearch.core.IndexResponse;
 import co.elastic.clients.elasticsearch.core.MgetRequest;
 import co.elastic.clients.elasticsearch.core.MgetResponse;
+import co.elastic.clients.elasticsearch.core.SearchRequest;
+import co.elastic.clients.elasticsearch.core.SearchResponse;
+import co.elastic.clients.elasticsearch.core.UpdateRequest;
+import co.elastic.clients.elasticsearch.core.UpdateResponse;
 import co.elastic.clients.elasticsearch.core.bulk.BulkOperation;
 import co.elastic.clients.elasticsearch.core.bulk.IndexOperation;
 import co.elastic.clients.elasticsearch.core.mget.MultiGetResponseItem;
 import co.elastic.clients.elasticsearch.core.search.Hit;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.phoebus.olog.entity.Property;
 import org.phoebus.olog.entity.State;
-import org.phoebus.olog.entity.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -33,7 +45,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -41,11 +52,11 @@ import java.util.stream.Collectors;
 
 @Repository
 public class PropertyRepository implements CrudRepository<Property, String> {
+
+    @SuppressWarnings("unused")
     @Value("${elasticsearch.property.index:olog_properties}")
     private String ES_PROPERTY_INDEX;
-    @Value("${elasticsearch.property.type:olog_property}")
-    private String ES_PROPERTY_TYPE;
-
+    @SuppressWarnings("unused")
     @Value("${elasticsearch.result.size.properties:10}")
     private int propertiesResultSize;
 
@@ -53,27 +64,25 @@ public class PropertyRepository implements CrudRepository<Property, String> {
     @Qualifier("client")
     ElasticsearchClient client;
 
-    private static final ObjectMapper mapper = new ObjectMapper();
-
-    private Logger logger = Logger.getLogger(PropertyRepository.class.getName());
+    private final Logger logger = Logger.getLogger(PropertyRepository.class.getName());
 
     @Override
     public <S extends Property> S save(S property) {
         try {
-            co.elastic.clients.elasticsearch.core.IndexRequest indexRequest =
-                    co.elastic.clients.elasticsearch.core.IndexRequest.of(i ->
+            IndexRequest<Property> indexRequest =
+                    IndexRequest.of(i ->
                             i.index(ES_PROPERTY_INDEX)
                                     .id(property.getName())
                                     .document(property)
                                     .refresh(Refresh.True));
-            co.elastic.clients.elasticsearch.core.IndexResponse response = client.index(indexRequest);
+            IndexResponse response = client.index(indexRequest);
 
             if (response.result().equals(Result.Created) ||
                     response.result().equals(Result.Updated)) {
-                co.elastic.clients.elasticsearch.core.GetRequest getRequest =
+                GetRequest getRequest =
                         co.elastic.clients.elasticsearch.core.GetRequest.of(g ->
                                 g.index(ES_PROPERTY_INDEX).id(response.id()));
-                co.elastic.clients.elasticsearch.core.GetResponse<Property> resp =
+                GetResponse<Property> resp =
                         client.get(getRequest, Property.class);
                 return (S) resp.source();
             }
@@ -88,11 +97,10 @@ public class PropertyRepository implements CrudRepository<Property, String> {
     public <S extends Property> Iterable<S> saveAll(Iterable<S> properties) {
         List<BulkOperation> bulkOperations = new ArrayList<>();
         properties.forEach(property -> bulkOperations.add(IndexOperation.of(i ->
-                i.index(ES_PROPERTY_INDEX).document(property))._toBulkOperation()));
+                i.index(ES_PROPERTY_INDEX).document(property).id(property.getName()))._toBulkOperation()));
 
-        co.elastic.clients.elasticsearch.core.BulkRequest bulkRequest =
-                co.elastic.clients.elasticsearch.core.BulkRequest.of(r ->
-                        r.operations(bulkOperations).refresh(Refresh.True));
+        BulkRequest bulkRequest = BulkRequest.of(r ->
+                r.operations(bulkOperations).refresh(Refresh.True));
 
         BulkResponse bulkResponse;
         try {
@@ -107,6 +115,7 @@ public class PropertyRepository implements CrudRepository<Property, String> {
                 throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
                         "Failed to create properties: " + properties);
             } else {
+
                 return properties;
             }
         } catch (IOException e) {
@@ -118,10 +127,10 @@ public class PropertyRepository implements CrudRepository<Property, String> {
     @Override
     public Optional<Property> findById(String propertyName) {
         try {
-            co.elastic.clients.elasticsearch.core.GetRequest getRequest =
-                    co.elastic.clients.elasticsearch.core.GetRequest.of(g ->
+            GetRequest getRequest =
+                    GetRequest.of(g ->
                             g.index(ES_PROPERTY_INDEX).id(propertyName));
-            co.elastic.clients.elasticsearch.core.GetResponse<Property> resp =
+            GetResponse<Property> resp =
                     client.get(getRequest, Property.class);
             if (resp.found()) {
                 return Optional.of(resp.source());
@@ -136,8 +145,15 @@ public class PropertyRepository implements CrudRepository<Property, String> {
 
     @Override
     public boolean existsById(String propertyName) {
-        Optional<Property> propertyOptional = findById(propertyName);
-        return propertyOptional.isPresent();
+        try {
+            ExistsRequest.Builder builder = new ExistsRequest.Builder();
+            builder.index(ES_PROPERTY_INDEX).id(propertyName);
+            return client.exists(builder.build()).value();
+        } catch (ElasticsearchException | IOException e) {
+            logger.log(Level.SEVERE, "Failed to check if property " + propertyName + " exists", e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Failed to check if property exists by id: " + propertyName, null);
+        }
     }
 
     @Override
@@ -147,15 +163,21 @@ public class PropertyRepository implements CrudRepository<Property, String> {
 
     public Iterable<Property> findAll(boolean includeInactive) {
         try {
-            co.elastic.clients.elasticsearch.core.SearchRequest searchRequest =
-                    co.elastic.clients.elasticsearch.core.SearchRequest.of(s ->
-                            s.index(ES_PROPERTY_INDEX)
-                                    .query(q -> q.match(t -> t.field("state").query(State.Active.toString())))
-                                    .timeout("10s")
-                                    .size(propertiesResultSize)
-                                    .sort(SortOptions.of(so -> so.field(FieldSort.of(f -> f.field("name"))))));
+            SearchRequest searchRequest;
+            Query query;
+            if (includeInactive) {
+                query = new MatchAllQuery.Builder().build()._toQuery();
+            } else {
+                query = MatchQuery.of(t -> t.field("state").query(State.Active.toString()))._toQuery();
+            }
+            searchRequest = SearchRequest.of(s ->
+                    s.index(ES_PROPERTY_INDEX)
+                            .query(query)
+                            .timeout("10s")
+                            .size(propertiesResultSize)
+                            .sort(SortOptions.of(so -> so.field(FieldSort.of(f -> f.field("name"))))));
 
-            co.elastic.clients.elasticsearch.core.SearchResponse<Property> response =
+            SearchResponse<Property> response =
                     client.search(searchRequest, Property.class);
 
             return response.hits().hits().stream().map(Hit::source).collect(Collectors.toList());
@@ -169,7 +191,7 @@ public class PropertyRepository implements CrudRepository<Property, String> {
     public Iterable<Property> findAllById(Iterable<String> propertyNames) {
         List<String> ids = new ArrayList<>();
         propertyNames.forEach(ids::add);
-        MgetRequest mgetRequest = MgetRequest.of(r -> r.ids(ids));
+        MgetRequest mgetRequest = MgetRequest.of(r -> r.index(ES_PROPERTY_INDEX).ids(ids));
         try {
             List<Property> foundProperties = new ArrayList<>();
             MgetResponse<Property> resp = client.mget(mgetRequest, Property.class);
@@ -194,28 +216,25 @@ public class PropertyRepository implements CrudRepository<Property, String> {
     @Override
     public void deleteById(String propertyName) {
         try {
-            co.elastic.clients.elasticsearch.core.GetRequest getRequest =
-                    co.elastic.clients.elasticsearch.core.GetRequest.of(g ->
+            GetRequest getRequest =
+                    GetRequest.of(g ->
                             g.index(ES_PROPERTY_INDEX).id(propertyName));
-            co.elastic.clients.elasticsearch.core.GetResponse<Property> resp =
+            GetResponse<Property> resp =
                     client.get(getRequest, Property.class);
             if (resp.found()) {
                 Property property = resp.source();
                 property.setState(State.Inactive);
-                co.elastic.clients.elasticsearch.core.UpdateRequest updateRequest =
-                        co.elastic.clients.elasticsearch.core.UpdateRequest.of(u ->
+                UpdateRequest<Property, Property> updateRequest =
+                        UpdateRequest.of(u ->
                                 u.index(ES_PROPERTY_INDEX).id(propertyName)
                                         .doc(property));
-                co.elastic.clients.elasticsearch.core.UpdateResponse updateResponse =
+                UpdateResponse<Property> updateResponse =
                         client.update(updateRequest, Property.class);
                 if (updateResponse.result().equals(co.elastic.clients.elasticsearch._types.Result.Updated)) {
                     logger.log(Level.INFO, "Deleted property " + propertyName);
                 }
             }
-        } /*catch (DocumentMissingException e) {
-            logger.log(Level.SEVERE, "Failed to delete property: " + propertyName + " because it does not exist", e);
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to delete property: " + propertyName + " because it does not exist");
-        }*/ catch (Exception e) {
+        } catch (Exception e) {
             logger.log(Level.SEVERE, "Failed to delete property: " + propertyName, e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete property: " + propertyName);
         }
@@ -223,35 +242,37 @@ public class PropertyRepository implements CrudRepository<Property, String> {
 
     public void deleteAttribute(String propertyName, String attributeName) {
         try {
-            Property property = findById(propertyName).get();
-            if (property != null) {
-                property.setAttributes(property.getAttributes().stream().map(p -> {
-                    if (p.getName().equals(attributeName)) {
-                        p.setState(State.Inactive);
-                    }
-                    return p;
-                }).collect(Collectors.toSet()));
+            Optional<Property> optional = findById(propertyName);
+            if (optional.isEmpty()) {
+                logger.log(Level.SEVERE, "Cannot delete attribute " + attributeName +
+                        " from property " + propertyName + " as the property does not exist");
+                return;
             }
+            Property property = optional.get();
+            property.setAttributes(property.getAttributes().stream().map(p -> {
+                if (p.getName().equals(attributeName)) {
+                    p.setState(State.Inactive);
+                }
+                return p;
+            }).collect(Collectors.toSet()));
 
-            co.elastic.clients.elasticsearch.core.UpdateRequest updateRequest =
-                    co.elastic.clients.elasticsearch.core.UpdateRequest.of(u ->
+            UpdateRequest<Property, Property> updateRequest =
+                    UpdateRequest.of(u ->
                             u.index(ES_PROPERTY_INDEX).id(propertyName)
                                     .doc(property));
-            co.elastic.clients.elasticsearch.core.UpdateResponse updateResponse =
+            UpdateResponse<Property> updateResponse =
                     client.update(updateRequest, Property.class);
 
             if (updateResponse.result().equals(Result.Updated)) {
-                co.elastic.clients.elasticsearch.core.GetRequest getRequest =
+                GetRequest getRequest =
                         co.elastic.clients.elasticsearch.core.GetRequest.of(g ->
                                 g.index(ES_PROPERTY_INDEX).id(updateResponse.id()));
-                co.elastic.clients.elasticsearch.core.GetResponse<Property> resp =
+                GetResponse<Property> resp =
                         client.get(getRequest, Property.class);
                 Property deletedProperty = resp.source();
                 logger.log(Level.INFO, "Deleted property attribute" + deletedProperty.toLogger());
             }
-        } /*catch (DocumentMissingException e) {
-            logger.log(Level.SEVERE, propertyName + " Does not exist and thus cannot be deleted");
-        } */catch (Exception e) {
+        } catch (Exception e) {
             logger.log(Level.SEVERE, e.getMessage(), e);
         }
     }
