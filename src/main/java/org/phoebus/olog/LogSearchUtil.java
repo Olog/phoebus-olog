@@ -3,6 +3,7 @@ package org.phoebus.olog;
 
 import co.elastic.clients.elasticsearch._types.FieldSort;
 import co.elastic.clients.elasticsearch._types.SortOptions;
+import co.elastic.clients.elasticsearch._types.SortOptionsBuilders;
 import co.elastic.clients.elasticsearch._types.SortOrder;
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery.Builder;
@@ -339,13 +340,14 @@ public class LogSearchUtil {
 
         int _searchResultSize = searchResultSize;
         int _from = from;
-        SortOrder _sortOrder = sortOrder;
+        FieldSort.Builder fb = new FieldSort.Builder();
+        fb.field("createdDate");
+        fb.order(sortOrder);
 
         return SearchRequest.of(s -> s.index(ES_LOG_INDEX)
                 .query(boolQueryBuilder.build()._toQuery())
                 .timeout("60s")
-                .sort(SortOptions.of(so -> so.field(FieldSort.of(f -> f.field("createdDate")))))
-                .sort(SortOptions.of(so -> so.score(sc -> sc.order(_sortOrder))))
+                .sort(SortOptions.of(so -> so.field(fb.build())))
                 .size(Math.min(_searchResultSize, maxSearchSize))
                 .from(_from));
     }

@@ -1,6 +1,9 @@
 package org.phoebus.olog;
 
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import org.phoebus.olog.notification.LogEntryNotifier;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -16,6 +19,7 @@ import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.mvc.method.annotation.PrincipalMethodArgumentResolver;
 
+import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -74,36 +78,6 @@ public class Application {
             System.setProperty("javax.net.ssl.trustStorePassword", "changeit");
         }
     }
-
-    /**
-     * Configures CORS policy in order to allow clients (web front-end) to do CORS requests if
-     * needed. Without a suitable configuration a client deployed to a different server than the Phoebus Olog service will not
-     * be able to request resources.
-     * Note: configuring this in {@link WebSecurityConfig#configure(HttpSecurity)}, it will have no effect. Not sure why,
-     * but probably related to the order in which Spring Security loads stuff.
-     *
-     * @return A {@link WebMvcConfigurer}
-     */
-    /*
-    @Bean
-    public WebMvcConfigurer corsConfigurer() {
-        return new WebMvcConfigurer() {
-            @Override
-            public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/**")
-                        .allowCredentials(true)
-                        .allowedMethods("HEAD", "GET", "POST", "PUT", "DELETE", "PATCH")
-                        .allowedOrigins(corsAllowedOrigins);
-            }
-
-            @Override
-            public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers){
-                resolvers.add(new PrincipalMethodArgumentResolver());
-            }
-        };
-    }
-
-     */
 
     /**
      * List of {@link LogEntryNotifier} implementations called when a new log entry
