@@ -1,9 +1,8 @@
 {
-    "_source": {
-        "enabled": false
-    },
-    "_all": {
-        "enabled": false
-    },
-    "enabled": false
+    "mappings" : {
+        "dynamic": "true",
+        "_source": {
+            "enabled": false
+        }
+    }
 }
