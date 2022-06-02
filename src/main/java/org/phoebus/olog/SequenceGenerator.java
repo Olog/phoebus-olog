@@ -13,6 +13,7 @@ import javax.annotation.PostConstruct;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.ElasticsearchException;
 import co.elastic.clients.elasticsearch._types.FieldSort;
+import co.elastic.clients.elasticsearch._types.Refresh;
 import co.elastic.clients.elasticsearch._types.SortOptions;
 import co.elastic.clients.elasticsearch._types.SortOrder;
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
@@ -24,11 +25,16 @@ import co.elastic.clients.elasticsearch.core.IndexRequest;
 import co.elastic.clients.elasticsearch.core.IndexResponse;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
+import co.elastic.clients.json.JsonData;
+import co.elastic.clients.json.jackson.JacksonJsonpMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.phoebus.olog.entity.Log;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 /**
  * @author Kunal Shroff
@@ -38,36 +44,27 @@ import org.springframework.stereotype.Service;
 public class SequenceGenerator
 {
     @SuppressWarnings("unused")
-    @Value("${elasticsearch.log.index:olog_logs}")
-    private String ES_LOG_INDEX;
+    @Value("${elasticsearch.sequence.index:olog_sequence}")
+    private String ES_LOG_SEQ;
 
     @Autowired
     @Qualifier("client")
     private ElasticsearchClient client;
 
-    private static long sequenceId = 0;
+    private OlogSequence seq;
+    private ObjectMapper objectMapper;
+    private IndexRequest request;
 
     @PostConstruct
     public void init()
     {
-        Application.logger.config("Initializing the unique sequence id generator");
-        FieldSort.Builder fb = new FieldSort.Builder();
-        fb.field("id");
-        fb.order(SortOrder.Desc);
-        SearchRequest searchRequest = SearchRequest.of(s -> s.index(ES_LOG_INDEX)
-                .timeout("10s")
-                .sort(SortOptions.of(so -> so.field(fb.build())))
-                .size(1));
-        try{
-            SearchResponse<Log> result = client.search(searchRequest, Log.class);
-            if(result.hits().hits().size() == 1){
-                sequenceId = result.hits().hits().get(0).source().getId();
-            }
-            Logger.getLogger(SequenceGenerator.class.getName()).log(Level.INFO, "Initialized log entry sequence, next entry is " + (sequenceId + 1));
-        }
-        catch(Exception e){
-            Logger.getLogger(SequenceGenerator.class.getName()).log(Level.INFO, "Failed to determine sequence id", e);
-        }
+        seq = new OlogSequence();
+        objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+        request = IndexRequest.of(i -> i.index(ES_LOG_SEQ)
+                .document(JsonData.of(seq, new JacksonJsonpMapper(objectMapper)))
+                .refresh(Refresh.True));
+
     }
 
     /**
@@ -78,6 +75,19 @@ public class SequenceGenerator
      */
     public synchronized  long getID() throws IOException
     {
-        return ++sequenceId;
+        return client.index(request).seqNo();
+    }
+
+
+    private static class OlogSequence {
+        private final Instant createDate;
+
+        OlogSequence() {
+            createDate = Instant.now();
+        }
+
+        public Instant getCreateDate() {
+            return createDate;
+        }
     }
 }
