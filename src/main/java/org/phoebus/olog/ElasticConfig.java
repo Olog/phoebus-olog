@@ -96,6 +96,7 @@ public class ElasticConfig {
             esInitialized.set(!Boolean.parseBoolean(createIndices));
             if (esInitialized.compareAndSet(false, true)) {
                 elasticIndexValidation(client);
+                elasticIndexInitialization(client);
             }
         }
         return client;
@@ -164,26 +165,17 @@ public class ElasticConfig {
         }
 
         // Olog Log Template
-        try {
-            ExistsTemplateRequest request = new ExistsTemplateRequest.Builder()
-                    .name(ES_LOG_INDEX+"_template")
-                    .build();
-            boolean exists = client.indices().existsTemplate(request).value();
+        try (InputStream is = ElasticConfig.class.getResourceAsStream("/log_entry_mapping.json")) {
+            BooleanResponse exits = client.indices().exists(ExistsRequest.of(e -> e.index(ES_LOG_INDEX)));
+            if(!exits.value()) {
 
-            if(!exists) {
-                InputStream is = ElasticConfig.class.getResourceAsStream("/log_template_mapping.json");
-                PutIndexTemplateRequest templateRequest = new PutIndexTemplateRequest.Builder()
-                        .name(ES_LOG_INDEX+"_template")
-                        .indexPatterns(Arrays.asList(ES_LOG_INDEX+"*"))
-                        .withJson(is)
-                        .create(true)
-                        .build();
-                PutIndexTemplateResponse putTemplateResponse = client.indices().putIndexTemplate(templateRequest);
-                putTemplateResponse.acknowledged();
-                logger.log( Level.INFO, "Created " + ES_LOG_INDEX + " template.");
+                CreateIndexResponse result = client.indices().create(
+                        CreateIndexRequest.of(
+                                c -> c.index(ES_LOG_INDEX).withJson(is)));
+                logger.info("Created index: " + ES_LOG_INDEX + " : acknowledged " + result.acknowledged());
             }
         } catch (IOException e) {
-            logger.log(Level.WARNING, "Failed to create index " + ES_PROPERTY_INDEX, e);
+            logger.log(Level.WARNING, "Failed to create index " + ES_LOG_INDEX, e);
         }
 
     }
