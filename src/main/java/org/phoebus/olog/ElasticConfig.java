@@ -260,7 +260,7 @@ public class ElasticConfig {
                     if(!indexClient.exists(e -> e.index(ES_PROPERTY_INDEX).id(property.getName())).value()){
                         IndexRequest<Property> indexRequest =
                                 IndexRequest.of(i ->
-                                        i.index(ES_TAG_INDEX)
+                                        i.index(ES_PROPERTY_INDEX)
                                                 .id(property.getName())
                                                 .document(property)
                                                 .refresh(Refresh.True));
