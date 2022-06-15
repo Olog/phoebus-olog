@@ -47,6 +47,8 @@ import java.io.IOException;
 import java.security.Principal;
 import java.time.Instant;
 import java.time.temporal.TemporalAmount;
+import java.time.temporal.TemporalUnit;
+import java.time.temporal.UnsupportedTemporalTypeException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -192,7 +194,7 @@ public class LogResource {
     public SearchResult search(@RequestHeader(value = OLOG_CLIENT_INFO_HEADER, required = false, defaultValue = "n/a") String clientInfo, @RequestParam MultiValueMap<String, String> allRequestParams) {
         logSearchRequest(clientInfo, allRequestParams);
         for (String key : allRequestParams.keySet()) {
-            if ("start".equalsIgnoreCase(key.toLowerCase()) || "end".equalsIgnoreCase(key.toLowerCase())) {
+            if ("start".equalsIgnoreCase(key) || "end".equalsIgnoreCase(key)) {
                 String value = allRequestParams.get(key).get(0);
                 Object time = TimeParser.parseInstantOrTemporalAmount(value);
                 if (time instanceof Instant) {
@@ -200,7 +202,11 @@ public class LogResource {
                     allRequestParams.get(key).add(MILLI_FORMAT.format((Instant) time));
                 } else if (time instanceof TemporalAmount) {
                     allRequestParams.get(key).clear();
-                    allRequestParams.get(key).add(MILLI_FORMAT.format(Instant.now().minus((TemporalAmount) time)));
+                    try {
+                        allRequestParams.get(key).add(MILLI_FORMAT.format(Instant.now().minus((TemporalAmount) time)));
+                    } catch (UnsupportedTemporalTypeException e) { // E.g. if client sends "months" or "years"
+                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unsupported date/time specified: " + value);
+                    }
                 }
             }
         }

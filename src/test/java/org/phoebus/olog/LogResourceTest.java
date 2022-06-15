@@ -51,7 +51,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -65,7 +64,6 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -195,6 +193,25 @@ public class LogResourceTest extends ResourcesTestBase {
 
         verify(logRepository, times(1)).search(map);
         reset(logRepository);
+    }
+
+    @Test
+    public void testSearchLogsUnsupportedTemporals() throws Exception {
+        MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
+        map.put("start", Arrays.asList("2 years"));
+
+        MockHttpServletRequestBuilder request = get("/" + OlogResourceDescriptors.LOG_RESOURCE_URI + "/search")
+                .params(map)
+                .contentType(JSON);
+        mockMvc.perform(request).andExpect(status().isBadRequest());
+
+        map = new LinkedMultiValueMap<>();
+        map.put("start", Arrays.asList("2 months"));
+
+        get("/" + OlogResourceDescriptors.LOG_RESOURCE_URI + "/search")
+                .params(map)
+                .contentType(JSON);
+        mockMvc.perform(request).andExpect(status().isBadRequest());
     }
 
     @Test
