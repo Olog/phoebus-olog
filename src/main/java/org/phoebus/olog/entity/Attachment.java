@@ -8,6 +8,7 @@ package org.phoebus.olog.entity;
 import org.springframework.core.io.InputStreamSource;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 /**
  * An object describing a log entry attachment.

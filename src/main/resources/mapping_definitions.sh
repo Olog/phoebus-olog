@@ -67,7 +67,7 @@ curl -H 'Content-Type: application/json' -XPUT 'http://localhost:9200/olog_prope
 #Create the Index
 curl -XPUT 'http://localhost:9200/olog_sequence'
 #Set the mappings
-curl -XPUT 'http://localhost:9200/olog_sequence/?pretty=1'  -d '
+curl -XPUT 'http://localhost:9200/olog_sequence/?pretty=true'  -d '
 {
    "settings" : {
       "number_of_shards"     : 1,

@@ -1,27 +1,29 @@
 {
+  "mappings": {
     "properties": {
-        "name": {
+      "name": {
+        "type": "keyword"
+      },
+      "owner": {
+        "type": "keyword"
+      },
+      "state": {
+        "type": "keyword"
+      },
+      "attributes": {
+        "type": "nested",
+        "properties": {
+          "name": {
             "type": "keyword"
-        },
-        "owner": {
+          },
+          "value": {
             "type": "keyword"
-        },
-        "state": {
+          },
+          "state": {
             "type": "keyword"
-        },
-        "attributes": {
-            "type": "nested",
-            "properties": {
-                "name": {
-                    "type": "keyword"
-                },
-                "value": {
-                    "type": "keyword"
-                },
-                "state": {
-                    "type": "keyword"
-                }
-            }
+          }
         }
+      }
     }
+  }
 }

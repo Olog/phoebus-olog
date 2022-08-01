@@ -5,41 +5,29 @@
  */
 package org.phoebus.olog;
 
-import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import org.elasticsearch.action.DocWriteResponse.Result;
-import org.elasticsearch.action.bulk.BulkRequest;
-import org.elasticsearch.action.bulk.BulkResponse;
-import org.elasticsearch.action.get.GetRequest;
-import org.elasticsearch.action.get.GetResponse;
-import org.elasticsearch.action.get.MultiGetItemResponse;
-import org.elasticsearch.action.get.MultiGetRequest;
-import org.elasticsearch.action.get.MultiGetResponse;
-import org.elasticsearch.action.index.IndexRequest;
-import org.elasticsearch.action.index.IndexResponse;
-import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.action.support.WriteRequest;
-import org.elasticsearch.action.update.UpdateRequest;
-import org.elasticsearch.action.update.UpdateResponse;
-import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.common.bytes.BytesReference;
-import org.elasticsearch.common.unit.TimeValue;
-import org.elasticsearch.common.xcontent.XContentType;
-import org.elasticsearch.index.engine.DocumentMissingException;
-import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.search.builder.SearchSourceBuilder;
-import org.elasticsearch.search.sort.SortBuilders;
-import org.elasticsearch.search.sort.SortOrder;
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch._types.ElasticsearchException;
+import co.elastic.clients.elasticsearch._types.FieldSort;
+import co.elastic.clients.elasticsearch._types.Refresh;
+import co.elastic.clients.elasticsearch._types.Result;
+import co.elastic.clients.elasticsearch._types.SortOptions;
+import co.elastic.clients.elasticsearch.core.BulkRequest;
+import co.elastic.clients.elasticsearch.core.BulkResponse;
+import co.elastic.clients.elasticsearch.core.ExistsRequest;
+import co.elastic.clients.elasticsearch.core.GetRequest;
+import co.elastic.clients.elasticsearch.core.GetResponse;
+import co.elastic.clients.elasticsearch.core.IndexRequest;
+import co.elastic.clients.elasticsearch.core.IndexResponse;
+import co.elastic.clients.elasticsearch.core.MgetRequest;
+import co.elastic.clients.elasticsearch.core.MgetResponse;
+import co.elastic.clients.elasticsearch.core.SearchRequest;
+import co.elastic.clients.elasticsearch.core.SearchResponse;
+import co.elastic.clients.elasticsearch.core.UpdateRequest;
+import co.elastic.clients.elasticsearch.core.UpdateResponse;
+import co.elastic.clients.elasticsearch.core.bulk.BulkOperation;
+import co.elastic.clients.elasticsearch.core.bulk.IndexOperation;
+import co.elastic.clients.elasticsearch.core.mget.MultiGetResponseItem;
+import co.elastic.clients.elasticsearch.core.search.Hit;
 import org.phoebus.olog.entity.Logbook;
 import org.phoebus.olog.entity.State;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,264 +38,222 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Repository;
 import org.springframework.web.server.ResponseStatusException;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 @Repository
-public class LogbookRepository implements CrudRepository<Logbook, String>
-{
+public class LogbookRepository implements CrudRepository<Logbook, String> {
 
-    // Read the elatic index and type from the application.properties
+    // Read the elastic index and type from the application.properties
+    @SuppressWarnings("unused")
     @Value("${elasticsearch.logbook.index:olog_logbooks}")
     private String ES_LOGBOOK_INDEX;
-    @Value("${elasticsearch.logbook.type:olog_logbook}")
-    private String ES_LOGBOOK_TYPE;
-
+    @SuppressWarnings("unused")
     @Value("${elasticsearch.result.size.logbooks:10}")
     private int logbooksResultSize;
 
+    @SuppressWarnings("unused")
     @Autowired
-    @Qualifier("indexClient")
-    RestHighLevelClient client;
+    @Qualifier("client")
+    private ElasticsearchClient client;
 
-    private static final ObjectMapper mapper = new ObjectMapper();
-
-    private Logger logger = Logger.getLogger(LogbookRepository.class.getName());
+    private final Logger logger = Logger.getLogger(LogbookRepository.class.getName());
 
     @Override
-    public <S extends Logbook> S save(S logbook)
-    {
-        try
-        {
-            IndexRequest indexRequest = new IndexRequest(ES_LOGBOOK_INDEX, ES_LOGBOOK_TYPE, logbook.getName())
-                    .source(mapper.writeValueAsBytes(logbook), XContentType.JSON)
-                    .setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE);
+    public <S extends Logbook> S save(S logbook) {
+        try {
+            IndexRequest<Logbook> indexRequest =
+                    IndexRequest.of(i ->
+                            i.index(ES_LOGBOOK_INDEX)
+                                    .id(logbook.getName())
+                                    .document(logbook)
+                                    .refresh(Refresh.True));
+            IndexResponse response = client.index(indexRequest);
 
-            IndexResponse response = client.index(indexRequest, RequestOptions.DEFAULT);
-
-            if (response.getResult().equals(Result.CREATED) ||
-                response.getResult().equals(Result.UPDATED))
-            {
-                BytesReference ref = client
-                        .get(new GetRequest(ES_LOGBOOK_INDEX, ES_LOGBOOK_TYPE, response.getId()), RequestOptions.DEFAULT)
-                        .getSourceAsBytesRef();
-                Logbook createdLogbook = mapper.readValue(ref.streamInput(), Logbook.class);
-                return (S) createdLogbook;
+            if (response.result().equals(Result.Created) ||
+                    response.result().equals(Result.Updated)) {
+                GetRequest getRequest =
+                        co.elastic.clients.elasticsearch.core.GetRequest.of(g ->
+                                g.index(ES_LOGBOOK_INDEX).id(response.id()));
+                GetResponse<Logbook> resp =
+                        client.get(getRequest, Logbook.class);
+                return (S) resp.source();
             }
             return null;
-        } catch (Exception e)
-        {
+        } catch (Exception e) {
             logger.log(Level.SEVERE, "Failed to create logbook: " + logbook, e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to create logbook: " + logbook);
         }
     }
 
     @Override
-    public <S extends Logbook> Iterable<S> saveAll(Iterable<S> logbooks)
-    {
-        BulkRequest bulk = new BulkRequest();
-        logbooks.forEach(logbook -> {
-            try
-            {
-                bulk.add(new IndexRequest(ES_LOGBOOK_INDEX, ES_LOGBOOK_TYPE, logbook.getName())
-                        .source(mapper.writeValueAsBytes(logbook), XContentType.JSON));
-            } catch (JsonProcessingException e)
-            {
-                logger.log(Level.SEVERE, "Failed to create logbook: " + logbook, e);
-                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to create logbook: " + logbook);
-            }
-        });
-        bulk.setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE);
+    public <S extends Logbook> Iterable<S> saveAll(Iterable<S> logbooks) {
+        List<BulkOperation> bulkOperations = new ArrayList<>();
+        logbooks.forEach(logbook -> bulkOperations.add(IndexOperation.of(i ->
+                i.index(ES_LOGBOOK_INDEX).document(logbook).id(logbook.getName()))._toBulkOperation()));
+        BulkRequest bulkRequest =
+                BulkRequest.of(r ->
+                        r.operations(bulkOperations).refresh(Refresh.True));
         BulkResponse bulkResponse;
-        try
-        {
-            bulkResponse = client.bulk(bulk, RequestOptions.DEFAULT);
-            if (bulkResponse.hasFailures())
-            {
+        try {
+            bulkResponse = client.bulk(bulkRequest);
+            if (bulkResponse.errors()) {
                 // process failures by iterating through each bulk response item
-                bulkResponse.forEach(response -> {
-                    if (response.getFailure() != null)
-                    {
-                        logger.log(Level.SEVERE, response.getFailureMessage(),
-                                response.getFailure().getCause());
+                bulkResponse.items().forEach(responseItem -> {
+                    if (responseItem.error() != null) {
+                        logger.log(Level.SEVERE, responseItem.error().reason());
                     }
                 });
                 throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
                         "Failed to create logbooks: " + logbooks);
-            } else
-            {
+            } else {
                 return logbooks;
             }
-        } catch (IOException e)
-        {
+        } catch (IOException e) {
             logger.log(Level.SEVERE, "Failed to create logbooks: " + logbooks, e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to create logbooks: " + logbooks);
         }
     }
 
     @Override
-    public Optional<Logbook> findById(String logbookName)
-    {
-        try
-        {
-            GetResponse result = client.get(new GetRequest(ES_LOGBOOK_INDEX, ES_LOGBOOK_TYPE, logbookName),
-                    RequestOptions.DEFAULT);
-            if (result.isExists())
-            {
-                return Optional.of(mapper.readValue(result.getSourceAsBytesRef().streamInput(), Logbook.class));
-            } else
-            {
+    public Optional<Logbook> findById(String logbookName) {
+        try {
+            GetRequest getRequest =
+                    GetRequest.of(g ->
+                            g.index(ES_LOGBOOK_INDEX).id(logbookName));
+            GetResponse<Logbook> resp =
+                    client.get(getRequest, Logbook.class);
+            if (resp.found()) {
+                return Optional.of(resp.source());
+            } else {
                 return Optional.empty();
             }
-        } catch (Exception e)
-        {
+        } catch (Exception e) {
             logger.log(Level.SEVERE, "Failed to find logbook: " + logbookName, e);
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to find logbook: " + logbookName);
         }
     }
 
     @Override
-    public boolean existsById(String logbookName)
-    {
-        try
-        {
-            return client.exists(new GetRequest(ES_LOGBOOK_INDEX, ES_LOGBOOK_TYPE, logbookName), RequestOptions.DEFAULT);
-        } catch (IOException e)
-        {
-            logger.log(Level.SEVERE, "Failed to find logbook: " + logbookName, e);
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to find logbook: " + logbookName);
+    public boolean existsById(String logbookName) {
+        try {
+            ExistsRequest.Builder builder = new ExistsRequest.Builder();
+            builder.index(ES_LOGBOOK_INDEX).id(logbookName);
+            return client.exists(builder.build()).value();
+        } catch (ElasticsearchException | IOException e) {
+            logger.log(Level.SEVERE, "Failed to check if logbook " + logbookName + " exists", e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Failed to check if logbook exists by id: " + logbookName, null);
         }
     }
 
-    public boolean existsByIds(List<String> logbookNames)
-    {
-        try
-        {
-            return logbookNames.stream().allMatch(logbook -> {
-                return existsById(logbook);
-            });
-        } catch (Exception e)
-        {
+    public boolean existsByIds(List<String> logbookNames) {
+        try {
+            boolean b =  logbookNames.stream().allMatch(id -> existsById(id));
+            return  b;
+        } catch (Exception e) {
             logger.log(Level.SEVERE, "Failed to find logbooks: " + logbookNames, e);
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to find logbooks: " + logbookNames);
         }
     }
 
     @Override
-    public Iterable<Logbook> findAll()
-    {
-        try
-        {
-            SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
-            sourceBuilder.query(QueryBuilders.termQuery("state", State.Active.toString()));
-            sourceBuilder.timeout(new TimeValue(10, TimeUnit.SECONDS));
-            sourceBuilder.size(logbooksResultSize);
-            sourceBuilder.sort(SortBuilders.fieldSort("name").order(SortOrder.ASC));
+    public Iterable<Logbook> findAll() {
+        try {
+            SearchRequest searchRequest =
+                    SearchRequest.of(s ->
+                            s.index(ES_LOGBOOK_INDEX)
+                                    .query(q -> q.match(t -> t.field("state").query(State.Active.toString())))
+                                    .timeout("10s")
+                                    .size(logbooksResultSize)
+                                    .sort(SortOptions.of(so -> so.field(FieldSort.of(f -> f.field("name"))))));
 
-            SearchResponse response = client.search(
-                    new SearchRequest(ES_LOGBOOK_INDEX).types(ES_LOGBOOK_TYPE).source(sourceBuilder), RequestOptions.DEFAULT);
-
-            List<Logbook> result = new ArrayList<Logbook>();
-            response.getHits().forEach(h -> {
-                BytesReference b = h.getSourceRef();
-                try
-                {
-                    result.add(mapper.readValue(b.streamInput(), Logbook.class));
-                } catch (IOException e)
-                {
-                    logger.log(Level.SEVERE, e.getMessage(), e);
-                }
-            });
-            return result;
-        } catch (Exception e)
-        {
+            SearchResponse<Logbook> response =
+                    client.search(searchRequest, Logbook.class);
+            return response.hits().hits().stream().map(Hit::source).collect(Collectors.toList());
+        } catch (Exception e) {
             logger.log(Level.SEVERE, "Failed to find logbooks", e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to find logbooks");
         }
     }
 
     @Override
-    public Iterable<Logbook> findAllById(Iterable<String> logbookNames)
-    {
-        MultiGetRequest request = new MultiGetRequest();
-        for (String logbookName : logbookNames)
-        {
-            request.add(new MultiGetRequest.Item(ES_LOGBOOK_INDEX, ES_LOGBOOK_TYPE, logbookName));
-        }
-        try
-        {
-            List<Logbook> foundLogbooks = new ArrayList<Logbook>();
-            MultiGetResponse response = client.mget(request, RequestOptions.DEFAULT);
-            for (MultiGetItemResponse multiGetItemResponse : response)
-            {
-                if (!multiGetItemResponse.isFailed())
-                {
-                    foundLogbooks.add(mapper.readValue(
-                            multiGetItemResponse.getResponse().getSourceAsBytesRef().streamInput(), Logbook.class));
+    public Iterable<Logbook> findAllById(Iterable<String> logbookNames) {
+        List<String> ids = new ArrayList<>();
+        logbookNames.forEach(ids::add);
+        MgetRequest mgetRequest = MgetRequest.of(r -> r.index(ES_LOGBOOK_INDEX).ids(ids));
+        try {
+            List<Logbook> foundLogbooks = new ArrayList<>();
+            MgetResponse<Logbook> resp = client.mget(mgetRequest, Logbook.class);
+            for (MultiGetResponseItem<Logbook> multiGetResponseItem : resp.docs()) {
+                if (!multiGetResponseItem.isFailure()) {
+                    foundLogbooks.add(multiGetResponseItem.result().source());
                 }
             }
             return foundLogbooks;
-        } catch (Exception e)
-        {
+        } catch (Exception e) {
             logger.log(Level.SEVERE, "Failed to find logbooks: " + logbookNames, e);
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to find logbooks: " + logbookNames);
         }
     }
 
     @Override
-    public long count()
-    {
+    public long count() {
         throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Count is not implemented");
     }
 
     @Override
-    public void deleteById(String logbookName)
-    {
-        try
-        {
-            UpdateResponse response = client.update(
-                    new UpdateRequest(ES_LOGBOOK_INDEX, ES_LOGBOOK_TYPE, logbookName)
-                            .doc(jsonBuilder().startObject().field("state", State.Inactive).endObject())
-                            .setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE),
-                    RequestOptions.DEFAULT);
-
-            if (response.getResult().equals(Result.UPDATED))
-            {
-                BytesReference ref = client
-                        .get(new GetRequest(ES_LOGBOOK_INDEX, ES_LOGBOOK_TYPE, response.getId()), RequestOptions.DEFAULT)
-                        .getSourceAsBytesRef();
-
-                Logbook deletedLogbook = mapper.readValue(ref.streamInput(), Logbook.class);
-                logger.log(Level.INFO, "Deleted logbook " + deletedLogbook.toLogger());
+    public void deleteById(String logbookName) {
+        try {
+            GetRequest getRequest =
+                    GetRequest.of(g ->
+                            g.index(ES_LOGBOOK_INDEX).id(logbookName));
+            GetResponse<Logbook> resp =
+                    client.get(getRequest, Logbook.class);
+            if (resp.found()) {
+                Logbook logbook = resp.source();
+                logbook.setState(State.Inactive);
+                UpdateRequest<Logbook, Logbook> updateRequest =
+                        UpdateRequest.of(u ->
+                                u.index(ES_LOGBOOK_INDEX).id(logbookName)
+                                        .doc(logbook));
+                UpdateResponse<Logbook> updateResponse =
+                        client.update(updateRequest, Logbook.class);
+                if (updateResponse.result().equals(co.elastic.clients.elasticsearch._types.Result.Updated)) {
+                    logger.log(Level.INFO, "Deleted logbook " + logbookName);
+                }
             }
-        } catch (DocumentMissingException e)
-        {
-            logger.log(Level.SEVERE, "Failed to delete logbook: " + logbookName + " because it does not exist", e);
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to delete logbook: " + logbookName + " because it does not exist");
-        } catch (Exception e)
-        {
+        } catch (Exception e) {
             logger.log(Level.SEVERE, "Failed to delete logbook: " + logbookName, e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete logbook: " + logbookName);
         }
-
     }
 
     @Override
-    public void delete(Logbook logbook)
-    {
+    public void delete(Logbook logbook) {
         deleteById(logbook.getName());
     }
 
     @Override
-    public void deleteAll(Iterable<? extends Logbook> logbooks)
-    {
+    public void deleteAll(Iterable<? extends Logbook> logbooks) {
         logbooks.forEach(logbook -> deleteById(logbook.getName()));
     }
 
     @Override
-    public void deleteAll()
-    {
+    public void deleteAll() {
         throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Deleting all logbooks is not allowed");
     }
 
+    @Override
+    public void deleteAllById(Iterable ids) {
+        while (ids.iterator().hasNext()) {
+            deleteById((String) ids.iterator().next());
+        }
+    }
 }

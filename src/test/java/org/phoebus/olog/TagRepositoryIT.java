@@ -1,9 +1,12 @@
 package org.phoebus.olog;
 
-import org.elasticsearch.action.bulk.BulkRequest;
-import org.elasticsearch.action.delete.DeleteRequest;
-import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.RestHighLevelClient;
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch._types.Refresh;
+import co.elastic.clients.elasticsearch.core.BulkRequest;
+import co.elastic.clients.elasticsearch.core.DeleteRequest;
+import co.elastic.clients.elasticsearch.core.bulk.BulkOperation;
+import co.elastic.clients.elasticsearch.core.bulk.DeleteOperation;
+import co.elastic.clients.elasticsearch.core.bulk.IndexOperation;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.phoebus.olog.entity.State;
@@ -31,9 +34,6 @@ import static org.junit.Assert.assertTrue;
 @TestPropertySource(locations = "classpath:test_application.properties")
 public class TagRepositoryIT {
 
-    @Autowired
-    @Qualifier("indexClient")
-    RestHighLevelClient client;
 
     @Autowired
     private TagRepository tagRepository;
@@ -46,8 +46,10 @@ public class TagRepositoryIT {
     // Read the elatic index and type from the application.properties
     @Value("${elasticsearch.tag.index:olog_tags}")
     private String ES_TAG_INDEX;
-    @Value("${elasticsearch.tag.type:olog_tag}")
-    private String ES_TAG_TYPE;
+
+    @Autowired
+    @Qualifier("client")
+    ElasticsearchClient client;
 
     /**
      * Test the creation of a test tag
@@ -61,7 +63,7 @@ public class TagRepositoryIT {
         assertThat("Failed to create Tag " + testTag1, result.isPresent() && result.get().equals(testTag1));
 
         // Manual cleanup since Olog does not delete things
-        client.delete(new DeleteRequest(ES_TAG_INDEX, ES_TAG_TYPE, testTag1.getName()), RequestOptions.DEFAULT);
+        client.delete(DeleteRequest.of(d -> d.index(ES_TAG_INDEX).id(testTag1.getName()).refresh(Refresh.True)));
     }
 
     /**
@@ -81,16 +83,14 @@ public class TagRepositoryIT {
         assertThat("Failed to delete Tag", result.isPresent() && result.get().equals(expectedTag));
 
         // Manual cleanup since Olog does not delete things
-        client.delete(new DeleteRequest(ES_TAG_INDEX, ES_TAG_TYPE, testTag2.getName()), RequestOptions.DEFAULT);
+        client.delete(DeleteRequest.of(d -> d.index(ES_TAG_INDEX).id(testTag2.getName()).refresh(Refresh.True)));
     }
 
     /**
      * create a set of tags
-     *
-     * @throws IOException
      */
     @Test
-    public void createTags() throws IOException {
+    public void createTags() {
         List<Tag> tags = Arrays.asList(testTag1, testTag2, testTag3, testTag4);
         try {
             List<Tag> result = new ArrayList<Tag>();
@@ -108,11 +108,9 @@ public class TagRepositoryIT {
 
     /**
      * delete a set of tags
-     *
-     * @throws IOException
      */
     @Test
-    public void deleteTags() throws IOException {
+    public void deleteTags() {
         List<Tag> tags = Arrays.asList(testTag1, testTag2, testTag3, testTag4);
         try {
             List<Tag> result = new ArrayList<Tag>();
@@ -135,7 +133,7 @@ public class TagRepositoryIT {
     }
 
     @Test
-    public void findAllTags() throws IOException {
+    public void findAllTags() {
         List<Tag> tags = Arrays.asList(testTag1, testTag2, testTag3, testTag4);
         try {
             tagRepository.saveAll(tags);
@@ -175,7 +173,7 @@ public class TagRepositoryIT {
     }
 
     @Test
-    public void findTagById() throws IOException {
+    public void findTagById() {
         List<Tag> tags = Arrays.asList(testTag1, testTag2);
         try {
             tagRepository.saveAll(tags);
@@ -190,7 +188,7 @@ public class TagRepositoryIT {
     }
 
     @Test
-    public void checkTagExists() throws IOException {
+    public void checkTagExists() {
         List<Tag> tags = Arrays.asList(testTag1, testTag2);
         try {
             tagRepository.saveAll(tags);
@@ -210,13 +208,16 @@ public class TagRepositoryIT {
      *
      * @param tags
      */
+
     private void cleanUp(List<Tag> tags) {
+        List<BulkOperation> bulkOperations = new ArrayList<>();
+        tags.forEach(tag -> bulkOperations.add(DeleteOperation.of(i ->
+                i.index(ES_TAG_INDEX).id(tag.getName()))._toBulkOperation()));
+        BulkRequest bulkRequest =
+                BulkRequest.of(r ->
+                        r.operations(bulkOperations).refresh(Refresh.True));
         try {
-            BulkRequest bulk = new BulkRequest();
-            tags.forEach(tag -> {
-                bulk.add(new DeleteRequest(ES_TAG_INDEX, ES_TAG_TYPE, tag.getName()));
-            });
-            client.bulk(bulk, RequestOptions.DEFAULT);
+            client.bulk(bulkRequest);
         } catch (IOException e) {
             e.printStackTrace();
         }

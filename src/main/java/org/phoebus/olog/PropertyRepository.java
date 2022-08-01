@@ -5,43 +5,32 @@
  */
 package org.phoebus.olog;
 
-import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.stream.Collectors;
-
-import org.elasticsearch.action.DocWriteResponse.Result;
-import org.elasticsearch.action.bulk.BulkRequest;
-import org.elasticsearch.action.bulk.BulkResponse;
-import org.elasticsearch.action.get.GetRequest;
-import org.elasticsearch.action.get.GetResponse;
-import org.elasticsearch.action.get.MultiGetItemResponse;
-import org.elasticsearch.action.get.MultiGetRequest;
-import org.elasticsearch.action.get.MultiGetResponse;
-import org.elasticsearch.action.index.IndexRequest;
-import org.elasticsearch.action.index.IndexResponse;
-import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.action.support.WriteRequest;
-import org.elasticsearch.action.update.UpdateRequest;
-import org.elasticsearch.action.update.UpdateResponse;
-import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.common.bytes.BytesReference;
-import org.elasticsearch.common.io.stream.StreamInput;
-import org.elasticsearch.common.unit.TimeValue;
-import org.elasticsearch.common.xcontent.XContentType;
-import org.elasticsearch.index.engine.DocumentMissingException;
-import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.search.builder.SearchSourceBuilder;
-import org.elasticsearch.search.sort.SortBuilders;
-import org.elasticsearch.search.sort.SortOrder;
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch._types.ElasticsearchException;
+import co.elastic.clients.elasticsearch._types.FieldSort;
+import co.elastic.clients.elasticsearch._types.Refresh;
+import co.elastic.clients.elasticsearch._types.Result;
+import co.elastic.clients.elasticsearch._types.SortOptions;
+import co.elastic.clients.elasticsearch._types.query_dsl.MatchAllQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.MatchQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
+import co.elastic.clients.elasticsearch.core.BulkRequest;
+import co.elastic.clients.elasticsearch.core.BulkResponse;
+import co.elastic.clients.elasticsearch.core.ExistsRequest;
+import co.elastic.clients.elasticsearch.core.GetRequest;
+import co.elastic.clients.elasticsearch.core.GetResponse;
+import co.elastic.clients.elasticsearch.core.IndexRequest;
+import co.elastic.clients.elasticsearch.core.IndexResponse;
+import co.elastic.clients.elasticsearch.core.MgetRequest;
+import co.elastic.clients.elasticsearch.core.MgetResponse;
+import co.elastic.clients.elasticsearch.core.SearchRequest;
+import co.elastic.clients.elasticsearch.core.SearchResponse;
+import co.elastic.clients.elasticsearch.core.UpdateRequest;
+import co.elastic.clients.elasticsearch.core.UpdateResponse;
+import co.elastic.clients.elasticsearch.core.bulk.BulkOperation;
+import co.elastic.clients.elasticsearch.core.bulk.IndexOperation;
+import co.elastic.clients.elasticsearch.core.mget.MultiGetResponseItem;
+import co.elastic.clients.elasticsearch.core.search.Hit;
 import org.phoebus.olog.entity.Property;
 import org.phoebus.olog.entity.State;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,296 +41,262 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Repository;
 import org.springframework.web.server.ResponseStatusException;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 
 @Repository
-public class PropertyRepository implements CrudRepository<Property, String>
-{
+public class PropertyRepository implements CrudRepository<Property, String> {
+
+    @SuppressWarnings("unused")
     @Value("${elasticsearch.property.index:olog_properties}")
     private String ES_PROPERTY_INDEX;
-    @Value("${elasticsearch.property.type:olog_property}")
-    private String ES_PROPERTY_TYPE;
-
+    @SuppressWarnings("unused")
     @Value("${elasticsearch.result.size.properties:10}")
     private int propertiesResultSize;
 
     @Autowired
-    @Qualifier("indexClient")
-    RestHighLevelClient client;
+    @Qualifier("client")
+    ElasticsearchClient client;
 
-    private static final ObjectMapper mapper = new ObjectMapper();
-
-    private Logger logger = Logger.getLogger(PropertyRepository.class.getName());
+    private final Logger logger = Logger.getLogger(PropertyRepository.class.getName());
 
     @Override
-    public <S extends Property> S save(S property)
-    {
-        try
-        {
-            IndexRequest indexRequest = new IndexRequest(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, property.getName())
-                    .source(mapper.writeValueAsBytes(property), XContentType.JSON);
-            IndexResponse response = client.index(indexRequest, RequestOptions.DEFAULT);
-            if (response.getResult().equals(Result.CREATED) ||
-                response.getResult().equals(Result.UPDATED))
-            {
-                BytesReference ref = client.get(new GetRequest(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, response.getId()),
-                        RequestOptions.DEFAULT).getSourceAsBytesRef();
-                Property createdProperty = mapper.readValue(ref.streamInput(), Property.class);
-                return (S) createdProperty;
+    public <S extends Property> S save(S property) {
+        try {
+            IndexRequest<Property> indexRequest =
+                    IndexRequest.of(i ->
+                            i.index(ES_PROPERTY_INDEX)
+                                    .id(property.getName())
+                                    .document(property)
+                                    .refresh(Refresh.True));
+            IndexResponse response = client.index(indexRequest);
+
+            if (response.result().equals(Result.Created) ||
+                    response.result().equals(Result.Updated)) {
+                GetRequest getRequest =
+                        co.elastic.clients.elasticsearch.core.GetRequest.of(g ->
+                                g.index(ES_PROPERTY_INDEX).id(response.id()));
+                GetResponse<Property> resp =
+                        client.get(getRequest, Property.class);
+                return (S) resp.source();
             }
-        } catch (Exception e)
-        {
+            return null;
+        } catch (Exception e) {
             logger.log(Level.SEVERE, "Failed to create property: " + property, e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to create property: " + property);
         }
-        return null;
     }
 
     @Override
-    public <S extends Property> Iterable<S> saveAll(Iterable<S> properties)
-    {
-        BulkRequest bulk = new BulkRequest();
-        properties.forEach(property -> {
-            try
-            {
-                bulk.add(new IndexRequest(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, property.getName())
-                        .source(mapper.writeValueAsBytes(property), XContentType.JSON));
-            } catch (JsonProcessingException e)
-            {
-                logger.log(Level.SEVERE, "Failed to create property: " + property, e);
-                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to create property: " + property);
-            }
-        });
-        BulkResponse bulkResponse;
-        try
-        {
-            bulk.setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE);
-            bulkResponse = client.bulk(bulk, RequestOptions.DEFAULT);
+    public <S extends Property> Iterable<S> saveAll(Iterable<S> properties) {
+        List<BulkOperation> bulkOperations = new ArrayList<>();
+        properties.forEach(property -> bulkOperations.add(IndexOperation.of(i ->
+                i.index(ES_PROPERTY_INDEX).document(property).id(property.getName()))._toBulkOperation()));
 
-            if (bulkResponse.hasFailures())
-            {
+        BulkRequest bulkRequest = BulkRequest.of(r ->
+                r.operations(bulkOperations).refresh(Refresh.True));
+
+        BulkResponse bulkResponse;
+        try {
+            bulkResponse = client.bulk(bulkRequest);
+            if (bulkResponse.errors()) {
                 // process failures by iterating through each bulk response item
-                bulkResponse.forEach(response -> {
-                    if (response.getFailure() != null)
-                    {
-                        logger.log(Level.SEVERE, response.getFailureMessage(),
-                                response.getFailure().getCause());
+                bulkResponse.items().forEach(responseItem -> {
+                    if (responseItem.error() != null) {
+                        logger.log(Level.SEVERE, responseItem.error().reason());
                     }
                 });
                 throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
                         "Failed to create properties: " + properties);
-            } else
-            {
+            } else {
+
                 return properties;
             }
-        } catch (IOException e)
-        {
+        } catch (IOException e) {
             logger.log(Level.SEVERE, "Failed to create properties: " + properties, e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to create properties: " + properties);
         }
     }
 
     @Override
-    public Optional<Property> findById(String propertyName)
-    {
-        try
-        {
-            GetResponse result = client.get(new GetRequest(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, propertyName),
-                                                           RequestOptions.DEFAULT);
-            if (result.isExists())
-            {
-                return Optional.of(mapper.readValue(result.getSourceAsBytesRef().streamInput(), Property.class));
-            } else
-            {
+    public Optional<Property> findById(String propertyName) {
+        try {
+            GetRequest getRequest =
+                    GetRequest.of(g ->
+                            g.index(ES_PROPERTY_INDEX).id(propertyName));
+            GetResponse<Property> resp =
+                    client.get(getRequest, Property.class);
+            if (resp.found()) {
+                return Optional.of(resp.source());
+            } else {
                 return Optional.empty();
             }
-        } catch (Exception e)
-        {
+        } catch (Exception e) {
             logger.log(Level.SEVERE, "Failed to find property: " + propertyName, e);
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to find property: " + propertyName);
         }
     }
 
     @Override
-    public boolean existsById(String propertyName)
-    {
-        try
-        {
-            return client.exists(new GetRequest(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, propertyName), RequestOptions.DEFAULT);
-        } catch (IOException e)
-        {
-            logger.log(Level.SEVERE, "Failed to find property: " + propertyName, e);
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to find property: " + propertyName);
+    public boolean existsById(String propertyName) {
+        try {
+            ExistsRequest.Builder builder = new ExistsRequest.Builder();
+            builder.index(ES_PROPERTY_INDEX).id(propertyName);
+            return client.exists(builder.build()).value();
+        } catch (ElasticsearchException | IOException e) {
+            logger.log(Level.SEVERE, "Failed to check if property " + propertyName + " exists", e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Failed to check if property exists by id: " + propertyName, null);
         }
     }
 
     @Override
-    public Iterable<Property> findAll()
-    {
+    public Iterable<Property> findAll() {
         return findAll(false);
     }
 
-    public Iterable<Property> findAll(boolean includeInactive)
-    {
-        try
-        {
-
-            SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
-            if (!includeInactive)
-            {
-                sourceBuilder.query(QueryBuilders.termQuery("state", State.Active.toString()));
+    public Iterable<Property> findAll(boolean includeInactive) {
+        try {
+            SearchRequest searchRequest;
+            Query query;
+            if (includeInactive) {
+                query = new MatchAllQuery.Builder().build()._toQuery();
+            } else {
+                query = MatchQuery.of(t -> t.field("state").query(State.Active.toString()))._toQuery();
             }
-            sourceBuilder.timeout(new TimeValue(10, TimeUnit.SECONDS));
-            sourceBuilder.size(propertiesResultSize);
-            sourceBuilder.sort(SortBuilders.fieldSort("name").order(SortOrder.ASC));
+            searchRequest = SearchRequest.of(s ->
+                    s.index(ES_PROPERTY_INDEX)
+                            .query(query)
+                            .timeout("10s")
+                            .size(propertiesResultSize)
+                            .sort(SortOptions.of(so -> so.field(FieldSort.of(f -> f.field("name"))))));
 
-            SearchResponse response = client.search(
-                    new SearchRequest(ES_PROPERTY_INDEX).types(ES_PROPERTY_TYPE).source(sourceBuilder), RequestOptions.DEFAULT);
+            SearchResponse<Property> response =
+                    client.search(searchRequest, Property.class);
 
-            List<Property> result = new ArrayList<Property>();
-            response.getHits().forEach(h -> {
-                BytesReference b = h.getSourceRef();
-                try
-                {
-                    result.add(mapper.readValue(b.streamInput(), Property.class));
-                } catch (IOException e)
-                {
-                    logger.log(Level.SEVERE, e.getMessage(), e);
-                }
-            });
-            return result;
-        } catch (Exception e)
-        {
+            return response.hits().hits().stream().map(Hit::source).collect(Collectors.toList());
+        } catch (Exception e) {
             logger.log(Level.SEVERE, "Failed to find properties", e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to find properties");
         }
     }
 
     @Override
-    public Iterable<Property> findAllById(Iterable<String> propertyNames)
-    {
-        MultiGetRequest request = new MultiGetRequest();
-        for (String propertyName : propertyNames)
-        {
-            request.add(new MultiGetRequest.Item(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, propertyName));
-        }
-        try
-        {
-            List<Property> foundProperties = new ArrayList<Property>();
-            MultiGetResponse response = client.mget(request, RequestOptions.DEFAULT);
-            for (MultiGetItemResponse multiGetItemResponse : response)
-            {
-                if (!multiGetItemResponse.isFailed())
-                {
-                    GetResponse res = multiGetItemResponse.getResponse();
-                    StreamInput str = res.getSourceAsBytesRef().streamInput();
-                    foundProperties.add(mapper.readValue(str, Property.class));
+    public Iterable<Property> findAllById(Iterable<String> propertyNames) {
+        List<String> ids = new ArrayList<>();
+        propertyNames.forEach(ids::add);
+        MgetRequest mgetRequest = MgetRequest.of(r -> r.index(ES_PROPERTY_INDEX).ids(ids));
+        try {
+            List<Property> foundProperties = new ArrayList<>();
+            MgetResponse<Property> resp = client.mget(mgetRequest, Property.class);
+            for (MultiGetResponseItem<Property> multiGetResponseItem : resp.docs()) {
+                if (!multiGetResponseItem.isFailure()) {
+                    foundProperties.add(multiGetResponseItem.result().source());
                 }
             }
             return foundProperties;
-        } catch (Exception e)
-        {
+        } catch (Exception e) {
             logger.log(Level.SEVERE, "Failed to find properties: " + propertyNames, e);
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to find properties: " + propertyNames);
         }
     }
 
     @Override
-    public long count()
-    {
+    public long count() {
         // TODO Auto-generated method stub
         return 0;
     }
 
     @Override
-    public void deleteById(String propertyName)
-    {
-        try
-        {
-
-            UpdateResponse response = client.update(
-                    new UpdateRequest(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, propertyName)
-                                        .doc(jsonBuilder().startObject().field("state", State.Inactive).endObject())
-                                        .setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE),
-                    RequestOptions.DEFAULT);
-
-            if (response.getResult().equals(Result.UPDATED))
-            {
-                BytesReference ref = client
-                        .get(new GetRequest(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, response.getId()), RequestOptions.DEFAULT)
-                        .getSourceAsBytesRef();
-                Property deletedProperty = mapper.readValue(ref.streamInput(), Property.class);
-                logger.log(Level.INFO, "Deleted property " + deletedProperty.toLogger());
+    public void deleteById(String propertyName) {
+        try {
+            GetRequest getRequest =
+                    GetRequest.of(g ->
+                            g.index(ES_PROPERTY_INDEX).id(propertyName));
+            GetResponse<Property> resp =
+                    client.get(getRequest, Property.class);
+            if (resp.found()) {
+                Property property = resp.source();
+                property.setState(State.Inactive);
+                UpdateRequest<Property, Property> updateRequest =
+                        UpdateRequest.of(u ->
+                                u.index(ES_PROPERTY_INDEX).id(propertyName)
+                                        .doc(property));
+                UpdateResponse<Property> updateResponse =
+                        client.update(updateRequest, Property.class);
+                if (updateResponse.result().equals(co.elastic.clients.elasticsearch._types.Result.Updated)) {
+                    logger.log(Level.INFO, "Deleted property " + propertyName);
+                }
             }
-        } catch (DocumentMissingException e)
-        {
-            logger.log(Level.SEVERE, "Failed to delete property: " + propertyName + " because it does not exist", e);
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to delete property: " + propertyName + " because it does not exist");
-        } catch (Exception e)
-        {
+        } catch (Exception e) {
             logger.log(Level.SEVERE, "Failed to delete property: " + propertyName, e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete property: " + propertyName);
         }
     }
 
-    public void deleteAttribute(String propertyName, String attributeName)
-    {
-        try
-        {
-            Property property = findById(propertyName).get();
-            if (property != null)
-            {
-                property.setAttributes(property.getAttributes().stream().map(p -> {
-                    if (p.getName().equals(attributeName))
-                    {
-                        p.setState(State.Inactive);
-                    }
-                    return p;
-                }).collect(Collectors.toSet()));
+    public void deleteAttribute(String propertyName, String attributeName) {
+        try {
+            Optional<Property> optional = findById(propertyName);
+            if (optional.isEmpty()) {
+                logger.log(Level.SEVERE, "Cannot delete attribute " + attributeName +
+                        " from property " + propertyName + " as the property does not exist");
+                return;
             }
+            Property property = optional.get();
+            property.setAttributes(property.getAttributes().stream().map(p -> {
+                if (p.getName().equals(attributeName)) {
+                    p.setState(State.Inactive);
+                }
+                return p;
+            }).collect(Collectors.toSet()));
 
+            UpdateRequest<Property, Property> updateRequest =
+                    UpdateRequest.of(u ->
+                            u.index(ES_PROPERTY_INDEX).id(propertyName)
+                                    .doc(property));
+            UpdateResponse<Property> updateResponse =
+                    client.update(updateRequest, Property.class);
 
-            UpdateResponse response = client.update(
-                    new UpdateRequest(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, propertyName)
-                            .doc(mapper.writeValueAsBytes(property), XContentType.JSON)
-                            .setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE),
-                    RequestOptions.DEFAULT);
-
-            if (response.getResult().equals(Result.UPDATED))
-            {
-                BytesReference ref = client
-                        .get(new GetRequest(ES_PROPERTY_INDEX, ES_PROPERTY_TYPE, response.getId()), RequestOptions.DEFAULT)
-                        .getSourceAsBytesRef();
-                Property deletedProperty = mapper.readValue(ref.streamInput(), Property.class);
+            if (updateResponse.result().equals(Result.Updated)) {
+                GetRequest getRequest =
+                        co.elastic.clients.elasticsearch.core.GetRequest.of(g ->
+                                g.index(ES_PROPERTY_INDEX).id(updateResponse.id()));
+                GetResponse<Property> resp =
+                        client.get(getRequest, Property.class);
+                Property deletedProperty = resp.source();
                 logger.log(Level.INFO, "Deleted property attribute" + deletedProperty.toLogger());
             }
-        } catch (DocumentMissingException e)
-        {
-            logger.log(Level.SEVERE, propertyName + " Does not exist and thus cannot be deleted");
-        } catch (Exception e)
-        {
+        } catch (Exception e) {
             logger.log(Level.SEVERE, e.getMessage(), e);
         }
     }
 
     @Override
-    public void delete(Property property)
-    {
+    public void delete(Property property) {
         deleteById(property.getName());
     }
 
     @Override
-    public void deleteAll(Iterable<? extends Property> properties)
-    {
+    public void deleteAll(Iterable<? extends Property> properties) {
         properties.forEach(property -> deleteById(property.getName()));
     }
 
     @Override
-    public void deleteAll()
-    {
+    public void deleteAll() {
         throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Deleting all properties is not allowed");
+    }
+
+    @Override
+    public void deleteAllById(Iterable ids) {
+        while (ids.iterator().hasNext()) {
+            deleteById((String) ids.iterator().next());
+        }
     }
 
 }

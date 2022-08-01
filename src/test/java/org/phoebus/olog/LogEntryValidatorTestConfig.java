@@ -18,7 +18,7 @@
 
 package org.phoebus.olog;
 
-import org.elasticsearch.client.RestHighLevelClient;
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import org.mockito.Mockito;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -41,13 +41,13 @@ public class LogEntryValidatorTestConfig {
     }
 
     @Bean("indexClient")
-    public RestHighLevelClient client() {
-        return Mockito.mock(RestHighLevelClient.class);
+    public ElasticsearchClient client() {
+        return Mockito.mock(ElasticsearchClient.class);
     }
 
     @Bean
-    public RestHighLevelClient searchClient() {
-        return Mockito.mock(RestHighLevelClient.class);
+    public ElasticsearchClient searchClient() {
+        return Mockito.mock(ElasticsearchClient.class);
     }
 
     @Bean

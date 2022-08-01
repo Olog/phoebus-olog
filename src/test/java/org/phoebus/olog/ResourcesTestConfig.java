@@ -20,9 +20,7 @@ package org.phoebus.olog;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mongodb.client.gridfs.GridFSBucket;
-import org.elasticsearch.client.RestHighLevelClient;
 import org.mockito.Mockito;
-import org.phoebus.olog.entity.Log;
 import org.springframework.boot.autoconfigure.h2.H2ConsoleProperties;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -31,7 +29,6 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.data.mongodb.gridfs.GridFsOperations;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.validation.Errors;
 
 import javax.sql.DataSource;
 
@@ -64,10 +61,10 @@ public class ResourcesTestConfig {
         return Mockito.mock(AttachmentRepository.class);
     }
 
-    @Bean("indexClient")
-    public RestHighLevelClient client() {
-        return Mockito.mock(RestHighLevelClient.class);
-    }
+    //@Bean("indexClient")
+    //public RestHighLevelClient client() {
+    //    return Mockito.mock(RestHighLevelClient.class);
+    //}
 
     @Bean
     public GridFsOperations gridOperation() {
@@ -120,4 +117,5 @@ public class ResourcesTestConfig {
         when(logEntryValidator.supports(Mockito.any(Class.class))).thenReturn(true);
         return logEntryValidator;
     }
+
 }

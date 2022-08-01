@@ -3,9 +3,6 @@
  */
 package org.phoebus.olog;
 
-import org.elasticsearch.action.delete.DeleteRequest;
-import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.RestHighLevelClient;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.phoebus.olog.entity.Attribute;
@@ -45,9 +42,9 @@ import static org.phoebus.olog.LogSearchUtil.MILLI_FORMAT;
 @TestPropertySource(locations = "classpath:test_application.properties")
 public class LogRepositorySearchIT  implements TestExecutionListener
 {
-    @Autowired
-    @Qualifier("indexClient")
-    RestHighLevelClient client;
+    //@Autowired
+    //@Qualifier("indexClient")
+    //RestHighLevelClient client;
 
     private static LogRepository logRepository;
 
@@ -540,6 +537,7 @@ public class LogRepositorySearchIT  implements TestExecutionListener
     /**
      * cleanup all the tags, logbooks, properties and log entries created for testing
      */
+    /*
     @Override
     public void afterTestClass(TestContext testContext) throws IOException
     {
@@ -559,4 +557,6 @@ public class LogRepositorySearchIT  implements TestExecutionListener
         client.delete(new DeleteRequest(ologResourceDescriptors.ES_LOG_INDEX, ologResourceDescriptors.ES_LOG_TYPE, createdLog4.getId().toString()), RequestOptions.DEFAULT);
 
     }
+
+     */
 }

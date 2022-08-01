@@ -1,13 +1,15 @@
 {
-"properties": {
-    "name": {
+  "mappings": {
+    "properties": {
+      "name": {
         "type": "keyword"
-    },
-    "owner": {
+      },
+      "owner": {
         "type": "keyword"
-    },
-    "state": {
+      },
+      "state": {
         "type": "keyword"
+      }
     }
-}
+  }
 }
