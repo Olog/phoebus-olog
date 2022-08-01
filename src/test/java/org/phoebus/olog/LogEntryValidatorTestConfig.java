@@ -40,13 +40,8 @@ public class LogEntryValidatorTestConfig {
         return Mockito.mock(TagRepository.class);
     }
 
-    @Bean("indexClient")
+    @Bean("client")
     public ElasticsearchClient client() {
-        return Mockito.mock(ElasticsearchClient.class);
-    }
-
-    @Bean
-    public ElasticsearchClient searchClient() {
         return Mockito.mock(ElasticsearchClient.class);
     }
 
