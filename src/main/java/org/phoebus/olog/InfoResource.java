@@ -7,10 +7,9 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.logging.Level;
 
-import org.elasticsearch.Version;
-import org.elasticsearch.action.main.MainResponse;
-import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.RestHighLevelClient;
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch._types.ElasticsearchVersionInfo;
+import co.elastic.clients.elasticsearch.core.InfoResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.mongodb.client.MongoClient;
+//import com.mongodb.client.MongoClient;
 
 @RestController
 @RequestMapping(OLOG_SERVICE_INFO)
@@ -36,7 +35,7 @@ public class InfoResource
     @Autowired
     private MongoConfig monoConfig;
 
-    private MongoClient mongoClient;
+    //private MongoClient mongoClient;
 
     private final static ObjectMapper objectMapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
 
@@ -51,15 +50,14 @@ public class InfoResource
         cfServiceInfo.put("name", "Olog Service");
         cfServiceInfo.put("version", version);
 
-        RestHighLevelClient client = esService.getSearchClient();
+        ElasticsearchClient client = esService.getClient();
         Map<String, String> elasticInfo = new LinkedHashMap<String, String>();
         try {
-            MainResponse response = client.info(RequestOptions.DEFAULT);
-            
+            InfoResponse response = client.info();
             elasticInfo.put("status", "Connected");
-            elasticInfo.put("clusterName", response.getClusterName().value());
-            elasticInfo.put("clusterUuid", response.getClusterUuid());
-            Version version = response.getVersion();
+            elasticInfo.put("clusterName", response.clusterName());
+            elasticInfo.put("clusterUuid", response.clusterUuid());
+            ElasticsearchVersionInfo version = response.version();
             elasticInfo.put("version", version.toString());
         } catch (IOException e) {
             Application.logger.log(Level.WARNING, "Failed to create Olog service info resource.", e);
@@ -67,6 +65,7 @@ public class InfoResource
         }
         cfServiceInfo.put("elastic", elasticInfo);
 
+        /*
         Map<String, String> mongoInfo = new LinkedHashMap<String, String>();
         mongoClient = monoConfig.mongoClient();
         if (mongoClient != null) {
@@ -76,7 +75,10 @@ public class InfoResource
             mongoInfo.put("status", "Discconnected");
         }
 
+
         cfServiceInfo.put("mongo-gridfs", mongoInfo);
+
+         */
         try {
             return objectMapper.writeValueAsString(cfServiceInfo);
         } catch (JsonProcessingException e) {

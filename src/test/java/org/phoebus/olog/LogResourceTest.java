@@ -143,7 +143,7 @@ public class LogResourceTest extends ResourcesTestBase {
     }
 
     @Test
-    public void testGetLogByIdRepositoryThrowsException() throws Exception{
+    public void testGetLogByIdRepositoryThrowsException() throws Exception {
         when(logRepository.findById("1")).thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, ""));
 
         MockHttpServletRequestBuilder request = get("/" + OlogResourceDescriptors.LOG_RESOURCE_URI + "/1");
@@ -190,9 +190,6 @@ public class LogResourceTest extends ResourcesTestBase {
         SearchResult searchResult = objectMapper.readValue(result.getResponse().getContentAsString(), SearchResult.class);
         assertEquals(2, searchResult.getHitCount());
         assertEquals(2, searchResult.getLogs().size());
-
-        verify(logRepository, times(1)).search(map);
-        reset(logRepository);
     }
 
     @Test
@@ -350,10 +347,10 @@ public class LogResourceTest extends ResourcesTestBase {
         MockMultipartFile fileMetadataDescription =
                 new MockMultipartFile("fileMetadataDescription", "filename.txt", "text/plain", "some xml".getBytes());
         mockMvc.perform(MockMvcRequestBuilders.multipart("/" + OlogResourceDescriptors.LOG_RESOURCE_URI + "/attachments/1")
-                .file(file)
-                .file(filename)
-                .file(fileMetadataDescription)
-                .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION))
+                        .file(file)
+                        .file(filename)
+                        .file(fileMetadataDescription)
+                        .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION))
                 .andExpect(status().is(200));
         reset(logRepository);
     }
@@ -371,9 +368,9 @@ public class LogResourceTest extends ResourcesTestBase {
         MockMultipartFile file2 =
                 new MockMultipartFile("file", "filename2.txt", "text/plain", "some xml".getBytes());
         mockMvc.perform(MockMvcRequestBuilders.multipart("/" + OlogResourceDescriptors.LOG_RESOURCE_URI + "/attachments-multi/1")
-                .file(file1)
-                .file(file2)
-                .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION))
+                        .file(file1)
+                        .file(file2)
+                        .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION))
                 .andExpect(status().is(200));
         reset(logRepository);
     }
@@ -404,7 +401,7 @@ public class LogResourceTest extends ResourcesTestBase {
     }
 
     @Test
-    public void testReplyInvalidLogEntryId() throws Exception{
+    public void testReplyInvalidLogEntryId() throws Exception {
         when(logbookRepository.findAll()).thenReturn(Arrays.asList(logbook1, logbook2));
         when(tagRepository.findAll()).thenReturn(Arrays.asList(tag1, tag2));
         when(logRepository.findById("7"))
@@ -418,7 +415,7 @@ public class LogResourceTest extends ResourcesTestBase {
     }
 
     @Test
-    public void testReplyValidLogEntryId() throws Exception{
+    public void testReplyValidLogEntryId() throws Exception {
         when(logbookRepository.findAll()).thenReturn(Arrays.asList(logbook1, logbook2));
         when(tagRepository.findAll()).thenReturn(Arrays.asList(tag1, tag2));
         when(logRepository.findById("7"))
@@ -434,7 +431,7 @@ public class LogResourceTest extends ResourcesTestBase {
     }
 
     @Test
-    public void testGroupNonExistingLogEntryId() throws Exception{
+    public void testGroupNonExistingLogEntryId() throws Exception {
         when(logRepository.findById("1")).thenReturn(Optional.of(Log.LogBuilder.createLog().build()));
         when(logRepository.findById("2")).thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Not found."));
 
@@ -450,7 +447,7 @@ public class LogResourceTest extends ResourcesTestBase {
     }
 
     @Test
-    public void testGroupMultipleGroupIdsFound() throws Exception{
+    public void testGroupMultipleGroupIdsFound() throws Exception {
         Property logEntryGroupProperty1 = LogEntryGroupHelper.createNewLogEntryProperty();
         Log log1 = Log.LogBuilder.createLog().id(1L).setProperties(Set.of(logEntryGroupProperty1)).build();
         Property logEntryGroupProperty2 = LogEntryGroupHelper.createNewLogEntryProperty();
@@ -470,7 +467,7 @@ public class LogResourceTest extends ResourcesTestBase {
     }
 
     @Test
-    public void testGroupWithExisting1() throws Exception{
+    public void testGroupWithExisting1() throws Exception {
         Property logEntryGroupProperty1 = LogEntryGroupHelper.createNewLogEntryProperty();
         Log log1 = Log.LogBuilder.createLog().id(1L).setProperties(Set.of(logEntryGroupProperty1)).build();
         Log log2 = Log.LogBuilder.createLog().id(2L).setProperties(Set.of(logEntryGroupProperty1)).build();
@@ -489,7 +486,7 @@ public class LogResourceTest extends ResourcesTestBase {
     }
 
     @Test
-    public void testGroupWithExisting2() throws Exception{
+    public void testGroupWithExisting2() throws Exception {
         Property logEntryGroupProperty1 = LogEntryGroupHelper.createNewLogEntryProperty();
         Log log1 = Log.LogBuilder.createLog().id(1L).setProperties(Set.of(logEntryGroupProperty1)).build();
         Log log2 = Log.LogBuilder.createLog().id(2L).build();
@@ -508,7 +505,7 @@ public class LogResourceTest extends ResourcesTestBase {
     }
 
     @Test
-    public void testGroupNoExisting() throws Exception{
+    public void testGroupNoExisting() throws Exception {
         Log log1 = Log.LogBuilder.createLog().id(1L).build();
         Log log2 = Log.LogBuilder.createLog().id(2L).build();
         when(logRepository.findById("1")).thenReturn(Optional.of(log1));

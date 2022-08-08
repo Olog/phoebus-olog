@@ -1,9 +1,6 @@
 package org.phoebus.olog;
 
 import junitx.framework.FileAssert;
-import org.elasticsearch.action.delete.DeleteRequest;
-import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.RestHighLevelClient;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.phoebus.olog.entity.Attachment;
@@ -35,9 +32,9 @@ public class LogResourceIT {
     @Autowired
     LogResource logResource;
 
-    @Autowired
-    @Qualifier("indexClient")
-    RestHighLevelClient client;
+   // @Autowired
+   // @Qualifier("indexClient")
+   // RestHighLevelClient client;
 
     @Autowired
     private LogbookRepository logbookRepository;
@@ -88,14 +85,14 @@ public class LogResourceIT {
             gridOperation.delete(new Query(Criteria.where("_id").is(attachmentId)));
 
             // Manual cleanup since Olog does not delete things
-            client.delete(new DeleteRequest(ES_LOG_INDEX, ES_LOG_TYPE, createdLog.getId().toString()),
-                    RequestOptions.DEFAULT);
+            //client.delete(new DeleteRequest(ES_LOG_INDEX, ES_LOG_TYPE, createdLog.getId().toString()),
+            //        RequestOptions.DEFAULT);
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
             // Manual cleanup since Olog does not delete things
-            client.delete(new DeleteRequest(ES_LOGBOOK_INDEX, ES_LOGBOOK_TYPE, testLogbook.getName()),
-                    RequestOptions.DEFAULT);
+            //client.delete(new DeleteRequest(ES_LOGBOOK_INDEX, ES_LOGBOOK_TYPE, testLogbook.getName()),
+             //       RequestOptions.DEFAULT);
         }
     }
 }

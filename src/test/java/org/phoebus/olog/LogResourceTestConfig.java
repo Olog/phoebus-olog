@@ -18,8 +18,6 @@
 
 package org.phoebus.olog;
 
-import com.mongodb.client.gridfs.GridFSBucket;
-import org.elasticsearch.client.RestHighLevelClient;
 import org.mockito.Mockito;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -35,10 +33,10 @@ public class LogResourceTestConfig {
         return Mockito.mock(LogRepository.class);
     }
 
-    @Bean("indexClient")
-    public RestHighLevelClient client() {
-        return Mockito.mock(RestHighLevelClient.class);
-    }
+    //@Bean("indexClient")
+    //public RestHighLevelClient client() {
+    //    return Mockito.mock(RestHighLevelClient.class);
+    //}
 
     @Bean
     public AttachmentRepository attachmentRepository() {
@@ -50,10 +48,10 @@ public class LogResourceTestConfig {
         return Mockito.mock(GridFsTemplate.class);
     }
 
-    @Bean
-    public GridFSBucket gridFSBucket(){
-        return Mockito.mock(GridFSBucket.class);
-    }
+    //@Bean
+    //public GridFSBucket gridFSBucket(){
+    //    return Mockito.mock(GridFSBucket.class);
+    //}
 
     @Bean
     public LogSearchUtil logSearchUtil() {
