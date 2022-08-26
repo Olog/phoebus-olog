@@ -9,49 +9,56 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
+import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
 import org.springframework.data.mongodb.core.SimpleMongoClientDatabaseFactory;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 
-import javax.annotation.PostConstruct;
-
 @Configuration
 @PropertySource("classpath:application.properties")
 @SuppressWarnings("unused")
-public class MongoConfig {
+public class MongoConfig extends AbstractMongoClientConfiguration {
 
-    @Value("${spring.data.mongodb.database:ologAttachments}")
+    @Value("${mongo.database:ologAttachments}")
     private String mongoDbName;
-    @Value("${spring.data.mongodb.host:localhost}")
+    @Value("${mongo.host:localhost}")
     private String mongoHost;
-    @Value("${spring.data.mongodb.port:27017}")
+    @Value("${mongo.port:27017}")
     private int mongoPort;
-
-    private MongoClient mongoClient;
-
-    @PostConstruct
-    public void setupClient() {
-        mongoClient = MongoClients.create("mongodb://" + mongoHost + ":" + mongoPort);
-    }
 
     @SuppressWarnings("unused")
     @Bean
     public GridFsTemplate gridFsTemplate() {
-        MongoDatabaseFactory dbFactory = new SimpleMongoClientDatabaseFactory(mongoClient, mongoDbName);
-        DefaultDbRefResolver dbRefResolver = new DefaultDbRefResolver(dbFactory);
+        MongoDatabaseFactory databaseFactory = mongoDbFactory();
+        DefaultDbRefResolver dbRefResolver = new DefaultDbRefResolver(databaseFactory);
 
         MongoMappingContext mappingContext = new MongoMappingContext();
         mappingContext.setAutoIndexCreation(true);
         mappingContext.afterPropertiesSet();
-        return new GridFsTemplate(dbFactory, new MappingMongoConverter(dbRefResolver, mappingContext));
+        return new GridFsTemplate(databaseFactory, new MappingMongoConverter(dbRefResolver, mappingContext));
     }
 
 
     @SuppressWarnings("unused")
     @Bean
     public GridFSBucket gridFSBucket() {
-        return GridFSBuckets.create(mongoClient.getDatabase(mongoDbName));
+        return GridFSBuckets.create(mongoClient().getDatabase(mongoDbName));
+    }
+
+    @Override
+    public String getDatabaseName() {
+        return mongoDbName;
+    }
+
+    @Override
+    public MongoClient mongoClient() {
+        return MongoClients.create("mongodb://" + mongoHost + ":" + mongoPort);
+    }
+
+    @Override
+    public MongoDatabaseFactory mongoDbFactory() {
+        return new SimpleMongoClientDatabaseFactory(mongoClient(), mongoDbName);
     }
 }
