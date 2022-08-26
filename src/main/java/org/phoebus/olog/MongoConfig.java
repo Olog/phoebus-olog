@@ -22,7 +22,7 @@ import javax.annotation.PostConstruct;
 @SuppressWarnings("unused")
 public class MongoConfig {
 
-    @Value("${spring.data.mongodb.databaseç:ologAttachments}")
+    @Value("${spring.data.mongodb.database:ologAttachments}")
     private String mongoDbName;
     @Value("${spring.data.mongodb.host:localhost}")
     private String mongoHost;
