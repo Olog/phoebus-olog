@@ -32,11 +32,6 @@ public class InfoResource
     @Autowired
     private ElasticConfig esService;
 
-    @Autowired
-    private MongoConfig monoConfig;
-
-    //private MongoClient mongoClient;
-
     private final static ObjectMapper objectMapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
 
     /**
@@ -65,20 +60,6 @@ public class InfoResource
         }
         cfServiceInfo.put("elastic", elasticInfo);
 
-        /*
-        Map<String, String> mongoInfo = new LinkedHashMap<String, String>();
-        mongoClient = monoConfig.mongoClient();
-        if (mongoClient != null) {
-            mongoInfo.put("status", "Connected");
-            mongoInfo.put("mongo", monoConfig.mongoClient().getClusterDescription().getShortDescription());
-        } else {
-            mongoInfo.put("status", "Discconnected");
-        }
-
-
-        cfServiceInfo.put("mongo-gridfs", mongoInfo);
-
-         */
         try {
             return objectMapper.writeValueAsString(cfServiceInfo);
         } catch (JsonProcessingException e) {
