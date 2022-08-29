@@ -52,6 +52,7 @@ public class MongoConfig extends AbstractMongoClientConfiguration {
         return mongoDbName;
     }
 
+    @Bean
     @Override
     public MongoClient mongoClient() {
         return MongoClients.create("mongodb://" + mongoHost + ":" + mongoPort);
