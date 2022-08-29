@@ -1,5 +1,7 @@
 package org.phoebus.olog;
 
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
 import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.GridFSBuckets;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,30 +18,28 @@ import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 
 @Configuration
 @PropertySource("classpath:application.properties")
+@SuppressWarnings("unused")
 public class MongoConfig extends AbstractMongoClientConfiguration {
 
     @Value("${mongo.database:ologAttachments}")
-    @SuppressWarnings("unused")
     private String mongoDbName;
     @Value("${mongo.host:localhost}")
-    @SuppressWarnings("unused")
     private String mongoHost;
     @Value("${mongo.port:27017}")
-    @SuppressWarnings("unused")
     private int mongoPort;
-
 
     @SuppressWarnings("unused")
     @Bean
     public GridFsTemplate gridFsTemplate() {
-        MongoDatabaseFactory dbFactory = new SimpleMongoClientDatabaseFactory("mongodb://" + mongoHost + ":" + mongoPort + "/" + mongoDbName);
-        DefaultDbRefResolver dbRefResolver = new DefaultDbRefResolver(dbFactory);
+        MongoDatabaseFactory databaseFactory = mongoDbFactory();
+        DefaultDbRefResolver dbRefResolver = new DefaultDbRefResolver(databaseFactory);
 
         MongoMappingContext mappingContext = new MongoMappingContext();
         mappingContext.setAutoIndexCreation(true);
         mappingContext.afterPropertiesSet();
-        return new GridFsTemplate(mongoDbFactory(), new MappingMongoConverter(dbRefResolver, mappingContext));
+        return new GridFsTemplate(databaseFactory, new MappingMongoConverter(dbRefResolver, mappingContext));
     }
+
 
     @SuppressWarnings("unused")
     @Bean
@@ -47,9 +47,18 @@ public class MongoConfig extends AbstractMongoClientConfiguration {
         return GridFSBuckets.create(mongoClient().getDatabase(mongoDbName));
     }
 
+    @Override
+    public String getDatabaseName() {
+        return mongoDbName;
+    }
 
     @Override
-    protected String getDatabaseName() {
-        return mongoDbName;
+    public MongoClient mongoClient() {
+        return MongoClients.create("mongodb://" + mongoHost + ":" + mongoPort);
+    }
+
+    @Override
+    public MongoDatabaseFactory mongoDbFactory() {
+        return new SimpleMongoClientDatabaseFactory(mongoClient(), mongoDbName);
     }
 }
