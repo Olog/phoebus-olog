@@ -34,6 +34,11 @@ public class InfoResource
     @Autowired
     private MongoClient mongoClient;
 
+    @Value("${elasticsearch.network.host:localhost}")
+    private String host;
+    @Value("${elasticsearch.http.port:9200}")
+    private int port;
+
     private final static ObjectMapper objectMapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
 
     /**
@@ -56,6 +61,8 @@ public class InfoResource
             elasticInfo.put("clusterUuid", response.clusterUuid());
             ElasticsearchVersionInfo version = response.version();
             elasticInfo.put("version", version.toString());
+            elasticInfo.put("elasticHost", host);
+            elasticInfo.put("elasticPort", String.valueOf(port));
         } catch (IOException e) {
             Application.logger.log(Level.WARNING, "Failed to create Olog service info resource.", e);
             elasticInfo.put("status", "Failed to connect to elastic " + e.getLocalizedMessage());
