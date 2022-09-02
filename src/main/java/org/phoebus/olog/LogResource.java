@@ -328,10 +328,12 @@ public class LogResource {
             persistedLog.setLevel(log.getLevel());
             persistedLog.setProperties(log.getProperties());
             persistedLog.setModifyDate(Instant.now());
-            persistedLog.setDescription(log.getDescription());
+            persistedLog.setDescription(log.getDescription());   // to make it work with old clients where description field is sent instead of source
+            persistedLog.setSource(log.getSource());
             persistedLog.setTags(log.getTags());
             persistedLog.setLogbooks(log.getLogbooks());
             persistedLog.setTitle(log.getTitle());
+            persistedLog = cleanMarkup(markup, persistedLog);
 
             Log newLogEntry = logRepository.update(persistedLog);
             return newLogEntry;

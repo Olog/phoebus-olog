@@ -30,17 +30,20 @@ public class CommonmarkCleaner implements MarkupCleaner {
     private Parser parser = Parser.builder().build();
 
     /**
-     * Processes the log entry under the assumption that the source field of a {@link Log} object
-     * as posted by client can be overwritten, if specified. This method treats the
-     * description field as a Commonmark source and copies it to the source field. Then the same
-     * string is processed to set the description field to a "plain text" variant of the Commonmark source.
+     * Processes the log entry under the assumption that the description field of a {@link Log} object
+     * client can be overwritten. This method treats the source field as a Commonmark source and copies 
+     * it to the description field. Then the same string is processed to set the description field to a 
+     * "plain text" variant of the Commonmark source.
      * @param log The {@link Log} entry to clean of markup.
      * @return The processed log entry.
      */
     @Override
     public Log process(Log log){
-        if(log.getDescription() != null){ // Should not be null, but clients cannot be trusted.
+        if (log.getSource() == null) { // to work with old clients where the source is sent in description field. 
             log.setSource(log.getDescription());
+        }
+        if(log.getSource() != null){ // Should not be null, but clients cannot be trusted.
+            log.setDescription(log.getSource());
             Node document = parser.parse(log.getDescription());
             String plainText = textContentRenderer.render(document);
             log.setDescription(plainText);
