@@ -228,7 +228,7 @@ public class LogResourceTest extends ResourcesTestBase {
                 .title("title")
                 .withLogbooks(Set.of(logbook1, logbook2))
                 .withTags(Set.of(tag1, tag2))
-                .description("description1")
+                .source("description1")
                 .createDate(now)
                 .modifyDate(now)
                 .level("Urgent")

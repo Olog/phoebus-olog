@@ -32,8 +32,8 @@ public class CommonmarkPreprocessorTest {
     @Test
     public void testDescriptionNonNull(){
         Log log = LogBuilder.createLog()
-                .description("**BOLD** ![alt](http://foo.bar)")
-                .source(null)
+                .source("**BOLD** ![alt](http://foo.bar)")
+                .description(null)
                 .build();
 
         log = commonmarkPreprocessor.process(log);
