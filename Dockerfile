@@ -3,7 +3,11 @@ FROM maven:3.6.3-openjdk-11 AS maven-build
 RUN mkdir phoebus-olog
 WORKDIR /phoebus-olog
 COPY . .
-RUN mvn clean install -DskipTests=true -Pdeployable-jar
+RUN mvn clean install \
+    -DskipTests=true \
+    -Dmaven.javadoc.skip=true \
+    -Dmaven.source.skip=true \
+    -Pdeployable-jar
 
 # Use smaller openjdk image for running.
 FROM openjdk:11
