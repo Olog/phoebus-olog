@@ -64,6 +64,8 @@ public class ElasticConfig {
     private String host;
     @Value("${elasticsearch.http.port:9200}")
     private int port;
+    @Value("${elasticsearch.http.protocol:https}")
+    private String protocol;
     @Value("${elasticsearch.create.indices:true}")
     private String createIndices;
 
@@ -81,7 +83,7 @@ public class ElasticConfig {
     public ElasticsearchClient getClient() {
         if (client == null) {
             // Create the low-level client
-            RestClient httpClient = RestClient.builder(new HttpHost(host, port)).build();
+            RestClient httpClient = RestClient.builder(new HttpHost(host, port, protocol)).build();
 
             // Create the Java API Client with the same low level client
             ElasticsearchTransport transport = new RestClientTransport(

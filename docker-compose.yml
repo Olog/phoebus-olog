@@ -12,7 +12,7 @@ services:
     # Ensure that the elastic server is up before starting olog.
     command: >
       /bin/bash -c "
-          while ! curl -s -f elastic:9200;
+          while ! curl -s -f elastic:9200/_cluster/health?wait_for_status=green;
         do
           echo Waiting for Elasticsearch;
           sleep 1;
@@ -28,12 +28,14 @@ services:
       - olog-mongodata:/etc/mongo
 
   elastic:
-    image: elasticsearch:6.8.13
+    image: elasticsearch:8.2.3
     environment:
       cluster.name: elasticsearch
       bootstrap.memory_lock: "true"
       discovery.type: single-node
       ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+      xpack.security.enabled: "false"
+      xpack.security.http.ssl.enabled: "false"
     ports:
       - 9200:9200
     volumes:
