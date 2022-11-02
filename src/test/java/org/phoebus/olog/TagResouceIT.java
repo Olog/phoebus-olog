@@ -5,11 +5,7 @@ import co.elastic.clients.elasticsearch._types.Refresh;
 import co.elastic.clients.elasticsearch.core.BulkRequest;
 import co.elastic.clients.elasticsearch.core.bulk.BulkOperation;
 import co.elastic.clients.elasticsearch.core.bulk.IndexOperation;
-import org.elasticsearch.client.RequestOptions;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.phoebus.olog.entity.State;
 import org.phoebus.olog.entity.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,15 +13,16 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-@RunWith(SpringJUnit4ClassRunner.class)
+@ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = ElasticConfig.class)
 @TestPropertySource(locations = "classpath:test_application.properties")
+@SuppressWarnings("unused")
 public class TagResouceIT {
 
 
@@ -36,36 +33,14 @@ public class TagResouceIT {
     @Autowired
     private TagRepository tagRepository;
 
-    @Rule
-    public ExpectedException exceptionRule = ExpectedException.none();
-
-    private Tag testTag1 = new Tag("test-tag-1", State.Active);
-    private Tag testTag2 = new Tag("test-tag-2", State.Active);
-    private Tag testTag3 = new Tag("test-tag-3", State.Active);
-    private Tag testTag4 = new Tag("test-tag-4", State.Active);
+    private final Tag testTag1 = new Tag("test-tag-1", State.Active);
+    private final Tag testTag2 = new Tag("test-tag-2", State.Active);
+    private final Tag testTag3 = new Tag("test-tag-3", State.Active);
+    private final Tag testTag4 = new Tag("test-tag-4", State.Active);
 
     // Read the elatic index and type from the application.properties
     @Value("${elasticsearch.tag.index:olog_tags}")
     private String ES_TAG_INDEX;
-
-    /**
-     * Test the creation of the same test tag fails
-     *
-     * @throws IOException
-     */
-    @Test
-    public void createSameTagTwice() throws IOException {
-    }
-
-    /**
-     * Test the deletion of a non existing test tag
-     *
-     * @throws IOException
-     */
-    @Test
-    public void deleteTag() throws IOException {
-    }
-
 
     /**
      * Cleanup the given tags

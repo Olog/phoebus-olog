@@ -4,18 +4,7 @@
 
 package org.phoebus.olog.docker;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.io.IOException;
-import java.net.URLEncoder;
-import java.time.Instant;
-import java.util.List;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.phoebus.olog.entity.Attribute;
 import org.phoebus.olog.entity.Event;
 import org.phoebus.olog.entity.Log;
@@ -23,6 +12,17 @@ import org.phoebus.olog.entity.Logbook;
 import org.phoebus.olog.entity.Property;
 import org.phoebus.olog.entity.State;
 import org.phoebus.olog.entity.Tag;
+
+import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Purpose to provide test fixture that can be used in multiple test classes and tests.
@@ -431,27 +431,27 @@ public class ITTestFixture {
             // create
             // --------------------------------------------------------------------------------
 
-            String name = URLEncoder.encode(logbookBuildings.getName(), ITUtil.UTF_8);
+            String name = URLEncoder.encode(logbookBuildings.getName(), StandardCharsets.UTF_8);
             response = ITUtil.runShellCommand(createCurlLogbookForAdmin(name, mapper.writeValueAsString(logbookBuildings)));
             ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(logbookBuildings.equals(mapper.readValue(response[1], Logbook.class)));
+            assertEquals(logbookBuildings, mapper.readValue(response[1], Logbook.class));
 
-            name = URLEncoder.encode(logbookCommunication.getName(), ITUtil.UTF_8);
+            name = URLEncoder.encode(logbookCommunication.getName(), StandardCharsets.UTF_8);
             response = ITUtil.runShellCommand(createCurlLogbookForAdmin(name, mapper.writeValueAsString(logbookCommunication)));
             ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(logbookCommunication.equals(mapper.readValue(response[1], Logbook.class)));
+            assertEquals(logbookCommunication, mapper.readValue(response[1], Logbook.class));
 
-            name = URLEncoder.encode(logbookExperiments.getName(), ITUtil.UTF_8);
+            name = URLEncoder.encode(logbookExperiments.getName(), StandardCharsets.UTF_8);
             response = ITUtil.runShellCommand(createCurlLogbookForAdmin(name, mapper.writeValueAsString(logbookExperiments)));
             ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(logbookExperiments.equals(mapper.readValue(response[1], Logbook.class)));
+            assertEquals(logbookExperiments, mapper.readValue(response[1], Logbook.class));
 
-            name = URLEncoder.encode(logbookFacilities.getName(), ITUtil.UTF_8);
+            name = URLEncoder.encode(logbookFacilities.getName(), StandardCharsets.UTF_8);
             response = ITUtil.runShellCommand(createCurlLogbookForAdmin(name, mapper.writeValueAsString(logbookFacilities)));
             ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(logbookFacilities.equals(mapper.readValue(response[1], Logbook.class)));
+            assertEquals(logbookFacilities, mapper.readValue(response[1], Logbook.class));
 
-            name = URLEncoder.encode(logbookMaintenance.getName(), ITUtil.UTF_8);
+            name = URLEncoder.encode(logbookMaintenance.getName(), StandardCharsets.UTF_8);
             response = ITUtil.runShellCommand(createCurlLogbookForAdmin(name, mapper.writeValueAsString(logbookMaintenance)));
             ITUtil.assertResponseLength2CodeOK(response);
             assertTrue(logbookMaintenance.equals(mapper.readValue(response[1], Logbook.class)));
@@ -560,7 +560,7 @@ public class ITTestFixture {
             name = URLEncoder.encode(tagSupra.getName(), ITUtil.UTF_8);
             response = ITUtil.runShellCommand(createCurlTagForAdmin(name, mapper.writeValueAsString(tagSupra)));
             ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(tagSupra.equals(mapper.readValue(response[1], Tag.class)));
+            assertEquals(tagSupra, mapper.readValue(response[1], Tag.class));
 
             // refresh elastic indices
             response = ITUtil.refreshElasticIndices();
@@ -608,25 +608,25 @@ public class ITTestFixture {
             // create
             // --------------------------------------------------------------------------------
 
-            String name = URLEncoder.encode(propertyShiftInfoCrewEmpty.getName(), ITUtil.UTF_8);
+            String name = URLEncoder.encode(propertyShiftInfoCrewEmpty.getName(), StandardCharsets.UTF_8);
             response = ITUtil.runShellCommand(createCurlPropertyForAdmin(name, mapper.writeValueAsString(propertyShiftInfoCrewEmpty)));
             ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(propertyShiftInfoCrewEmpty.equals(mapper.readValue(response[1], Property.class)));
+            assertEquals(propertyShiftInfoCrewEmpty, mapper.readValue(response[1], Property.class));
 
-            name = URLEncoder.encode(propertyShiftInfoACrew1.getName(), ITUtil.UTF_8);
+            name = URLEncoder.encode(propertyShiftInfoACrew1.getName(), StandardCharsets.UTF_8);
             response = ITUtil.runShellCommand(createCurlPropertyForAdmin(name, mapper.writeValueAsString(propertyShiftInfoACrew1)));
             ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(propertyShiftInfoACrew1.equals(mapper.readValue(response[1], Property.class)));
+            assertEquals(propertyShiftInfoACrew1, mapper.readValue(response[1], Property.class));
 
-            name = URLEncoder.encode(propertyShiftInfoBCrew2.getName(), ITUtil.UTF_8);
+            name = URLEncoder.encode(propertyShiftInfoBCrew2.getName(), StandardCharsets.UTF_8);
             response = ITUtil.runShellCommand(createCurlPropertyForAdmin(name, mapper.writeValueAsString(propertyShiftInfoBCrew2)));
             ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(propertyShiftInfoBCrew2.equals(mapper.readValue(response[1], Property.class)));
+            assertEquals(propertyShiftInfoBCrew2, mapper.readValue(response[1], Property.class));
 
-            name = URLEncoder.encode(propertyShiftInfoCCrew3.getName(), ITUtil.UTF_8);
+            name = URLEncoder.encode(propertyShiftInfoCCrew3.getName(), StandardCharsets.UTF_8);
             response = ITUtil.runShellCommand(createCurlPropertyForAdmin(name, mapper.writeValueAsString(propertyShiftInfoCCrew3)));
             ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(propertyShiftInfoCCrew3.equals(mapper.readValue(response[1], Property.class)));
+            assertEquals(propertyShiftInfoCCrew3, mapper.readValue(response[1], Property.class));
 
             // refresh elastic indices
             response = ITUtil.refreshElasticIndices();

@@ -4,24 +4,21 @@
  */
 package org.phoebus.util.time;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
-import static org.junit.Assert.assertThat;
 
 /**
  *
  * @author carcassi
  */
 public class TimeIntervalTest {
-
-    public TimeIntervalTest() {
-    }
 
     @Test
     public void interval1() {

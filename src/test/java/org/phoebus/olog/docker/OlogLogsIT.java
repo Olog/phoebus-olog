@@ -4,21 +4,20 @@
 
 package org.phoebus.olog.docker;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.Test;
+import org.phoebus.olog.entity.Log;
+import org.testcontainers.containers.DockerComposeContainer;
+import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.testcontainers.containers.DockerComposeContainer;
-import org.testcontainers.containers.wait.strategy.Wait;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import org.phoebus.olog.entity.Log;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Integration tests for Olog and Elasticsearch that make use of existing dockerization
@@ -32,6 +31,7 @@ import org.phoebus.olog.entity.Log;
  *
  * @see org.phoebus.olog.LogResource
  */
+@Testcontainers
 public class OlogLogsIT {
 
     // Note
@@ -72,7 +72,7 @@ public class OlogLogsIT {
     static final String HTTP_AUTH_USER_IP_PORT_OLOG_LOGS  = ITUtil.HTTP + ITUtil.AUTH_USER  + "@" + ITUtil.IP_PORT_OLOG + LOGS;
     static final String HTTP_AUTH_ADMIN_IP_PORT_OLOG_LOGS = ITUtil.HTTP + ITUtil.AUTH_ADMIN + "@" + ITUtil.IP_PORT_OLOG + LOGS;
 
-    @ClassRule
+    @Container
     public static final DockerComposeContainer<?> ENVIRONMENT =
         new DockerComposeContainer<>(new File("docker-compose.yml"))
             .waitingFor(ITUtil.OLOG, Wait.forLogMessage(".*Started Application.*", 1));
@@ -90,7 +90,7 @@ public class OlogLogsIT {
     }
 
     /**
-     * Test {@link gov.bnl.log.OlogResourceDescriptors#LOG_RESOURCE_URI}.
+     * Test {@link org.phoebus.olog.OlogResourceDescriptors#LOG_RESOURCE_URI}.
      */
     @Test
     public void handleLogRetrieveCheck() {
@@ -115,7 +115,7 @@ public class OlogLogsIT {
     }
 
     /**
-     * Test {@link gov.bnl.log.OlogResourceDescriptors#LOG_RESOURCE_URI}.
+     * Test {@link org.phoebus.olog.OlogResourceDescriptors#LOG_RESOURCE_URI}.
      */
     @Test
     public void handleLogCreateCheckJson() {
@@ -189,7 +189,7 @@ public class OlogLogsIT {
     }
 
     /**
-     * Test {@link gov.bnl.log.OlogResourceDescriptors#LOG_RESOURCE_URI}.
+     * Test {@link org.phoebus.olog.OlogResourceDescriptors#LOG_RESOURCE_URI}.
      */
     @Test
     public void handleLogCreateCheck() {

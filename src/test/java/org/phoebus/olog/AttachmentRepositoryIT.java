@@ -1,11 +1,8 @@
 package org.phoebus.olog;
 
-import com.mongodb.client.gridfs.model.GridFSFile;
 import junitx.framework.FileAssert;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.phoebus.olog.entity.Attachment;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -15,16 +12,15 @@ import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
-import java.util.function.Consumer;
 
-@RunWith(SpringJUnit4ClassRunner.class)
+@ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = ElasticConfig.class)
 @SuppressWarnings("unused")
 @TestPropertySource(locations = "classpath:test_application.properties")
@@ -38,15 +34,6 @@ public class AttachmentRepositoryIT {
     private LogRepository logRepository;
     @Autowired
     private AttachmentRepository attachmentRepository;
-
-    @BeforeClass
-    public static void setup() {
-
-    }
-
-    @AfterClass
-    public static void cleanup() {
-    }
 
     /**
      * Test the creation of a image attachment
@@ -62,28 +49,22 @@ public class AttachmentRepositoryIT {
             Attachment createdAttachment = attachmentRepository.save(testAttachment);
             // Directly retrieve the attached file to verify if it was recorded correctly
 
-            gridOperation.find(new Query(Criteria.where("_id").is(createdAttachment.getId()))).forEach(new Consumer<GridFSFile>() {
-
-                @Override
-                public void accept(GridFSFile t) {
-                    try {
-                        File createdFile = new File("test_attachment_" + createdAttachment.getId() + "_" + createdAttachment.getFilename());
-                        InputStream st = gridOperation.getResource(t).getInputStream();
-                        Files.copy(st, createdFile.toPath());
-                        FileAssert.assertBinaryEquals("failed to create log entry with attachment", testFile, createdFile);
-                        Files.delete(createdFile.toPath());
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    } finally {
-                        gridOperation.delete(new Query(Criteria.where("_id").is(createdAttachment.getId())));
-                    }
+            gridOperation.find(new Query(Criteria.where("_id").is(createdAttachment.getId()))).forEach(t -> {
+                try {
+                    File createdFile = new File("test_attachment_" + createdAttachment.getId() + "_" + createdAttachment.getFilename());
+                    InputStream st = gridOperation.getResource(t).getInputStream();
+                    Files.copy(st, createdFile.toPath());
+                    FileAssert.assertBinaryEquals("failed to create log entry with attachment", testFile, createdFile);
+                    Files.delete(createdFile.toPath());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } finally {
+                    gridOperation.delete(new Query(Criteria.where("_id").is(createdAttachment.getId())));
                 }
             });
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-
     }
 
     /**
@@ -101,21 +82,17 @@ public class AttachmentRepositoryIT {
 
             // Directly retrieve the attached file to verify if it was recorded correctly
 
-            gridOperation.find(new Query(Criteria.where("_id").is(createdAttachment.getId()))).forEach(new Consumer<GridFSFile>() {
-
-                @Override
-                public void accept(GridFSFile t) {
-                    try {
-                        File createdFile = new File("test_attachment_" + createdAttachment.getId() + "_" + createdAttachment.getFilename());
-                        InputStream st = gridOperation.getResource(t).getInputStream();
-                        Files.copy(st, createdFile.toPath());
-                        FileAssert.assertBinaryEquals("failed to create log entry with attachment", testFile, createdFile);
-                        Files.delete(createdFile.toPath());
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    } finally {
-                        gridOperation.delete(new Query(Criteria.where("_id").is(createdAttachment.getId())));
-                    }
+            gridOperation.find(new Query(Criteria.where("_id").is(createdAttachment.getId()))).forEach(t -> {
+                try {
+                    File createdFile = new File("test_attachment_" + createdAttachment.getId() + "_" + createdAttachment.getFilename());
+                    InputStream st = gridOperation.getResource(t).getInputStream();
+                    Files.copy(st, createdFile.toPath());
+                    FileAssert.assertBinaryEquals("failed to create log entry with attachment", testFile, createdFile);
+                    Files.delete(createdFile.toPath());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } finally {
+                    gridOperation.delete(new Query(Criteria.where("_id").is(createdAttachment.getId())));
                 }
             });
         } catch (IOException e) {

@@ -264,7 +264,7 @@ public class LogSearchUtil {
                 if (includeEvents) {
                     RangeQuery.Builder eventsRangeQuery = new RangeQuery.Builder();
                     // Add a query based on the time of the associated events
-                    rangeQuery.field("events.instant").from(Long.toString(1000 * start.toEpochSecond()))
+                    eventsRangeQuery.field("events.instant").from(Long.toString(1000 * start.toEpochSecond()))
                             .to(Long.toString(1000 * end.toEpochSecond()));
                     NestedQuery.Builder nestedQuery = new NestedQuery.Builder();
                     nestedQuery.path("events").query(eventsRangeQuery.build()._toQuery());

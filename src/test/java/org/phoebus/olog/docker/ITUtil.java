@@ -4,10 +4,10 @@
 
 package org.phoebus.olog.docker;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import org.phoebus.olog.entity.Log;
+import org.phoebus.olog.entity.Logbook;
+import org.phoebus.olog.entity.Property;
+import org.phoebus.olog.entity.Tag;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -17,10 +17,10 @@ import java.net.URL;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import org.phoebus.olog.entity.Log;
-import org.phoebus.olog.entity.Logbook;
-import org.phoebus.olog.entity.Property;
-import org.phoebus.olog.entity.Tag;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Utility class to help (Docker) integration tests for Olog and Elasticsearch.
@@ -228,7 +228,7 @@ public class ITUtil {
             assertNotNull(actual);
             assertEquals(expected.length, actual.length);
             for (int i=0; i<expected.length; i++) {
-                assertTrue(expected[i].equals(actual[i]));
+                assertEquals(expected[i], actual[i]);
             }
         } else {
             assertNull(actual);
@@ -246,7 +246,7 @@ public class ITUtil {
             assertNotNull(actual);
             assertEquals(expected.length, actual.length);
             for (int i=0; i<expected.length; i++) {
-                assertTrue(expected[i].equals(actual[i]));
+                assertEquals(expected[i], actual[i]);
             }
         } else {
             assertNull(actual);
@@ -264,7 +264,7 @@ public class ITUtil {
             assertNotNull(actual);
             assertEquals(expected.length, actual.length);
             for (int i=0; i<expected.length; i++) {
-                assertTrue(expected[i].equals(actual[i]));
+                assertEquals(expected[i], actual[i]);
             }
         } else {
             assertNull(actual);
@@ -282,7 +282,7 @@ public class ITUtil {
             assertNotNull(actual);
             assertEquals(expected.length, actual.length);
             for (int i=0; i<expected.length; i++) {
-                assertTrue(expected[i].equals(actual[i]));
+                assertEquals(expected[i], actual[i]);
             }
         } else {
             assertNull(actual);

@@ -3,14 +3,10 @@ package org.phoebus.olog;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.Refresh;
 import co.elastic.clients.elasticsearch.core.BulkRequest;
-import co.elastic.clients.elasticsearch.core.DeleteRequest;
 import co.elastic.clients.elasticsearch.core.bulk.BulkOperation;
 import co.elastic.clients.elasticsearch.core.bulk.DeleteOperation;
-import co.elastic.clients.elasticsearch.core.bulk.IndexOperation;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.phoebus.olog.entity.Logbook;
 import org.phoebus.olog.entity.State;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +14,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -28,10 +24,11 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@RunWith(SpringJUnit4ClassRunner.class)
+@ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = ElasticConfig.class)
 @TestPropertySource(locations = "classpath:test_application.properties")
 public class LogbookRepositoryIT {
@@ -47,20 +44,10 @@ public class LogbookRepositoryIT {
     @Qualifier("client")
     ElasticsearchClient client;
 
-    private Logbook testLogbook1 = new Logbook("test-logbook-1", testOwner, State.Active);
-    private Logbook testLogbook2 = new Logbook("test-logbook-2", testOwner, State.Active);
-    private Logbook testLogbook3 = new Logbook("test-logbook-3", testOwner, State.Active);
-    private Logbook testLogbook4 = new Logbook("test-logbook-4", testOwner, State.Active);
-
-    @BeforeClass
-    public static void setup() {
-
-    }
-
-    @AfterClass
-    public static void cleanup() {
-
-    }
+    private final Logbook testLogbook1 = new Logbook("test-logbook-1", testOwner, State.Active);
+    private final Logbook testLogbook2 = new Logbook("test-logbook-2", testOwner, State.Active);
+    private final Logbook testLogbook3 = new Logbook("test-logbook-3", testOwner, State.Active);
+    private final Logbook testLogbook4 = new Logbook("test-logbook-4", testOwner, State.Active);
 
     private static final String testOwner = "test-owner";
 
@@ -74,7 +61,7 @@ public class LogbookRepositoryIT {
             Optional<Logbook> result = logbookRepository.findById(testLogbook1.getName());
             assertThat("Failed to create Logbook " + testLogbook1, result.isPresent() && result.get().equals(testLogbook1));
         } finally {
-            cleanupLogbook(Arrays.asList(testLogbook1));
+            cleanupLogbook(List.of(testLogbook1));
         }
     }
 
@@ -85,16 +72,12 @@ public class LogbookRepositoryIT {
     public void createLogbooks() {
         List<Logbook> logbooks = Arrays.asList(testLogbook1, testLogbook2, testLogbook3, testLogbook4);
         try {
-            List<Logbook> result = new ArrayList<Logbook>();
-            logbookRepository.saveAll(logbooks).forEach(logbook -> {
-                result.add(logbook);
-            });
+            List<Logbook> result = new ArrayList<>();
+            logbookRepository.saveAll(logbooks).forEach(result::add);
             assertThat("Failed to create all logbooks", result.containsAll(logbooks));
 
-            List<Logbook> findAll = new ArrayList<Logbook>();
-            logbookRepository.findAll().forEach(logbook -> {
-                findAll.add(logbook);
-            });
+            List<Logbook> findAll = new ArrayList<>();
+            logbookRepository.findAll().forEach(logbook -> findAll.add(logbook));
             assertThat("Failed to list all logbooks", findAll.containsAll(logbooks));
         } finally {
             cleanupLogbook(logbooks);
@@ -118,7 +101,7 @@ public class LogbookRepositoryIT {
             Logbook expectedLogbook = new Logbook("test-logbook-2", testOwner, State.Inactive);
             assertThat("Failed to delete Logbook", result.isPresent() && result.get().equals(expectedLogbook));
         } finally {
-            cleanupLogbook(Arrays.asList(testLogbook2));
+            cleanupLogbook(List.of(testLogbook2));
         }
     }
 
@@ -129,13 +112,11 @@ public class LogbookRepositoryIT {
     public void deteleLogbooks(){
         List<Logbook> logbooks = Arrays.asList(testLogbook1, testLogbook2, testLogbook3, testLogbook4);
         try {
-            List<Logbook> result = new ArrayList<Logbook>();
-            logbookRepository.saveAll(logbooks).forEach(logbook -> {
-                result.add(logbook);
-            });
+            List<Logbook> result = new ArrayList<>();
+            logbookRepository.saveAll(logbooks).forEach(result::add);
 
             logbookRepository.deleteAll(logbooks);
-            List<Logbook> inactiveTags = new ArrayList<Logbook>();
+            List<Logbook> inactiveTags = new ArrayList<>();
             logbookRepository.findAllById(logbooks.stream().map(Logbook::getName).collect(Collectors.toList())).forEach(logbook -> {
                 if (logbook.getState().equals(State.Inactive)) {
                     inactiveTags.add(logbook);
@@ -156,10 +137,8 @@ public class LogbookRepositoryIT {
         List<Logbook> logbooks = Arrays.asList(testLogbook1, testLogbook2, testLogbook3, testLogbook4);
         try {
             logbookRepository.saveAll(logbooks);
-            List<Logbook> findAll = new ArrayList<Logbook>();
-            logbookRepository.findAll().forEach(logbook -> {
-                findAll.add(logbook);
-            });
+            List<Logbook> findAll = new ArrayList<>();
+            logbookRepository.findAll().forEach(findAll::add);
             assertThat("Failed to list all logbooks", findAll.containsAll(logbooks));
         } finally {
             // Manual cleanup
@@ -175,10 +154,8 @@ public class LogbookRepositoryIT {
         List<Logbook> logbooks = Arrays.asList(testLogbook1, testLogbook2);
         try {
             logbookRepository.saveAll(logbooks);
-            assertTrue("Failed to find by index logbook: " + testLogbook1,
-                    testLogbook1.equals(logbookRepository.findById(testLogbook1.getName()).get()));
-            assertTrue("Failed to find by index logbook: " + testLogbook2,
-                    testLogbook2.equals(logbookRepository.findById(testLogbook2.getName()).get()));
+            assertEquals(testLogbook1, logbookRepository.findById(testLogbook1.getName()).get(), "Failed to find by index logbook: " + testLogbook1);
+            assertEquals(testLogbook2, logbookRepository.findById(testLogbook2.getName()).get(), "Failed to find by index logbook: " + testLogbook2);
         } finally {
             // Manual cleanup
             cleanupLogbook(logbooks);
@@ -194,13 +171,12 @@ public class LogbookRepositoryIT {
         try {
             logbookRepository.saveAll(logbooks);
 
-            List<Logbook> findAllById = new ArrayList<Logbook>();
+            List<Logbook> findAllById = new ArrayList<>();
             logbookRepository.findAllById(Arrays.asList("test-logbook-1", "test-logbook-2"))
-                    .forEach(logbook -> {
-                        findAllById.add(logbook);
-                    });
-            assertTrue("Failed to search by id test-logbook-1 and test-logbook-2 ",
-                    findAllById.size() == 2 && findAllById.contains(testLogbook1) && findAllById.contains(testLogbook2));
+                    .forEach(findAllById::add);
+            assertTrue(
+                    findAllById.size() == 2 && findAllById.contains(testLogbook1) && findAllById.contains(testLogbook2),
+                    "Failed to search by id test-logbook-1 and test-logbook-2 ");
         } finally {
             // Manual cleanup
             cleanupLogbook(logbooks);
@@ -213,11 +189,12 @@ public class LogbookRepositoryIT {
         try {
             logbookRepository.saveAll(logbooks);
 
-            assertTrue("Failed to check if exists logbook: " + testLogbook1, logbookRepository.existsById(testLogbook1.getName()));
-            assertTrue("Failed to check if exists logbook: " + testLogbook2, logbookRepository.existsById(testLogbook2.getName()));
+            assertTrue(logbookRepository.existsById(testLogbook1.getName()), "Failed to check if exists logbook: " + testLogbook1);
+            assertTrue(logbookRepository.existsById(testLogbook2.getName()), "Failed to check if exists logbook: " + testLogbook2);
 
-            assertFalse("Failed to check if exists logbook: non-existant-logbook",
-                    logbookRepository.existsById("non-existant-logbook"));
+            assertFalse(
+                    logbookRepository.existsById("non-existant-logbook"),
+                    "Failed to check if exists logbook: non-existant-logbook");
         } finally {
             // Manual cleanup
             cleanupLogbook(logbooks);
@@ -230,11 +207,13 @@ public class LogbookRepositoryIT {
         try {
             logbookRepository.saveAll(logbooks);
 
-            assertTrue("Failed to check if logbooks : " + testLogbook1 + ", " + testLogbook2 + " exist",
-                    logbookRepository.existsByIds(Arrays.asList(testLogbook1.getName(), testLogbook2.getName())));
+            assertTrue(
+                    logbookRepository.existsByIds(Arrays.asList(testLogbook1.getName(), testLogbook2.getName())),
+                    "Failed to check if logbooks : " + testLogbook1 + ", " + testLogbook2 + " exist");
 
-            assertFalse("When any one of the requested ids does not exist the expected result is false",
-                    logbookRepository.existsByIds(Arrays.asList(testLogbook1.getName(), testLogbook3.getName())));
+            assertFalse(
+                    logbookRepository.existsByIds(Arrays.asList(testLogbook1.getName(), testLogbook3.getName())),
+                    "When any one of the requested ids does not exist the expected result is false");
 
         } finally {
             // Manual cleanup
