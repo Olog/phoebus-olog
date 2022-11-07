@@ -10,12 +10,12 @@ Olog
 * Prerequisites
 
   * JDK 11 or newer
-  * Elastic version 6.8.4
+  * Elastic version 8.2.x
   * mongo gridfs
 
 
  **Download links for the prerequisites**   
- Download and install elasticsearch (verision 6.8.4) from [elastic.com](https://www.elastic.co/downloads/past-releases/elasticsearch-6-8-4)    
+ Download and install elasticsearch (verision 8.2.x) from [elastic.com](https://www.elastic.co/downloads/past-releases/elasticsearch-8-2-3)    
  Download and install mongodb from [mongodb](https://www.mongodb.com/download-center/community)    
   
   
