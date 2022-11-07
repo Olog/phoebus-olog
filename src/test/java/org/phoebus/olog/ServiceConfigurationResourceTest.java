@@ -18,9 +18,9 @@
 
 package org.phoebus.olog;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.phoebus.olog.entity.Logbook;
 import org.phoebus.olog.entity.ServiceConfiguration;
 import org.phoebus.olog.entity.Tag;
@@ -29,19 +29,19 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.ContextHierarchy;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 import java.util.Arrays;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @ContextHierarchy({@ContextConfiguration(classes = {ResourcesTestConfig.class})})
 @WebMvcTest(LogResource.class)
 @TestPropertySource(locations = "classpath:no_ldap_test_application.properties")
@@ -53,14 +53,14 @@ public class ServiceConfigurationResourceTest extends ResourcesTestBase {
     @Autowired
     private TagRepository tagRepository;
 
-    private Logbook logbook1;
-    private Logbook logbook2;
+    private static Logbook logbook1;
+    private static Logbook logbook2;
 
-    private Tag tag1;
-    private Tag tag2;
+    private static Tag tag1;
+    private static Tag tag2;
 
-    @Before
-    public void init() {
+    @BeforeAll
+    public static void init() {
         logbook1 = new Logbook("name1", "user");
         logbook2 = new Logbook("name2", "user");
 

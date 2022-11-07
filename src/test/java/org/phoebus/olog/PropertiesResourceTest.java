@@ -19,10 +19,9 @@
 package org.phoebus.olog;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentMatcher;
 import org.phoebus.olog.entity.Property;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,19 +31,27 @@ import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.ContextHierarchy;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.argThat;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @ContextHierarchy({@ContextConfiguration(classes = {ResourcesTestConfig.class})})
 @WebMvcTest(LogbookResourceTest.class)
 @TestPropertySource(locations = "classpath:no_ldap_test_application.properties")
@@ -53,11 +60,11 @@ public class PropertiesResourceTest extends ResourcesTestBase {
     @Autowired
     private PropertyRepository propertyRepository;
 
-    private Property property1;
-    private Property property2;
+    private static Property property1;
+    private static Property property2;
 
-    @Before
-    public void init() {
+    @BeforeAll
+    public static void init() {
         property1 = new Property("property1");
         property2 = new Property("property2");
     }
@@ -69,7 +76,7 @@ public class PropertiesResourceTest extends ResourcesTestBase {
         MockHttpServletRequestBuilder request = get("/" + OlogResourceDescriptors.PROPERTY_RESOURCE_URI);
         MvcResult result = mockMvc.perform(request).andExpect(status().isOk())
                 .andReturn();
-        Iterable<Property> properties = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<Iterable<Property>>() {
+        Iterable<Property> properties = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {
         });
         assertEquals("property1", properties.iterator().next().getName());
         verify(propertyRepository, times(1)).findAll();
@@ -133,18 +140,18 @@ public class PropertiesResourceTest extends ResourcesTestBase {
         Property property = new Property("property1");
         property.setOwner("user");
 
-        when(propertyRepository.saveAll(Arrays.asList(argThat(new PropertyMatcher(property)))))
-                .thenReturn(Arrays.asList(property));
+        when(propertyRepository.saveAll(Collections.singletonList(argThat(new PropertyMatcher(property)))))
+                .thenReturn(List.of(property));
 
         MockHttpServletRequestBuilder request = put("/" +
                 OlogResourceDescriptors.PROPERTY_RESOURCE_URI)
                 .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
                 .contentType(JSON)
-                .content(objectMapper.writeValueAsString(Arrays.asList(property1)));
+                .content(objectMapper.writeValueAsString(Collections.singletonList(property1)));
         MvcResult result = mockMvc.perform(request).andExpect(status().isOk()).andReturn();
         objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<Iterable<Property>>() {
         });
-        verify(propertyRepository, times(1)).saveAll(Arrays.asList(property));
+        verify(propertyRepository, times(1)).saveAll(List.of(property));
         reset(propertyRepository);
     }
 
@@ -170,7 +177,7 @@ public class PropertiesResourceTest extends ResourcesTestBase {
     /**
      * A matcher used to work around issues with {@link Property#equals(Object)} when using the mocks.
      */
-    private class PropertyMatcher implements ArgumentMatcher<Property> {
+    private static class PropertyMatcher implements ArgumentMatcher<Property> {
         private final Property expected;
 
         public PropertyMatcher(Property expected) {
@@ -182,7 +189,7 @@ public class PropertiesResourceTest extends ResourcesTestBase {
             if (!(obj instanceof Property)) {
                 return false;
             }
-            Property actual = (Property) obj;
+            Property actual = obj;
 
             return actual.getName().equals(expected.getName());
         }

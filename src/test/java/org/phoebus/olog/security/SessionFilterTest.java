@@ -18,12 +18,11 @@
 
 package org.phoebus.olog.security;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 import org.phoebus.olog.WebSecurityConfig;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -32,42 +31,40 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.session.FindByIndexNameSessionRepository;
 import org.springframework.session.MapSession;
 import org.springframework.session.Session;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.ContextHierarchy;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import javax.servlet.FilterChain;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.Arrays;
+import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
 
-@RunWith(SpringRunner.class)
-@ContextHierarchy({@ContextConfiguration(classes = {SessionFilterTestConfig.class})})
+@ExtendWith(SpringExtension.class)
+@SuppressWarnings("unused")
 public class SessionFilterTest {
 
-    @Autowired
-    private AuthenticationManager authenticationManager;
+    private static AuthenticationManager authenticationManager =
+            Mockito.mock(AuthenticationManager.class);
 
-    @Autowired
-    private FindByIndexNameSessionRepository sessionRepository;
+    private static FindByIndexNameSessionRepository sessionRepository =
+            Mockito.mock(FindByIndexNameSessionRepository.class);
 
-    private SessionFilter sessionFilter;
-    private HttpServletResponse httpServletResponse;
-    private FilterChain filterChain;
-    private Cookie[] cookies;
+    private static SessionFilter sessionFilter;
+    private static HttpServletResponse httpServletResponse;
+    private static FilterChain filterChain;
+    private static Cookie[] cookies;
 
-    @Before
-    public void init() {
+    @BeforeAll
+    public static void init() {
         sessionFilter = new SessionFilter(authenticationManager, sessionRepository);
         httpServletResponse = Mockito.mock(HttpServletResponse.class);
         filterChain = Mockito.mock(FilterChain.class);
@@ -98,7 +95,7 @@ public class SessionFilterTest {
         reset(httpServletRequest);
         when(httpServletRequest.getCookies()).thenReturn(cookies);
         Session session = new MapSession();
-        session.setAttribute(WebSecurityConfig.ROLES_ATTRIBUTE_NAME, Arrays.asList("role1"));
+        session.setAttribute(WebSecurityConfig.ROLES_ATTRIBUTE_NAME, List.of("role1"));
         session.setAttribute(FindByIndexNameSessionRepository.PRINCIPAL_NAME_INDEX_NAME, "user");
         when(sessionRepository.findById("a")).thenReturn(session);
         authentication = sessionFilter.getAuthenticationFromCookie(httpServletRequest);
@@ -144,7 +141,7 @@ public class SessionFilterTest {
         when(httpServletRequest.getCookies()).thenReturn(cookies);
         Session session = mock(Session.class);
         when(session.isExpired()).thenReturn(false);
-        when(session.getAttribute(WebSecurityConfig.ROLES_ATTRIBUTE_NAME)).thenReturn(Arrays.asList("ROLE_ADMIN"));
+        when(session.getAttribute(WebSecurityConfig.ROLES_ATTRIBUTE_NAME)).thenReturn(List.of("ROLE_ADMIN"));
         when(session.getAttribute(FindByIndexNameSessionRepository.PRINCIPAL_NAME_INDEX_NAME)).thenReturn("ADMIN");
         when(sessionRepository.findById("abc")).thenReturn(session);
         sessionFilter.doFilter(httpServletRequest, httpServletResponse, filterChain);

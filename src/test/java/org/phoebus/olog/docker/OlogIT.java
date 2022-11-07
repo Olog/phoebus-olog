@@ -4,17 +4,18 @@
 
 package org.phoebus.olog.docker;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import org.junit.jupiter.api.Test;
+import org.testcontainers.containers.DockerComposeContainer;
+import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.testcontainers.containers.DockerComposeContainer;
-import org.testcontainers.containers.wait.strategy.Wait;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Integration tests for Olog and Elasticsearch that make use of existing dockerization
@@ -25,6 +26,7 @@ import org.testcontainers.containers.wait.strategy.Wait;
  *
  * @author Lars Johansson
  */
+@Testcontainers
 public class OlogIT {
 
     // Note
@@ -43,7 +45,7 @@ public class OlogIT {
     //         https://olog.readthedocs.io/en/latest/
     //     ------------------------------------------------------------------------------------------------
 
-    @ClassRule
+    @Container
     public static final DockerComposeContainer<?> ENVIRONMENT =
         new DockerComposeContainer<>(new File("docker-compose.yml"))
             .waitingFor(ITUtil.OLOG, Wait.forLogMessage(".*Started Application.*", 1));

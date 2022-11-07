@@ -18,8 +18,9 @@
 
 package org.phoebus.olog.entity;
 
-import org.junit.Test;
-import static org.junit.Assert.assertNull;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class ServiceConfigurationTest {
 

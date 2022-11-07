@@ -18,16 +18,17 @@
 
 package org.phoebus.olog.entity.preprocess;
 
-import org.junit.Test;
+
+import org.junit.jupiter.api.Test;
 import org.phoebus.olog.entity.Log;
 import org.phoebus.olog.entity.Log.LogBuilder;
 import org.phoebus.olog.entity.preprocess.impl.CommonmarkCleaner;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class CommonmarkPreprocessorTest {
 
-    private CommonmarkCleaner commonmarkPreprocessor = new CommonmarkCleaner();
+    private final CommonmarkCleaner commonmarkPreprocessor = new CommonmarkCleaner();
 
     @Test
     public void testDescriptionNonNull(){

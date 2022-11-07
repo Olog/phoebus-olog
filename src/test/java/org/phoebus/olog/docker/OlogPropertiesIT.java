@@ -4,27 +4,26 @@
 
 package org.phoebus.olog.docker;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.phoebus.olog.entity.Attribute;
+import org.phoebus.olog.entity.Property;
+import org.phoebus.olog.entity.State;
+import org.testcontainers.containers.DockerComposeContainer;
+import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.util.HashSet;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.testcontainers.containers.DockerComposeContainer;
-import org.testcontainers.containers.wait.strategy.Wait;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import org.phoebus.olog.entity.Attribute;
-import org.phoebus.olog.entity.Property;
-import org.phoebus.olog.entity.State;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Integration tests for Olog and Elasticsearch that make use of existing dockerization
@@ -38,6 +37,7 @@ import org.phoebus.olog.entity.State;
  *
  * @see org.phoebus.olog.PropertiesResource
  */
+@Testcontainers
 public class OlogPropertiesIT {
 
     // Note
@@ -101,12 +101,12 @@ public class OlogPropertiesIT {
     static Property property_p9_owner_a_state_i_attributes;
     static Property property_p10_owner_a_state_i_attributes;
 
-    @ClassRule
+    @Container
     public static final DockerComposeContainer<?> ENVIRONMENT =
         new DockerComposeContainer<>(new File("docker-compose.yml"))
             .waitingFor(ITUtil.OLOG, Wait.forLogMessage(".*Started Application.*", 1));
 
-    @BeforeClass
+    @BeforeAll
     public static void setupObjects() {
         a1 = new Attribute("a1", "v1", State.Active);
         a2 = new Attribute("a2", "v2", State.Active);
@@ -177,7 +177,7 @@ public class OlogPropertiesIT {
         property_p10_owner_a_state_i_attributes.addAttributes(a5);
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDownObjects() {
         property_p1_owner_a_state_a_attributes = null;
         property_p2_owner_a_state_a_attributes = null;
@@ -216,7 +216,7 @@ public class OlogPropertiesIT {
     }
 
     /**
-     * Test {@link gov.bnl.log.OlogResourceDescriptors#PROPERTY_RESOURCE_URI}.
+     * Test {@link org.phoebus.olog.OlogResourceDescriptors#PROPERTY_RESOURCE_URI}.
      */
     @Test
     public void handlePropertyRetrieveCheck() {
@@ -240,7 +240,7 @@ public class OlogPropertiesIT {
     }
 
     /**
-     * Test {@link gov.bnl.log.OlogResourceDescriptors#PROPERTY_RESOURCE_URI}.
+     * Test {@link org.phoebus.olog.OlogResourceDescriptors#PROPERTY_RESOURCE_URI}.
      */
     @Test
     public void handlePropertyRemoveCheck() {
@@ -272,7 +272,7 @@ public class OlogPropertiesIT {
     }
 
     /**
-     * Test {@link gov.bnl.log.OlogResourceDescriptors#PROPERTY_RESOURCE_URI}.
+     * Test {@link org.phoebus.olog.OlogResourceDescriptors#PROPERTY_RESOURCE_URI}.
      */
     @Test
     public void handlePropertyCreateCheckJson() {
@@ -359,7 +359,7 @@ public class OlogPropertiesIT {
     }
 
     /**
-     * Test {@link gov.bnl.log.OlogResourceDescriptors#PROPERTY_RESOURCE_URI}.
+     * Test {@link org.phoebus.olog.OlogResourceDescriptors#PROPERTY_RESOURCE_URI}.
      */
     @Test
     public void handlePropertyCreateCheck() {
@@ -453,7 +453,7 @@ public class OlogPropertiesIT {
     }
 
     /**
-     * Test {@link gov.bnl.log.OlogResourceDescriptors#PROPERTY_RESOURCE_URI}.
+     * Test {@link org.phoebus.olog.OlogResourceDescriptors#PROPERTY_RESOURCE_URI}.
      */
     @Test
     public void handleProperty() {
@@ -538,7 +538,7 @@ public class OlogPropertiesIT {
     }
 
     /**
-     * Test {@link gov.bnl.log.OlogResourceDescriptors#PROPERTY_RESOURCE_URI}.
+     * Test {@link org.phoebus.olog.OlogResourceDescriptors#PROPERTY_RESOURCE_URI}.
      */
     @Test
     public void handleProperty2() {
@@ -561,11 +561,11 @@ public class OlogPropertiesIT {
 
             response = ITUtil.runShellCommand(createCurlPropertyForAdmin("p1", mapper.writeValueAsString(property_p1_owner_a_state_a_attributes)));
             ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(property_p1_owner_a_state_a_attributes.equals(mapper.readValue(response[1], Property.class)));
+            assertEquals(property_p1_owner_a_state_a_attributes, mapper.readValue(response[1], Property.class));
 
             response = ITUtil.runShellCommand(createCurlPropertyForAdmin("p2", mapper.writeValueAsString(property_p2_owner_a_state_a_attributes)));
             ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(property_p2_owner_a_state_a_attributes.equals(mapper.readValue(response[1], Property.class)));
+            assertEquals(property_p2_owner_a_state_a_attributes, mapper.readValue(response[1], Property.class));
 
             // refresh elastic indices
             response = ITUtil.refreshElasticIndices();
@@ -594,11 +594,11 @@ public class OlogPropertiesIT {
 
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES + "/p1");
             ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(property_p1_owner_a_state_a_attributes.equals(mapper.readValue(response[1], Property.class)));
+            assertEquals(property_p1_owner_a_state_a_attributes, mapper.readValue(response[1], Property.class));
 
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES + "/p2");
             ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(property_p2_owner_a_state_a_attributes.equals(mapper.readValue(response[1], Property.class)));
+            assertEquals(property_p2_owner_a_state_a_attributes, mapper.readValue(response[1], Property.class));
 
             response = ITUtil.runShellCommand(deleteCurlPropertyForAdmin("p1"));
             ITUtil.assertResponseLength2CodeOK(response);
@@ -624,14 +624,14 @@ public class OlogPropertiesIT {
 
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES + "/p1");
             ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(property_p1_owner_a_state_i_attributes.equals(mapper.readValue(response[1], Property.class)));
+            assertEquals(property_p1_owner_a_state_i_attributes, mapper.readValue(response[1], Property.class));
 
             response = ITUtil.runShellCommand(deleteCurlPropertyForAdmin("p2"));
             ITUtil.assertResponseLength2CodeOK(response);
 
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES + "/p2");
             ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(property_p2_owner_a_state_i_attributes.equals(mapper.readValue(response[1], Property.class)));
+            assertEquals(property_p2_owner_a_state_i_attributes, mapper.readValue(response[1], Property.class));
 
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES + "?inactive=false");
             ITUtil.assertResponseLength2CodeOK(response);
@@ -657,7 +657,7 @@ public class OlogPropertiesIT {
     }
 
     /**
-     * Test {@link gov.bnl.log.OlogResourceDescriptors#PROPERTY_RESOURCE_URI}.
+     * Test {@link org.phoebus.olog.OlogResourceDescriptors#PROPERTY_RESOURCE_URI}.
      */
     @Test
     public void handleProperty3ChangeState() {
@@ -680,7 +680,7 @@ public class OlogPropertiesIT {
 
             response = ITUtil.runShellCommand(createCurlPropertyForAdmin("p1", mapper.writeValueAsString(property_p1_owner_a_state_a_attributes)));
             ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(property_p1_owner_a_state_a_attributes.equals(mapper.readValue(response[1], Property.class)));
+            assertEquals(property_p1_owner_a_state_a_attributes, mapper.readValue(response[1], Property.class));
 
             // refresh elastic indices
             response = ITUtil.refreshElasticIndices();
@@ -694,7 +694,7 @@ public class OlogPropertiesIT {
 
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES + "/p1");
             ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(property_p1_owner_a_state_a_attributes.equals(mapper.readValue(response[1], Property.class)));
+            assertEquals(property_p1_owner_a_state_a_attributes, mapper.readValue(response[1], Property.class));
 
             response = ITUtil.runShellCommand(createCurlPropertyForAdmin("p1", mapper.writeValueAsString(property_p1_owner_a_state_i_attributes)));
             ITUtil.assertResponseLength2CodeOK(response);
@@ -704,14 +704,14 @@ public class OlogPropertiesIT {
 
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES + "/p1");
             ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(property_p1_owner_a_state_i_attributes.equals(mapper.readValue(response[1], Property.class)));
+            assertEquals(property_p1_owner_a_state_i_attributes, mapper.readValue(response[1], Property.class));
 
             response = ITUtil.runShellCommand(deleteCurlPropertyForAdmin("p1"));
             ITUtil.assertResponseLength2CodeOK(response);
 
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES + "/p1");
             ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(property_p1_owner_a_state_i_attributes.equals(mapper.readValue(response[1], Property.class)));
+            assertEquals(property_p1_owner_a_state_i_attributes, mapper.readValue(response[1], Property.class));
 
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES);
             ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
@@ -725,7 +725,7 @@ public class OlogPropertiesIT {
     }
 
     /**
-     * Test {@link gov.bnl.log.OlogResourceDescriptors#PROPERTY_RESOURCE_URI}.
+     * Test {@link org.phoebus.olog.OlogResourceDescriptors#PROPERTY_RESOURCE_URI}.
      */
     @Test
     public void handlePropertiesCreateCheck() {
@@ -833,7 +833,7 @@ public class OlogPropertiesIT {
     }
 
     /**
-     * Test {@link gov.bnl.log.OlogResourceDescriptors#PROPERTY_RESOURCE_URI}.
+     * Test {@link org.phoebus.olog.OlogResourceDescriptors#PROPERTY_RESOURCE_URI}.
      */
     @Test
     public void handleProperties() {
@@ -918,43 +918,43 @@ public class OlogPropertiesIT {
 
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES + "/p1");
             ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(property_p1_owner_a_state_a_attributes.equals(mapper.readValue(response[1], Property.class)));
+            assertEquals(property_p1_owner_a_state_a_attributes, mapper.readValue(response[1], Property.class));
 
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES + "/p2");
             ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(property_p2_owner_a_state_a_attributes.equals(mapper.readValue(response[1], Property.class)));
+            assertEquals(property_p2_owner_a_state_a_attributes, mapper.readValue(response[1], Property.class));
 
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES + "/p3");
             ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(property_p3_owner_a_state_a_attributes.equals(mapper.readValue(response[1], Property.class)));
+            assertEquals(property_p3_owner_a_state_a_attributes, mapper.readValue(response[1], Property.class));
 
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES + "/p4");
             ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(property_p4_owner_a_state_a_attributes.equals(mapper.readValue(response[1], Property.class)));
+            assertEquals(property_p4_owner_a_state_a_attributes, mapper.readValue(response[1], Property.class));
 
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES + "/p5");
             ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(property_p5_owner_a_state_a_attributes.equals(mapper.readValue(response[1], Property.class)));
+            assertEquals(property_p5_owner_a_state_a_attributes, mapper.readValue(response[1], Property.class));
 
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES + "/p6");
             ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(property_p6_owner_a_state_i_attributes.equals(mapper.readValue(response[1], Property.class)));
+            assertEquals(property_p6_owner_a_state_i_attributes, mapper.readValue(response[1], Property.class));
 
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES + "/p7");
             ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(property_p7_owner_a_state_i_attributes.equals(mapper.readValue(response[1], Property.class)));
+            assertEquals(property_p7_owner_a_state_i_attributes, mapper.readValue(response[1], Property.class));
 
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES + "/p8");
             ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(property_p8_owner_a_state_i_attributes.equals(mapper.readValue(response[1], Property.class)));
+            assertEquals(property_p8_owner_a_state_i_attributes, mapper.readValue(response[1], Property.class));
 
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES + "/p9");
             ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(property_p9_owner_a_state_i_attributes.equals(mapper.readValue(response[1], Property.class)));
+            assertEquals(property_p9_owner_a_state_i_attributes, mapper.readValue(response[1], Property.class));
 
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES + "/p10");
             ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(property_p10_owner_a_state_i_attributes.equals(mapper.readValue(response[1], Property.class)));
+            assertEquals(property_p10_owner_a_state_i_attributes, mapper.readValue(response[1], Property.class));
 
             response = ITUtil.runShellCommand(deleteCurlPropertyForAdmin("p1"));
             ITUtil.assertResponseLength2CodeOK(response);

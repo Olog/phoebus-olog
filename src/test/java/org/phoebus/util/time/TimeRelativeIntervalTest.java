@@ -4,7 +4,7 @@
  */
 package org.phoebus.util.time;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -17,9 +17,9 @@ import static java.time.Duration.ofMillis;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 import static java.time.Period.ofMonths;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  *
@@ -153,6 +153,7 @@ public class TimeRelativeIntervalTest {
         assertEquals(29L, Duration.between(leapFeb.getStart(), leapFeb.getEnd()).toDays());
     }
 
+    @Test
     public void relativeIntervalinDays2() {
         // Create an interval for January
         TimeRelativeInterval interval = TimeRelativeInterval.of(LocalDateTime

@@ -18,10 +18,9 @@
 package org.phoebus.olog;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.phoebus.olog.entity.Logbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -30,7 +29,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.ContextHierarchy;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
@@ -39,10 +38,15 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -50,7 +54,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * hard coded user/userPass credentials. The {@link LogbookRepository} is mocked.
  */
 
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @ContextHierarchy({@ContextConfiguration(classes = {ResourcesTestConfig.class})})
 @WebMvcTest(LogbookResourceTest.class)
 @TestPropertySource(locations = "classpath:no_ldap_test_application.properties")
@@ -60,12 +64,12 @@ public class LogbookResourceTest extends ResourcesTestBase {
     @Autowired
     private LogbookRepository logbookRepository;
 
-    private Logbook logbook1;
-    private Logbook logbook2;
+    private static Logbook logbook1;
+    private static Logbook logbook2;
 
 
-    @Before
-    public void init() {
+    @BeforeAll
+    public static void init() {
         logbook1 = new Logbook("name1", "user");
         logbook2 = new Logbook("name2", "user");
     }
@@ -78,7 +82,7 @@ public class LogbookResourceTest extends ResourcesTestBase {
         MvcResult result = mockMvc.perform(request).andExpect(status().isOk())
                 .andReturn();
         Iterable<Logbook> logbooks = objectMapper.readValue(result.getResponse().getContentAsString(),
-                new TypeReference<Iterable<Logbook>>() {
+                new TypeReference<>() {
                 });
         assertEquals("name1", logbooks.iterator().next().getName());
         verify(logbookRepository, times(1)).findAll();
@@ -93,7 +97,7 @@ public class LogbookResourceTest extends ResourcesTestBase {
         MvcResult result = mockMvc.perform(request).andExpect(status().isOk())
                 .andReturn();
         Iterable<Logbook> logbooks = objectMapper.readValue(result.getResponse().getContentAsString(),
-                new TypeReference<Iterable<Logbook>>() {
+                new TypeReference<>() {
                 });
         assertFalse(logbooks.iterator().hasNext());
         verify(logbookRepository, times(1)).findAll();
@@ -162,7 +166,7 @@ public class LogbookResourceTest extends ResourcesTestBase {
                 .contentType(JSON);
         MvcResult result = mockMvc.perform(request).andExpect(status().isOk()).andReturn();
         logbooks = objectMapper.readValue(result.getResponse().getContentAsString(),
-                new TypeReference<List<Logbook>>() {
+                new TypeReference<>() {
                 });
         assertEquals("name1", logbooks.iterator().next().getName());
         verify(logbookRepository, times(1)).saveAll(logbooks);

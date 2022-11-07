@@ -4,7 +4,7 @@
  */
 package org.phoebus.util.time;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -14,9 +14,7 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAmount;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
+import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * TODO additional tests are needed to verify all the chrono types are properly handled.
  * @author shroffk
@@ -176,7 +174,7 @@ public class TimeParserTest {
         text = TimeParser.format(Period.of(1, 2, 3));
         assertEquals("1 year 2 months 3 days", text);
 
-        text = TimeParser.format(Duration.ofSeconds(2*24*60*60 + 1*60*60 + 10, 123000000L));
+        text = TimeParser.format(Duration.ofSeconds(2*24*60*60 + 60*60 + 10, 123000000L));
         assertEquals("2 days 1 hour 10 seconds 123 ms", text);
 
         text = TimeParser.format(Duration.ofSeconds(0));

@@ -18,9 +18,9 @@
 
 package org.phoebus.olog;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.phoebus.olog.entity.Log;
 import org.phoebus.olog.entity.Log.LogBuilder;
 import org.phoebus.olog.entity.Logbook;
@@ -28,7 +28,7 @@ import org.phoebus.olog.entity.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.ContextHierarchy;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.Errors;
 
@@ -36,11 +36,11 @@ import java.time.Instant;
 import java.util.Arrays;
 import java.util.Set;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.Mockito.when;
 
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @ContextHierarchy({@ContextConfiguration(classes = {LogEntryValidatorTestConfig.class})})
 public class LogEntryValidatorTest {
 
@@ -53,15 +53,15 @@ public class LogEntryValidatorTest {
     @Autowired
     private LogEntryValidator logEntryValidator;
 
-    private Logbook logbook1;
-    private Logbook logbook2;
-    private Tag tag1;
-    private Tag tag2;
+    private static Logbook logbook1;
+    private static Logbook logbook2;
+    private static Tag tag1;
+    private static Tag tag2;
 
-    private Instant now = Instant.now();
+    private final Instant now = Instant.now();
 
-    @Before
-    public void init() {
+    @BeforeAll
+    public static void init() {
         logbook1 = new Logbook("name1", "user");
         logbook2 = new Logbook("name2", "user");
 

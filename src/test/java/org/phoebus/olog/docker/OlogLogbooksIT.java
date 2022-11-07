@@ -4,25 +4,24 @@
 
 package org.phoebus.olog.docker;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.phoebus.olog.entity.Logbook;
+import org.phoebus.olog.entity.State;
+import org.testcontainers.containers.DockerComposeContainer;
+import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.testcontainers.containers.DockerComposeContainer;
-import org.testcontainers.containers.wait.strategy.Wait;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import org.phoebus.olog.entity.Logbook;
-import org.phoebus.olog.entity.State;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Integration tests for Olog and Elasticsearch that make use of existing dockerization
@@ -36,6 +35,7 @@ import org.phoebus.olog.entity.State;
  *
  * @see org.phoebus.olog.LogbooksResource
  */
+@Testcontainers
 public class OlogLogbooksIT {
 
     // Note
@@ -90,12 +90,12 @@ public class OlogLogbooksIT {
     static Logbook logbook_l9_owner_a_state_i;
     static Logbook logbook_l10_owner_a_state_i;
 
-    @ClassRule
+    @Container
     public static final DockerComposeContainer<?> ENVIRONMENT =
         new DockerComposeContainer<>(new File("docker-compose.yml"))
             .waitingFor(ITUtil.OLOG, Wait.forLogMessage(".*Started Application.*", 1));
 
-    @BeforeClass
+    @BeforeAll
     public static void setupObjects() {
         logbook_l1_owner_a_state_a  = new Logbook("l1",  "admin", State.Active);
         logbook_l2_owner_a_state_a  = new Logbook("l2",  "admin", State.Active);
@@ -112,7 +112,7 @@ public class OlogLogbooksIT {
         logbook_l10_owner_a_state_i = new Logbook("l10", "admin", State.Inactive);
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDownObjects() {
         logbook_l1_owner_a_state_a  = null;
         logbook_l2_owner_a_state_a  = null;
@@ -142,7 +142,7 @@ public class OlogLogbooksIT {
     }
 
     /**
-     * Test {@link gov.bnl.log.OlogResourceDescriptors#LOGBOOK_RESOURCE_URI}.
+     * Test {@link org.phoebus.olog.OlogResourceDescriptors#LOGBOOK_RESOURCE_URI}.
      */
     @Test
     public void handleLogbookRetrieveCheck() {
@@ -166,7 +166,7 @@ public class OlogLogbooksIT {
     }
 
     /**
-     * Test {@link gov.bnl.log.OlogResourceDescriptors#LOGBOOK_RESOURCE_URI}.
+     * Test {@link org.phoebus.olog.OlogResourceDescriptors#LOGBOOK_RESOURCE_URI}.
      */
     @Test
     public void handleLogbookRemoveCheck() {
@@ -198,7 +198,7 @@ public class OlogLogbooksIT {
     }
 
     /**
-     * Test {@link gov.bnl.log.OlogResourceDescriptors#LOGBOOK_RESOURCE_URI}.
+     * Test {@link org.phoebus.olog.OlogResourceDescriptors#LOGBOOK_RESOURCE_URI}.
      */
     @Test
     public void handleLogbookCreateCheckJson() {
@@ -276,7 +276,7 @@ public class OlogLogbooksIT {
     }
 
     /**
-     * Test {@link gov.bnl.log.OlogResourceDescriptors#LOGBOOK_RESOURCE_URI}.
+     * Test {@link org.phoebus.olog.OlogResourceDescriptors#LOGBOOK_RESOURCE_URI}.
      */
     @Test
     public void handleLogbookCreateCheck() {
@@ -335,7 +335,7 @@ public class OlogLogbooksIT {
     }
 
     /**
-     * Test {@link gov.bnl.log.OlogResourceDescriptors#LOGBOOK_RESOURCE_URI}.
+     * Test {@link org.phoebus.olog.OlogResourceDescriptors#LOGBOOK_RESOURCE_URI}.
      */
     @Test
     public void handleLogbook() {
@@ -397,7 +397,7 @@ public class OlogLogbooksIT {
     }
 
     /**
-     * Test {@link gov.bnl.log.OlogResourceDescriptors#LOGBOOK_RESOURCE_URI}.
+     * Test {@link org.phoebus.olog.OlogResourceDescriptors#LOGBOOK_RESOURCE_URI}.
      */
     @Test
     public void handleLogbook2() {
@@ -477,7 +477,7 @@ public class OlogLogbooksIT {
     }
 
     /**
-     * Test {@link gov.bnl.log.OlogResourceDescriptors#LOGBOOK_RESOURCE_URI}.
+     * Test {@link org.phoebus.olog.OlogResourceDescriptors#LOGBOOK_RESOURCE_URI}.
      */
     @Test
     public void handleLogbook3ChangeState() {
@@ -545,7 +545,7 @@ public class OlogLogbooksIT {
     }
 
     /**
-     * Test {@link gov.bnl.log.OlogResourceDescriptors#LOGBOOK_RESOURCE_URI}.
+     * Test {@link org.phoebus.olog.OlogResourceDescriptors#LOGBOOK_RESOURCE_URI}.
      */
     @Test
     public void handleLogbooksCreateCheck() {
@@ -614,7 +614,7 @@ public class OlogLogbooksIT {
     }
 
     /**
-     * Test {@link gov.bnl.log.OlogResourceDescriptors#LOGBOOK_RESOURCE_URI}.
+     * Test {@link org.phoebus.olog.OlogResourceDescriptors#LOGBOOK_RESOURCE_URI}.
      */
     @Test
     public void handleLogbooks() {
@@ -670,43 +670,43 @@ public class OlogLogbooksIT {
 
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_LOGBOOKS + "/l1");
             ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(logbook_l1_owner_a_state_a.equals(mapper.readValue(response[1], Logbook.class)));
+            assertEquals(logbook_l1_owner_a_state_a, mapper.readValue(response[1], Logbook.class));
 
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_LOGBOOKS + "/l2");
             ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(logbook_l2_owner_a_state_a.equals(mapper.readValue(response[1], Logbook.class)));
+            assertEquals(logbook_l2_owner_a_state_a, mapper.readValue(response[1], Logbook.class));
 
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_LOGBOOKS + "/l3");
             ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(logbook_l3_owner_a_state_a.equals(mapper.readValue(response[1], Logbook.class)));
+            assertEquals(logbook_l3_owner_a_state_a, mapper.readValue(response[1], Logbook.class));
 
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_LOGBOOKS + "/l4");
             ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(logbook_l4_owner_a_state_a.equals(mapper.readValue(response[1], Logbook.class)));
+            assertEquals(logbook_l4_owner_a_state_a, mapper.readValue(response[1], Logbook.class));
 
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_LOGBOOKS + "/l5");
             ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(logbook_l5_owner_a_state_a.equals(mapper.readValue(response[1], Logbook.class)));
+            assertEquals(logbook_l5_owner_a_state_a, mapper.readValue(response[1], Logbook.class));
 
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_LOGBOOKS + "/l6");
             ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(logbook_l6_owner_a_state_i.equals(mapper.readValue(response[1], Logbook.class)));
+            assertEquals(logbook_l6_owner_a_state_i, mapper.readValue(response[1], Logbook.class));
 
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_LOGBOOKS + "/l7");
             ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(logbook_l7_owner_a_state_i.equals(mapper.readValue(response[1], Logbook.class)));
+            assertEquals(logbook_l7_owner_a_state_i, mapper.readValue(response[1], Logbook.class));
 
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_LOGBOOKS + "/l8");
             ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(logbook_l8_owner_a_state_i.equals(mapper.readValue(response[1], Logbook.class)));
+            assertEquals(logbook_l8_owner_a_state_i, mapper.readValue(response[1], Logbook.class));
 
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_LOGBOOKS + "/l9");
             ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(logbook_l9_owner_a_state_i.equals(mapper.readValue(response[1], Logbook.class)));
+            assertEquals(logbook_l9_owner_a_state_i, mapper.readValue(response[1], Logbook.class));
 
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_LOGBOOKS + "/l10");
             ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(logbook_l10_owner_a_state_i.equals(mapper.readValue(response[1], Logbook.class)));
+            assertEquals(logbook_l10_owner_a_state_i, mapper.readValue(response[1], Logbook.class));
 
             response = ITUtil.runShellCommand(deleteCurlLogbookForAdmin("l1"));
             ITUtil.assertResponseLength2CodeOK(response);

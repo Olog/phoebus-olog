@@ -64,7 +64,7 @@ public class ElasticConfig {
     private String host;
     @Value("${elasticsearch.http.port:9200}")
     private int port;
-    @Value("${elasticsearch.http.protocol:https}")
+    @Value("${elasticsearch.http.protocol:http}")
     private String protocol;
     @Value("${elasticsearch.create.indices:true}")
     private String createIndices;

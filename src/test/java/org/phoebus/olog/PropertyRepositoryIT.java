@@ -5,9 +5,8 @@ import co.elastic.clients.elasticsearch._types.Refresh;
 import co.elastic.clients.elasticsearch.core.BulkRequest;
 import co.elastic.clients.elasticsearch.core.bulk.BulkOperation;
 import co.elastic.clients.elasticsearch.core.bulk.DeleteOperation;
-import co.elastic.clients.elasticsearch.core.bulk.IndexOperation;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.phoebus.olog.entity.Attribute;
 import org.phoebus.olog.entity.Property;
 import org.phoebus.olog.entity.State;
@@ -16,7 +15,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -28,10 +27,11 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@RunWith(SpringJUnit4ClassRunner.class)
+@ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = ElasticConfig.class)
 @TestPropertySource(locations = "classpath:test_application.properties")
 public class PropertyRepositoryIT {
@@ -71,7 +71,7 @@ public class PropertyRepositoryIT {
                 result.isPresent() && result.get().equals(testProperty1));
 
         // Manual cleanup since Olog does not delete things
-        cleanupProperties(Arrays.asList(testProperty1));
+        cleanupProperties(List.of(testProperty1));
     }
 
     /**
@@ -80,15 +80,11 @@ public class PropertyRepositoryIT {
     @Test
     public void createProperties() {
         List<Property> properties = Arrays.asList(testProperty1, testProperty2, testProperty3, testProperty4);
-        List<Property> result = new ArrayList<Property>();
-        propertyRepository.saveAll(properties).forEach(property -> {
-            result.add(property);
-        });
+        List<Property> result = new ArrayList<>();
+        propertyRepository.saveAll(properties).forEach(result::add);
         assertThat("Failed to create all properties", result.containsAll(properties));
-        List<Property> findAll = new ArrayList<Property>();
-        propertyRepository.findAll().forEach(property -> {
-            findAll.add(property);
-        });
+        List<Property> findAll = new ArrayList<>();
+        propertyRepository.findAll().forEach(findAll::add);
         assertThat("Failed to list all properties", findAll.containsAll(properties));
 
         // Manual cleanup since Olog does not delete things
@@ -111,7 +107,7 @@ public class PropertyRepositoryIT {
         assertThat("Failed to delete Property", result.isPresent() && result.get().equals(testProperty2));
 
         // Manual cleanup since Olog does not delete things
-        cleanupProperties(Arrays.asList(testProperty2));
+        cleanupProperties(List.of(testProperty2));
     }
 
     /**
@@ -135,7 +131,7 @@ public class PropertyRepositoryIT {
         assertThat("Failed to delete Property", result.isPresent() && result.get().equals(testProperty2));
 
         // Manual cleanup since Olog does not delete things
-        cleanupProperties(Arrays.asList(testProperty2));
+        cleanupProperties(List.of(testProperty2));
     }
 
     /**
@@ -145,13 +141,11 @@ public class PropertyRepositoryIT {
     public void deleteproperties() {
         List<Property> properties = Arrays.asList(testProperty1, testProperty2, testProperty3, testProperty4);
         try {
-            List<Property> result = new ArrayList<Property>();
-            propertyRepository.saveAll(properties).forEach(Property -> {
-                result.add(Property);
-            });
+            List<Property> result = new ArrayList<>();
+            propertyRepository.saveAll(properties).forEach(result::add);
 
             propertyRepository.deleteAll(properties);
-            List<Property> inactiveproperties = new ArrayList<Property>();
+            List<Property> inactiveproperties = new ArrayList<>();
             propertyRepository.findAllById(properties.stream().map(Property::getName).collect(Collectors.toList())).forEach(Property -> {
                 if (Property.getState().equals(State.Inactive)) {
                     inactiveproperties.add(Property);
@@ -169,10 +163,8 @@ public class PropertyRepositoryIT {
         List<Property> properties = Arrays.asList(testProperty1, testProperty2, testProperty3, testProperty4);
         try {
             propertyRepository.saveAll(properties);
-            List<Property> findAll = new ArrayList<Property>();
-            propertyRepository.findAll().forEach(Property -> {
-                findAll.add(Property);
-            });
+            List<Property> findAll = new ArrayList<>();
+            propertyRepository.findAll().forEach(findAll::add);
             assertThat("Failed to list all properties", findAll.containsAll(properties));
         } finally {
             // Manual cleanup
@@ -186,13 +178,12 @@ public class PropertyRepositoryIT {
         try {
             propertyRepository.saveAll(properties);
 
-            List<Property> findAllById = new ArrayList<Property>();
+            List<Property> findAllById = new ArrayList<>();
             propertyRepository.findAllById(Arrays.asList("test-property-1", "test-property-2"))
-                    .forEach(Property -> {
-                        findAllById.add(Property);
-                    });
-            assertTrue("Failed to search by id test-property-1 and test-property-2 ",
-                    findAllById.size() == 2 && findAllById.contains(testProperty1) && findAllById.contains(testProperty2));
+                    .forEach(findAllById::add);
+            assertTrue(
+                    findAllById.size() == 2 && findAllById.contains(testProperty1) && findAllById.contains(testProperty2),
+                    "Failed to search by id test-property-1 and test-property-2 ");
         } finally {
             // Manual cleanup
             cleanupProperties(properties);
@@ -204,10 +195,8 @@ public class PropertyRepositoryIT {
         List<Property> properties = Arrays.asList(testProperty1, testProperty2);
         try {
             propertyRepository.saveAll(properties);
-            assertTrue("Failed to find by index Property: " + testProperty1,
-                    testProperty1.equals(propertyRepository.findById(testProperty1.getName()).get()));
-            assertTrue("Failed to find by index Property: " + testProperty2,
-                    testProperty2.equals(propertyRepository.findById(testProperty2.getName()).get()));
+            assertEquals(testProperty1, propertyRepository.findById(testProperty1.getName()).get(), "Failed to find by index Property: " + testProperty1);
+            assertEquals(testProperty2, propertyRepository.findById(testProperty2.getName()).get(), "Failed to find by index Property: " + testProperty2);
         } finally {
             // Manual cleanup
             cleanupProperties(properties);
@@ -220,10 +209,13 @@ public class PropertyRepositoryIT {
         try {
             propertyRepository.saveAll(properties);
 
-            assertTrue("Failed to check if exists Property: " + testProperty1, propertyRepository.existsById(testProperty1.getName()));
-            assertTrue("Failed to check if exists Property: " + testProperty2, propertyRepository.existsById(testProperty2.getName()));
+            assertTrue(propertyRepository.existsById(testProperty1.getName()),
+                    "Failed to check if exists Property: " + testProperty1);
+            assertTrue(propertyRepository.existsById(testProperty2.getName()),
+                    "Failed to check if exists Property: " + testProperty2);
 
-            assertFalse("Failed to check if exists Property: non-existant-Property", propertyRepository.existsById("non-existant-Property"));
+            assertFalse(propertyRepository.existsById("non-existant-Property"),
+                    "Failed to check if exists Property: non-existant-Property");
         } finally {
             // Manual cleanup
             cleanupProperties(properties);

@@ -4,25 +4,23 @@
 
 package org.phoebus.olog.docker;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.phoebus.olog.entity.State;
+import org.phoebus.olog.entity.Tag;
+import org.testcontainers.containers.DockerComposeContainer;
+import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.testcontainers.containers.DockerComposeContainer;
-import org.testcontainers.containers.wait.strategy.Wait;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import org.phoebus.olog.entity.State;
-import org.phoebus.olog.entity.Tag;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Integration tests for Olog and Elasticsearch that make use of existing dockerization
@@ -36,6 +34,7 @@ import org.phoebus.olog.entity.Tag;
  *
  * @see org.phoebus.olog.TagsResource
  */
+@Testcontainers
 public class OlogTagsIT {
 
     // Note
@@ -90,12 +89,12 @@ public class OlogTagsIT {
     static Tag tag_t1_state_i;
     static Tag tag_t2_state_i;
 
-    @ClassRule
+    @Container
     public static final DockerComposeContainer<?> ENVIRONMENT =
         new DockerComposeContainer<>(new File("docker-compose.yml"))
             .waitingFor(ITUtil.OLOG, Wait.forLogMessage(".*Started Application.*", 1));
 
-    @BeforeClass
+    @BeforeAll
     public static void setupObjects() {
         tag_t1_state_a = new Tag("t1", State.Active);
         tag_t2_state_a = new Tag("t2", State.Active);
@@ -112,7 +111,7 @@ public class OlogTagsIT {
         tag_t2_state_i = new Tag("t2", State.Inactive);
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDownObjects() {
         tag_t1_state_a = null;
         tag_t2_state_a = null;
@@ -142,7 +141,7 @@ public class OlogTagsIT {
     }
 
     /**
-     * Test {@link gov.bnl.log.OlogResourceDescriptors#TAG_RESOURCE_URI}.
+     * Test {@link org.phoebus.olog.OlogResourceDescriptors#TAG_RESOURCE_URI}.
      */
     @Test
     public void handleTagRetrieveCheck() {
@@ -166,7 +165,7 @@ public class OlogTagsIT {
     }
 
     /**
-     * Test {@link gov.bnl.log.OlogResourceDescriptors#TAG_RESOURCE_URI}.
+     * Test {@link org.phoebus.olog.OlogResourceDescriptors#TAG_RESOURCE_URI}.
      */
     @Test
     public void handleTagRemoveCheck() {
@@ -198,7 +197,7 @@ public class OlogTagsIT {
     }
 
     /**
-     * Test {@link gov.bnl.log.OlogResourceDescriptors#TAG_RESOURCE_URI}.
+     * Test {@link org.phoebus.olog.OlogResourceDescriptors#TAG_RESOURCE_URI}.
      */
     @Test
     public void handleTagCreateCheckJson() {
@@ -279,7 +278,7 @@ public class OlogTagsIT {
     }
 
     /**
-     * Test {@link gov.bnl.log.OlogResourceDescriptors#TAG_RESOURCE_URI}.
+     * Test {@link org.phoebus.olog.OlogResourceDescriptors#TAG_RESOURCE_URI}.
      */
     @Test
     public void handleTagCreateCheck() {
@@ -337,7 +336,7 @@ public class OlogTagsIT {
     }
 
     /**
-     * Test {@link gov.bnl.log.OlogResourceDescriptors#TAG_RESOURCE_URI}.
+     * Test {@link org.phoebus.olog.OlogResourceDescriptors#TAG_RESOURCE_URI}.
      */
     @Test
     public void handleTag() {
@@ -361,7 +360,7 @@ public class OlogTagsIT {
 
             response = ITUtil.runShellCommand(createCurlTagForAdmin("t1", mapper.writeValueAsString(tag_t1_state_a)));
             ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(tag_t1_state_a.equals(mapper.readValue(response[1], Tag.class)));
+            assertEquals(tag_t1_state_a, mapper.readValue(response[1], Tag.class));
 
             // refresh elastic indices
             response = ITUtil.refreshElasticIndices();
@@ -375,7 +374,7 @@ public class OlogTagsIT {
 
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_TAGS + "/t1");
             ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(tag_t1_state_a.equals(mapper.readValue(response[1], Tag.class)));
+            assertEquals(tag_t1_state_a, mapper.readValue(response[1], Tag.class));
 
             // response = ITUtil.runShellCommand(deleteCurlTagForUser("t1"));
             // ITUtil.assertResponseLength2Code(HttpURLConnection.HTTP_UNAUTHORIZED, response);
@@ -385,7 +384,7 @@ public class OlogTagsIT {
 
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_TAGS + "/t1");
             ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(tag_t1_state_i.equals(mapper.readValue(response[1], Tag.class)));
+            assertEquals(tag_t1_state_i, mapper.readValue(response[1], Tag.class));
 
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_TAGS);
             ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
@@ -399,7 +398,7 @@ public class OlogTagsIT {
     }
 
     /**
-     * Test {@link gov.bnl.log.OlogResourceDescriptors#TAG_RESOURCE_URI}.
+     * Test {@link org.phoebus.olog.OlogResourceDescriptors#TAG_RESOURCE_URI}.
      */
     @Test
     public void handleTag2() {
@@ -422,11 +421,11 @@ public class OlogTagsIT {
 
             response = ITUtil.runShellCommand(createCurlTagForAdmin("t1", mapper.writeValueAsString(tag_t1_state_a)));
             ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(tag_t1_state_a.equals(mapper.readValue(response[1], Tag.class)));
+            assertEquals(tag_t1_state_a, mapper.readValue(response[1], Tag.class));
 
             response = ITUtil.runShellCommand(createCurlTagForAdmin("t2", mapper.writeValueAsString(tag_t2_state_a)));
             ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(tag_t2_state_a.equals(mapper.readValue(response[1], Tag.class)));
+            assertEquals(tag_t2_state_a, mapper.readValue(response[1], Tag.class));
 
             // refresh elastic indices
             response = ITUtil.refreshElasticIndices();
@@ -441,11 +440,11 @@ public class OlogTagsIT {
 
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_TAGS + "/t1");
             ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(tag_t1_state_a.equals(mapper.readValue(response[1], Tag.class)));
+            assertEquals(tag_t1_state_a, mapper.readValue(response[1], Tag.class));
 
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_TAGS + "/t2");
             ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(tag_t2_state_a.equals(mapper.readValue(response[1], Tag.class)));
+            assertEquals(tag_t2_state_a, mapper.readValue(response[1], Tag.class));
 
             response = ITUtil.runShellCommand(deleteCurlTagForAdmin("t1"));
             ITUtil.assertResponseLength2CodeOK(response);
@@ -458,14 +457,14 @@ public class OlogTagsIT {
 
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_TAGS + "/t1");
             ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(tag_t1_state_i.equals(mapper.readValue(response[1], Tag.class)));
+            assertEquals(tag_t1_state_i, mapper.readValue(response[1], Tag.class));
 
             response = ITUtil.runShellCommand(deleteCurlTagForAdmin("t2"));
             ITUtil.assertResponseLength2CodeOK(response);
 
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_TAGS + "/t2");
             ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(tag_t2_state_i.equals(mapper.readValue(response[1], Tag.class)));
+            assertEquals(tag_t2_state_i, mapper.readValue(response[1], Tag.class));
 
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_TAGS);
             ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
@@ -479,7 +478,7 @@ public class OlogTagsIT {
     }
 
     /**
-     * Test {@link gov.bnl.log.OlogResourceDescriptors#TAG_RESOURCE_URI}.
+     * Test {@link org.phoebus.olog.OlogResourceDescriptors#TAG_RESOURCE_URI}.
      */
     @Test
     public void handleTag3ChangeState() {
@@ -502,7 +501,7 @@ public class OlogTagsIT {
 
             response = ITUtil.runShellCommand(createCurlTagForAdmin("t1", mapper.writeValueAsString(tag_t1_state_a)));
             ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(tag_t1_state_a.equals(mapper.readValue(response[1], Tag.class)));
+            assertEquals(tag_t1_state_a, mapper.readValue(response[1], Tag.class));
 
             // refresh elastic indices
             response = ITUtil.refreshElasticIndices();
@@ -516,7 +515,7 @@ public class OlogTagsIT {
 
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_TAGS + "/t1");
             ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(tag_t1_state_a.equals(mapper.readValue(response[1], Tag.class)));
+            assertEquals(tag_t1_state_a, mapper.readValue(response[1], Tag.class));
 
             response = ITUtil.runShellCommand(createCurlTagForAdmin("t1", mapper.writeValueAsString(tag_t1_state_i)));
             ITUtil.assertResponseLength2CodeOK(response);
@@ -526,14 +525,14 @@ public class OlogTagsIT {
 
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_TAGS + "/t1");
             ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(tag_t1_state_i.equals(mapper.readValue(response[1], Tag.class)));
+            assertEquals(tag_t1_state_i, mapper.readValue(response[1], Tag.class));
 
             response = ITUtil.runShellCommand(deleteCurlTagForAdmin("t1"));
             ITUtil.assertResponseLength2CodeOK(response);
 
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_TAGS + "/t1");
             ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(tag_t1_state_i.equals(mapper.readValue(response[1], Tag.class)));
+            assertEquals(tag_t1_state_i, mapper.readValue(response[1], Tag.class));
 
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_TAGS);
             ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
@@ -547,7 +546,7 @@ public class OlogTagsIT {
     }
 
     /**
-     * Test {@link gov.bnl.log.OlogResourceDescriptors#TAG_RESOURCE_URI}.
+     * Test {@link org.phoebus.olog.OlogResourceDescriptors#TAG_RESOURCE_URI}.
      */
     @Test
     public void handleTagsCreateCheck() {
@@ -615,7 +614,7 @@ public class OlogTagsIT {
     }
 
     /**
-     * Test {@link gov.bnl.log.OlogResourceDescriptors#TAG_RESOURCE_URI}.
+     * Test {@link org.phoebus.olog.OlogResourceDescriptors#TAG_RESOURCE_URI}.
      */
     @Test
     public void handleTags() {
@@ -671,43 +670,43 @@ public class OlogTagsIT {
 
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_TAGS + "/t1");
             ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(tag_t1_state_a.equals(mapper.readValue(response[1], Tag.class)));
+            assertEquals(tag_t1_state_a, mapper.readValue(response[1], Tag.class));
 
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_TAGS + "/t2");
             ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(tag_t2_state_a.equals(mapper.readValue(response[1], Tag.class)));
+            assertEquals(tag_t2_state_a, mapper.readValue(response[1], Tag.class));
 
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_TAGS + "/t3");
             ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(tag_t3_state_a.equals(mapper.readValue(response[1], Tag.class)));
+            assertEquals(tag_t3_state_a, mapper.readValue(response[1], Tag.class));
 
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_TAGS + "/t4");
             ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(tag_t4_state_a.equals(mapper.readValue(response[1], Tag.class)));
+            assertEquals(tag_t4_state_a, mapper.readValue(response[1], Tag.class));
 
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_TAGS + "/t5");
             ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(tag_t5_state_a.equals(mapper.readValue(response[1], Tag.class)));
+            assertEquals(tag_t5_state_a, mapper.readValue(response[1], Tag.class));
 
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_TAGS + "/t6");
             ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(tag_t6_state_i.equals(mapper.readValue(response[1], Tag.class)));
+            assertEquals(tag_t6_state_i, mapper.readValue(response[1], Tag.class));
 
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_TAGS + "/t7");
             ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(tag_t7_state_i.equals(mapper.readValue(response[1], Tag.class)));
+            assertEquals(tag_t7_state_i, mapper.readValue(response[1], Tag.class));
 
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_TAGS + "/t8");
             ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(tag_t8_state_i.equals(mapper.readValue(response[1], Tag.class)));
+            assertEquals(tag_t8_state_i, mapper.readValue(response[1], Tag.class));
 
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_TAGS + "/t9");
             ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(tag_t9_state_i.equals(mapper.readValue(response[1], Tag.class)));
+            assertEquals(tag_t9_state_i, mapper.readValue(response[1], Tag.class));
 
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_TAGS + "/t10");
             ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(tag_t10_state_i.equals(mapper.readValue(response[1], Tag.class)));
+            assertEquals(tag_t10_state_i, mapper.readValue(response[1], Tag.class));
 
             response = ITUtil.runShellCommand(deleteCurlTagForAdmin("t1"));
             ITUtil.assertResponseLength2CodeOK(response);

@@ -19,9 +19,9 @@
 package org.phoebus.olog;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
 import org.mockito.internal.util.collections.Sets;
@@ -41,7 +41,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.ContextHierarchy;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -55,7 +55,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.argThat;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
@@ -70,7 +70,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Tests {@link org.phoebus.olog.entity.Log} resource endpoints. The authentication scheme used is the
  * hard coded user/userPass credentials. The {@link LogRepository} is mocked.
  */
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @ContextHierarchy({@ContextConfiguration(classes = {ResourcesTestConfig.class})})
 @WebMvcTest(LogResource.class)
 @TestPropertySource(locations = "classpath:no_ldap_test_application.properties")
@@ -88,20 +88,20 @@ public class LogResourceTest extends ResourcesTestBase {
     @Autowired
     private LogEntryValidator logEntryValidator;
 
-    private Log log1;
-    private Log log2;
+    private static Log log1;
+    private static Log log2;
 
-    private Logbook logbook1;
-    private Logbook logbook2;
+    private static Logbook logbook1;
+    private static Logbook logbook2;
 
-    private Tag tag1;
+    private static Tag tag1;
 
-    private Tag tag2;
+    private static Tag tag2;
 
-    private Instant now = Instant.now();
+    private static final Instant now = Instant.now();
 
-    @Before
-    public void init() {
+    @BeforeAll
+    public static void init() {
         logbook1 = new Logbook("name1", "user");
         logbook2 = new Logbook("name2", "user");
 
@@ -155,7 +155,7 @@ public class LogResourceTest extends ResourcesTestBase {
     @Test
     public void testFindLogs() throws Exception {
         MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
-        map.put("a", Arrays.asList("b"));
+        map.put("a", List.of("b"));
 
         when(logRepository.search(map)).thenAnswer(invocationOnMock -> new SearchResult(2, Arrays.asList(log1, log2)));
 
@@ -166,7 +166,7 @@ public class LogResourceTest extends ResourcesTestBase {
                 .andReturn();
 
         Iterable<Log> logs = objectMapper.readValue(result.getResponse().getContentAsString(),
-                new TypeReference<Iterable<Log>>() {
+                new TypeReference<>() {
                 });
         assertEquals(Long.valueOf(1L), logs.iterator().next().getId());
 
@@ -177,7 +177,7 @@ public class LogResourceTest extends ResourcesTestBase {
     @Test
     public void testSearchLogs() throws Exception {
         MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
-        map.put("a", Arrays.asList("b"));
+        map.put("a", List.of("b"));
 
         when(logRepository.search(map)).thenAnswer(invocationOnMock -> new SearchResult(2, Arrays.asList(log1, log2)));
 
@@ -195,7 +195,7 @@ public class LogResourceTest extends ResourcesTestBase {
     @Test
     public void testSearchLogsUnsupportedTemporals() throws Exception {
         MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
-        map.put("start", Arrays.asList("2 years"));
+        map.put("start", List.of("2 years"));
 
         MockHttpServletRequestBuilder request = get("/" + OlogResourceDescriptors.LOG_RESOURCE_URI + "/search")
                 .params(map)
@@ -203,7 +203,7 @@ public class LogResourceTest extends ResourcesTestBase {
         mockMvc.perform(request).andExpect(status().isBadRequest());
 
         map = new LinkedMultiValueMap<>();
-        map.put("start", Arrays.asList("2 months"));
+        map.put("start", List.of("2 months"));
 
         get("/" + OlogResourceDescriptors.LOG_RESOURCE_URI + "/search")
                 .params(map)
@@ -379,7 +379,7 @@ public class LogResourceTest extends ResourcesTestBase {
     /**
      * A matcher used to work around issues with {@link Log#equals(Object)} when using the mocks.
      */
-    private class LogMatcher implements ArgumentMatcher<Log> {
+    private static class LogMatcher implements ArgumentMatcher<Log> {
         private final Log expected;
 
         public LogMatcher(Log expected) {

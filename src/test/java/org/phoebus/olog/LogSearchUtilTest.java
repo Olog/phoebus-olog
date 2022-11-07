@@ -18,19 +18,17 @@
 
 package org.phoebus.olog;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.phoebus.olog.LogSearchUtil.MILLI_FORMAT;
 
 @TestPropertySource(locations = "classpath:no_ldap_test_application.properties")
@@ -42,7 +40,7 @@ public class LogSearchUtilTest {
 
         // Test DESC and ASC
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-        params.put("sort", Arrays.asList("asc"));
+        params.put("sort", List.of("asc"));
 
         // Explicit ascending
         /*
@@ -129,9 +127,7 @@ public class LogSearchUtilTest {
         params.put("start", List.of(MILLI_FORMAT.format(now.plusMillis(1000))));
         params.put("end",   List.of(MILLI_FORMAT.format(now.minusMillis(1000))));
 
-        Exception exception = assertThrows(ResponseStatusException.class, () -> {
-            logSearchUtil.buildSearchRequest(params);
-        });
+        Exception exception = assertThrows(ResponseStatusException.class, () -> logSearchUtil.buildSearchRequest(params));
 
         String actualMessage = exception.getMessage();
         assertTrue(actualMessage.contains(expectedMessage));

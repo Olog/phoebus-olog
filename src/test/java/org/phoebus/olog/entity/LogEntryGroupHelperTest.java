@@ -18,58 +18,33 @@
 
 package org.phoebus.olog.entity;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.phoebus.olog.entity.Log.LogBuilder;
 
 import java.time.Instant;
 import java.util.Set;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class LogEntryGroupHelperTest {
 
-    private Log log1;
-    private Log log2;
+    private static Logbook logbook1;
+    private static Logbook logbook2;
 
-    private Logbook logbook1;
-    private Logbook logbook2;
+    private static Tag tag1;
+    private static Tag tag2;
 
-    private Tag tag1;
-    private Tag tag2;
+    private static Property property1;
 
-    private Property property1;
-
-    private Instant now = Instant.now();
-
-    @Before
-    public void init() {
+    @BeforeAll
+    public static void init() {
         logbook1 = new Logbook("name1", "user");
         logbook2 = new Logbook("name2", "user");
 
         tag1 = new Tag("tag1");
         tag2 = new Tag("tag2");
-
-        log1 = LogBuilder.createLog()
-                .id(1L)
-                .owner("owner")
-                .title("title")
-                .withLogbooks(Set.of(logbook1, logbook2))
-                .description("description1")
-                .withTags(Set.of(tag1, tag2))
-                .createDate(now)
-                .level("Urgent")
-                .build();
-
-        log2 = LogBuilder.createLog()
-                .id(2L)
-                .owner("user")
-                .withLogbooks(Set.of(logbook1, logbook2))
-                .description("description2")
-                .createDate(now)
-                .level("Urgent")
-                .build();
 
         property1 = new Property();
         property1.setName("prop1");

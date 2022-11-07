@@ -6,9 +6,8 @@ import co.elastic.clients.elasticsearch.core.BulkRequest;
 import co.elastic.clients.elasticsearch.core.DeleteRequest;
 import co.elastic.clients.elasticsearch.core.bulk.BulkOperation;
 import co.elastic.clients.elasticsearch.core.bulk.DeleteOperation;
-import co.elastic.clients.elasticsearch.core.bulk.IndexOperation;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.phoebus.olog.entity.State;
 import org.phoebus.olog.entity.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +15,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -26,22 +25,24 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@RunWith(SpringJUnit4ClassRunner.class)
+@ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = ElasticConfig.class)
 @TestPropertySource(locations = "classpath:test_application.properties")
+@SuppressWarnings("unused")
 public class TagRepositoryIT {
 
 
     @Autowired
     private TagRepository tagRepository;
 
-    private Tag testTag1 = new Tag("test-tag-1", State.Active);
-    private Tag testTag2 = new Tag("test-tag-2", State.Active);
-    private Tag testTag3 = new Tag("test-tag-3", State.Active);
-    private Tag testTag4 = new Tag("test-tag-4", State.Active);
+    private final Tag testTag1 = new Tag("test-tag-1", State.Active);
+    private final Tag testTag2 = new Tag("test-tag-2", State.Active);
+    private final Tag testTag3 = new Tag("test-tag-3", State.Active);
+    private final Tag testTag4 = new Tag("test-tag-4", State.Active);
 
     // Read the elatic index and type from the application.properties
     @Value("${elasticsearch.tag.index:olog_tags}")
@@ -93,12 +94,12 @@ public class TagRepositoryIT {
     public void createTags() {
         List<Tag> tags = Arrays.asList(testTag1, testTag2, testTag3, testTag4);
         try {
-            List<Tag> result = new ArrayList<Tag>();
-            tagRepository.saveAll(tags).forEach(tag -> result.add(tag));
+            List<Tag> result = new ArrayList<>();
+            tagRepository.saveAll(tags).forEach(result::add);
             assertThat("Failed to create multiple tags", result.containsAll(tags));
 
-            List<Tag> findAll = new ArrayList<Tag>();
-            tagRepository.findAll().forEach(tag -> findAll.add(tag));
+            List<Tag> findAll = new ArrayList<>();
+            tagRepository.findAll().forEach(findAll::add);
             assertThat("Failed to create multiple tags ", findAll.containsAll(tags));
         } finally {
             // Manual cleanup
@@ -113,13 +114,11 @@ public class TagRepositoryIT {
     public void deleteTags() {
         List<Tag> tags = Arrays.asList(testTag1, testTag2, testTag3, testTag4);
         try {
-            List<Tag> result = new ArrayList<Tag>();
-            tagRepository.saveAll(tags).forEach(tag -> {
-                result.add(tag);
-            });
+            List<Tag> result = new ArrayList<>();
+            tagRepository.saveAll(tags).forEach(result::add);
 
             tagRepository.deleteAll(tags);
-            List<Tag> inactiveTags = new ArrayList<Tag>();
+            List<Tag> inactiveTags = new ArrayList<>();
             tagRepository.findAllById(tags.stream().map(Tag::getName).collect(Collectors.toList())).forEach(tag -> {
                 if (tag.getState().equals(State.Inactive)) {
                     inactiveTags.add(tag);
@@ -137,10 +136,8 @@ public class TagRepositoryIT {
         List<Tag> tags = Arrays.asList(testTag1, testTag2, testTag3, testTag4);
         try {
             tagRepository.saveAll(tags);
-            List<Tag> findAll = new ArrayList<Tag>();
-            tagRepository.findAll().forEach(tag -> {
-                findAll.add(tag);
-            });
+            List<Tag> findAll = new ArrayList<>();
+            tagRepository.findAll().forEach(findAll::add);
             assertThat("Failed to list all tags", findAll.containsAll(tags));
         } finally {
             // Manual cleanup
@@ -154,13 +151,12 @@ public class TagRepositoryIT {
         try {
             tagRepository.saveAll(tags);
 
-            List<Tag> findAllById = new ArrayList<Tag>();
+            List<Tag> findAllById = new ArrayList<>();
             tagRepository.findAllById(Arrays.asList("test-tag-1", "test-tag-2"))
-                    .forEach(tag -> {
-                        findAllById.add(tag);
-                    });
-            assertTrue("Failed to search by id test-tag-1 and test-tag-2 ",
-                    findAllById.size() == 2 && findAllById.contains(testTag1) && findAllById.contains(testTag2));
+                    .forEach(findAllById::add);
+            assertTrue(
+                    findAllById.size() == 2 && findAllById.contains(testTag1) && findAllById.contains(testTag2),
+                    "Failed to search by id test-tag-1 and test-tag-2 ");
         } finally {
             // Manual cleanup
             cleanUp(tags);
@@ -177,10 +173,8 @@ public class TagRepositoryIT {
         List<Tag> tags = Arrays.asList(testTag1, testTag2);
         try {
             tagRepository.saveAll(tags);
-            assertTrue("Failed to find by index tag: " + testTag1,
-                    testTag1.equals(tagRepository.findById(testTag1.getName()).get()));
-            assertTrue("Failed to find by index tag: " + testTag2,
-                    testTag2.equals(tagRepository.findById(testTag2.getName()).get()));
+            assertEquals(testTag1, tagRepository.findById(testTag1.getName()).get(), "Failed to find by index tag: " + testTag1);
+            assertEquals(testTag2, tagRepository.findById(testTag2.getName()).get(), "Failed to find by index tag: " + testTag2);
         } finally {
             // Manual cleanup
             cleanUp(tags);
@@ -193,10 +187,13 @@ public class TagRepositoryIT {
         try {
             tagRepository.saveAll(tags);
 
-            assertTrue("Failed to check if exists tag: " + testTag1, tagRepository.existsById(testTag1.getName()));
-            assertTrue("Failed to check if exists tag: " + testTag2, tagRepository.existsById(testTag2.getName()));
+            assertTrue( tagRepository.existsById(testTag1.getName()),
+                    "Failed to check if exists tag: " + testTag1);
+            assertTrue( tagRepository.existsById(testTag2.getName()),
+                    "Failed to check if exists tag: " + testTag2);
 
-            assertFalse("Failed to check if exists tag: non-existant-tag", tagRepository.existsById("non-existant-tag"));
+            assertFalse( tagRepository.existsById("non-existant-tag"),
+                    "Failed to check if exists tag: non-existant-tag");
         } finally {
             // Manual cleanup
             cleanUp(tags);

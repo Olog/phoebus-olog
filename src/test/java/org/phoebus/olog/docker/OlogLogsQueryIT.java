@@ -4,23 +4,23 @@
 
 package org.phoebus.olog.docker;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.Test;
+import org.phoebus.olog.entity.Log;
+import org.testcontainers.containers.DockerComposeContainer;
+import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.testcontainers.containers.DockerComposeContainer;
-import org.testcontainers.containers.wait.strategy.Wait;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import org.phoebus.olog.entity.Log;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Integration tests for Olog and Elasticsearch that make use of existing dockerization
@@ -34,6 +34,7 @@ import org.phoebus.olog.entity.Log;
  *
  * @see org.phoebus.olog.LogResource
  */
+@Testcontainers
 public class OlogLogsQueryIT {
 
     // Note
@@ -75,7 +76,7 @@ public class OlogLogsQueryIT {
     static final String HTTP_AUTH_USER_IP_PORT_OLOG_LOGS  = ITUtil.HTTP + ITUtil.AUTH_USER  + "@" + ITUtil.IP_PORT_OLOG + LOGS;
     static final String HTTP_AUTH_ADMIN_IP_PORT_OLOG_LOGS = ITUtil.HTTP + ITUtil.AUTH_ADMIN + "@" + ITUtil.IP_PORT_OLOG + LOGS;
 
-    @ClassRule
+    @Container
     public static final DockerComposeContainer<?> ENVIRONMENT =
         new DockerComposeContainer<>(new File("docker-compose.yml"))
             .waitingFor(ITUtil.OLOG, Wait.forLogMessage(".*Started Application.*", 1));
@@ -93,7 +94,7 @@ public class OlogLogsQueryIT {
     }
 
     /**
-     * Test {@link gov.bnl.channelfinder.CFResourceDescriptors#LOG_RESOURCE_URI}.
+     * Test {@link org.phoebus.olog.OlogResourceDescriptors#LOG_RESOURCE_URI}.
      */
     @Test
     public void handleLogsQueryByPattern() {
@@ -234,22 +235,22 @@ public class OlogLogsQueryIT {
             assertNotNull(logs);
             assertEquals(10, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?desc="+URLEncoder.encode("check complete", ITUtil.UTF_8));
+            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?desc="+URLEncoder.encode("check complete", StandardCharsets.UTF_8));
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(10, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?desc='"+URLEncoder.encode("check complete", ITUtil.UTF_8)+"'");
+            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?desc='"+URLEncoder.encode("check complete", StandardCharsets.UTF_8)+"'");
             ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?desc="+URLEncoder.encode("CHECK COMPLETE", ITUtil.UTF_8));
+            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?desc="+URLEncoder.encode("CHECK COMPLETE", StandardCharsets.UTF_8));
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(10, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?desc='"+URLEncoder.encode("CHECK COMPLETE", ITUtil.UTF_8)+"'");
+            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?desc='"+URLEncoder.encode("CHECK COMPLETE", StandardCharsets.UTF_8)+"'");
             ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
 
             response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?desc=chec?");
@@ -315,22 +316,22 @@ public class OlogLogsQueryIT {
             assertNotNull(logs);
             assertEquals(10, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?description="+URLEncoder.encode("check complete", ITUtil.UTF_8));
+            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?description="+URLEncoder.encode("check complete", StandardCharsets.UTF_8));
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(10, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?description='"+URLEncoder.encode("check complete", ITUtil.UTF_8)+"'");
+            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?description='"+URLEncoder.encode("check complete", StandardCharsets.UTF_8)+"'");
             ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?description="+URLEncoder.encode("CHECK COMPLETE", ITUtil.UTF_8));
+            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?description="+URLEncoder.encode("CHECK COMPLETE", StandardCharsets.UTF_8));
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(10, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?description='"+URLEncoder.encode("CHECK COMPLETE", ITUtil.UTF_8)+"'");
+            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?description='"+URLEncoder.encode("CHECK COMPLETE", StandardCharsets.UTF_8)+"'");
             ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
 
             response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?description=chec?");
@@ -394,21 +395,21 @@ public class OlogLogsQueryIT {
             assertNotNull(logs);
             assertEquals(43, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?title="+URLEncoder.encode("shift update", ITUtil.UTF_8));
+            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?title="+URLEncoder.encode("shift update", StandardCharsets.UTF_8));
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(43, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?title='"+URLEncoder.encode("shift update", ITUtil.UTF_8)+"'");
+            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?title='"+URLEncoder.encode("shift update", StandardCharsets.UTF_8)+"'");
             ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?title="+URLEncoder.encode("SHIFT UPDATE", ITUtil.UTF_8));
+            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?title="+URLEncoder.encode("SHIFT UPDATE", StandardCharsets.UTF_8));
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(43, logs.length);
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?title='"+URLEncoder.encode("SHIFT UPDATE", ITUtil.UTF_8)+"'");
+            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?title='"+URLEncoder.encode("SHIFT UPDATE", StandardCharsets.UTF_8)+"'");
             ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
 
             response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?title=Shif?");
@@ -472,22 +473,22 @@ public class OlogLogsQueryIT {
             assertNotNull(logs);
             assertEquals(60, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?level="+URLEncoder.encode("shift update", ITUtil.UTF_8));
+            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?level="+URLEncoder.encode("shift update", StandardCharsets.UTF_8));
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(60, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?level='"+URLEncoder.encode("shift update", ITUtil.UTF_8)+"'");
+            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?level='"+URLEncoder.encode("shift update", StandardCharsets.UTF_8)+"'");
             ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?level="+URLEncoder.encode("SHIFT UPDATE", ITUtil.UTF_8));
+            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?level="+URLEncoder.encode("SHIFT UPDATE", StandardCharsets.UTF_8));
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(60, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?level='"+URLEncoder.encode("SHIFT UPDATE", ITUtil.UTF_8)+"'");
+            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?level='"+URLEncoder.encode("SHIFT UPDATE", StandardCharsets.UTF_8)+"'");
             ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
 
             response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?level=?pdate");
@@ -552,25 +553,25 @@ public class OlogLogsQueryIT {
             assertNotNull(logs);
             assertEquals(10, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?phrase="+URLEncoder.encode("check complete", ITUtil.UTF_8));
+            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?phrase="+URLEncoder.encode("check complete", StandardCharsets.UTF_8));
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(2, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?phrase='"+URLEncoder.encode("check complete", ITUtil.UTF_8)+"'");
+            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?phrase='"+URLEncoder.encode("check complete", StandardCharsets.UTF_8)+"'");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(2, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?phrase="+URLEncoder.encode("CHECK COMPLETE", ITUtil.UTF_8));
+            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?phrase="+URLEncoder.encode("CHECK COMPLETE", StandardCharsets.UTF_8));
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(2, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?phrase='"+URLEncoder.encode("CHECK COMPLETE", ITUtil.UTF_8)+"'");
+            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?phrase='"+URLEncoder.encode("CHECK COMPLETE", StandardCharsets.UTF_8)+"'");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
@@ -827,13 +828,13 @@ public class OlogLogsQueryIT {
             response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?properties='Shift Info C'");
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_VERSION);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?properties="+URLEncoder.encode("Shift Info C", ITUtil.UTF_8));
+            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?properties="+URLEncoder.encode("Shift Info C", StandardCharsets.UTF_8));
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(20, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?properties='"+URLEncoder.encode("Shift Info C", ITUtil.UTF_8)+"'");
+            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?properties='"+URLEncoder.encode("Shift Info C", StandardCharsets.UTF_8)+"'");
             ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
 
             response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?properties=.operator");
@@ -918,14 +919,14 @@ public class OlogLogsQueryIT {
             assertNotNull(logs);
             assertEquals(1, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?properties=..12345678A&phrase="+URLEncoder.encode("Start-up after maintenance", ITUtil.UTF_8));
+            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?properties=..12345678A&phrase="+URLEncoder.encode("Start-up after maintenance", StandardCharsets.UTF_8));
             ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?properties=..12345678C&phrase="+URLEncoder.encode("Start-up after maintenance", ITUtil.UTF_8));
+            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?properties=..12345678C&phrase="+URLEncoder.encode("Start-up after maintenance", StandardCharsets.UTF_8));
             // expected 3
             ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?properties=..123*&phrase="+URLEncoder.encode("Start-up after maintenance", ITUtil.UTF_8));
+            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?properties=..123*&phrase="+URLEncoder.encode("Start-up after maintenance", StandardCharsets.UTF_8));
             // expected 3
             ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
 
