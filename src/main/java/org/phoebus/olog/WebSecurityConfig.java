@@ -34,12 +34,12 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.ldap.DefaultSpringSecurityContextSource;
 import org.springframework.security.ldap.userdetails.DefaultLdapAuthoritiesPopulator;
+import org.springframework.security.ldap.authentication.ad.ActiveDirectoryLdapAuthenticationProvider;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.session.FindByIndexNameSessionRepository;
 import org.springframework.session.jdbc.JdbcIndexedSessionRepository;
 import org.springframework.transaction.support.TransactionOperations;
 import org.springframework.transaction.support.TransactionTemplate;
-
 import javax.sql.DataSource;
 import java.sql.Driver;
 
@@ -74,6 +74,15 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         web.ignoring().requestMatchers(PathRequest.toH2Console());
     }
 
+    /**
+     * External Active Directory configuration properties
+     */
+    @Value("${ad.enabled:false}")
+    boolean ad_enabled;
+    @Value("${ad.url:ldap://localhost:389/}")
+    String ad_url;
+    @Value("${ad.domain}")
+    String ad_domain;
     /**
      * External LDAP configuration properties
      */
@@ -128,7 +137,12 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     public void configure(AuthenticationManagerBuilder auth) throws Exception {
-
+        if (ad_enabled) {
+            ActiveDirectoryLdapAuthenticationProvider adProvider = new ActiveDirectoryLdapAuthenticationProvider(ad_domain, ad_url);
+            adProvider.setConvertSubErrorCodesToExceptions(true);
+	        adProvider.setUseAuthenticationRequestCredentials(true);
+	        auth.authenticationProvider(adProvider);
+        }
         if (ldap_enabled) {
             DefaultSpringSecurityContextSource contextSource = new DefaultSpringSecurityContextSource(ldap_url);
             if(ldap_manager_dn != null && !ldap_manager_dn.isEmpty() && ldap_manager_password != null && !ldap_manager_password.isEmpty()){
