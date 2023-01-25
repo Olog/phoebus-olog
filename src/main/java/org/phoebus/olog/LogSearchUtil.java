@@ -63,6 +63,7 @@ public class LogSearchUtil {
         BoolQuery.Builder boolQueryBuilder = new Builder();
         boolean fuzzySearch = false;
         List<String> searchTerms = new ArrayList<>();
+        List<String> phraseSearchTerms = new ArrayList<>();
         List<String> titleSearchTerms = new ArrayList<>();
         boolean temporalSearch = false;
         boolean includeEvents = false;
@@ -82,7 +83,13 @@ public class LogSearchUtil {
                 case "text":
                     for (String value : parameter.getValue()) {
                         for (String pattern : value.split("[\\|,;\\s+]")) {
-                            searchTerms.add(pattern.trim().toLowerCase());
+                            String term = pattern.trim().toLowerCase();
+                            // Quoted strings will be mapped to a phrase query
+                            if (term.startsWith("\"") && term.endsWith("\"")) {
+                                phraseSearchTerms.add(term.substring(1, term.length() - 1));
+                            } else {
+                                searchTerms.add(term);
+                            }
                         }
                     }
                     break;
@@ -280,21 +287,24 @@ public class LogSearchUtil {
             }
         }
 
-        // Add the description query
+        // Add the description query. Multiple search terms will be AND:ed.
         if (!searchTerms.isEmpty()) {
-            DisMaxQuery.Builder descQuery = new DisMaxQuery.Builder();
-            List<Query> descQueries = new ArrayList<>();
             if (fuzzySearch) {
                 searchTerms.stream().forEach(searchTerm -> {
-                    descQueries.add(FuzzyQuery.of(f -> f.field("description").value(searchTerm))._toQuery());
+                    boolQueryBuilder.must(FuzzyQuery.of(f -> f.field("description").value(searchTerm))._toQuery());
                 });
             } else {
                 searchTerms.stream().forEach(searchTerm -> {
-                    descQueries.add(WildcardQuery.of(w -> w.field("description").value(searchTerm))._toQuery());
+                    boolQueryBuilder.must(WildcardQuery.of(w -> w.field("description").value(searchTerm))._toQuery());
                 });
             }
-            descQuery.queries(descQueries);
-            boolQueryBuilder.must(descQuery.build()._toQuery());
+        }
+
+        // Add phrase queries for description key. Multiple search terms will be AND:ed.
+        if (!phraseSearchTerms.isEmpty()) {
+            phraseSearchTerms.stream().forEach(phraseSearchTerm -> {
+                boolQueryBuilder.must(MatchPhraseQuery.of(m -> m.field("description").query(phraseSearchTerm))._toQuery());
+            });
         }
 
         // Add the title query
