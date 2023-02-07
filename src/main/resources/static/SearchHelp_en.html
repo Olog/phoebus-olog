@@ -79,6 +79,10 @@
             <code>desc=&quot;foo-bar&quot;,other</code>.
 
             <p>
+                Note that using quotes may affect performance, i.e. the search process may take longer time to complete.
+            </p>
+
+            <p>
             <b>NOTE:</b> log entries with an empty body will <b>not</b> match queries containing the <code>desc</code> key, even if
             wildcards are used, e.g. <code>desc=*</code>. In other words, to match all log entries irrespective of
             body text length, the <code>desc</code> key must not be present in the query.
