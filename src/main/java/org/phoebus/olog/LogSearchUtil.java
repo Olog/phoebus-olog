@@ -27,6 +27,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -117,7 +118,9 @@ public class LogSearchUtil {
                     List<Query> ownerQueries = new ArrayList<>();
                     for (String value : parameter.getValue()) {
                         for (String pattern : value.split("[\\|,;\\s+]")) {
-                            ownerQueries.add(WildcardQuery.of(w -> w.field("owner").value(pattern.trim()))._toQuery());
+                            ownerQueries.add(WildcardQuery.of(w -> w.field("owner")
+                                    .caseInsensitive(true)
+                                    .value(pattern.trim()))._toQuery());
                         }
                     }
                     ownerQuery.queries(ownerQueries);
@@ -128,7 +131,9 @@ public class LogSearchUtil {
                     List<Query> tagsQueries = new ArrayList<>();
                     for (String value : parameter.getValue()) {
                         for (String pattern : value.split("[\\|,;]")) {
-                            tagsQueries.add(WildcardQuery.of(w -> w.field("tags.name").value(pattern.trim()))._toQuery());
+                            tagsQueries.add(WildcardQuery.of(w -> w.field("tags.name")
+                                    .caseInsensitive(true)
+                                    .value(pattern.trim()))._toQuery());
                         }
                     }
                     Query tagsQuery = tagQuery.queries(tagsQueries).build()._toQuery();
@@ -140,7 +145,9 @@ public class LogSearchUtil {
                     List<Query> logbooksQueries = new ArrayList<>();
                     for (String value : parameter.getValue()) {
                         for (String pattern : value.split("[\\|,;]")) {
-                            logbooksQueries.add(WildcardQuery.of(w -> w.field("logbooks.name").value(pattern.trim()))._toQuery());
+                            logbooksQueries.add(WildcardQuery.of(w -> w.field("logbooks.name")
+                                    .caseInsensitive(true)
+                                    .value(pattern.trim()))._toQuery());
                         }
                     }
                     Query logbooksQuery = logbookQuery.queries(logbooksQueries).build()._toQuery();
@@ -179,14 +186,19 @@ public class LogSearchUtil {
                             propertySearchFields = Arrays.copyOf(pattern.split("\\."), 3);
                             BoolQuery.Builder bqb = new BoolQuery.Builder();
                             if (propertySearchFields[0] != null && !propertySearchFields[0].isEmpty()) {
-                                bqb.must(WildcardQuery.of(w -> w.field("properties.name").value(propertySearchFields[0].trim()))._toQuery());
+                                bqb.must(WildcardQuery.of(w -> w.field("properties.name")
+                                        .caseInsensitive(true)
+                                        .value(propertySearchFields[0].trim()))._toQuery());
                             }
-
                             if (propertySearchFields[1] != null && !propertySearchFields[1].isEmpty()) {
                                 BoolQuery.Builder bqb2 = new BoolQuery.Builder();
-                                bqb2.must(WildcardQuery.of(w -> w.field("properties.attributes.name").value(propertySearchFields[1].trim()))._toQuery());
+                                bqb2.must(WildcardQuery.of(w -> w.field("properties.attributes.name")
+                                        .caseInsensitive(true)
+                                        .value(propertySearchFields[1].trim()))._toQuery());
                                 if (propertySearchFields[2] != null && !propertySearchFields[2].isEmpty()) {
-                                    bqb2.must(WildcardQuery.of(w -> w.field("properties.attributes.value").value(propertySearchFields[2].trim()))._toQuery());
+                                    bqb2.must(WildcardQuery.of(w -> w.field("properties.attributes.value")
+                                            .caseInsensitive(true)
+                                            .value(propertySearchFields[2].trim()))._toQuery());
                                 }
                                 bqb.must(NestedQuery.of(n -> n.path("properties.attributes").query(bqb2.build()._toQuery()).scoreMode(ChildScoreMode.None))._toQuery());
                             }
@@ -204,17 +216,13 @@ public class LogSearchUtil {
                     break;
                 case "size":
                 case "limit":
-                    Optional<String> maxSize = parameter.getValue().stream().max((o1, o2) -> {
-                        return Integer.valueOf(o1).compareTo(Integer.valueOf(o2));
-                    });
+                    Optional<String> maxSize = parameter.getValue().stream().max(Comparator.comparing(Integer::valueOf));
                     if (maxSize.isPresent()) {
                         searchResultSize = Integer.valueOf(maxSize.get());
                     }
                     break;
                 case "from":
-                    Optional<String> maxFrom = parameter.getValue().stream().max((o1, o2) -> {
-                        return Integer.valueOf(o1).compareTo(Integer.valueOf(o2));
-                    });
+                    Optional<String> maxFrom = parameter.getValue().stream().max(Comparator.comparing(Integer::valueOf));
                     if (maxFrom.isPresent()) {
                         from = Integer.valueOf(maxFrom.get());
                     }
