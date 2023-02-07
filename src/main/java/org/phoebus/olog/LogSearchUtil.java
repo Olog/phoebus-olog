@@ -31,6 +31,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * A utility class for creating a search query for log entries based on time,
@@ -56,6 +58,7 @@ public class LogSearchUtil {
     @Value("${elasticsearch.result.size.search.max:1000}")
     private int maxSearchSize;
 
+    private static final Logger LOGGER = Logger.getLogger(LogSearchUtil.class.getName());
     /**
      * @param searchParameters - the various search parameters
      * @return A {@link SearchRequest} based on the provided search parameters
@@ -218,13 +221,21 @@ public class LogSearchUtil {
                 case "limit":
                     Optional<String> maxSize = parameter.getValue().stream().max(Comparator.comparing(Integer::valueOf));
                     if (maxSize.isPresent()) {
-                        searchResultSize = Integer.valueOf(maxSize.get());
+                        try {
+                            searchResultSize = Integer.valueOf(maxSize.get());
+                        } catch (NumberFormatException e) {
+                            LOGGER.log(Level.WARNING, "Cannot parse size value\"" + maxSize.get() + "\" as number");
+                        }
                     }
                     break;
                 case "from":
                     Optional<String> maxFrom = parameter.getValue().stream().max(Comparator.comparing(Integer::valueOf));
                     if (maxFrom.isPresent()) {
-                        from = Integer.valueOf(maxFrom.get());
+                        try {
+                            from = Integer.valueOf(maxFrom.get());
+                        } catch (NumberFormatException e) {
+                            LOGGER.log(Level.WARNING, "Cannot parse from value\"" + maxFrom.get() + "\" as number");
+                        }
                     }
                     break;
                 case "sort": // Honor sort order if client specifies it
