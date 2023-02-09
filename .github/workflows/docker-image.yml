@@ -16,7 +16,7 @@ jobs:
       - name: Set Project Info Env Vars
         run: ./scripts/set-github-env.sh
       - name: Confirm project information
-        run: echo "Building docker image for ${{ env.IMAGE_TAG_LATEST }}, ${{ $IMAGE_TAG_VERSION }}, and ${{ $IMAGE_TAG_VERSION_TIMESTAMP }}"
+        run: echo "Building docker image for ${{ env.IMAGE_TAG_LATEST }}, ${{ env.IMAGE_TAG_VERSION }}, and ${{ env.IMAGE_TAG_VERSION_TIMESTAMP }}"
 #      - name: Build and push
 #        uses: docker/build-push-action@v2
 #        with:
