@@ -3,16 +3,21 @@ name: build docker image
 on:
   push:
   pull_request:
+  workflow_dispatch:
 
 jobs:
   docker:
     runs-on: ubuntu-latest
     steps:
-      -
-        name: Checkout
+      - name: Checkout
         uses: actions/checkout@v2
-      -
-        name: Build and push
-        uses: docker/build-push-action@v2
-        with:
-          context: .
+      - name: Get Project Info
+        run: ./scripts/write-project-info.sh
+      - name: Set Project Info Env Vars
+        run: ./scripts/set-github-env.sh
+      - name: Echo vars set
+        run: echo "Project version ${{ env.PROJECT_VERSION }}"
+#      - name: Build and push
+#        uses: docker/build-push-action@v2
+#        with:
+#          context: .
