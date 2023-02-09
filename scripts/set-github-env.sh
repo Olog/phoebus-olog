@@ -6,7 +6,7 @@
 # export GITHUB_ENV=myfile.txt
 # Otherwise you will be an "ambiguous redirect" error when
 # running this script locally
-touch $GITHUB_ENV
+touch $GITHUB_OUTPUT
 while read p; do
-  echo "$p" >> $GITHUB_ENV
+  echo "$p" >> $GITHUB_OUTPUT
 done <PROJECT_INFO.txt

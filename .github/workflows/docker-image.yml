@@ -12,11 +12,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Get/Set Project Info
+        id: project-info
         run: ./scripts/write-project-info.sh && ./scripts/set-github-env.sh
       - name: Confirm build information
-        run: echo "Building docker image for ${{ env.IMAGE_TAG_LATEST }}, ${{ env.IMAGE_TAG_VERSION }}, and ${{ env.IMAGE_TAG_VERSION_TIMESTAMP }}"
+        run: echo "Building docker image for ${{ steps.project-info.outputs.IMAGE_TAG_LATEST }}, ${{ steps.project-info.outputs.IMAGE_TAG_VERSION }}, and ${{ steps.project-info.outputs.IMAGE_TAG_VERSION_TIMESTAMP }}"
       - name: Build and push
         uses: docker/build-push-action@v2
         with:
           context: .
-          tags: ${{ env.IMAGE_TAG_LATEST }},${{ env.IMAGE_TAG_VERSION }},${{ env.IMAGE_TAG_VERSION_TIMESTAMP }}
+          tags: ${{ steps.project-info.outputs.IMAGE_TAG_LATEST }},${{ steps.project-info.outputs.IMAGE_TAG_VERSION }},${{ steps.project-info.outputs.IMAGE_TAG_VERSION_TIMESTAMP }}
