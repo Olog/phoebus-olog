@@ -375,6 +375,15 @@ public class LogSearchUtil {
                 .from(_from));
     }
 
+    /**
+     * Parses a search query terms string into a string array. In particular,
+     * quoted search terms must be maintained even if they contain the
+     * separator chars used to tokenize the terms.
+     *
+     * @param searchQueryTerms String as specified by client
+     * @return A {@link List} of search terms, some of which may be
+     * quoted. Is void of any zero-length strings.
+     */
     public List<String> getSearchTerms(String searchQueryTerms) {
         // Count double quote chars. Odd number of quote chars
         // is not supported -> throw exception
