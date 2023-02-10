@@ -33,6 +33,7 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
  * A utility class for creating a search query for log entries based on time,
@@ -86,7 +87,7 @@ public class LogSearchUtil {
                 case "description":
                 case "text":
                     for (String value : parameter.getValue()) {
-                        for (String pattern : value.split("[\\|,;\\s+]")) {
+                        for (String pattern : getSearchTerms(value)) {
                             String term = pattern.trim().toLowerCase();
                             // Quoted strings will be mapped to a phrase query
                             if (term.startsWith("\"") && term.endsWith("\"")) {
@@ -372,5 +373,39 @@ public class LogSearchUtil {
                 .sort(SortOptions.of(so -> so.field(fb.build())))
                 .size(Math.min(_searchResultSize, maxSearchSize))
                 .from(_from));
+    }
+
+    public List<String> getSearchTerms(String searchQueryTerms) {
+        // Count double quote chars. Odd number of quote chars
+        // is not supported -> throw exception
+        long quoteCount = searchQueryTerms.chars().filter(c -> c == '\"').count();
+        if(quoteCount == 0){
+            return Arrays.asList(searchQueryTerms.split("[\\|,;\\s+]"))
+                    .stream().filter(t -> t.length() > 0).collect(Collectors.toList());
+        }
+        if(quoteCount % 2 == 1){
+            throw new IllegalArgumentException("Unbalanced quotes in search query");
+        }
+        // If we come this far then at least one quoted term is
+        // contained in user input
+        List<String> terms = new ArrayList<>();
+        int nextStartIndex = searchQueryTerms.indexOf('\"');
+        while(true){
+            int endIndex = searchQueryTerms.indexOf('\"', nextStartIndex + 1);
+            String quotedTerm = searchQueryTerms.substring(nextStartIndex, endIndex + 1);
+            terms.add(quotedTerm);
+            // Remove the quoted term from user input
+            searchQueryTerms = searchQueryTerms.replace(quotedTerm, "");
+            // Check next occurrence
+            nextStartIndex = searchQueryTerms.indexOf('\"');
+            if(nextStartIndex < 0){
+                break;
+            }
+        }
+        // Add remaining terms...
+        List<String> remaining = Arrays.asList(searchQueryTerms.split("[\\|,;\\s+]"));
+        //...but remove empty strings, which are "leftovers" when quoted terms are removed
+        terms.addAll(remaining.stream().filter(t -> t.length() > 0).collect(Collectors.toList()));
+        return terms;
     }
 }
