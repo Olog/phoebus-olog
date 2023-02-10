@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <title>Olog Search Help</title>
+    <title>Logbook Search Help</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 
@@ -8,12 +8,12 @@
 
     <div class="container">
         <div>
-            <h2>Olog Search Help Reference</h2>
-            <p>This document details the search capabilities supported by the Olog service. Users are encouraged
+            <h2>Logbook Search Help Reference</h2>
+            <p>This document details the search capabilities supported by the Olog logbook service. Users are encouraged
                 to familiarize themselves with this content in order to be able to construct efficient queries.
             </p>
             <p>
-               The query as edited in the Olog clients consists of a list of key/value pairs separated by an ampersand (&amp;amp;)
+               The query as edited in the logbook clients consists of a list of key/value pairs separated by an ampersand (&amp;amp;)
                 character. Keys identify the various elements - i.e. text and meta-data - of a log entry. Key names
                 are <b>case insensitive</b>.
             </p>
@@ -56,8 +56,8 @@
             a date/time picker tool.
 
             <h3>owner</h3>
-            This is the author element of the log entry. The value for this key is <b>case sensitive</b>,
-            but wildcards can be used, e.g. <code>owner=John*</code>.<br>
+            This is the author element of the log entry. The value for this key is <b>case insensitive</b>,
+            and wildcards can be used, e.g. <code>owner=John*</code>.<br>
 
             <h3>title</h3>
             This is the title of the log entry. A title is mandatory for a log entry, i.e. all log entries will
@@ -75,8 +75,12 @@
 
             In some cases one may need to quote a string in order to
             get the wanted search result. For instance, to search for a string like <code>foo-bar</code> one must use
-            <code>desc="foo-bar"</code>. Mixing quoted and non-quoted values is supported, e.g.
-            <code>desc="foo-bar",other</code>.
+            <code>desc=&quot;foo-bar&quot;</code>. Mixing quoted and non-quoted values is supported, e.g.
+            <code>desc=&quot;foo-bar&quot;,other</code>.
+
+            <p>
+                Note that using quotes may affect performance, i.e. the search process may take longer time to complete.
+            </p>
 
             <p>
             <b>NOTE:</b> log entries with an empty body will <b>not</b> match queries containing the <code>desc</code> key, even if
@@ -86,25 +90,27 @@
 
             <h3>logbooks</h3>
             This is the logbooks meta-data of a log entry. A log entry is contained in
-            one or multiple logbooks. The value for this key is <b>case sensitive</b>.<br>
+            one or multiple logbooks. The value for this key is <b>case insensitive</b>,
+            and wildcards can be used, e.g. <code>logbooks=operation*</code>.<br>
 
             <h3>tags</h3>
             This is the tags meta-data of a log entry. A log entry may contain zero or multiple
-            tags. The value for this key is <b>case sensitive</b>.<br>
+            tags. The value for this key is <b>case insensitive</b>,
+            and wildcards can be used, e.g. <code>tags=cavity*</code>.<br>
 
             <h3>properties</h3>
             This is the properties meta-data of a log entry. A log entry may contain zero or multiple
-            properties. The value for this key is <b>case sensitive</b>.<br>
+            properties.<br>
 
-            A property is a named list of attributes, where each attribute is a key/value pair. Consequently the value
+            A property is a named list of attributes, where each attribute is a key/value pair. Consequently, the value
             for this search key must be specified using a dot (.) separated string corresponding to the structure of
             a property like so:<br>
             <code>&lt;property name&gt;.&lt;attribute name&gt;.&lt;attribute value&gt;</code><br>
 
-            Example: assume some log entries contain a property named <code>Shift Info</code> which in turn contains an attribute named
+            Example: assume some log entries contain a property named <code>Shift Info</code>, which in turn contains an attribute named
             <code>Shift Lead</code>. A search query for log entries where the <code>Shift Lead</code> is <code>John Doe</code>
-            would then use: <code>properties=Shift Info.Shift Lead.John Doe</code>. Wildcards can be used in any portion of
-            the value string.<br>
+            would then use: <code>properties=Shift Info.Shift Lead.John Doe</code>.  All three, dot-separated, elements of the value
+            string for the properties key are <i>case insensitive</i>, and wildcards can be used.<br>
 
             Not all elements need to be specified. A query like <code>properties=Shift Info</code> will match all log entries
             containing such a property, irrespective of the attribute list it contains.<br>
@@ -116,23 +122,23 @@
             will match entries with plot file attachments. To search for log entries that containing attachments any of type other
             than <code>image</code> or <code>plt</code>, use <code>attachments=file</code>.<br>
 
-            If "all" is specified in the value, other attachment type specifiers are ignored.
+            If &quot;all&quot; is specified in the value, other attachment type specifiers are ignored.
 
             <h3>Multiple keys</h3>
             If multiple keys are used in a search query, the service will consider all (valid) keys and return log
             entries matching <i>all</i> criteria. In other words, the search keys are and:ed.
 
             <h3>Multiple values</h3>
-            One may specify multiple values for a key using a comma (,) separator. The search will then find entries
-            matching <i>any</i> of the values. However, for the "desc" key the search will instead apply an "and"
+            One may specify multiple values for a key using a comma (,) separator. This will then find entries
+            matching <i>any</i> of the values. However, for the &quot;desc&quot; key the search will instead apply an &quot;and&quot;
             strategy, i.e. only entries containing <i>all</i> of the values will match the search query.
             <p>
                 Examples:
                 <ul>
-                    <li><code>user=John*,Jane*</code> will match entries created by "John" <i>or</i> "Jane".</li>
-                    <li><code>desc=magnet,current</code> will match entries containing "magnet" <i>and</i> "current".</li>
-                    <li><code>user=John*,Jane*&amp;desc=magnet,current</code> will find entries created by by "John" <i>or</i> "Jane",
-                    <i>and</i> that contain both "magnet" <i>and</i> "current".</li>
+                    <li><code>user=John*,Jane*</code> will match entries created by users named &quot;John&quot; <i>or</i> &quot;Jane&quot;.</li>
+                    <li><code>desc=magnet,current</code> will match entries containing &quot;magnet&quot; <i>and</i> &quot;current&quot;.</li>
+                    <li><code>user=John*,Jane*&amp;desc=magnet,current</code> will find entries created by users named &quot;John&quot; <i>or</i> &quot;Jane&quot;,
+                    <i>and</i> that contain both &quot;magnet&quot; <i>and</i> &quot;current&quot;.</li>
                 </ul>
             </p>
             <br>
