@@ -79,12 +79,21 @@
             <code>desc=&quot;foo-bar&quot;,other</code>.
 
             <p>
-                Note that using quotes may affect performance, i.e. the search process may take longer time to complete.
+                To enclose a term in quotes, one <i>must</i> use double the double quote character (&quot;).
             </p>
 
             <p>
-            <b>NOTE:</b> log entries with an empty body will <b>not</b> match queries containing the <code>desc</code> key, even if
-            wildcards are used, e.g. <code>desc=*</code>. In other words, to match all log entries irrespective of
+            Considerations when using quoted search terms:
+            <ul>
+                <li>Performance may be affected, i.e. the search process may take longer time to complete.</li>
+                <li>Search will fail if quote characters are not balanced, i.e. search terms string must contain even number of quote characters.</li>
+                <li>Searching for occurrence of quote character is not possible.</li>
+            </ul>
+            </p>
+
+            <p>
+            <b>NOTE:</b> log entries with an empty body will <b>not</b> match queries containing the <code>desc</code> key.
+            In other words, to match all log entries irrespective of
             body text length, the <code>desc</code> key must not be present in the query.
             </p>
 

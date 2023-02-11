@@ -235,7 +235,7 @@ public class LogRepository implements CrudRepository<Log, String> {
             searchResult.setHitCount(searchResponse.hits().total().value());
             searchResult.setLogs(result);
             return searchResult;
-        } catch (IOException e) {
+        } catch (IOException | IllegalArgumentException e) {
             logger.log(Level.SEVERE, "Failed to complete search", e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to complete search");
         }
