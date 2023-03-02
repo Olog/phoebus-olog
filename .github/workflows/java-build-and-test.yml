@@ -1,15 +1,17 @@
-name: Build with tests
+name: Build Java Binary and Run Tests
 
+# We want to verify the Java jar can be built and that tests
+# pass on every push (whether to master or not), in addition to pull request
 on:
   push:
   pull_request:
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Set up JDK 11
       uses: actions/setup-java@v1
       with:
