@@ -14,7 +14,7 @@ PROJECT_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdou
 IMAGE_OWNER=$(echo $GITHUB_REPOSITORY_OWNER | tr '[:upper:]' '[:lower:]' | tr '.' '-')
 IMAGE_PROJECT_GROUP_ID=$(echo $PROJECT_GROUP_ID | tr '[:upper:]' '[:lower:]' | tr '.' '-')
 IMAGE_PROJECT_ARTIFACT_ID=$(echo $PROJECT_ARTIFACT_ID | tr '[:upper:]' '[:lower:]' | tr '.' '-')
-IMAGE_PROJECT_VERSION=$(echo $PROJECT_VERSION | tr '[:upper:]' '[:lower:]' | tr -d '\-snapshot')
+IMAGE_PROJECT_VERSION=$(echo $PROJECT_VERSION | tr '[:upper:]' '[:lower:]')
 
 IMAGE_NAME="ghcr.io/${IMAGE_OWNER}/${IMAGE_PROJECT_GROUP_ID}-${IMAGE_PROJECT_ARTIFACT_ID}"
 IMAGE_TIMESTAMP=$(date '+%Y%m%d%H%M%S')
