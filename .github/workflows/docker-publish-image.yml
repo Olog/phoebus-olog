@@ -18,6 +18,12 @@ jobs:
         run: ./scripts/write-project-info.sh && ./scripts/set-github-env.sh
       - name: Print Tag Info
         run: echo "Will build docker image for ${{ steps.project-info.outputs.IMAGE_TAG_LATEST }}, ${{ steps.project-info.outputs.IMAGE_TAG_VERSION }}, and ${{ steps.project-info.outputs.IMAGE_TAG_VERSION_TIMESTAMP }}"
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build, Tag, and Publish Docker Image
         uses: docker/build-push-action@v3
         with:
