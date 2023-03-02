@@ -1,8 +1,10 @@
-name: build docker image
+name: Build and Publish Docker Image
 
+# Publish Docker image on pushes to main branch, or on-demand.
 on:
   push:
-  pull_request:
+    branches:
+      - 'master'
   workflow_dispatch:
 
 jobs:
@@ -11,12 +13,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      - name: Get/Set Project Info
+      - name: Get/Set Tag Info
         id: project-info
         run: ./scripts/write-project-info.sh && ./scripts/set-github-env.sh
-      - name: Confirm build information
-        run: echo "Building docker image for ${{ steps.project-info.outputs.IMAGE_TAG_LATEST }}, ${{ steps.project-info.outputs.IMAGE_TAG_VERSION }}, and ${{ steps.project-info.outputs.IMAGE_TAG_VERSION_TIMESTAMP }}"
-      - name: Build and push
+      - name: Print Tag Info
+        run: echo "Will build docker image for ${{ steps.project-info.outputs.IMAGE_TAG_LATEST }}, ${{ steps.project-info.outputs.IMAGE_TAG_VERSION }}, and ${{ steps.project-info.outputs.IMAGE_TAG_VERSION_TIMESTAMP }}"
+      - name: Build, Tag, and Publish Docker Image
         uses: docker/build-push-action@v3
         with:
           context: .
