@@ -27,6 +27,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map.Entry;
@@ -252,26 +253,42 @@ public class LogSearchUtil {
                     break;
                 case "attachments":
                     DisMaxQuery.Builder attachmentsQuery = new DisMaxQuery.Builder();
+                    attachmentsQuery.queries(Collections.emptyList());
                     List<String> parameterValues = parameter.getValue();
                     boolean searchAll = false;
-                    // If query string contains attachments= or attachments=all, then this overrides any
-                    // other parameter values and results in a search for entries with at least one attachment.
                     for (String value : parameterValues) {
                         for (String pattern : value.split("[\\|,;]")) {
-                            String parameterValue = pattern.trim();
-                            if ("all".equals(parameterValue) || parameterValue.isEmpty()) {
+                            // No value for attachments -> search for existence of attachment, regardless of name and type
+                            if(pattern == null || "null".equals(pattern) || pattern.isEmpty()){
                                 attachmentsQuery.queries(ExistsQuery.of(e -> e.field("attachments"))._toQuery());
                                 searchAll = true;
                                 break;
-                            } else {
-                                attachmentsQuery.queries(WildcardQuery.of(w -> w.field("attachments.fileMetadataDescription").value(pattern.trim()))._toQuery());
+                            }
+                            String trimmed = pattern.trim();
+                            int index = trimmed.indexOf(".");
+                            // Value specified -> search on type, which is defined as the MIME type determined when
+                            // the attachment was uploaded, and saved in fileMetadataDescription.
+                            if(index == -1){
+                                attachmentsQuery.queries(WildcardQuery.of(w -> w.field("attachments.fileMetadataDescription").caseInsensitive(true).value(trimmed))._toQuery());
+                            }
+                            // Value is like x.y, where x=name implies search on file name matching y.
+                            else{
+                                String first = trimmed.substring(0, index).trim();
+                                String second = trimmed.substring(index + 1).trim();
+                                if("name".equalsIgnoreCase(first)){
+                                    attachmentsQuery.queries(WildcardQuery.of(m -> m.field("attachments.filename").caseInsensitive(true).value(second))._toQuery());
+                                }
                             }
                         }
                         if (searchAll) { // search all -> ignore other parameter values
                             break;
                         }
                     }
-                    boolQueryBuilder.must(attachmentsQuery.build()._toQuery());
+                    DisMaxQuery disMaxQuery = attachmentsQuery.build();
+                    if(!disMaxQuery.queries().isEmpty()){
+                        boolQueryBuilder.must(disMaxQuery._toQuery());
+                    }
+                    //boolQueryBuilder.must(attachmentsQuery.build()._toQuery());
                     break;
                 default:
                     // Unsupported search parameters are ignored

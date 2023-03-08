@@ -142,16 +142,46 @@
         containing such a property, irrespective of the attribute list it contains.<br>
 
         <h3>attachments</h3>
-        If this added to the search query, the service will return log entries that contain at least one file
-        attachment.
-        The value for this key is <b>case sensitive</b>. Use <code>attachments=all</code> to search for log entries with
-        attachments of any type.
-        <code>attachments=image</code> will match entries with image attachments, while <code>attachments=plt</code>
-        will match entries with plot file attachments. To search for log entries that containing attachments any of type
-        other
-        than <code>image</code> or <code>plt</code>, use <code>attachments=file</code>.<br>
+        <p>
+        If this added to the search query, the service will return log entries that contain file attachments.
+        To find entries with at least one attachment, irrespective of type, one must not specify a value.
+        </p>
 
-        If &quot;all&quot; is specified in the value, other attachment type specifiers are ignored.
+        <p>
+        The search can be narrowed down to attachments matching either file name or type, see below for an
+        explanation of how &quot;type&quot; is defined.
+        </p>
+
+        <p>
+        To search for entries containing an attachment with a particular file name, one must add to the query:
+        <code>attachments=name.some_file_name</code>. Here <code>some_file_name</code> is case-insensitive, but must
+        otherwise match exactly. Wildcards can be used, e.g. <code>attachments=name.some_file*</code>. To search for attachments
+        with a particular file extension, use something like <code>attachments=name.*plt</code>.
+        </p>
+
+        <p>
+        The &quot;type&quot; of an attachment is determined when uploaded and is set to its MIME type. A MIME type is
+        rather generic and need not map to the file extension. To search for attachments of a particular type, use
+            <code>attachments=&lt;type&gt;</code>, where &quot;type&quot; should be surrounded by asterisks. Examples:<br>
+
+            <table border='1' style='border-collapse:collapse;'>
+                <tr><th>Type</th><th>Syntax</th></tr>
+                <tr><td>Images</td><td><code>attachments=*image*</code></td></tr>
+                <tr><td>Spreadsheets, e.g. Microsoft Excel</td><td><code>attachments=*spreadsheet*</code></td></tr>
+                <tr><td>Presentations, e.g. Microsoft Powerpoint </td><td><code>attachments=*presentation*</code></td></tr>
+                <tr><td>Word processing doc</td><td><code>attachments=*word*</code></td></tr>
+            </table>
+        </p>
+
+        <p>
+        The above table is not exhaustive. A spreadsheet created in an application other than Microsoft Excel may have
+        a different MIME type. Online tools can be used to determine the MIME type for a file.
+        </p>
+
+        <p>
+            <b>NOTE:</b> The only string allowed between equal sign and first dot is &quot;name&quot;.
+            A query like <code>attachments=foo.bar</code> is thus considered invalid and will be ignored.
+        </p>
 
         <h3>Multiple keys</h3>
         If multiple keys are used in a search query, the service will consider all (valid) keys and return log
