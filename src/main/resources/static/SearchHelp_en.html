@@ -64,32 +64,26 @@
         and wildcards can be used, e.g. <code>owner=John*</code>.<br>
 
         <h3>title</h3>
-        This is the title of the log entry. A title is mandatory for a log entry, i.e. all log entries will
-        have a non-empty title. The value for this key is <b>case insensitive</b>.<br>
-
-        Wildcards need not be used for a substring match, e.g. <code>title=increased</code> will match a log entry with
-        the
-        title <code>Temperature increased in tank X</code>.
+        This is the title of the log entry. Semantics for this is same as the <code>desc</code> key, see below.
 
         <h3>desc</h3>
         This is the body of the log entry. A body text is not mandatory for a log entry, i.e. it may
         be empty. The value for this key is <b>case insensitive</b>.<br>
 
         Wildcards need not be used for a substring match, e.g. <code>desc=increased</code> will match a log entry with
-        the
-        body <code>Temperature increased in tank X</code>.<br>
+        the body text <code>Temperature increased in tank X</code>.<br>
 
         In some cases one may need to quote a string in order to
         get the wanted search result. For instance, to search for a string like <code>foo-bar</code> one must use
         <code>desc=&quot;foo-bar&quot;</code>. Mixing quoted and non-quoted values is supported, e.g.
-        <code>desc=&quot;foo-bar&quot&quot;,other</code>.
+        <code>desc=&quot;foo-bar&quot;,other</code>.
 
         <p>
             To enclose a term in quotes, one <i>must</i> use double the double quote character (&quot;).
         </p>
 
         <p>
-            Considerations when using quoted search terms:
+            Limitations when using quoted search terms:
         <ul>
             <li>Performance may be affected, i.e. the search process may take longer time to complete.</li>
             <li>Search will fail if quote characters are not balanced, i.e. search terms string must contain even number
@@ -99,7 +93,7 @@
                 For instance,
                 <code>foo,&quot;bar&quot;,other</code> is valid, but <code>foo,&quot;bar&quot;*,other</code> is not.
             </li>
-            <li>Searching for occurrence of quote character is not possible.</li>
+            <li>Searching for occurrence of quote characters is not possible.</li>
         </ul>
         </p>
 
@@ -143,44 +137,28 @@
 
         <h3>attachments</h3>
         <p>
-        If this added to the search query, the service will return log entries that contain file attachments.
+        If this is added to the search query, the service will return log entries that contain file attachments.
         To find entries with at least one attachment, irrespective of type, one must not specify a value.
         </p>
 
         <p>
-        The search can be narrowed down to attachments matching either file name or type, see below for an
-        explanation of how &quot;type&quot; is defined.
-        </p>
-
-        <p>
         To search for entries containing an attachment with a particular file name, one must add to the query:
-        <code>attachments=name.some_file_name</code>. Here <code>some_file_name</code> is case-insensitive, but must
-        otherwise match exactly. Wildcards can be used, e.g. <code>attachments=name.some_file*</code>. To search for attachments
-        with a particular file extension, use something like <code>attachments=name.*plt</code>.
+        <code>attachments=some_file_name</code>. Here <code>some_file_name</code> is case-insensitive, but must
+        otherwise match exactly. Wildcards can be used, e.g. <code>attachments=*_file*</code>. To search for attachments
+        with a particular file extension, one may use something like <code>attachments=*plt</code> or
+            <code>attachments=name.*xls*</code>.
         </p>
 
         <p>
-        The &quot;type&quot; of an attachment is determined when uploaded and is set to its MIME type. A MIME type is
-        rather generic and need not map to the file extension. To search for attachments of a particular type, use
-            <code>attachments=&lt;type&gt;</code>, where &quot;type&quot; should be surrounded by asterisks. Examples:<br>
-
-            <table border='1' style='border-collapse:collapse;'>
-                <tr><th>Type</th><th>Syntax</th></tr>
-                <tr><td>Images</td><td><code>attachments=*image*</code></td></tr>
-                <tr><td>Spreadsheets, e.g. Microsoft Excel</td><td><code>attachments=*spreadsheet*</code></td></tr>
-                <tr><td>Presentations, e.g. Microsoft Powerpoint </td><td><code>attachments=*presentation*</code></td></tr>
-                <tr><td>Word processing doc</td><td><code>attachments=*word*</code></td></tr>
-            </table>
+        As image file name extensions vary by type one may need to specify multiple extensions, e.g.
+            <code>attachments=*png,*jpeg</code>.
         </p>
 
         <p>
-        The above table is not exhaustive. A spreadsheet created in an application other than Microsoft Excel may have
-        a different MIME type. Online tools can be used to determine the MIME type for a file.
-        </p>
-
-        <p>
-            <b>NOTE:</b> The only string allowed between equal sign and first dot is &quot;name&quot;.
-            A query like <code>attachments=foo.bar</code> is thus considered invalid and will be ignored.
+            <b>NOTE:</b> Since the space character is treated in a special manner by the underlying search engine,
+            a search for file name cannot contain space characters. For instance, to find entries with an attachment
+            file name like &quot;proton electron neutron&quot;, one should instead use <code>attachments=proton*</code> or
+            <code>attachments=*electron*</code>.
         </p>
 
         <h3>Multiple keys</h3>
@@ -189,8 +167,8 @@
 
         <h3>Multiple values</h3>
         One may specify multiple values for a key using a comma (,) separator. This will then find entries
-        matching <i>any</i> of the values. However, for the &quot;desc&quot; key the search will instead apply an &quot;and&quot;
-        strategy, i.e. only entries containing <i>all</i> of the values will match the search query.
+        matching <i>any</i> of the values. However, for the <code>desc</code> and <code>title</code> keys the search will instead apply an
+        &quot;and&quot; strategy, i.e. only entries containing <i>all</i> of the values will match the search query.
         <p>
             Examples:
         <ul>
