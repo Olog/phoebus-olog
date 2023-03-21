@@ -137,21 +137,19 @@
 
         <h3>attachments</h3>
         <p>
-        If this is added to the search query, the service will return log entries that contain file attachments.
-        To find entries with at least one attachment, irrespective of type, one must not specify a value.
-        </p>
-
-        <p>
-        To search for entries containing an attachment with a particular file name, one must add to the query:
-        <code>attachments=some_file_name</code>. Here <code>some_file_name</code> is case-insensitive, but must
-        otherwise match exactly. Wildcards can be used, e.g. <code>attachments=*_file*</code>. To search for attachments
-        with a particular file extension, one may use something like <code>attachments=*plt</code> or
-            <code>attachments=name.*xls*</code>.
-        </p>
-
-        <p>
-        As image file name extensions vary by type one may need to specify multiple extensions, e.g.
-            <code>attachments=*png,*jpeg</code>.
+            Search related to attachments supports two distinct use cases:
+            <ol>
+                <li>Search for log entries containing at least one attachment, irrespective of type. This is
+                done by omitting a value, i.e. by adding only the keyword <code>attachments</code> to the
+                query.</li>
+                <li>Search for log entries where attachments match on file name. This is done by adding
+                    <code>attachments=some_file_name</code>. Here <code>some_file_name</code> is case-insensitive, but must
+                    otherwise match exactly. Wildcards can be used, e.g. <code>attachments=*_file*</code>. To search for attachments
+                    with a particular file name extension, one may use something like <code>attachments=*plt</code> or
+                    <code>attachments=*xls*</code>. As image file name extensions vary by type one may need to specify multiple extensions, e.g.
+                    <code>attachments=*png,*jpeg</code>.
+                </li>
+            </ol>
         </p>
 
         <p>
@@ -159,6 +157,10 @@
             a search for file name cannot contain space characters. For instance, to find entries with an attachment
             file name like &quot;proton electron neutron&quot;, one should instead use <code>attachments=proton*</code> or
             <code>attachments=*electron*</code>.
+        </p>
+
+        <p>
+            <b>NOTE:</b> Search for occurrence of text <i>within</i> an attachment is not supported.
         </p>
 
         <h3>Multiple keys</h3>
