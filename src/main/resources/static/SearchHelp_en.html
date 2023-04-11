@@ -64,32 +64,26 @@
         and wildcards can be used, e.g. <code>owner=John*</code>.<br>
 
         <h3>title</h3>
-        This is the title of the log entry. A title is mandatory for a log entry, i.e. all log entries will
-        have a non-empty title. The value for this key is <b>case insensitive</b>.<br>
-
-        Wildcards need not be used for a substring match, e.g. <code>title=increased</code> will match a log entry with
-        the
-        title <code>Temperature increased in tank X</code>.
+        This is the title of the log entry. Semantics for this is same as the <code>desc</code> key, see below.
 
         <h3>desc</h3>
         This is the body of the log entry. A body text is not mandatory for a log entry, i.e. it may
         be empty. The value for this key is <b>case insensitive</b>.<br>
 
         Wildcards need not be used for a substring match, e.g. <code>desc=increased</code> will match a log entry with
-        the
-        body <code>Temperature increased in tank X</code>.<br>
+        the body text <code>Temperature increased in tank X</code>.<br>
 
         In some cases one may need to quote a string in order to
         get the wanted search result. For instance, to search for a string like <code>foo-bar</code> one must use
         <code>desc=&quot;foo-bar&quot;</code>. Mixing quoted and non-quoted values is supported, e.g.
-        <code>desc=&quot;foo-bar&quot&quot;,other</code>.
+        <code>desc=&quot;foo-bar&quot;,other</code>.
 
         <p>
             To enclose a term in quotes, one <i>must</i> use double the double quote character (&quot;).
         </p>
 
         <p>
-            Considerations when using quoted search terms:
+            Limitations when using quoted search terms:
         <ul>
             <li>Performance may be affected, i.e. the search process may take longer time to complete.</li>
             <li>Search will fail if quote characters are not balanced, i.e. search terms string must contain even number
@@ -99,7 +93,7 @@
                 For instance,
                 <code>foo,&quot;bar&quot;,other</code> is valid, but <code>foo,&quot;bar&quot;*,other</code> is not.
             </li>
-            <li>Searching for occurrence of quote character is not possible.</li>
+            <li>Searching for occurrence of quote characters is not possible.</li>
         </ul>
         </p>
 
@@ -142,16 +136,32 @@
         containing such a property, irrespective of the attribute list it contains.<br>
 
         <h3>attachments</h3>
-        If this added to the search query, the service will return log entries that contain at least one file
-        attachment.
-        The value for this key is <b>case sensitive</b>. Use <code>attachments=all</code> to search for log entries with
-        attachments of any type.
-        <code>attachments=image</code> will match entries with image attachments, while <code>attachments=plt</code>
-        will match entries with plot file attachments. To search for log entries that containing attachments any of type
-        other
-        than <code>image</code> or <code>plt</code>, use <code>attachments=file</code>.<br>
+        <p>
+            Search related to attachments supports two distinct use cases:
+            <ol>
+                <li>Search for log entries containing at least one attachment, irrespective of type. This is
+                done by omitting a value, i.e. by adding only the keyword <code>attachments</code> to the
+                query.</li>
+                <li>Search for log entries where attachments match on file name. This is done by adding
+                    <code>attachments=some_file_name</code>. Here <code>some_file_name</code> is case-insensitive, but must
+                    otherwise match exactly. Wildcards can be used, e.g. <code>attachments=*_file*</code>. To search for attachments
+                    with a particular file name extension, one may use something like <code>attachments=*plt</code> or
+                    <code>attachments=*xls*</code>. As image file name extensions vary by type one may need to specify multiple extensions, e.g.
+                    <code>attachments=*png,*jpeg</code>.
+                </li>
+            </ol>
+        </p>
 
-        If &quot;all&quot; is specified in the value, other attachment type specifiers are ignored.
+        <p>
+            <b>NOTE:</b> Since the space character is treated in a special manner by the underlying search engine,
+            a search for file name cannot contain space characters. For instance, to find entries with an attachment
+            file name like &quot;proton electron neutron&quot;, one should instead use <code>attachments=proton*</code> or
+            <code>attachments=*electron*</code>.
+        </p>
+
+        <p>
+            <b>NOTE:</b> Search for occurrence of text <i>within</i> an attachment is not supported.
+        </p>
 
         <h3>Multiple keys</h3>
         If multiple keys are used in a search query, the service will consider all (valid) keys and return log
@@ -159,8 +169,8 @@
 
         <h3>Multiple values</h3>
         One may specify multiple values for a key using a comma (,) separator. This will then find entries
-        matching <i>any</i> of the values. However, for the &quot;desc&quot; key the search will instead apply an &quot;and&quot;
-        strategy, i.e. only entries containing <i>all</i> of the values will match the search query.
+        matching <i>any</i> of the values. However, for the <code>desc</code> and <code>title</code> keys the search will instead apply an
+        &quot;and&quot; strategy, i.e. only entries containing <i>all</i> of the values will match the search query.
         <p>
             Examples:
         <ul>
