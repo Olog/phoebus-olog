@@ -27,9 +27,14 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
  * A utility class for creating a search query for log entries based on time,
@@ -55,6 +60,8 @@ public class LogSearchUtil {
     @Value("${elasticsearch.result.size.search.max:1000}")
     private int maxSearchSize;
 
+    private static final Logger LOGGER = Logger.getLogger(LogSearchUtil.class.getName());
+
     /**
      * @param searchParameters - the various search parameters
      * @return A {@link SearchRequest} based on the provided search parameters
@@ -63,7 +70,9 @@ public class LogSearchUtil {
         BoolQuery.Builder boolQueryBuilder = new Builder();
         boolean fuzzySearch = false;
         List<String> searchTerms = new ArrayList<>();
+        List<String> descriptionPhraseSearchTerms = new ArrayList<>();
         List<String> titleSearchTerms = new ArrayList<>();
+        List<String> titlePhraseSearchTerms = new ArrayList<>();
         boolean temporalSearch = false;
         boolean includeEvents = false;
         ZonedDateTime start = ZonedDateTime.ofInstant(Instant.EPOCH, ZoneId.systemDefault());
@@ -81,15 +90,27 @@ public class LogSearchUtil {
                 case "description":
                 case "text":
                     for (String value : parameter.getValue()) {
-                        for (String pattern : value.split("[\\|,;\\s+]")) {
-                            searchTerms.add(pattern.trim().toLowerCase());
+                        for (String pattern : getSearchTerms(value)) {
+                            String term = pattern.trim().toLowerCase();
+                            // Quoted strings will be mapped to a phrase query
+                            if (term.startsWith("\"") && term.endsWith("\"")) {
+                                descriptionPhraseSearchTerms.add(term.substring(1, term.length() - 1));
+                            } else {
+                                searchTerms.add(term);
+                            }
                         }
                     }
                     break;
                 case "title":
                     for (String value : parameter.getValue()) {
-                        for (String pattern : value.split("[\\|,;\\s+]")) {
-                            titleSearchTerms.add(pattern.trim().toLowerCase());
+                        for (String pattern : getSearchTerms(value)) {
+                            String term = pattern.trim().toLowerCase();
+                            // Quoted strings will be mapped to a phrase query
+                            if (term.startsWith("\"") && term.endsWith("\"")) {
+                                titlePhraseSearchTerms.add(term.substring(1, term.length() - 1));
+                            } else {
+                                titleSearchTerms.add(pattern.trim().toLowerCase());
+                            }
                         }
                     }
                     break;
@@ -110,7 +131,9 @@ public class LogSearchUtil {
                     List<Query> ownerQueries = new ArrayList<>();
                     for (String value : parameter.getValue()) {
                         for (String pattern : value.split("[\\|,;\\s+]")) {
-                            ownerQueries.add(WildcardQuery.of(w -> w.field("owner").value(pattern.trim()))._toQuery());
+                            ownerQueries.add(WildcardQuery.of(w -> w.field("owner")
+                                    .caseInsensitive(true)
+                                    .value(pattern.trim()))._toQuery());
                         }
                     }
                     ownerQuery.queries(ownerQueries);
@@ -121,7 +144,9 @@ public class LogSearchUtil {
                     List<Query> tagsQueries = new ArrayList<>();
                     for (String value : parameter.getValue()) {
                         for (String pattern : value.split("[\\|,;]")) {
-                            tagsQueries.add(WildcardQuery.of(w -> w.field("tags.name").value(pattern.trim()))._toQuery());
+                            tagsQueries.add(WildcardQuery.of(w -> w.field("tags.name")
+                                    .caseInsensitive(true)
+                                    .value(pattern.trim()))._toQuery());
                         }
                     }
                     Query tagsQuery = tagQuery.queries(tagsQueries).build()._toQuery();
@@ -133,7 +158,9 @@ public class LogSearchUtil {
                     List<Query> logbooksQueries = new ArrayList<>();
                     for (String value : parameter.getValue()) {
                         for (String pattern : value.split("[\\|,;]")) {
-                            logbooksQueries.add(WildcardQuery.of(w -> w.field("logbooks.name").value(pattern.trim()))._toQuery());
+                            logbooksQueries.add(WildcardQuery.of(w -> w.field("logbooks.name")
+                                    .caseInsensitive(true)
+                                    .value(pattern.trim()))._toQuery());
                         }
                     }
                     Query logbooksQuery = logbookQuery.queries(logbooksQueries).build()._toQuery();
@@ -172,14 +199,19 @@ public class LogSearchUtil {
                             propertySearchFields = Arrays.copyOf(pattern.split("\\."), 3);
                             BoolQuery.Builder bqb = new BoolQuery.Builder();
                             if (propertySearchFields[0] != null && !propertySearchFields[0].isEmpty()) {
-                                bqb.must(WildcardQuery.of(w -> w.field("properties.name").value(propertySearchFields[0].trim()))._toQuery());
+                                bqb.must(WildcardQuery.of(w -> w.field("properties.name")
+                                        .caseInsensitive(true)
+                                        .value(propertySearchFields[0].trim()))._toQuery());
                             }
-
                             if (propertySearchFields[1] != null && !propertySearchFields[1].isEmpty()) {
                                 BoolQuery.Builder bqb2 = new BoolQuery.Builder();
-                                bqb2.must(WildcardQuery.of(w -> w.field("properties.attributes.name").value(propertySearchFields[1].trim()))._toQuery());
+                                bqb2.must(WildcardQuery.of(w -> w.field("properties.attributes.name")
+                                        .caseInsensitive(true)
+                                        .value(propertySearchFields[1].trim()))._toQuery());
                                 if (propertySearchFields[2] != null && !propertySearchFields[2].isEmpty()) {
-                                    bqb2.must(WildcardQuery.of(w -> w.field("properties.attributes.value").value(propertySearchFields[2].trim()))._toQuery());
+                                    bqb2.must(WildcardQuery.of(w -> w.field("properties.attributes.value")
+                                            .caseInsensitive(true)
+                                            .value(propertySearchFields[2].trim()))._toQuery());
                                 }
                                 bqb.must(NestedQuery.of(n -> n.path("properties.attributes").query(bqb2.build()._toQuery()).scoreMode(ChildScoreMode.None))._toQuery());
                             }
@@ -197,19 +229,23 @@ public class LogSearchUtil {
                     break;
                 case "size":
                 case "limit":
-                    Optional<String> maxSize = parameter.getValue().stream().max((o1, o2) -> {
-                        return Integer.valueOf(o1).compareTo(Integer.valueOf(o2));
-                    });
+                    Optional<String> maxSize = parameter.getValue().stream().max(Comparator.comparing(Integer::valueOf));
                     if (maxSize.isPresent()) {
-                        searchResultSize = Integer.valueOf(maxSize.get());
+                        try {
+                            searchResultSize = Integer.valueOf(maxSize.get());
+                        } catch (NumberFormatException e) {
+                            LOGGER.log(Level.WARNING, "Cannot parse size value\"" + maxSize.get() + "\" as number");
+                        }
                     }
                     break;
                 case "from":
-                    Optional<String> maxFrom = parameter.getValue().stream().max((o1, o2) -> {
-                        return Integer.valueOf(o1).compareTo(Integer.valueOf(o2));
-                    });
+                    Optional<String> maxFrom = parameter.getValue().stream().max(Comparator.comparing(Integer::valueOf));
                     if (maxFrom.isPresent()) {
-                        from = Integer.valueOf(maxFrom.get());
+                        try {
+                            from = Integer.valueOf(maxFrom.get());
+                        } catch (NumberFormatException e) {
+                            LOGGER.log(Level.WARNING, "Cannot parse from value\"" + maxFrom.get() + "\" as number");
+                        }
                     }
                     break;
                 case "sort": // Honor sort order if client specifies it
@@ -225,26 +261,29 @@ public class LogSearchUtil {
                     break;
                 case "attachments":
                     DisMaxQuery.Builder attachmentsQuery = new DisMaxQuery.Builder();
+                    attachmentsQuery.queries(Collections.emptyList());
                     List<String> parameterValues = parameter.getValue();
                     boolean searchAll = false;
-                    // If query string contains attachments= or attachments=all, then this overrides any
-                    // other parameter values and results in a search for entries with at least one attachment.
                     for (String value : parameterValues) {
                         for (String pattern : value.split("[\\|,;]")) {
-                            String parameterValue = pattern.trim();
-                            if ("all".equals(parameterValue) || parameterValue.isEmpty()) {
+                            // No value for attachments -> search for existence of attachment, regardless of name and type
+                            if (pattern == null || "null".equals(pattern) || pattern.isEmpty()) {
                                 attachmentsQuery.queries(ExistsQuery.of(e -> e.field("attachments"))._toQuery());
                                 searchAll = true;
                                 break;
                             } else {
-                                attachmentsQuery.queries(WildcardQuery.of(w -> w.field("attachments.fileMetadataDescription").value(pattern.trim()))._toQuery());
+                                attachmentsQuery.queries(WildcardQuery.of(m -> m.field("attachments.filename").caseInsensitive(true).value(pattern.trim()))._toQuery());
                             }
                         }
                         if (searchAll) { // search all -> ignore other parameter values
                             break;
                         }
                     }
-                    boolQueryBuilder.must(attachmentsQuery.build()._toQuery());
+                    DisMaxQuery disMaxQuery = attachmentsQuery.build();
+                    if (!disMaxQuery.queries().isEmpty()) {
+                        boolQueryBuilder.must(disMaxQuery._toQuery());
+                    }
+                    //boolQueryBuilder.must(attachmentsQuery.build()._toQuery());
                     break;
                 default:
                     // Unsupported search parameters are ignored
@@ -280,38 +319,44 @@ public class LogSearchUtil {
             }
         }
 
-        // Add the description query
+        // Add the description query. Multiple search terms will be AND:ed.
         if (!searchTerms.isEmpty()) {
-            DisMaxQuery.Builder descQuery = new DisMaxQuery.Builder();
-            List<Query> descQueries = new ArrayList<>();
             if (fuzzySearch) {
                 searchTerms.stream().forEach(searchTerm -> {
-                    descQueries.add(FuzzyQuery.of(f -> f.field("description").value(searchTerm))._toQuery());
+                    boolQueryBuilder.must(FuzzyQuery.of(f -> f.field("description").value(searchTerm))._toQuery());
                 });
             } else {
                 searchTerms.stream().forEach(searchTerm -> {
-                    descQueries.add(WildcardQuery.of(w -> w.field("description").value(searchTerm))._toQuery());
+                    boolQueryBuilder.must(WildcardQuery.of(w -> w.field("description").value(searchTerm))._toQuery());
                 });
             }
-            descQuery.queries(descQueries);
-            boolQueryBuilder.must(descQuery.build()._toQuery());
         }
 
-        // Add the title query
+        // Add phrase queries for description key. Multiple search terms will be AND:ed.
+        if (!descriptionPhraseSearchTerms.isEmpty()) {
+            descriptionPhraseSearchTerms.stream().forEach(phraseSearchTerm -> {
+                boolQueryBuilder.must(MatchPhraseQuery.of(m -> m.field("description").query(phraseSearchTerm))._toQuery());
+            });
+        }
+
+        // Add the title query. Multiple search terms will be AND:ed.
         if (!titleSearchTerms.isEmpty()) {
-            DisMaxQuery.Builder titleQuery = new DisMaxQuery.Builder();
-            List<Query> titleQueries = new ArrayList<>();
             if (fuzzySearch) {
                 titleSearchTerms.stream().forEach(searchTerm -> {
-                    titleQueries.add(FuzzyQuery.of(f -> f.field("title").value(searchTerm))._toQuery());
+                    boolQueryBuilder.must(FuzzyQuery.of(f -> f.field("title").value(searchTerm))._toQuery());
                 });
             } else {
                 titleSearchTerms.stream().forEach(searchTerm -> {
-                    titleQueries.add(WildcardQuery.of(w -> w.field("title").value(searchTerm))._toQuery());
+                    boolQueryBuilder.must(WildcardQuery.of(w -> w.field("title").value(searchTerm))._toQuery());
                 });
             }
-            titleQuery.queries(titleQueries);
-            boolQueryBuilder.must(titleQuery.build()._toQuery());
+        }
+
+        // Add phrase queries for title key. Multiple search terms will be AND:ed.
+        if (!titlePhraseSearchTerms.isEmpty()) {
+            titlePhraseSearchTerms.stream().forEach(phraseSearchTerm -> {
+                boolQueryBuilder.must(MatchPhraseQuery.of(m -> m.field("title").query(phraseSearchTerm))._toQuery());
+            });
         }
 
         // Add the level query
@@ -343,5 +388,44 @@ public class LogSearchUtil {
                 .sort(SortOptions.of(so -> so.field(fb.build())))
                 .size(Math.min(_searchResultSize, maxSearchSize))
                 .from(_from));
+    }
+
+    /**
+     * Parses a search query terms string into a string array. In particular,
+     * quoted search terms must be maintained even if they contain the
+     * separator chars used to tokenize the terms.
+     *
+     * @param searchQueryTerms String as specified by client
+     * @return A {@link List} of search terms, some of which may be
+     * quoted. Is void of any zero-length strings.
+     */
+    public List<String> getSearchTerms(String searchQueryTerms) {
+        // Count double quote chars. Odd number of quote chars
+        // is not supported -> throw exception
+        long quoteCount = searchQueryTerms.chars().filter(c -> c == '\"').count();
+        if (quoteCount == 0) {
+            return Arrays.stream(searchQueryTerms.split("[\\|,;\\s+]")).filter(t -> t.length() > 0).collect(Collectors.toList());
+        }
+        if (quoteCount % 2 == 1) {
+            throw new IllegalArgumentException("Unbalanced quotes in search query");
+        }
+        // If we come this far then at least one quoted term is
+        // contained in user input
+        List<String> terms = new ArrayList<>();
+        int nextStartIndex = searchQueryTerms.indexOf('\"');
+        while (nextStartIndex >= 0) {
+            int endIndex = searchQueryTerms.indexOf('\"', nextStartIndex + 1);
+            String quotedTerm = searchQueryTerms.substring(nextStartIndex, endIndex + 1);
+            terms.add(quotedTerm);
+            // Remove the quoted term from user input
+            searchQueryTerms = searchQueryTerms.replace(quotedTerm, "");
+            // Check next occurrence
+            nextStartIndex = searchQueryTerms.indexOf('\"');
+        }
+        // Add remaining terms...
+        List<String> remaining = Arrays.asList(searchQueryTerms.split("[\\|,;\\s+]"));
+        //...but remove empty strings, which are "leftovers" when quoted terms are removed
+        terms.addAll(remaining.stream().filter(t -> t.length() > 0).collect(Collectors.toList()));
+        return terms;
     }
 }

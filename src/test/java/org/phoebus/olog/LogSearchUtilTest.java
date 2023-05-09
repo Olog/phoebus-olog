@@ -27,6 +27,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.Instant;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.phoebus.olog.LogSearchUtil.MILLI_FORMAT;
@@ -134,4 +135,49 @@ public class LogSearchUtilTest {
 
     }
 
+    @Test
+    public void testGetSearchTerms(){
+        LogSearchUtil logSearchUtil = new LogSearchUtil();
+        String userInput = "";
+        List<String> parsed = logSearchUtil.getSearchTerms(userInput);
+        assertTrue(parsed.isEmpty());
+
+        userInput = "foo,,neutron";
+        parsed = logSearchUtil.getSearchTerms(userInput);
+        assertEquals(2, parsed.size());
+        assertTrue(parsed.contains("foo"));
+        assertTrue(parsed.contains("neutron"));
+
+        userInput = "foo,bar,neutron";
+        parsed = logSearchUtil.getSearchTerms(userInput);
+        assertEquals(3, parsed.size());
+        assertTrue(parsed.contains("foo"));
+        assertTrue(parsed.contains("bar"));
+        assertTrue(parsed.contains("neutron"));
+
+        userInput = "\"foo\",bar,neutron";
+        parsed = logSearchUtil.getSearchTerms(userInput);
+        assertEquals(3, parsed.size());
+        assertTrue(parsed.contains("\"foo\""));
+        assertTrue(parsed.contains("bar"));
+        assertTrue(parsed.contains("neutron"));
+
+        userInput = "foo,\"bar\",\"neutron\"";
+        parsed = logSearchUtil.getSearchTerms(userInput);
+        assertEquals(3, parsed.size());
+        assertTrue(parsed.contains("foo"));
+        assertTrue(parsed.contains("\"bar\""));
+        assertTrue(parsed.contains("\"neutron\""));
+
+        userInput = "\"foo,bar\",\"bar|foo\",\"neutron;proton\",\"electron muon\"";
+        parsed = logSearchUtil.getSearchTerms(userInput);
+        assertEquals(4, parsed.size());
+        assertTrue(parsed.contains("\"foo,bar\""));
+        assertTrue(parsed.contains("\"bar|foo\""));
+        assertTrue(parsed.contains("\"neutron;proton\""));
+        assertTrue(parsed.contains("\"electron muon\""));
+
+        final String _userInput = "foo,\"bar\",\"neutron";
+        assertThrows(IllegalArgumentException.class, () -> logSearchUtil.getSearchTerms(_userInput));
+    }
 }
