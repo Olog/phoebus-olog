@@ -1,4 +1,4 @@
-# Olog   [![Build Status](https://travis-ci.org/Olog/olog-es.svg?branch=master)](https://travis-ci.org/Olog/olog-es)
+# Olog   [![Build Java Binary and Run Tests](https://github.com/Olog/phoebus-olog/actions/workflows/java-build-and-test.yml/badge.svg)](https://github.com/Olog/phoebus-olog/actions/workflows/java-build-and-test.yml)
 
 An online logbook service that allows for the creation and retrieval of log entries.
 
