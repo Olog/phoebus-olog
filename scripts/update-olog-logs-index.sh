@@ -25,7 +25,7 @@ echo "Re-creating original index"
 curl -XPUT "http://localhost:9200/olog_logs"  -H 'Content-Type: application/json' --data @$1
 echo
 
-echo "Flushing data to temporary index"
+echo "Flushing data to the newly created index"
 curl -XPOST "http://localhost:9200/olog_logs/_flush"
 echo
 
