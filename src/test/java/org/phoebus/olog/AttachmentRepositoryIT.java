@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.phoebus.olog.entity.Attachment;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.gridfs.GridFsOperations;
@@ -21,6 +22,9 @@ import java.io.InputStream;
 import java.nio.file.Files;
 
 @ExtendWith(SpringExtension.class)
+@SpringBootTest(
+        webEnvironment = SpringBootTest.WebEnvironment.MOCK,
+        classes = AuthenticationResource.class)
 @ContextConfiguration(classes = ElasticConfig.class)
 @SuppressWarnings("unused")
 @TestPropertySource(locations = "classpath:test_application.properties")

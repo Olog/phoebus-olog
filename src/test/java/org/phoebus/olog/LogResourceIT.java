@@ -10,11 +10,14 @@ import org.phoebus.olog.entity.State;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.Resource;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.gridfs.GridFsOperations;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
@@ -24,7 +27,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 
 @ExtendWith(SpringExtension.class)
-@WebMvcTest(LogResource.class)
+@SpringBootTest(
+        webEnvironment = SpringBootTest.WebEnvironment.MOCK,
+        classes = AuthenticationManager.class)
+@ContextConfiguration(classes = {LogResource.class, LogRepository.class, ElasticConfig.class, GridFsOperations.class})
 @TestPropertySource(locations = "classpath:test_application.properties")
 @SuppressWarnings("unused")
 public class LogResourceIT {

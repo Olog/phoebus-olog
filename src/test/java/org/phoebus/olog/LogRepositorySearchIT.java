@@ -12,6 +12,7 @@ import org.phoebus.olog.entity.Logbook;
 import org.phoebus.olog.entity.Property;
 import org.phoebus.olog.entity.State;
 import org.phoebus.olog.entity.Tag;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestContext;
 import org.springframework.test.context.TestExecutionListener;
@@ -34,6 +35,9 @@ import static org.phoebus.olog.LogSearchUtil.MILLI_FORMAT;
  *
  */
 @ExtendWith(SpringExtension.class)
+@SpringBootTest(
+        webEnvironment = SpringBootTest.WebEnvironment.MOCK,
+        classes = AuthenticationResource.class)
 @TestExecutionListeners(listeners = {LogRepositorySearchIT.class})
 @ContextConfiguration(classes = ElasticConfig.class)
 @TestPropertySource(locations = "classpath:test_application.properties")

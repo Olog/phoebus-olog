@@ -1,4 +1,17 @@
 {
+  "settings":{
+    "analysis": {
+      "analyzer": {
+        "olog_analyzer": {
+          "type": "custom",
+          "tokenizer": "whitespace",
+          "filter":[
+            "lowercase"
+          ]
+        }
+      }
+    }
+  },
   "mappings": {
     "properties": {
       "id": {
@@ -8,16 +21,20 @@
         "type": "keyword"
       },
       "source": {
-        "type": "text"
+        "type": "text",
+        "analyzer" : "olog_analyzer"
       },
       "description": {
-        "type": "text"
+        "type": "text",
+        "analyzer" : "olog_analyzer"
       },
       "level": {
-        "type": "text"
+        "type": "text",
+        "analyzer" : "olog_analyzer"
       },
       "title": {
-        "type": "text"
+        "type": "text",
+        "analyzer" : "olog_analyzer"
       },
       "state": {
         "type": "keyword"
