@@ -26,8 +26,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.util.FileCopyUtils;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.WebDataBinder;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -39,10 +42,19 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartException;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.math.BigInteger;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.security.MessageDigest;
 import java.security.Principal;
 import java.time.Instant;
 import java.time.temporal.TemporalAmount;
@@ -59,6 +71,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import java.util.zip.CRC32;
+import java.util.zip.CheckedInputStream;
 
 import static org.phoebus.olog.OlogResourceDescriptors.LOG_RESOURCE_URI;
 import static org.phoebus.util.time.TimestampFormats.MILLI_FORMAT;
@@ -269,9 +283,38 @@ public class LogResource {
         return newLogEntry;
     }
 
+    @PostMapping("/composite")
+    public Log createCompositeLog(@RequestHeader(value = OLOG_CLIENT_INFO_HEADER, required = false, defaultValue = "n/a") String clientInfo,
+                                  @RequestParam(value = "markup", required = false) String markup,
+                                  @RequestParam(value = "inReplyTo", required = false, defaultValue = "-1") String inReplyTo,
+                          @RequestPart("logEntry") Log log,
+                          @RequestPart("attachmentData") List<AttachmentLight> attachmentData,
+                          @RequestPart("files") MultipartFile[] files,
+                          @AuthenticationPrincipal Principal principal) {
+
+        Log createdLog = createLog(clientInfo, markup, log, inReplyTo, principal);
+
+        for(MultipartFile multipartFile : files){
+            try {
+                String checksum = getMD5Checksum(multipartFile.getInputStream());
+                Optional<AttachmentLight> attachmentLight = attachmentData.stream().filter(a -> a.checksum.equals(checksum)).findFirst();
+                if(attachmentLight.isPresent()){
+                    uploadAttachment(Long.toString(createdLog.getId()), multipartFile, attachmentLight.get().fileName,
+                            attachmentLight.get().id,
+                            attachmentLight.get().fileMetaDataDescription);
+                    attachmentData.remove(attachmentLight.get());
+                }
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        return createdLog;
+    }
+
     @PostMapping("/attachments/{logId}")
     public Log uploadAttachment(@PathVariable String logId,
-                                @RequestPart("file") MultipartFile file,
+                                @RequestPart("files") MultipartFile file,
                                 @RequestPart("filename") String filename,
                                 @RequestPart(value = "id", required = false) String id,
                                 @RequestPart(value = "fileMetadataDescription", required = false) String fileMetadataDescription) {
@@ -525,5 +568,59 @@ public class LogResource {
             // Log entry not found, return HTTP 400
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot reply to log entry " + originalLogEntryId + " as it does not exist");
         }
+    }
+
+    private static class AttachmentLight{
+        private String id;
+        private String fileName;
+        private String fileMetaDataDescription;
+
+        private String checksum;
+
+        public String getId() {
+            return id;
+        }
+
+        public void setId(String id) {
+            this.id = id;
+        }
+
+        public String getFileName() {
+            return fileName;
+        }
+
+        public void setFileName(String fileName) {
+            this.fileName = fileName;
+        }
+
+        public String getFileMetaDataDescription() {
+            return fileMetaDataDescription;
+        }
+
+        public void setFileMetaDataDescription(String fileMetaDataDescription) {
+            this.fileMetaDataDescription = fileMetaDataDescription;
+        }
+
+        public String getChecksum() {
+            return checksum;
+        }
+
+        public void setChecksum(String checksum) {
+            this.checksum = checksum;
+        }
+    }
+
+    private long getChecksumCRC32(InputStream inputStream, int bufferSize)
+            throws IOException {
+        CheckedInputStream checkedInputStream = new CheckedInputStream(inputStream, new CRC32());
+        byte[] buffer = new byte[bufferSize];
+        while (checkedInputStream.read(buffer, 0, buffer.length) >= 0) {}
+        return checkedInputStream.getChecksum().getValue();
+    }
+
+    private static String getMD5Checksum(InputStream inputStream) throws Exception{
+        byte[] data = FileCopyUtils.copyToByteArray(inputStream);
+        byte[] hash = MessageDigest.getInstance("MD5").digest(data);
+        return new BigInteger(1, hash).toString(16);
     }
 }
