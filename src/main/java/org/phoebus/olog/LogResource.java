@@ -65,6 +65,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -242,11 +243,12 @@ public class LogResource {
      * @param principal  The authenticated {@link Principal} of the request.
      * @return The persisted {@link Log} object.
      */
-    @PutMapping()
+    @PutMapping(consumes = "application/json")
     public Log createLog(@RequestHeader(value = OLOG_CLIENT_INFO_HEADER, required = false, defaultValue = "n/a") String clientInfo,
                          @RequestParam(value = "markup", required = false) String markup,
-                         @RequestBody Log log,
                          @RequestParam(value = "inReplyTo", required = false, defaultValue = "-1") String inReplyTo,
+                         @RequestPart("logEntry") Log log,
+                         @RequestPart(value = "files", required = false) MultipartFile[] files,
                          @AuthenticationPrincipal Principal principal) {
         if(log.getLogbooks().isEmpty()){
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A log entry must specify at least one logbook");
@@ -276,6 +278,22 @@ public class LogResource {
         log = cleanMarkup(markup, log);
         addPropertiesFromProviders(log);
         Log newLogEntry = logRepository.save(log);
+
+        if(files != null){
+            for(MultipartFile multipartFile : files){
+                try {
+                    Optional<Attachment> attachment = log.getAttachments().stream().filter(a -> a.getId().equals(multipartFile.getName())).findFirst();
+                    if(attachment.isPresent()){
+                        uploadAttachment(Long.toString(newLogEntry.getId()), multipartFile, attachment.get().getFilename(),
+                                attachment.get().getId(),
+                                attachment.get().getFileMetadataDescription());
+                    }
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+
         sendToNotifiers(newLogEntry);
 
         logger.log(Level.INFO, "Entry id " + newLogEntry.getId() + " created from " + clientInfo);
@@ -283,38 +301,10 @@ public class LogResource {
         return newLogEntry;
     }
 
-    @PostMapping("/composite")
-    public Log createCompositeLog(@RequestHeader(value = OLOG_CLIENT_INFO_HEADER, required = false, defaultValue = "n/a") String clientInfo,
-                                  @RequestParam(value = "markup", required = false) String markup,
-                                  @RequestParam(value = "inReplyTo", required = false, defaultValue = "-1") String inReplyTo,
-                          @RequestPart("logEntry") Log log,
-                          @RequestPart("attachmentData") List<AttachmentLight> attachmentData,
-                          @RequestPart("files") MultipartFile[] files,
-                          @AuthenticationPrincipal Principal principal) {
-
-        Log createdLog = createLog(clientInfo, markup, log, inReplyTo, principal);
-
-        for(MultipartFile multipartFile : files){
-            try {
-                String checksum = getMD5Checksum(multipartFile.getInputStream());
-                Optional<AttachmentLight> attachmentLight = attachmentData.stream().filter(a -> a.checksum.equals(checksum)).findFirst();
-                if(attachmentLight.isPresent()){
-                    uploadAttachment(Long.toString(createdLog.getId()), multipartFile, attachmentLight.get().fileName,
-                            attachmentLight.get().id,
-                            attachmentLight.get().fileMetaDataDescription);
-                    attachmentData.remove(attachmentLight.get());
-                }
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        return createdLog;
-    }
 
     @PostMapping("/attachments/{logId}")
     public Log uploadAttachment(@PathVariable String logId,
-                                @RequestPart("files") MultipartFile file,
+                                @RequestPart("file") MultipartFile file,
                                 @RequestPart("filename") String filename,
                                 @RequestPart(value = "id", required = false) String id,
                                 @RequestPart(value = "fileMetadataDescription", required = false) String fileMetadataDescription) {

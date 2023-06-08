@@ -18,7 +18,10 @@
 
 package org.phoebus.olog;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -26,18 +29,24 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.MultipartException;
 
+/**
+ * Handles request exceeding configured sizes (spring.servlet.multipart.max-file-size and
+ * spring.servlet.multipart.max-request-size). In such cases client will get an HTTP 413 (payload too large) response
+ * with a (hopefully) useful message.
+ */
 @ControllerAdvice
+@SuppressWarnings("unused")
 public class FileUploadSizeExceededHandler {
 
-    @ExceptionHandler(MaxUploadSizeExceededException.class)
-    @ResponseStatus(value = HttpStatus.BAD_REQUEST, reason = "Too large")
-    public void handleMaxSizeExceededException(RuntimeException ex, WebRequest request) {
-        System.out.println();
-    }
+    @Value("${spring.servlet.multipart.max-file-size}")
+    private String maxFileSize;
 
-    @ExceptionHandler(MultipartException.class)
-    @ResponseStatus(value = HttpStatus.BAD_REQUEST, reason = "Too large")
-    public void handleMultipartException(RuntimeException ex, WebRequest request) {
-        System.out.println();
+    @Value("${spring.servlet.multipart.max-request-size}")
+    private String maxRequestSize;
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<String> handleMaxSizeExceededException(RuntimeException ex, WebRequest request) {
+        return new ResponseEntity<>("Log entry exceeds size limits: max size per file: " + maxFileSize + ", max total size: " + maxRequestSize,
+                HttpStatus.PAYLOAD_TOO_LARGE);
     }
 }
