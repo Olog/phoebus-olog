@@ -9,6 +9,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.phoebus.olog.entity.Attachment;
 import org.phoebus.olog.entity.Log;
 import org.phoebus.olog.entity.LogEntryGroupHelper;
+import org.phoebus.olog.entity.Logbook;
 import org.phoebus.olog.entity.Property;
 import org.phoebus.olog.entity.SearchResult;
 import org.phoebus.olog.entity.Tag;
@@ -26,13 +27,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.util.FileCopyUtils;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.bind.WebDataBinder;
-import org.springframework.web.bind.annotation.ControllerAdvice;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -42,38 +38,26 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartException;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.math.BigInteger;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.security.MessageDigest;
 import java.security.Principal;
 import java.time.Instant;
 import java.time.temporal.TemporalAmount;
-import java.time.temporal.TemporalUnit;
 import java.time.temporal.UnsupportedTemporalTypeException;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-import java.util.zip.CRC32;
-import java.util.zip.CheckedInputStream;
 
 import static org.phoebus.olog.OlogResourceDescriptors.LOG_RESOURCE_URI;
 import static org.phoebus.util.time.TimestampFormats.MILLI_FORMAT;
@@ -144,9 +128,7 @@ public class LogResource {
     public ResponseEntity<Resource> findResources(@PathVariable String logId, @PathVariable String attachmentName) {
         Optional<Log> log = logRepository.findById(logId);
         if (log.isPresent()) {
-            Set<Attachment> attachments = log.get().getAttachments().stream().filter(attachment -> {
-                return attachment.getFilename().equals(attachmentName);
-            }).collect(Collectors.toSet());
+            Set<Attachment> attachments = log.get().getAttachments().stream().filter(attachment -> attachment.getFilename().equals(attachmentName)).collect(Collectors.toSet());
             if (attachments.size() == 1) {
                 Attachment attachment = attachments.iterator().next();
                 this.logger.log(Level.INFO, "Requesting attachment " + attachment.getId() + ": " + attachment.getFilename());
@@ -235,32 +217,33 @@ public class LogResource {
      * <p>
      * This may return a HTTP 400 if for instance <code>inReplyTo</code> does not identify an existing log entry,
      * or if the logbooks listed in the {@link Log} object contains invalid (i.e. non-existing) logbooks.
+     * </p>
      *
      * @param clientInfo A string sent by client identifying it with respect to version and platform.
      * @param log        A {@link Log} object to be persisted.
      * @param markup     Optional string identifying the wanted markup scheme.
-     * @param inReplyTo  Optional log entry id specifying to which log entry the new log entry is a response.
+     * @param inReplyTo  Optional log entry id specifying to which log entry the new log entry is a reply.
      * @param principal  The authenticated {@link Principal} of the request.
      * @return The persisted {@link Log} object.
      */
-    @PutMapping(consumes = "application/json")
+    @PutMapping()
+    @Deprecated
     public Log createLog(@RequestHeader(value = OLOG_CLIENT_INFO_HEADER, required = false, defaultValue = "n/a") String clientInfo,
                          @RequestParam(value = "markup", required = false) String markup,
                          @RequestParam(value = "inReplyTo", required = false, defaultValue = "-1") String inReplyTo,
-                         @RequestPart("logEntry") Log log,
-                         @RequestPart(value = "files", required = false) MultipartFile[] files,
+                         @RequestBody Log log,
                          @AuthenticationPrincipal Principal principal) {
-        if(log.getLogbooks().isEmpty()){
+        if (log.getLogbooks().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A log entry must specify at least one logbook");
         }
-        if(log.getTitle().isEmpty()){
+        if (log.getTitle().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A log entry must specify a title");
         }
         if (!inReplyTo.equals("-1")) {
             handleReply(inReplyTo, log);
         }
         log.setOwner(principal.getName());
-        Set<String> logbookNames = log.getLogbooks().stream().map(l -> l.getName()).collect(Collectors.toSet());
+        Set<String> logbookNames = log.getLogbooks().stream().map(Logbook::getName).collect(Collectors.toSet());
         Set<String> persistedLogbookNames = new HashSet<>();
         logbookRepository.findAll().forEach(l -> persistedLogbookNames.add(l.getName()));
         if (!CollectionUtils.containsAll(persistedLogbookNames, logbookNames)) {
@@ -268,7 +251,7 @@ public class LogResource {
         }
         Set<Tag> tags = log.getTags();
         if (tags != null && !tags.isEmpty()) {
-            Set<String> tagNames = tags.stream().map(t -> t.getName()).collect(Collectors.toSet());
+            Set<String> tagNames = tags.stream().map(Tag::getName).collect(Collectors.toSet());
             Set<String> persistedTags = new HashSet<>();
             tagRepository.findAll().forEach(t -> persistedTags.add(t.getName()));
             if (!CollectionUtils.containsAll(persistedTags, tagNames)) {
@@ -278,19 +261,54 @@ public class LogResource {
         log = cleanMarkup(markup, log);
         addPropertiesFromProviders(log);
         Log newLogEntry = logRepository.save(log);
+        sendToNotifiers(newLogEntry);
 
-        if(files != null){
-            for(MultipartFile multipartFile : files){
-                try {
-                    Optional<Attachment> attachment = log.getAttachments().stream().filter(a -> a.getId().equals(multipartFile.getName())).findFirst();
-                    if(attachment.isPresent()){
-                        uploadAttachment(Long.toString(newLogEntry.getId()), multipartFile, attachment.get().getFilename(),
-                                attachment.get().getId(),
-                                attachment.get().getFileMetadataDescription());
-                    }
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
+        logger.log(Level.INFO, "Entry id " + newLogEntry.getId() + " created from " + clientInfo);
+
+        return newLogEntry;
+    }
+
+    /**
+     * Creates a new log entry. If the <code>inReplyTo</code> parameters identifies an existing log entry,
+     * this method will treat the new log entry as a reply.
+     * <p>
+     * This may return a HTTP 400 if for instance <code>inReplyTo</code> does not identify an existing log entry,
+     * or if the logbooks listed in the {@link Log} object contains invalid (i.e. non-existing) logbooks.
+     * </p>
+     * <p>Client calling this endpoint <b>must</b> set Content-Type=multipart/form-data.</p>
+     *
+     * @param clientInfo A string sent by client identifying it with respect to version and platform.
+     * @param logEntry   A {@link Log} object to be persisted.
+     * @param markup     Optional string identifying the wanted markup scheme.
+     * @param inReplyTo  Optional log entry id specifying to which log entry the new log entry is a reply.
+     * @param files      Optional array of {@link MultipartFile}s representing attachments. These <b>must</b> appear in the same
+     *                   order as the {@link Attachment} items in the list of {@link Attachment}s of the log entry.
+     * @param principal  The authenticated {@link Principal} of the request.
+     * @return The persisted {@link Log} object.
+     */
+    @PutMapping("/multipart")
+    public Log createLog(@RequestHeader(value = OLOG_CLIENT_INFO_HEADER, required = false, defaultValue = "n/a") String clientInfo,
+                         @RequestParam(value = "markup", required = false) String markup,
+                         @RequestParam(value = "inReplyTo", required = false, defaultValue = "-1") String inReplyTo,
+                         @RequestPart("logEntry") Log logEntry,
+                         @RequestPart(value = "files", required = false) MultipartFile[] files,
+                         @AuthenticationPrincipal Principal principal) {
+
+        if (files != null && logEntry.getAttachments() != null && files.length != logEntry.getAttachments().size()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Attachment data invalid: file count does not match attachment count");
+        }
+
+        Log newLogEntry = createLog(clientInfo, markup, inReplyTo, logEntry, principal);
+
+        if (files != null) {
+            Iterator<Attachment> attachmentIterator = logEntry.getAttachments().iterator();
+            for (int i = 0; i < files.length; i++) {
+                Attachment attachment = attachmentIterator.next();
+                uploadAttachment(Long.toString(newLogEntry.getId()),
+                        files[i],
+                        attachment.getFilename(),
+                        attachment.getId(),
+                        attachment.getFileMetadataDescription());
             }
         }
 
@@ -368,32 +386,7 @@ public class LogResource {
             persistedLog.setTitle(log.getTitle());
             persistedLog = cleanMarkup(markup, persistedLog);
 
-            Log newLogEntry = logRepository.update(persistedLog);
-            return newLogEntry;
-        } else {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to retrieve log with id: " + logId);
-        }
-    }
-
-
-    /**
-     * Endpoint supporting upload of multiple files, i.e. saving the client from sending one POST request per file.
-     * Calls {@link #uploadAttachment(String, MultipartFile, String, String, String)} internally, using the original file's
-     * name and content type.
-     *
-     * @param logId A (numerical) id of a {@link Log}
-     * @param files The files subject to upload.
-     * @return The persisted {@link Log} object.
-     */
-    @SuppressWarnings("unused")
-    @PostMapping(value = "/attachments-multi/{logId}", consumes = "multipart/form-data")
-    public Log uploadMultipleAttachments(@PathVariable String logId,
-                                         @RequestPart("file") MultipartFile[] files) {
-        if (logRepository.findById(logId).isPresent()) {
-            for (MultipartFile file : files) {
-                uploadAttachment(logId, file, file.getOriginalFilename(), file.getName(), file.getContentType());
-            }
-            return logRepository.findById(logId).get();
+            return logRepository.update(persistedLog);
         } else {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to retrieve log with id: " + logId);
         }
@@ -409,7 +402,7 @@ public class LogResource {
         // the same group. If not, throw exception.
         synchronized (logGroupSyncObject) {
             for (Long id : logEntryIds) {
-                Optional<Log> log = null;
+                Optional<Log> log;
                 try {
                     log = logRepository.findById(Long.toString(id));
                 } catch (ResponseStatusException exception) {
@@ -451,13 +444,13 @@ public class LogResource {
      * error handling or logging has to be done in the {@link LogEntryNotifier}, but exceptions are
      * handled here in order to not abort if any of the providers fails.
      *
-     * @param log
+     * @param log The log entry
      */
     private void sendToNotifiers(Log log) {
         if (logEntryNotifiers.isEmpty()) {
             return;
         }
-        taskExecutor.execute(() -> logEntryNotifiers.stream().forEach(n -> {
+        taskExecutor.execute(() -> logEntryNotifiers.forEach(n -> {
             try {
                 n.notify(log);
             } catch (Exception e) {
@@ -477,6 +470,30 @@ public class LogResource {
             }
         }
         return log;
+    }
+
+    /**
+     * Endpoint supporting upload of multiple files, i.e. saving the client from sending one POST request per file.
+     * Calls {@link #uploadAttachment(String, MultipartFile, String, String, String)} internally, using the original file's
+     * name and content type.
+     *
+     * @param logId A (numerical) id of a {@link Log}
+     * @param files The files subject to upload.
+     * @return The persisted {@link Log} object.
+     */
+    @SuppressWarnings("unused")
+    @PostMapping(value = "/attachments-multi/{logId}", consumes = "multipart/form-data")
+    @Deprecated
+    public Log uploadMultipleAttachments(@PathVariable String logId,
+                                         @RequestPart("file") MultipartFile[] files) {
+        if (logRepository.findById(logId).isPresent()) {
+            for (MultipartFile file : files) {
+                uploadAttachment(logId, file, file.getOriginalFilename(), file.getName(), file.getContentType());
+            }
+            return logRepository.findById(logId).get();
+        } else {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to retrieve log with id: " + logId);
+        }
     }
 
     /**
@@ -558,59 +575,5 @@ public class LogResource {
             // Log entry not found, return HTTP 400
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot reply to log entry " + originalLogEntryId + " as it does not exist");
         }
-    }
-
-    private static class AttachmentLight{
-        private String id;
-        private String fileName;
-        private String fileMetaDataDescription;
-
-        private String checksum;
-
-        public String getId() {
-            return id;
-        }
-
-        public void setId(String id) {
-            this.id = id;
-        }
-
-        public String getFileName() {
-            return fileName;
-        }
-
-        public void setFileName(String fileName) {
-            this.fileName = fileName;
-        }
-
-        public String getFileMetaDataDescription() {
-            return fileMetaDataDescription;
-        }
-
-        public void setFileMetaDataDescription(String fileMetaDataDescription) {
-            this.fileMetaDataDescription = fileMetaDataDescription;
-        }
-
-        public String getChecksum() {
-            return checksum;
-        }
-
-        public void setChecksum(String checksum) {
-            this.checksum = checksum;
-        }
-    }
-
-    private long getChecksumCRC32(InputStream inputStream, int bufferSize)
-            throws IOException {
-        CheckedInputStream checkedInputStream = new CheckedInputStream(inputStream, new CRC32());
-        byte[] buffer = new byte[bufferSize];
-        while (checkedInputStream.read(buffer, 0, buffer.length) >= 0) {}
-        return checkedInputStream.getChecksum().getValue();
-    }
-
-    private static String getMD5Checksum(InputStream inputStream) throws Exception{
-        byte[] data = FileCopyUtils.copyToByteArray(inputStream);
-        byte[] hash = MessageDigest.getInstance("MD5").digest(data);
-        return new BigInteger(1, hash).toString(16);
     }
 }

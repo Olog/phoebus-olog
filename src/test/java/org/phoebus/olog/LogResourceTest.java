@@ -25,6 +25,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
 import org.mockito.internal.util.collections.Sets;
+import org.phoebus.olog.entity.Attachment;
 import org.phoebus.olog.entity.Attribute;
 import org.phoebus.olog.entity.Log;
 import org.phoebus.olog.entity.Log.LogBuilder;
@@ -36,8 +37,11 @@ import org.phoebus.olog.entity.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.mock.web.MockMultipartHttpServletRequest;
+import org.springframework.mock.web.MockPart;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.ContextHierarchy;
 import org.springframework.test.context.TestPropertySource;
@@ -47,10 +51,15 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.multipart.MultipartHttpServletRequest;
+import org.springframework.web.multipart.MultipartRequest;
+import org.springframework.web.multipart.support.StandardMultipartHttpServletRequest;
 import org.springframework.web.server.ResponseStatusException;
 
+import javax.servlet.http.Part;
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -355,23 +364,125 @@ public class LogResourceTest extends ResourcesTestBase {
         reset(logRepository);
     }
 
-    /**
-     * Test only endpoint URI
-     *
-     * @throws Exception
-     */
     @Test
-    public void testCreateMultipleAttachments() throws Exception {
-        when(logRepository.findById("1")).thenReturn(Optional.of(log1));
+    public void testCreateLogMultipart() throws Exception{
+        Attachment attachment = new Attachment();
+        attachment.setId("attachmentId");
+        attachment.setFilename("filename1.txt");
+        Log log = LogBuilder.createLog()
+                .id(1L)
+                .owner("user")
+                .title("title")
+                .withLogbooks(Set.of(logbook1, logbook2))
+                .withTags(Set.of(tag1, tag2))
+                .source("description1")
+                .description("description1")
+                .createDate(now)
+                .modifyDate(now)
+                .level("Urgent")
+                .build();
+        Set<Attachment> attachments = new HashSet<>();
+        attachments.add(attachment);
+        log.setAttachments(attachments);
         MockMultipartFile file1 =
-                new MockMultipartFile("file", "filename1.txt", "text/plain", "some xml".getBytes());
-        MockMultipartFile file2 =
-                new MockMultipartFile("file", "filename2.txt", "text/plain", "some xml".getBytes());
-        mockMvc.perform(MockMvcRequestBuilders.multipart("/" + OlogResourceDescriptors.LOG_RESOURCE_URI + "/attachments-multi/1")
+                new MockMultipartFile("files", "filename1.txt", "text/plain", "some xml".getBytes());
+        MockMultipartFile log1 = new MockMultipartFile("logEntry", "","application/json", objectMapper.writeValueAsString(log).getBytes());
+
+        when(logbookRepository.findAll()).thenReturn(Arrays.asList(logbook1, logbook2));
+        when(tagRepository.findAll()).thenReturn(Arrays.asList(tag1, tag2));
+        when(logRepository.save(argThat(new LogMatcher(log)))).thenReturn(log);
+        when(logRepository.findById("1")).thenReturn(Optional.of(log));
+        MockHttpServletRequestBuilder request =
+                MockMvcRequestBuilders.multipart(HttpMethod.PUT,
+                                "/" + OlogResourceDescriptors.LOG_RESOURCE_URI + "/multipart")
+                .file(file1)
+                .file(log1)
+                .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
+                .header(HttpHeaders.CONTENT_TYPE, "multipart/form-data")
+                .contentType(JSON);
+        MvcResult result = mockMvc.perform(request).andExpect(status().isOk()).andReturn();
+
+        Log savedLog = objectMapper.readValue(result.getResponse().getContentAsString(), Log.class);
+        assertEquals(Long.valueOf(1L), savedLog.getId());
+        reset(logRepository);
+    }
+
+    @Test
+    public void testCreateLogMultipartNoAttachments() throws Exception{
+        Log log = LogBuilder.createLog()
+                .id(1L)
+                .owner("user")
+                .title("title")
+                .withLogbooks(Set.of(logbook1, logbook2))
+                .withTags(Set.of(tag1, tag2))
+                .source("description1")
+                .description("description1")
+                .createDate(now)
+                .modifyDate(now)
+                .level("Urgent")
+                .build();
+        MockMultipartFile log1 = new MockMultipartFile("logEntry", "","application/json", objectMapper.writeValueAsString(log).getBytes());
+
+        when(logbookRepository.findAll()).thenReturn(Arrays.asList(logbook1, logbook2));
+        when(tagRepository.findAll()).thenReturn(Arrays.asList(tag1, tag2));
+        when(logRepository.save(argThat(new LogMatcher(log)))).thenReturn(log);
+        when(logRepository.findById("1")).thenReturn(Optional.of(log));
+        MockHttpServletRequestBuilder request =
+                MockMvcRequestBuilders.multipart(HttpMethod.PUT,
+                                "/" + OlogResourceDescriptors.LOG_RESOURCE_URI + "/multipart")
+                        .file(log1)
+                        .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
+                        .header(HttpHeaders.CONTENT_TYPE, "multipart/form-data")
+                        .contentType(JSON);
+        MvcResult result = mockMvc.perform(request).andExpect(status().isOk()).andReturn();
+
+        Log savedLog = objectMapper.readValue(result.getResponse().getContentAsString(), Log.class);
+        assertEquals(Long.valueOf(1L), savedLog.getId());
+        reset(logRepository);
+    }
+
+    @Test
+    public void testCreateLogMultipartFileAndAttachmentMismatch() throws Exception{
+        Attachment attachment = new Attachment();
+        attachment.setId("attachmentId");
+        attachment.setFilename("filename1.txt");
+        Attachment attachment2 = new Attachment();
+        attachment2.setId("attachmentId2");
+        attachment2.setFilename("filename2.txt");
+        Log log = LogBuilder.createLog()
+                .id(1L)
+                .owner("user")
+                .title("title")
+                .withLogbooks(Set.of(logbook1, logbook2))
+                .withTags(Set.of(tag1, tag2))
+                .source("description1")
+                .description("description1")
+                .createDate(now)
+                .modifyDate(now)
+                .level("Urgent")
+                .build();
+        Set<Attachment> attachments = new HashSet<>();
+        attachments.add(attachment);
+        attachments.add(attachment2);
+        log.setAttachments(attachments);
+        MockMultipartFile file1 =
+                new MockMultipartFile("files", "filename1.txt", "text/plain", "some xml".getBytes());
+        MockMultipartFile log1 = new MockMultipartFile("logEntry", "","application/json", objectMapper.writeValueAsString(log).getBytes());
+
+        when(logbookRepository.findAll()).thenReturn(Arrays.asList(logbook1, logbook2));
+        when(tagRepository.findAll()).thenReturn(Arrays.asList(tag1, tag2));
+        when(logRepository.save(argThat(new LogMatcher(log)))).thenReturn(log);
+        when(logRepository.findById("1")).thenReturn(Optional.of(log));
+        MockHttpServletRequestBuilder request =
+                MockMvcRequestBuilders.multipart(HttpMethod.PUT,
+                                "/" + OlogResourceDescriptors.LOG_RESOURCE_URI + "/multipart")
                         .file(file1)
-                        .file(file2)
-                        .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION))
-                .andExpect(status().is(200));
+                        .file(log1)
+                        .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
+                        .header(HttpHeaders.CONTENT_TYPE, "multipart/form-data")
+                        .contentType(JSON);
+        mockMvc.perform(request).andExpect(status().isBadRequest());
+
         reset(logRepository);
     }
 
