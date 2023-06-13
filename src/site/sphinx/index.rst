@@ -131,7 +131,7 @@ time based searches will ensure that these log entries are also found even if th
 Quick Start
 ############
 
-Download and install elasticsearch (verision 6.3) from elastic.com
+Download and install elasticsearch (verision 8.3) from elastic.com
 Download and install mongodb from mongodb
 
 Configure the service
@@ -158,6 +158,7 @@ Creating a Log Entry
 
 Create a simple log entry 
 
+NOTE: deprecated, will be removed in future commits. Replaced by https://localhost:8181/Olog/logs/multipart
 **PUT** https://localhost:8181/Olog/logs
 
 .. code-block:: json
@@ -173,6 +174,39 @@ Create a simple log entry
          }
       ]
  }
+
+Create a log entry, optionally with file attachments
+
+**PUT** https://localhost:8181/Olog/logs/multipart
+
+.. code-block:: json
+
+ {
+    "owner":"log",
+      "description":"Beam Dump due to Major power dip Current Alarms Booster transmitter switched back to lower state.",
+      "level":"Info",
+      "title":"Some title",
+      "logbooks":[
+         {
+            "name":"Operations"
+         }
+      ],
+      "attachments":[
+         {"id": "82dd67fa-09df-11ee-be56-0242ac120002", "name":"MyScreenShot.png"},
+         {"id": "c02948ad-4bbd-432f-aa4d-a687a54f8d40", "name":"MySpreadsheet.xlsx"}
+      ]
+ }
+
+**NOTE** Attachment ids must be unique, e.g. UUID. When creating a log entry - optionally with attachments - client **must**:
+
+#. Use a multipart request and set the Content-Type to "multipart/form-data", even if no attachments are present.
+#. If attachments are present: add one request part per attachment file, in the order they appear in the log entry. Each
+file must be added using "files" as the name for the part.
+#. Add the log entry as a request part with content type "application/json". The name of the part must be "logEntry".
+
+Client must also be prepared to handle a HTTP 413 (payload too large) response in case the attached files exceed
+file and request size limits configured in the service.
+
 
 Reply to a log entry. This uses the same end point as when creating a log entry, but client must
 send the unique id of the log entry to which the new one is a reply.
