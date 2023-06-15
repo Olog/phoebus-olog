@@ -306,7 +306,7 @@ public class LogResource {
                 Attachment attachment = attachmentIterator.next();
                 uploadAttachment(Long.toString(newLogEntry.getId()),
                         files[i],
-                        attachment.getFilename(),
+                        files[i].getOriginalFilename(),
                         attachment.getId(),
                         attachment.getFileMetadataDescription());
             }
