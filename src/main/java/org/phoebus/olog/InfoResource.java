@@ -83,7 +83,7 @@ public class InfoResource
         serverConfigInfo.put("maxFileSize", 1.0 * DataSize.parse(maxFileSize).toKilobytes() / 1024);
         serverConfigInfo.put("maxRequestSize", 1.0 * DataSize.parse(maxRequestSize).toKilobytes() / 1024);
 
-        ologServiceInfo.put("server config", serverConfigInfo);
+        ologServiceInfo.put("serverConfig", serverConfigInfo);
 
         try {
             return objectMapper.writeValueAsString(ologServiceInfo);
