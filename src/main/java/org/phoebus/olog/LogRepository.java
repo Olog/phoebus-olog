@@ -8,6 +8,7 @@ package org.phoebus.olog;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.Refresh;
 import co.elastic.clients.elasticsearch._types.Result;
+import co.elastic.clients.elasticsearch.core.ExistsRequest;
 import co.elastic.clients.elasticsearch.core.GetRequest;
 import co.elastic.clients.elasticsearch.core.GetResponse;
 import co.elastic.clients.elasticsearch.core.IndexRequest;
@@ -18,6 +19,7 @@ import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.mget.MultiGetResponseItem;
 import co.elastic.clients.elasticsearch.core.search.Hit;
+import org.apache.logging.log4j.util.Strings;
 import org.phoebus.olog.entity.Attachment;
 import org.phoebus.olog.entity.Log;
 import org.phoebus.olog.entity.Log.LogBuilder;
@@ -50,6 +52,12 @@ public class LogRepository implements CrudRepository<Log, String> {
     @SuppressWarnings("unused")
     @Value("${elasticsearch.log.index:olog_logs}")
     private String ES_LOG_INDEX;
+
+    @Value("${archive.modified.entries:true}")
+    private Boolean ARCHIVE_MODIFIED_LOGS;
+    @Value("${elasticsearch.log.archive.index:olog_archived_logs}")
+    private String ES_LOG_ARCHIVE_INDEX;
+
 
     @SuppressWarnings("unused")
     @Autowired
@@ -111,8 +119,11 @@ public class LogRepository implements CrudRepository<Log, String> {
 
     public Log update(Log log) {
         try {
-            Log document = LogBuilder.createLog(log).build();
+            if(ARCHIVE_MODIFIED_LOGS) {
+                archive(log.getId());
+            }
 
+            Log document = LogBuilder.createLog(log).build();
             IndexRequest<Log> indexRequest =
                     IndexRequest.of(i ->
                             i.index(ES_LOG_INDEX)
@@ -136,11 +147,38 @@ public class LogRepository implements CrudRepository<Log, String> {
         return null;
     }
 
+    String archive(Long id) {
+        try {
+            GetResponse<Log> resp = client.get(GetRequest.of(g ->
+                    g.index(ES_LOG_INDEX).id(String.valueOf(id))), Log.class);
+            if(!resp.found()) {
+                logger.log(Level.SEVERE, "Failed to archiver log with id: " + id);
+            } else {
+                Log original_document = resp.source();
+                IndexRequest<Log> indexRequest =
+                        IndexRequest.of(i ->
+                                i.index(ES_LOG_ARCHIVE_INDEX)
+                                        .id(original_document.getId() + "_v" + resp.version())
+                                        .document(original_document)
+                                        .refresh(Refresh.True));
+                IndexResponse response = client.index(indexRequest);
+                if (response.result().equals(Result.Created)) {
+                    return original_document.getId() + "_v" + resp.version();
+                } else {
+                    logger.log(Level.SEVERE, "Failed to archiver log with id: " + id);
+                }
+            }
+        } catch (IOException e) {
+            logger.log(Level.SEVERE, "Failed to archiver log with id: " + id, e);
+        }
+        return Strings.EMPTY;
+    }
+
     @Override
     public Optional<Log> findById(String id) {
         try {
             GetRequest getRequest =
-                    co.elastic.clients.elasticsearch.core.GetRequest.of(g ->
+                    GetRequest.of(g ->
                             g.index(ES_LOG_INDEX).id(id));
             GetResponse<Log> resp =
                     client.get(getRequest, Log.class);
@@ -159,12 +197,8 @@ public class LogRepository implements CrudRepository<Log, String> {
     @Override
     public boolean existsById(String logId) {
         try {
-            GetRequest getRequest =
-                    GetRequest.of(g ->
-                            g.index(ES_LOG_INDEX).id(logId));
-            GetResponse<Log> resp =
-                    client.get(getRequest, Log.class);
-            return resp.found();
+            ExistsRequest existsRequest = ExistsRequest.of(e -> e.index(ES_LOG_INDEX).id(logId));
+            return client.exists(existsRequest).value();
         } catch (IOException e) {
             logger.log(Level.SEVERE, "Failed to check existence of log with id: " + logId, e);
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to check existence of log with id: " + logId);
