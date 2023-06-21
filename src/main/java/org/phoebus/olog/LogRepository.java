@@ -6,8 +6,12 @@
 package org.phoebus.olog;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch._types.FieldSort;
 import co.elastic.clients.elasticsearch._types.Refresh;
 import co.elastic.clients.elasticsearch._types.Result;
+import co.elastic.clients.elasticsearch._types.SortOptions;
+import co.elastic.clients.elasticsearch._types.SortOrder;
+import co.elastic.clients.elasticsearch._types.query_dsl.WildcardQuery;
 import co.elastic.clients.elasticsearch.core.ExistsRequest;
 import co.elastic.clients.elasticsearch.core.GetRequest;
 import co.elastic.clients.elasticsearch.core.GetResponse;
@@ -118,11 +122,14 @@ public class LogRepository implements CrudRepository<Log, String> {
     }
 
     public Log update(Log log) {
+        if(log.getId() == null || log.getId() < 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Failed to update log entry with invalid id: " + log.getId());
+        }
+
         try {
             if(ARCHIVE_MODIFIED_LOGS) {
                 archive(log.getId());
             }
-
             Log document = LogBuilder.createLog(log).build();
             IndexRequest<Log> indexRequest =
                     IndexRequest.of(i ->
@@ -142,28 +149,33 @@ public class LogRepository implements CrudRepository<Log, String> {
             }
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Failed to save log entry: " + log, e);
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to save log entry: " + log);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update log entry: " + log);
         }
         return null;
     }
 
-    String archive(Long id) {
+    public String archive(Long id) {
+        if(id == null || id < 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Failed to archive log entry with invalid id: " + id);
+        }
+
         try {
             GetResponse<Log> resp = client.get(GetRequest.of(g ->
                     g.index(ES_LOG_INDEX).id(String.valueOf(id))), Log.class);
             if(!resp.found()) {
                 logger.log(Level.SEVERE, "Failed to archiver log with id: " + id);
             } else {
-                Log original_document = resp.source();
+                Log originalDocument = resp.source();
+                String updatedVersion = originalDocument.getId() + "_v" + resp.version();
                 IndexRequest<Log> indexRequest =
                         IndexRequest.of(i ->
                                 i.index(ES_LOG_ARCHIVE_INDEX)
-                                        .id(original_document.getId() + "_v" + resp.version())
-                                        .document(original_document)
+                                        .id(updatedVersion)
+                                        .document(originalDocument)
                                         .refresh(Refresh.True));
                 IndexResponse response = client.index(indexRequest);
                 if (response.result().equals(Result.Created)) {
-                    return original_document.getId() + "_v" + resp.version();
+                    return updatedVersion;
                 } else {
                     logger.log(Level.SEVERE, "Failed to archiver log with id: " + id);
                 }
@@ -172,6 +184,28 @@ public class LogRepository implements CrudRepository<Log, String> {
             logger.log(Level.SEVERE, "Failed to archiver log with id: " + id, e);
         }
         return Strings.EMPTY;
+    }
+
+    public SearchResult findArchivedById(String id) {
+        FieldSort.Builder fb = new FieldSort.Builder();
+        fb.field("modifyDate");
+        fb.order(SortOrder.Desc);
+
+        SearchRequest searchRequest = SearchRequest.of(s -> s.index(ES_LOG_ARCHIVE_INDEX)
+                                                        .query(WildcardQuery.of(q -> q.field("id").caseInsensitive(true).value(id+"*"))._toQuery())
+                                                        .timeout("60s")
+                                                        .sort(SortOptions.of(so -> so.field(fb.build()))));
+        try {
+            final SearchResponse<Log> searchResponse = client.search(searchRequest, Log.class);
+            List<Log> result = searchResponse.hits().hits().stream().map(Hit::source).collect(Collectors.toList());
+            SearchResult searchResult = new SearchResult();
+            searchResult.setHitCount(searchResponse.hits().total().value());
+            searchResult.setLogs(result);
+            return searchResult;
+        } catch (IOException | IllegalArgumentException e) {
+            logger.log(Level.SEVERE, "Failed to complete search for archived logs", e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to complete search archived logs");
+        }
     }
 
     @Override

@@ -293,10 +293,11 @@ public class LogRepositoryIT {
             tagRepository.save(TEST_TAG_1);
             propertyRepository.save(TEST_PROPERTY_1);
 
-            Log originalLog = Log.LogBuilder.createLog("This is a test entry").owner(TEST_OWNER)
-                    .withTag(TEST_TAG_1)
-                    .withLogbook(TEST_LOGBOOK_1)
-                    .withProperty(TEST_PROPERTY_1).build();
+            Log originalLog = Log.LogBuilder.createLog("This is a test entry")
+                                            .owner(TEST_OWNER)
+                                            .withTag(TEST_TAG_1)
+                                            .withLogbook(TEST_LOGBOOK_1)
+                                            .withProperty(TEST_PROPERTY_1).build();
             Log createdOriginalLog = logRepository.save(originalLog);
 
             String archivedId = logRepository.archive(createdOriginalLog.getId());
@@ -330,27 +331,29 @@ public class LogRepositoryIT {
             tagRepository.save(TEST_TAG_1);
             propertyRepository.save(TEST_PROPERTY_1);
 
-            Log originalLog = Log.LogBuilder.createLog("This is a test entry").owner(TEST_OWNER)
-                    .withTag(TEST_TAG_1).build();
+            Log originalLog = Log.LogBuilder.createLog("This is a test entry")
+                                            .owner(TEST_OWNER)
+                                            .withTag(TEST_TAG_1).build();
             Log originalCreatedLog = logRepository.save(originalLog);
 
-            String updatedDescription = "This is an updated test entry";
-            originalLog.setDescription(updatedDescription);
+            String updatedSource = "This is an updated test entry";
+            originalLog.setId(originalCreatedLog.getId());
+            originalLog.setSource(updatedSource);
             originalLog.setTags(Set.of(TEST_TAG_1));
             originalLog.setProperties(Set.of(TEST_PROPERTY_1));
 
             Log updatedLog = logRepository.update(originalLog);
 
-            assertTrue(updatedLog.getDescription().equals(updatedDescription), "Failed to update the description");
+            assertTrue(updatedLog.getSource().equals(updatedSource), "Failed to update the source");
             assertTrue(updatedLog.getTags().contains(TEST_TAG_1) && updatedLog.getProperties().contains(TEST_PROPERTY_1), "Failed to update with new Tags and Properties");
             
             Log updatedLog1 = logRepository.update(originalLog);
             Log updatedLog2 = logRepository.update(originalLog);
 
             // Check that the log entry has been archived before updating
-            String archiveLogId0 = originalCreatedLog.getId() +"_V0";
-            String archiveLogId1 = originalCreatedLog.getId() +"_V1";
-            String archiveLogId2 = originalCreatedLog.getId() +"_V3";
+            String archiveLogId0 = originalCreatedLog.getId() +"_v1";
+            String archiveLogId1 = originalCreatedLog.getId() +"_v2";
+            String archiveLogId2 = originalCreatedLog.getId() +"_v3";
 
             ExistsRequest existsRequest = ExistsRequest.of(e -> e.index(ES_LOG_ARCHIVE_INDEX).id(archiveLogId0));
             assertTrue(client.exists(existsRequest).value() , "Failed to archive log entries.");

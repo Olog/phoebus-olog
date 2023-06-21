@@ -125,6 +125,13 @@ public class LogResource {
         }
     }
 
+    @GetMapping("archived/{logId}")
+    @SuppressWarnings("unused")
+    public SearchResult getArchivedLog(@PathVariable String logId) {
+        SearchResult searchResult = logRepository.findArchivedById(logId);
+        return searchResult;
+    }
+
     @GetMapping("/attachments/{logId}/{attachmentName}")
     public ResponseEntity<Resource> findResources(@PathVariable String logId, @PathVariable String attachmentName) {
         Optional<Log> log = logRepository.findById(logId);
