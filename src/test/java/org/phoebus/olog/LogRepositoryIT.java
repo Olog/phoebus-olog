@@ -338,6 +338,7 @@ public class LogRepositoryIT {
 
             String updatedSource = "This is an updated test entry";
             originalLog.setId(originalCreatedLog.getId());
+            originalLog.setCreatedDate(originalCreatedLog.getCreatedDate());
             originalLog.setSource(updatedSource);
             originalLog.setTags(Set.of(TEST_TAG_1));
             originalLog.setProperties(Set.of(TEST_PROPERTY_1));

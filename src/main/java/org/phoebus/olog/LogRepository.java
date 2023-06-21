@@ -133,7 +133,7 @@ public class LogRepository implements CrudRepository<Log, String> {
             Log document = LogBuilder.createLog(log).build();
             IndexRequest<Log> indexRequest =
                     IndexRequest.of(i ->
-                            i.index(ES_LOG_INDEX)
+                                    i.index(ES_LOG_INDEX)
                                     .id(String.valueOf(document.getId()))
                                     .document(document));
 
