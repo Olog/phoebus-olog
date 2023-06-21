@@ -80,8 +80,8 @@ public class InfoResource
 
         Map<String, Object> serverConfigInfo = new LinkedHashMap<>();
         // Provide sizes in MB, arithmetics needed to avoid rounding to 0.
-        serverConfigInfo.put("Max file size", 1.0 * DataSize.parse(maxFileSize).toKilobytes() / 1024);
-        serverConfigInfo.put("Max request size", 1.0 * DataSize.parse(maxRequestSize).toKilobytes() / 1024);
+        serverConfigInfo.put("maxFileSize", 1.0 * DataSize.parse(maxFileSize).toKilobytes() / 1024);
+        serverConfigInfo.put("maxRequestSize", 1.0 * DataSize.parse(maxRequestSize).toKilobytes() / 1024);
 
         ologServiceInfo.put("server config", serverConfigInfo);
 
