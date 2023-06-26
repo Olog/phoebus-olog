@@ -300,17 +300,17 @@ public class LogRepositoryIT {
                                             .withProperty(TEST_PROPERTY_1).build();
             Log createdOriginalLog = logRepository.save(originalLog);
 
-            String archivedId = logRepository.archive(createdOriginalLog.getId());
+            Log archivedLog = logRepository.archive(createdOriginalLog);
 
-            ExistsRequest existsRequest = ExistsRequest.of(e -> e.index(ES_LOG_ARCHIVE_INDEX).id(archivedId));
+            ExistsRequest existsRequest = ExistsRequest.of(e -> e.index(ES_LOG_ARCHIVE_INDEX).id(archivedLog.getId()+"_v1"));
             BooleanResponse response = client.exists(existsRequest);
             assertTrue(response.value() , "Failed to archive log entries.");
 
-            GetResponse<Log> archivedResponse = client.get(GetRequest.of(g -> g.index(ES_LOG_ARCHIVE_INDEX).id(archivedId)), Log.class);
+            GetResponse<Log> archivedResponse = client.get(GetRequest.of(g -> g.index(ES_LOG_ARCHIVE_INDEX).id(archivedLog.getId()+"_v1")), Log.class);
             assertTrue(containsLogs(List.of(createdOriginalLog), List.of(archivedResponse.source())), "Archived log is same as the created log");
 
             client.delete(DeleteRequest.of(d -> d.index(ES_LOG_INDEX).id(createdOriginalLog.getId().toString()).refresh(Refresh.True)));
-            client.delete(DeleteRequest.of(d -> d.index(ES_LOG_ARCHIVE_INDEX).id(archivedId).refresh(Refresh.True)));
+            client.delete(DeleteRequest.of(d -> d.index(ES_LOG_ARCHIVE_INDEX).id(archivedLog.getId()+"_v1").refresh(Refresh.True)));
         } finally {
             client.delete(DeleteRequest.of(d -> d.index(ES_LOGBOOK_INDEX).id( TEST_LOGBOOK_1.getName()).refresh(Refresh.True)));
             client.delete(DeleteRequest.of(d -> d.index(ES_TAG_INDEX).id( TEST_TAG_1.getName()).refresh(Refresh.True)));
@@ -318,6 +318,54 @@ public class LogRepositoryIT {
         }
 
     }
+
+    /**
+     * Test the archiving of a simple test log
+     *
+     * @throws IOException
+     */
+    @Test
+    public void archiveLogs() throws IOException {
+        try {
+            logbookRepository.save(TEST_LOGBOOK_1);
+            tagRepository.save(TEST_TAG_1);
+            propertyRepository.save(TEST_PROPERTY_1);
+
+            Log originalLog = Log.LogBuilder.createLog("This is a test entry").owner(TEST_OWNER).withLogbook(TEST_LOGBOOK_1).build();
+
+            Log originalCreatedLog = logRepository.save(originalLog);
+            Log archivedLog = logRepository.archive(originalCreatedLog);
+            logRepository.update(originalCreatedLog);
+            Log updatedLog1 = logRepository.archive(originalCreatedLog);
+            logRepository.update(originalCreatedLog);
+            Log updatedLog2 = logRepository.archive(originalCreatedLog);
+
+            // Archiving the same log entry multiple times should result in newer "ids"
+            // Check that the log entry has been archived before updating
+            String archiveLogId0 = originalCreatedLog.getId() +"_v1";
+            String archiveLogId1 = originalCreatedLog.getId() +"_v2";
+            String archiveLogId2 = originalCreatedLog.getId() +"_v3";
+
+            List<String> expectedArchivedLogs = List.of(archiveLogId0, archiveLogId1, archiveLogId2);
+            expectedArchivedLogs.stream().forEach(expectedArchivedLog -> {
+                try {
+                    assertTrue(client.exists(ExistsRequest.of(e -> e.index(ES_LOG_ARCHIVE_INDEX).id(expectedArchivedLog))).value() , "Failed to archive log entries.");
+                    client.delete(DeleteRequest.of(d -> d.index(ES_LOG_ARCHIVE_INDEX).id(expectedArchivedLog).refresh(Refresh.True)));
+                } catch (IOException e) {
+                    fail("updated log " + expectedArchivedLog + " was not archived" , e);
+                }
+            });
+
+
+            client.delete(DeleteRequest.of(d -> d.index(ES_LOG_INDEX).id(originalCreatedLog.getId().toString()).refresh(Refresh.True)));
+        } finally {
+            client.delete(DeleteRequest.of(d -> d.index(ES_LOGBOOK_INDEX).id( TEST_LOGBOOK_1.getName()).refresh(Refresh.True)));
+            client.delete(DeleteRequest.of(d -> d.index(ES_TAG_INDEX).id( TEST_TAG_1.getName()).refresh(Refresh.True)));
+            client.delete(DeleteRequest.of(d -> d.index(ES_PROPERTY_INDEX).id( TEST_PROPERTY_1.getName()).refresh(Refresh.True)));
+        }
+
+    }
+
 
     /**
      * Test the updating of a simple test log
@@ -332,8 +380,8 @@ public class LogRepositoryIT {
             propertyRepository.save(TEST_PROPERTY_1);
 
             Log originalLog = Log.LogBuilder.createLog("This is a test entry")
-                                            .owner(TEST_OWNER)
-                                            .withTag(TEST_TAG_1).build();
+                    .owner(TEST_OWNER)
+                    .withTag(TEST_TAG_1).build();
             Log originalCreatedLog = logRepository.save(originalLog);
 
             String updatedSource = "This is an updated test entry";
@@ -347,37 +395,8 @@ public class LogRepositoryIT {
 
             assertTrue(updatedLog.getSource().equals(updatedSource), "Failed to update the source");
             assertTrue(updatedLog.getTags().contains(TEST_TAG_1) && updatedLog.getProperties().contains(TEST_PROPERTY_1), "Failed to update with new Tags and Properties");
-            
-            Log updatedLog1 = logRepository.update(originalLog);
-            Log updatedLog2 = logRepository.update(originalLog);
-
-            // Check that the log entry has been archived before updating
-            String archiveLogId0 = originalCreatedLog.getId() +"_v1";
-            String archiveLogId1 = originalCreatedLog.getId() +"_v2";
-            String archiveLogId2 = originalCreatedLog.getId() +"_v3";
-
-            ExistsRequest existsRequest = ExistsRequest.of(e -> e.index(ES_LOG_ARCHIVE_INDEX).id(archiveLogId0));
-            assertTrue(client.exists(existsRequest).value() , "Failed to archive log entries.");
-
-            GetResponse<Log> archivedResponse = client.get(GetRequest.of(g -> g.index(ES_LOG_ARCHIVE_INDEX).id(archiveLogId0)), Log.class);
-            assertTrue(containsLogs(List.of(archivedResponse.source()), List.of(originalCreatedLog)), "Archived log is not the same as the pre updated log");
-
-            List<String> expectedArchivedLogs = List.of(archiveLogId1, archiveLogId2);
-            expectedArchivedLogs.stream().forEach(expectedArchivedLog -> {
-                try {
-                    assertTrue(client.exists(ExistsRequest.of(e -> e.index(ES_LOG_ARCHIVE_INDEX).id(expectedArchivedLog))).value() , "Failed to archive log entries.");
-                    assertTrue(containsLogs(
-                            List.of(client.get(GetRequest.of(g -> g.index(ES_LOG_ARCHIVE_INDEX).id(expectedArchivedLog)), Log.class).source()),
-                            List.of(updatedLog)), "Archived log is not the same as the pre updated log");
-                    client.delete(DeleteRequest.of(d -> d.index(ES_LOG_ARCHIVE_INDEX).id(expectedArchivedLog).refresh(Refresh.True)));
-                } catch (IOException e) {
-                    fail("updated log " + expectedArchivedLog + " was not archived" , e);
-                }
-            });
-
 
             client.delete(DeleteRequest.of(d -> d.index(ES_LOG_INDEX).id(originalCreatedLog.getId().toString()).refresh(Refresh.True)));
-            client.delete(DeleteRequest.of(d -> d.index(ES_LOG_ARCHIVE_INDEX).id(archiveLogId0).refresh(Refresh.True)));
         } finally {
             client.delete(DeleteRequest.of(d -> d.index(ES_LOGBOOK_INDEX).id( TEST_LOGBOOK_1.getName()).refresh(Refresh.True)));
             client.delete(DeleteRequest.of(d -> d.index(ES_TAG_INDEX).id( TEST_TAG_1.getName()).refresh(Refresh.True)));

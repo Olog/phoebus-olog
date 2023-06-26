@@ -57,8 +57,6 @@ public class LogRepository implements CrudRepository<Log, String> {
     @Value("${elasticsearch.log.index:olog_logs}")
     private String ES_LOG_INDEX;
 
-    @Value("${archive.modified.entries:true}")
-    private Boolean ARCHIVE_MODIFIED_LOGS;
     @Value("${elasticsearch.log.archive.index:olog_archived_logs}")
     private String ES_LOG_ARCHIVE_INDEX;
 
@@ -122,14 +120,7 @@ public class LogRepository implements CrudRepository<Log, String> {
     }
 
     public Log update(Log log) {
-        if(log.getId() == null || log.getId() < 0) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Failed to update log entry with invalid id: " + log.getId());
-        }
-
         try {
-            if(ARCHIVE_MODIFIED_LOGS) {
-                archive(log.getId());
-            }
             Log document = LogBuilder.createLog(log).build();
             IndexRequest<Log> indexRequest =
                     IndexRequest.of(i ->
@@ -154,16 +145,13 @@ public class LogRepository implements CrudRepository<Log, String> {
         return null;
     }
 
-    public String archive(Long id) {
-        if(id == null || id < 0) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Failed to archive log entry with invalid id: " + id);
-        }
-
+    public Log archive(Log log) {
         try {
+            // retrieve the log version from elastic
             GetResponse<Log> resp = client.get(GetRequest.of(g ->
-                    g.index(ES_LOG_INDEX).id(String.valueOf(id))), Log.class);
+                    g.index(ES_LOG_INDEX).id(String.valueOf(log.getId()))), Log.class);
             if(!resp.found()) {
-                logger.log(Level.SEVERE, "Failed to archiver log with id: " + id);
+                logger.log(Level.SEVERE, "Failed to archiver log with id: " + log.getId());
             } else {
                 Log originalDocument = resp.source();
                 String updatedVersion = originalDocument.getId() + "_v" + resp.version();
@@ -175,15 +163,18 @@ public class LogRepository implements CrudRepository<Log, String> {
                                         .refresh(Refresh.True));
                 IndexResponse response = client.index(indexRequest);
                 if (response.result().equals(Result.Created)) {
-                    return updatedVersion;
+                    GetRequest getRequest =
+                            GetRequest.of(g ->
+                                    g.index(ES_LOG_ARCHIVE_INDEX).id(response.id()));
+                    return client.get(getRequest, Log.class).source();
                 } else {
-                    logger.log(Level.SEVERE, "Failed to archiver log with id: " + id);
+                    logger.log(Level.SEVERE, "Failed to archiver log with id: " + updatedVersion);
                 }
             }
         } catch (IOException e) {
-            logger.log(Level.SEVERE, "Failed to archiver log with id: " + id, e);
+            logger.log(Level.SEVERE, "Failed to archiver log with id: " + log.getId(), e);
         }
-        return Strings.EMPTY;
+        return null;
     }
 
     public SearchResult findArchivedById(String id) {

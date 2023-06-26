@@ -18,6 +18,7 @@ import org.phoebus.olog.entity.preprocess.MarkupCleaner;
 import org.phoebus.olog.notification.LogEntryNotifier;
 import org.phoebus.util.time.TimeParser;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.task.TaskExecutor;
@@ -103,6 +104,8 @@ public class LogResource {
     @SuppressWarnings("unused")
     @Autowired
     private Long propertyProvidersTimeout;
+    @Value("${archive.modified.entries:true}")
+    private Boolean ARCHIVE_MODIFIED_LOGS;
 
     /**
      * Custom HTTP header that client may send in order to identify itself. This is logged for some of the
@@ -374,11 +377,18 @@ public class LogResource {
     @PostMapping("/{logId}")
     public Log updateLog(@PathVariable String logId,
                          @RequestParam(value = "markup", required = false) String markup,
-                         @RequestBody Log log) {
+                         @RequestBody Log log,
+                         @AuthenticationPrincipal Principal principal) {
+
 
         Optional<Log> foundLog = logRepository.findById(logId);
         if (foundLog.isPresent()) {
             Log persistedLog = foundLog.get();
+            if (ARCHIVE_MODIFIED_LOGS) {
+                logRepository.archive(persistedLog);
+                persistedLog.setOwner(principal.getName());
+            }
+
             // In case a client sends a log record where the id does not match the path variable, return HTTP 400 (bad request)
             if (!logId.equals(Long.toString(log.getId()))) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Log entry id does not match path variable");
@@ -392,6 +402,7 @@ public class LogResource {
             persistedLog.setLogbooks(log.getLogbooks());
             persistedLog.setTitle(log.getTitle());
             persistedLog = cleanMarkup(markup, persistedLog);
+
 
             return logRepository.update(persistedLog);
         } else {
