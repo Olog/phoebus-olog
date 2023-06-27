@@ -47,11 +47,6 @@ public class FileUploadSizeExceededHandler {
     @Value("${cors.allowed.origins:http://localhost:3000}")
     private String corsAllowedOrigins;
 
-    @Value("${spring.servlet.multipart.max-file-size}")
-    private String maxFileSize;
-
-    @Value("${spring.servlet.multipart.max-request-size}")
-    private String maxRequestSize;
 
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     public ResponseEntity<String> handleMaxSizeExceededException(RuntimeException ex, WebRequest request) {
@@ -59,7 +54,7 @@ public class FileUploadSizeExceededHandler {
         HttpHeaders headers = new HttpHeaders();
         headers.add("Access-Control-Allow-Origin", corsAllowedOrigins);
         headers.add("Access-Control-Allow-Credentials", "true");
-        return new ResponseEntity<>("Log entry exceeds size limits: max size per file=" + maxFileSize + ", max total size=" + maxRequestSize,
+        return new ResponseEntity<>("Log entry exceeds size limits",
                 headers,
                 HttpStatus.PAYLOAD_TOO_LARGE);
     }

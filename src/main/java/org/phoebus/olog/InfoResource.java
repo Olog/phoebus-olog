@@ -7,6 +7,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.mongodb.client.MongoClient;
+import org.apache.catalina.Server;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.unit.DataSize;
@@ -41,10 +42,10 @@ public class InfoResource
     @Value("${elasticsearch.http.port:9200}")
     private int port;
 
-    @Value("${spring.servlet.multipart.max-file-size}")
+    @Value("${spring.servlet.multipart.max-file-size:15MB}")
     private String maxFileSize;
 
-    @Value("${spring.servlet.multipart.max-request-size}")
+    @Value("${spring.servlet.multipart.max-request-size:50MB}")
     private String maxRequestSize;
 
     private final static ObjectMapper objectMapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
@@ -80,10 +81,10 @@ public class InfoResource
 
         Map<String, Object> serverConfigInfo = new LinkedHashMap<>();
         // Provide sizes in MB, arithmetics needed to avoid rounding to 0.
-        serverConfigInfo.put("Max file size", 1.0 * DataSize.parse(maxFileSize).toKilobytes() / 1024);
-        serverConfigInfo.put("Max request size", 1.0 * DataSize.parse(maxRequestSize).toKilobytes() / 1024);
+        serverConfigInfo.put("maxFileSize", 1.0 * DataSize.parse(maxFileSize).toKilobytes() / 1024);
+        serverConfigInfo.put("maxRequestSize", 1.0 * DataSize.parse(maxRequestSize).toKilobytes() / 1024);
 
-        ologServiceInfo.put("server config", serverConfigInfo);
+        ologServiceInfo.put("serverConfig", serverConfigInfo);
 
         try {
             return objectMapper.writeValueAsString(ologServiceInfo);
