@@ -370,6 +370,7 @@ public class LogResource {
      * @param logId  The log id of the entry subject to update. It must exist, i.e. it is not created of not found.
      * @param markup Markup strategy, if any.
      * @param log    The log record data as sent by client.
+     * @param principal  The authenticated {@link Principal} of the request.
      * @return The updated log record, or HTTP status 404 if the log record does not exist. If the path
      * variable does not match the id in the log record, HTTP status 400 (bad request) is returned.
      */

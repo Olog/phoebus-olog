@@ -151,7 +151,7 @@ public class LogRepository implements CrudRepository<Log, String> {
             GetResponse<Log> resp = client.get(GetRequest.of(g ->
                     g.index(ES_LOG_INDEX).id(String.valueOf(log.getId()))), Log.class);
             if(!resp.found()) {
-                logger.log(Level.SEVERE, "Failed to archiver log with id: " + log.getId());
+                logger.log(Level.SEVERE, "Failed to archive log with id: " + log.getId());
             } else {
                 Log originalDocument = resp.source();
                 String updatedVersion = originalDocument.getId() + "_v" + resp.version();
