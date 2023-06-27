@@ -7,6 +7,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.mongodb.client.MongoClient;
+import org.apache.catalina.Server;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.unit.DataSize;
@@ -41,10 +42,10 @@ public class InfoResource
     @Value("${elasticsearch.http.port:9200}")
     private int port;
 
-    @Value("${spring.servlet.multipart.max-file-size}")
+    @Value("${spring.servlet.multipart.max-file-size:15MB}")
     private String maxFileSize;
 
-    @Value("${spring.servlet.multipart.max-request-size}")
+    @Value("${spring.servlet.multipart.max-request-size:50MB}")
     private String maxRequestSize;
 
     private final static ObjectMapper objectMapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
