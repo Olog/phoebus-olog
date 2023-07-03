@@ -7,8 +7,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.mongodb.client.MongoClient;
+import org.apache.catalina.Server;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.util.unit.DataSize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -23,6 +25,7 @@ import static org.phoebus.olog.OlogResourceDescriptors.OLOG_SERVICE_INFO;
 
 @RestController
 @RequestMapping(OLOG_SERVICE_INFO)
+@SuppressWarnings("unused")
 public class InfoResource
 {
 
@@ -39,6 +42,12 @@ public class InfoResource
     @Value("${elasticsearch.http.port:9200}")
     private int port;
 
+    @Value("${spring.servlet.multipart.max-file-size:15MB}")
+    private String maxFileSize;
+
+    @Value("${spring.servlet.multipart.max-request-size:50MB}")
+    private String maxRequestSize;
+
     private final static ObjectMapper objectMapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
 
     /**
@@ -48,12 +57,12 @@ public class InfoResource
     @GetMapping
     public String info() {
 
-        Map<String, Object> ologServiceInfo = new LinkedHashMap<String, Object>();
+        Map<String, Object> ologServiceInfo = new LinkedHashMap<>();
         ologServiceInfo.put("name", "Olog Service");
         ologServiceInfo.put("version", version);
 
         ElasticsearchClient client = esService.getClient();
-        Map<String, String> elasticInfo = new LinkedHashMap<String, String>();
+        Map<String, String> elasticInfo = new LinkedHashMap<>();
         try {
             InfoResponse response = client.info();
             elasticInfo.put("status", "Connected");
@@ -70,6 +79,12 @@ public class InfoResource
         ologServiceInfo.put("elastic", elasticInfo);
         ologServiceInfo.put("mongoDB", mongoClient.getClusterDescription().getShortDescription());
 
+        Map<String, Object> serverConfigInfo = new LinkedHashMap<>();
+        // Provide sizes in MB, arithmetics needed to avoid rounding to 0.
+        serverConfigInfo.put("maxFileSize", 1.0 * DataSize.parse(maxFileSize).toKilobytes() / 1024);
+        serverConfigInfo.put("maxRequestSize", 1.0 * DataSize.parse(maxRequestSize).toKilobytes() / 1024);
+
+        ologServiceInfo.put("serverConfig", serverConfigInfo);
 
         try {
             return objectMapper.writeValueAsString(ologServiceInfo);
@@ -78,5 +93,4 @@ public class InfoResource
             return "Failed to gather Olog service info";
         }
     }
-
 }
