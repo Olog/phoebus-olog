@@ -381,6 +381,10 @@ public class LogResource {
                          @RequestBody Log log,
                          @AuthenticationPrincipal Principal principal) {
 
+        // In case a client sends a log record where the id does not match the path variable, return HTTP 400 (bad request)
+        if (!logId.equals(Long.toString(log.getId()))) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Log entry id does not match path variable");
+        }
 
         Optional<Log> foundLog = logRepository.findById(logId);
         if (foundLog.isPresent()) {
@@ -390,10 +394,6 @@ public class LogResource {
                 persistedLog.setOwner(principal.getName());
             }
 
-            // In case a client sends a log record where the id does not match the path variable, return HTTP 400 (bad request)
-            if (!logId.equals(Long.toString(log.getId()))) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Log entry id does not match path variable");
-            }
             persistedLog.setLevel(log.getLevel());
             persistedLog.setProperties(log.getProperties());
             persistedLog.setModifyDate(Instant.now());
