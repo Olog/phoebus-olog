@@ -330,6 +330,15 @@ public class LogResource {
     }
 
 
+    /**
+     * Add an attachment to log entry identified by logId
+     * @param logId log entry ID
+     * @param file the file to be attached
+     * @param filename name of file
+     * @param id UUID for file in mongo
+     * @param fileMetadataDescription file metadata
+     * @return
+     */
     @PostMapping("/attachments/{logId}")
     public Log uploadAttachment(@PathVariable String logId,
                                 @RequestPart("file") MultipartFile file,
@@ -361,7 +370,6 @@ public class LogResource {
      * of logbooks or tags, the updated log record will reflect that. However, the following data is NOT updated:
      * <ul>
      *     <li>Attachments</li>
-     *     <li>Owner (author)</li>
      *     <li>Created date</li>
      *     <li>Events</li>
      * </ul>
@@ -403,7 +411,6 @@ public class LogResource {
             persistedLog.setLogbooks(log.getLogbooks());
             persistedLog.setTitle(log.getTitle());
             persistedLog = cleanMarkup(markup, persistedLog);
-
 
             return logRepository.update(persistedLog);
         } else {

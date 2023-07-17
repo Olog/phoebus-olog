@@ -304,6 +304,29 @@ Find entries with at least one attachment of type 'image'
 
 **GET** https://localhost:8181/Olog/logs/search?attachments=image
 
+Updating a Log Entry
+********************
+
+**POST** https://localhost:8181/Olog/logs/{logId}
+
+Update a log entry, the orginal log entry is archived in a seperate elastic index before any of the changes are applied.
+
+Note: the create date, attachments, and events cannot be modified.
+
+.. code-block:: json
+
+ {
+      "owner":"log",
+      "description":"Beam Dump due to Major power dip Current Alarms Booster transmitter switched back to lower state.
+                     New important info appended",
+      "level":"Info",
+      "title":"A new title",
+      "logbooks":[
+         {
+            "name":"Operations"
+         }
+      ]
+ }
 
 Managing Logbooks & Tags
 ************************
