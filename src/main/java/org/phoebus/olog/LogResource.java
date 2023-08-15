@@ -301,14 +301,20 @@ public class LogResource {
         Log newLogEntry = createLog(clientInfo, markup, inReplyTo, logEntry, principal);
 
         if (files != null) {
-            Iterator<Attachment> attachmentIterator = logEntry.getAttachments().iterator();
             for (int i = 0; i < files.length; i++) {
-                Attachment attachment = attachmentIterator.next();
+                String originalFileName = files[i].getOriginalFilename();
+                Optional<Attachment> attachment =
+                    logEntry.getAttachments().stream()
+                            .filter(a -> a.getFilename() != null && a.getFilename().equals(originalFileName)).findFirst();
+                if(attachment.isEmpty()){ // Should not happen if client behaves correctly
+                    logger.log(Level.WARNING, "File " + originalFileName + " not matched with attachment meta-data");
+                    continue;
+                }
                 uploadAttachment(Long.toString(newLogEntry.getId()),
                         files[i],
-                        files[i].getOriginalFilename(),
-                        attachment.getId(),
-                        attachment.getFileMetadataDescription());
+                        originalFileName,
+                        attachment.get().getId(),
+                        attachment.get().getFileMetadataDescription());
             }
         }
 
