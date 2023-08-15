@@ -6,13 +6,7 @@
 package org.phoebus.olog;
 
 import org.apache.commons.collections4.CollectionUtils;
-import org.phoebus.olog.entity.Attachment;
-import org.phoebus.olog.entity.Log;
-import org.phoebus.olog.entity.LogEntryGroupHelper;
-import org.phoebus.olog.entity.Logbook;
-import org.phoebus.olog.entity.Property;
-import org.phoebus.olog.entity.SearchResult;
-import org.phoebus.olog.entity.Tag;
+import org.phoebus.olog.entity.*;
 import org.phoebus.olog.entity.preprocess.LogPropertyProvider;
 import org.phoebus.olog.entity.preprocess.MarkupCleaner;
 import org.phoebus.olog.notification.LogEntryNotifier;
@@ -21,23 +15,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.task.TaskExecutor;
-import org.springframework.http.ContentDisposition;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -46,12 +27,7 @@ import java.security.Principal;
 import java.time.Instant;
 import java.time.temporal.TemporalAmount;
 import java.time.temporal.UnsupportedTemporalTypeException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -207,8 +183,7 @@ public class LogResource {
                 }
             }
         }
-        SearchResult searchResult = logRepository.search(allRequestParams);
-        return searchResult;
+        return logRepository.search(allRequestParams);
     }
 
     /**
@@ -301,14 +276,20 @@ public class LogResource {
         Log newLogEntry = createLog(clientInfo, markup, inReplyTo, logEntry, principal);
 
         if (files != null) {
-            Iterator<Attachment> attachmentIterator = logEntry.getAttachments().iterator();
             for (int i = 0; i < files.length; i++) {
-                Attachment attachment = attachmentIterator.next();
+                String originalFileName = files[i].getOriginalFilename();
+                Optional<Attachment> attachment =
+                        logEntry.getAttachments().stream()
+                                .filter(a -> a.getFilename() != null && a.getFilename().equals(originalFileName)).findFirst();
+                if (attachment.isEmpty()) { // Should not happen if client behaves correctly
+                    logger.log(Level.WARNING, "File " + originalFileName + " not matched with attachment meta-data");
+                    continue;
+                }
                 uploadAttachment(Long.toString(newLogEntry.getId()),
                         files[i],
-                        files[i].getOriginalFilename(),
-                        attachment.getId(),
-                        attachment.getFileMetadataDescription());
+                        originalFileName,
+                        attachment.get().getId(),
+                        attachment.get().getFileMetadataDescription());
             }
         }
 
