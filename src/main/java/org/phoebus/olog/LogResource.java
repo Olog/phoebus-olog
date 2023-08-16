@@ -104,8 +104,6 @@ public class LogResource {
     @SuppressWarnings("unused")
     @Autowired
     private Long propertyProvidersTimeout;
-    @Value("${archive.modified.entries:true}")
-    private Boolean ARCHIVE_MODIFIED_LOGS;
 
     /**
      * Custom HTTP header that client may send in order to identify itself. This is logged for some of the
@@ -397,11 +395,9 @@ public class LogResource {
         Optional<Log> foundLog = logRepository.findById(logId);
         if (foundLog.isPresent()) {
             Log persistedLog = foundLog.get();
-            if (ARCHIVE_MODIFIED_LOGS) {
-                logRepository.archive(persistedLog);
-                persistedLog.setOwner(principal.getName());
-            }
+            logRepository.archive(persistedLog);
 
+            persistedLog.setOwner(principal.getName());
             persistedLog.setLevel(log.getLevel());
             persistedLog.setProperties(log.getProperties());
             persistedLog.setModifyDate(Instant.now());

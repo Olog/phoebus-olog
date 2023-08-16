@@ -60,7 +60,6 @@ public class LogRepository implements CrudRepository<Log, String> {
     @Value("${elasticsearch.log.archive.index:olog_archived_logs}")
     private String ES_LOG_ARCHIVE_INDEX;
 
-
     @SuppressWarnings("unused")
     @Autowired
     @Qualifier("client")
