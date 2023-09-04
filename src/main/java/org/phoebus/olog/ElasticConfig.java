@@ -57,6 +57,9 @@ public class ElasticConfig {
     private String ES_LOG_INDEX;
     @Value("${elasticsearch.sequence.index:olog_sequence}")
     private String ES_SEQ_INDEX;
+    @Value("${elasticsearch.log.archive.index:olog_archived_logs}")
+    private String ES_LOG_ARCHIVE_INDEX;
+
 
     @Value("${elasticsearch.cluster.name:elasticsearch}")
     private String clusterName;
@@ -175,7 +178,18 @@ public class ElasticConfig {
         } catch (IOException e) {
             logger.log(Level.WARNING, "Failed to create index " + ES_LOG_INDEX, e);
         }
-
+        // Olog Archived Log Template
+        try (InputStream is = ElasticConfig.class.getResourceAsStream("/log_entry_mapping.json")) {
+            BooleanResponse exits = client.indices().exists(ExistsRequest.of(e -> e.index(ES_LOG_ARCHIVE_INDEX)));
+            if (!exits.value()) {
+                CreateIndexResponse result = client.indices().create(
+                        CreateIndexRequest.of(
+                                c -> c.index(ES_LOG_ARCHIVE_INDEX).withJson(is)));
+                logger.info("Created index: " + "archived_" + ES_LOG_ARCHIVE_INDEX + " : acknowledged " + result.acknowledged());
+            }
+        } catch (IOException e) {
+            logger.log(Level.WARNING, "Failed to create index " + ES_LOG_ARCHIVE_INDEX, e);
+        }
     }
 
     private static final ObjectMapper mapper = new ObjectMapper();

@@ -12,6 +12,7 @@ import org.phoebus.olog.entity.preprocess.MarkupCleaner;
 import org.phoebus.olog.notification.LogEntryNotifier;
 import org.phoebus.util.time.TimeParser;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.task.TaskExecutor;
@@ -98,6 +99,13 @@ public class LogResource {
             logger.log(Level.SEVERE, "Failed to find log: " + logId, new ResponseStatusException(HttpStatus.NOT_FOUND));
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to find log: " + logId);
         }
+    }
+
+    @GetMapping("archived/{logId}")
+    @SuppressWarnings("unused")
+    public SearchResult getArchivedLog(@PathVariable String logId) {
+        SearchResult searchResult = logRepository.findArchivedById(logId);
+        return searchResult;
     }
 
     @GetMapping("/attachments/{logId}/{attachmentName}")
@@ -301,6 +309,15 @@ public class LogResource {
     }
 
 
+    /**
+     * Add an attachment to log entry identified by logId
+     * @param logId log entry ID
+     * @param file the file to be attached
+     * @param filename name of file
+     * @param id UUID for file in mongo
+     * @param fileMetadataDescription file metadata
+     * @return
+     */
     @PostMapping("/attachments/{logId}")
     public Log uploadAttachment(@PathVariable String logId,
                                 @RequestPart("file") MultipartFile file,
@@ -332,7 +349,6 @@ public class LogResource {
      * of logbooks or tags, the updated log record will reflect that. However, the following data is NOT updated:
      * <ul>
      *     <li>Attachments</li>
-     *     <li>Owner (author)</li>
      *     <li>Created date</li>
      *     <li>Events</li>
      * </ul>
@@ -341,6 +357,7 @@ public class LogResource {
      * @param logId  The log id of the entry subject to update. It must exist, i.e. it is not created of not found.
      * @param markup Markup strategy, if any.
      * @param log    The log record data as sent by client.
+     * @param principal  The authenticated {@link Principal} of the request.
      * @return The updated log record, or HTTP status 404 if the log record does not exist. If the path
      * variable does not match the id in the log record, HTTP status 400 (bad request) is returned.
      */
@@ -348,15 +365,20 @@ public class LogResource {
     @PostMapping("/{logId}")
     public Log updateLog(@PathVariable String logId,
                          @RequestParam(value = "markup", required = false) String markup,
-                         @RequestBody Log log) {
+                         @RequestBody Log log,
+                         @AuthenticationPrincipal Principal principal) {
+
+        // In case a client sends a log record where the id does not match the path variable, return HTTP 400 (bad request)
+        if (!logId.equals(Long.toString(log.getId()))) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Log entry id does not match path variable");
+        }
 
         Optional<Log> foundLog = logRepository.findById(logId);
         if (foundLog.isPresent()) {
             Log persistedLog = foundLog.get();
-            // In case a client sends a log record where the id does not match the path variable, return HTTP 400 (bad request)
-            if (!logId.equals(Long.toString(log.getId()))) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Log entry id does not match path variable");
-            }
+            logRepository.archive(persistedLog);
+
+            persistedLog.setOwner(principal.getName());
             persistedLog.setLevel(log.getLevel());
             persistedLog.setProperties(log.getProperties());
             persistedLog.setModifyDate(Instant.now());
