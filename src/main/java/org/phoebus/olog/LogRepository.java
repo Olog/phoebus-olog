@@ -125,6 +125,7 @@ public class LogRepository implements CrudRepository<Log, String> {
                     IndexRequest.of(i ->
                                     i.index(ES_LOG_INDEX)
                                     .id(String.valueOf(document.getId()))
+                                    .refresh(Refresh.True)
                                     .document(document));
 
             IndexResponse response = client.index(indexRequest);
