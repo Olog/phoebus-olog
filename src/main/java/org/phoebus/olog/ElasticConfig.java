@@ -2,7 +2,6 @@ package org.phoebus.olog;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.Refresh;
-import co.elastic.clients.elasticsearch._types.Time;
 import co.elastic.clients.elasticsearch.core.IndexRequest;
 import co.elastic.clients.elasticsearch.core.IndexResponse;
 import co.elastic.clients.elasticsearch.indices.CreateIndexRequest;
@@ -48,6 +47,8 @@ public class ElasticConfig {
     private static final Logger logger = Logger.getLogger(ElasticConfig.class.getName());
 
     // Read the elastic index and type from the application.properties
+    @Value("${elasticsearch.http.keep_alive_timeout_ms:30000}") // default 30 seconds
+    private Long ES_HTTP_CLIENT_KEEP_ALIVE_TIMEOUT_MS;
     @Value("${elasticsearch.index.create.timeout:30s}")
     private String ES_INDEX_CREATE_TIMEOUT;
     @Value("${elasticsearch.index.create.master_timeout:30s}")
@@ -112,7 +113,21 @@ public class ElasticConfig {
     public ElasticsearchClient getClient() {
         if (client == null) {
             // Create the low-level client
-            RestClient httpClient = RestClient.builder(new HttpHost(host, port, protocol)).build();
+            logger.info(String.format("Creating HTTP client with " +
+                            "host %s, " +
+                            "port %s, " +
+                            "protocol %s, " +
+                            "keep-alive %s ms",
+                    host, port, protocol,
+                    ES_HTTP_CLIENT_KEEP_ALIVE_TIMEOUT_MS
+            ));
+            RestClient httpClient = RestClient.builder(new HttpHost(host, port, protocol))
+                    .setHttpClientConfigCallback(builder ->
+                            // Avoid timeout problems
+                            // https://github.com/elastic/elasticsearch/issues/65213
+                            builder.setKeepAliveStrategy((response, context) -> ES_HTTP_CLIENT_KEEP_ALIVE_TIMEOUT_MS)
+                    )
+                    .build();
 
             // Create the Java API Client with the same low level client
             ElasticsearchTransport transport = new RestClientTransport(
