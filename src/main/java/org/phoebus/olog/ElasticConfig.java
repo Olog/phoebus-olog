@@ -13,8 +13,10 @@ import co.elastic.clients.transport.endpoints.BooleanResponse;
 import co.elastic.clients.transport.rest_client.RestClientTransport;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.concurrent.TimeUnit;
 import org.apache.http.HttpHost;
 import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestClientBuilder;
 import org.phoebus.olog.entity.Logbook;
 import org.phoebus.olog.entity.Property;
 import org.phoebus.olog.entity.Tag;
@@ -47,6 +49,10 @@ public class ElasticConfig {
     private static final Logger logger = Logger.getLogger(ElasticConfig.class.getName());
 
     // Read the elastic index and type from the application.properties
+    @Value("${elasticsearch.http.connect_timeout_ms:" + RestClientBuilder.DEFAULT_CONNECT_TIMEOUT_MILLIS + "}") // default 1 second
+    private Integer ES_HTTP_CONNECT_TIMEOUT_MS;
+    @Value("${elasticsearch.http.socket_timeout_ms:" + RestClientBuilder.DEFAULT_SOCKET_TIMEOUT_MILLIS + "}") // default 30 seconds
+    private Integer ES_HTTP_SOCKET_TIMEOUT_MS;
     @Value("${elasticsearch.http.keep_alive_timeout_ms:30000}") // default 30 seconds
     private Long ES_HTTP_CLIENT_KEEP_ALIVE_TIMEOUT_MS;
     @Value("${elasticsearch.index.create.timeout:30s}")
@@ -117,15 +123,24 @@ public class ElasticConfig {
                             "host %s, " +
                             "port %s, " +
                             "protocol %s, " +
-                            "keep-alive %s ms",
+                            "keep-alive %s ms, " +
+                            "connect timeout %s ms, " +
+                            "socket timeout %s ms",
                     host, port, protocol,
-                    ES_HTTP_CLIENT_KEEP_ALIVE_TIMEOUT_MS
+                    ES_HTTP_CLIENT_KEEP_ALIVE_TIMEOUT_MS,
+                    ES_HTTP_CONNECT_TIMEOUT_MS,
+                    ES_HTTP_SOCKET_TIMEOUT_MS
             ));
             RestClient httpClient = RestClient.builder(new HttpHost(host, port, protocol))
+                    .setRequestConfigCallback( builder ->
+                            builder.setConnectTimeout(ES_HTTP_CONNECT_TIMEOUT_MS)
+                                    .setSocketTimeout(ES_HTTP_SOCKET_TIMEOUT_MS)
+                    )
                     .setHttpClientConfigCallback(builder ->
                             // Avoid timeout problems
                             // https://github.com/elastic/elasticsearch/issues/65213
                             builder.setKeepAliveStrategy((response, context) -> ES_HTTP_CLIENT_KEEP_ALIVE_TIMEOUT_MS)
+                                    .setConnectionTimeToLive(5, TimeUnit.MINUTES)
                     )
                     .build();
 
