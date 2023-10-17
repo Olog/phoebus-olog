@@ -140,7 +140,6 @@ public class ElasticConfig {
                             // Avoid timeout problems
                             // https://github.com/elastic/elasticsearch/issues/65213
                             builder.setKeepAliveStrategy((response, context) -> ES_HTTP_CLIENT_KEEP_ALIVE_TIMEOUT_MS)
-                                    .setConnectionTimeToLive(5, TimeUnit.MINUTES)
                     )
                     .build();
 
