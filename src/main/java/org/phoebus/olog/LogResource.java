@@ -301,8 +301,6 @@ public class LogResource {
             }
         }
 
-        sendToNotifiers(newLogEntry);
-
         logger.log(Level.INFO, "Entry id " + newLogEntry.getId() + " created from " + clientInfo);
 
         return newLogEntry;
