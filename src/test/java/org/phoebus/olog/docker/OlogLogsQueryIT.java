@@ -7,12 +7,10 @@ package org.phoebus.olog.docker;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.phoebus.olog.entity.Log;
-import org.testcontainers.containers.DockerComposeContainer;
-import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.containers.ComposeContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URLEncoder;
@@ -77,9 +75,7 @@ public class OlogLogsQueryIT {
     static final String HTTP_AUTH_ADMIN_IP_PORT_OLOG_LOGS = ITUtil.HTTP + ITUtil.AUTH_ADMIN + "@" + ITUtil.IP_PORT_OLOG + LOGS;
 
     @Container
-    public static final DockerComposeContainer<?> ENVIRONMENT =
-        new DockerComposeContainer<>(new File("docker-compose.yml"))
-            .waitingFor(ITUtil.OLOG, Wait.forLogMessage(".*Started Application.*", 1));
+    public static final ComposeContainer ENVIRONMENT = ITUtil.defaultComposeContainers();
 
     @Test
     public void ologUp() {

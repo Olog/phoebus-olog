@@ -10,12 +10,10 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.phoebus.olog.entity.Logbook;
 import org.phoebus.olog.entity.State;
-import org.testcontainers.containers.DockerComposeContainer;
-import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.containers.ComposeContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 
@@ -91,9 +89,7 @@ public class OlogLogbooksIT {
     static Logbook logbook_l10_owner_a_state_i;
 
     @Container
-    public static final DockerComposeContainer<?> ENVIRONMENT =
-        new DockerComposeContainer<>(new File("docker-compose.yml"))
-            .waitingFor(ITUtil.OLOG, Wait.forLogMessage(".*Started Application.*", 1));
+    public static final ComposeContainer ENVIRONMENT = ITUtil.defaultComposeContainers();
 
     @BeforeAll
     public static void setupObjects() {

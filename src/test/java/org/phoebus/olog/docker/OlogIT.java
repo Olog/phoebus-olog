@@ -5,12 +5,10 @@
 package org.phoebus.olog.docker;
 
 import org.junit.jupiter.api.Test;
-import org.testcontainers.containers.DockerComposeContainer;
-import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.containers.ComposeContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 
@@ -46,9 +44,7 @@ public class OlogIT {
     //     ------------------------------------------------------------------------------------------------
 
     @Container
-    public static final DockerComposeContainer<?> ENVIRONMENT =
-        new DockerComposeContainer<>(new File("docker-compose.yml"))
-            .waitingFor(ITUtil.OLOG, Wait.forLogMessage(".*Started Application.*", 1));
+    public static final ComposeContainer ENVIRONMENT = ITUtil.defaultComposeContainers();
 
     @Test
     public void ologUp() {

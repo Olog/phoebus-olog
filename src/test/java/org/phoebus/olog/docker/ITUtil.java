@@ -8,8 +8,11 @@ import org.phoebus.olog.entity.Log;
 import org.phoebus.olog.entity.Logbook;
 import org.phoebus.olog.entity.Property;
 import org.phoebus.olog.entity.Tag;
+import org.testcontainers.containers.ComposeContainer;
+import org.testcontainers.containers.wait.strategy.Wait;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -20,7 +23,6 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Utility class to help (Docker) integration tests for Olog and Elasticsearch.
@@ -51,11 +53,30 @@ public class ITUtil {
     private static final String CURLY_BRACE_END   = "}";
     private static final String HTTP_REPLY        = "HTTP";
 
+    // integration test - docker
+
+    public static final String INTEGRATIONTEST_DOCKER_COMPOSE = "docker-compose-integrationtest.yml";
+    public static final String INTEGRATIONTEST_LOG_MESSAGE    = ".*Started Application.*";
+
     /**
      * This class is not to be instantiated.
      */
     private ITUtil() {
         throw new IllegalStateException("Utility class");
+    }
+
+    /**
+     * Provide a default compose setup for testing.
+     * For Docker Compose V2.
+     *
+     * Intended usage is as field annotated with @Container from class annotated with @Testcontainers.
+     *
+     * @return compose container
+     */
+    public static ComposeContainer defaultComposeContainers() {
+        return new ComposeContainer(new File(ITUtil.INTEGRATIONTEST_DOCKER_COMPOSE))
+                .withLocalCompose(true)
+                .waitingFor(ITUtil.OLOG, Wait.forLogMessage(ITUtil.INTEGRATIONTEST_LOG_MESSAGE, 1));
     }
 
     /**
