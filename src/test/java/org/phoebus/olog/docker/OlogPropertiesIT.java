@@ -271,10 +271,10 @@ class OlogPropertiesIT {
             // might be both 401, 404
             //     401 UNAUTHORIZED
             //     404 NOT_FOUND
-            String[] response = ITUtil.runShellCommand(deleteCurlPropertyForUser("p11"));
+            String[] response = ITUtil.runShellCommand(ITUtilProperties.deleteCurlPropertyForUser("p11"));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_NOT_FOUND);
 
-            response = ITUtil.runShellCommand(deleteCurlPropertyForAdmin("p11"));
+            response = ITUtil.runShellCommand(ITUtilProperties.deleteCurlPropertyForAdmin("p11"));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_NOT_FOUND);
         } catch (IOException e) {
             fail();
@@ -331,37 +331,37 @@ class OlogPropertiesIT {
                     mapper.readValue(response[1], Property[].class),
                     default_properties[0]);
 
-            response = ITUtil.runShellCommand(createCurlPropertyForAdmin("p1", json_incomplete1));
+            response = ITUtil.runShellCommand(ITUtilProperties.createCurlPropertyForAdmin("p1", json_incomplete1));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
-            response = ITUtil.runShellCommand(createCurlPropertyForAdmin("p1", json_incomplete2));
+            response = ITUtil.runShellCommand(ITUtilProperties.createCurlPropertyForAdmin("p1", json_incomplete2));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
-            response = ITUtil.runShellCommand(createCurlPropertyForAdmin("p1", json_incomplete3));
+            response = ITUtil.runShellCommand(ITUtilProperties.createCurlPropertyForAdmin("p1", json_incomplete3));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
-            response = ITUtil.runShellCommand(createCurlPropertyForAdmin("p1", json_incomplete4));
+            response = ITUtil.runShellCommand(ITUtilProperties.createCurlPropertyForAdmin("p1", json_incomplete4));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
-            response = ITUtil.runShellCommand(createCurlPropertyForAdmin("p1", json_incomplete5));
+            response = ITUtil.runShellCommand(ITUtilProperties.createCurlPropertyForAdmin("p1", json_incomplete5));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
-            response = ITUtil.runShellCommand(createCurlPropertyForAdmin("p1", json_incomplete7));
+            response = ITUtil.runShellCommand(ITUtilProperties.createCurlPropertyForAdmin("p1", json_incomplete7));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
-            response = ITUtil.runShellCommand(createCurlPropertyForAdmin("p1", json_incomplete8));
+            response = ITUtil.runShellCommand(ITUtilProperties.createCurlPropertyForAdmin("p1", json_incomplete8));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
-            response = ITUtil.runShellCommand(createCurlPropertyForAdmin("p1", json_incomplete9));
+            response = ITUtil.runShellCommand(ITUtilProperties.createCurlPropertyForAdmin("p1", json_incomplete9));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
-            response = ITUtil.runShellCommand(createCurlPropertyForAdmin("p1", json_property_p1_name_na));
+            response = ITUtil.runShellCommand(ITUtilProperties.createCurlPropertyForAdmin("p1", json_property_p1_name_na));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
-            response = ITUtil.runShellCommand(createCurlPropertyForAdmin("p1", json_property_p1_attribute_0));
+            response = ITUtil.runShellCommand(ITUtilProperties.createCurlPropertyForAdmin("p1", json_property_p1_attribute_0));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
-            response = ITUtil.runShellCommand(createCurlPropertyForAdmin("p1", json_property_p1_attribute_2_state_hyperactive));
+            response = ITUtil.runShellCommand(ITUtilProperties.createCurlPropertyForAdmin("p1", json_property_p1_attribute_2_state_hyperactive));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
             response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES);
@@ -417,20 +417,20 @@ class OlogPropertiesIT {
             // response = ITUtil.runShellCommand(createCurlPropertyForUser("p1", mapper.writeValueAsString(property_p1_owner_a_state_a_attributes)));
             // ITUtil.assertResponseLength2Code(HttpURLConnection.HTTP_UNAUTHORIZED, response);
 
-            response = ITUtil.runShellCommand(createCurlPropertyForUser("asdf", mapper.writeValueAsString(property_check)));
+            response = ITUtil.runShellCommand(ITUtilProperties.createCurlPropertyForUser("asdf", mapper.writeValueAsString(property_check)));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
-            response = ITUtil.runShellCommand(createCurlPropertyForAdmin("asdf", mapper.writeValueAsString(property_check)));
+            response = ITUtil.runShellCommand(ITUtilProperties.createCurlPropertyForAdmin("asdf", mapper.writeValueAsString(property_check)));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
             property_check.setName(null);
 
-            response = ITUtil.runShellCommand(createCurlPropertyForAdmin("asdf", mapper.writeValueAsString(property_check)));
+            response = ITUtil.runShellCommand(ITUtilProperties.createCurlPropertyForAdmin("asdf", mapper.writeValueAsString(property_check)));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
             property_check.setName("");
 
-            response = ITUtil.runShellCommand(createCurlPropertyForAdmin("asdf", mapper.writeValueAsString(property_check)));
+            response = ITUtil.runShellCommand(ITUtilProperties.createCurlPropertyForAdmin("asdf", mapper.writeValueAsString(property_check)));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
             property_check.setName("asdf");
@@ -438,7 +438,7 @@ class OlogPropertiesIT {
             property_check.setState(State.Active);
             property_check.setAttributes(null);
 
-            response = ITUtil.runShellCommand(createCurlPropertyForAdmin("asdf", mapper.writeValueAsString(property_check)));
+            response = ITUtil.runShellCommand(ITUtilProperties.createCurlPropertyForAdmin("asdf", mapper.writeValueAsString(property_check)));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_INTERNAL_ERROR);
 
             property_check = new Property();
@@ -447,21 +447,21 @@ class OlogPropertiesIT {
             property_check.setState(State.Active);
             property_check.addAttributes(attribute_check);
 
-            response = ITUtil.runShellCommand(createCurlPropertyForAdmin("asdf", mapper.writeValueAsString(property_check)));
+            response = ITUtil.runShellCommand(ITUtilProperties.createCurlPropertyForAdmin("asdf", mapper.writeValueAsString(property_check)));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
             attribute_check.setName(null);
             property_check.getAttributes().clear();
             property_check.addAttributes(attribute_check);
 
-            response = ITUtil.runShellCommand(createCurlPropertyForAdmin("asdf", mapper.writeValueAsString(property_check)));
+            response = ITUtil.runShellCommand(ITUtilProperties.createCurlPropertyForAdmin("asdf", mapper.writeValueAsString(property_check)));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
             attribute_check.setName("");
             property_check.getAttributes().clear();
             property_check.addAttributes(attribute_check);
 
-            response = ITUtil.runShellCommand(createCurlPropertyForAdmin("asdf", mapper.writeValueAsString(property_check)));
+            response = ITUtil.runShellCommand(ITUtilProperties.createCurlPropertyForAdmin("asdf", mapper.writeValueAsString(property_check)));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
             response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES);
@@ -504,7 +504,7 @@ class OlogPropertiesIT {
                     mapper.readValue(response[1], Property[].class),
                     default_properties[0]);
 
-            response = ITUtil.runShellCommand(createCurlPropertyForAdmin("p1", mapper.writeValueAsString(property_p1_owner_a_state_a_attributes)));
+            response = ITUtil.runShellCommand(ITUtilProperties.createCurlPropertyForAdmin("p1", mapper.writeValueAsString(property_p1_owner_a_state_a_attributes)));
             ITUtil.assertResponseLength2CodeOK(response);
             assertTrue(property_p1_owner_a_state_a_attributes.equals(mapper.readValue(response[1], Property.class)));
 
@@ -540,7 +540,7 @@ class OlogPropertiesIT {
             // response = ITUtil.runShellCommand(deleteCurlPropertyForUser("p1"));
             // ITUtil.assertResponseLength2Code(HttpURLConnection.HTTP_UNAUTHORIZED, response);
 
-            response = ITUtil.runShellCommand(deleteCurlPropertyForAdmin("p1"));
+            response = ITUtil.runShellCommand(ITUtilProperties.deleteCurlPropertyForAdmin("p1"));
             ITUtil.assertResponseLength2CodeOK(response);
 
             // refresh elastic indices
@@ -603,11 +603,11 @@ class OlogPropertiesIT {
                     mapper.readValue(response[1], Property[].class),
                     default_properties[0]);
 
-            response = ITUtil.runShellCommand(createCurlPropertyForAdmin("p1", mapper.writeValueAsString(property_p1_owner_a_state_a_attributes)));
+            response = ITUtil.runShellCommand(ITUtilProperties.createCurlPropertyForAdmin("p1", mapper.writeValueAsString(property_p1_owner_a_state_a_attributes)));
             ITUtil.assertResponseLength2CodeOK(response);
             assertEquals(property_p1_owner_a_state_a_attributes, mapper.readValue(response[1], Property.class));
 
-            response = ITUtil.runShellCommand(createCurlPropertyForAdmin("p2", mapper.writeValueAsString(property_p2_owner_a_state_a_attributes)));
+            response = ITUtil.runShellCommand(ITUtilProperties.createCurlPropertyForAdmin("p2", mapper.writeValueAsString(property_p2_owner_a_state_a_attributes)));
             ITUtil.assertResponseLength2CodeOK(response);
             assertEquals(property_p2_owner_a_state_a_attributes, mapper.readValue(response[1], Property.class));
 
@@ -647,7 +647,7 @@ class OlogPropertiesIT {
             ITUtil.assertResponseLength2CodeOK(response);
             assertEquals(property_p2_owner_a_state_a_attributes, mapper.readValue(response[1], Property.class));
 
-            response = ITUtil.runShellCommand(deleteCurlPropertyForAdmin("p1"));
+            response = ITUtil.runShellCommand(ITUtilProperties.deleteCurlPropertyForAdmin("p1"));
             ITUtil.assertResponseLength2CodeOK(response);
 
             // refresh elastic indices
@@ -680,7 +680,7 @@ class OlogPropertiesIT {
             ITUtil.assertResponseLength2CodeOK(response);
             assertEquals(property_p1_owner_a_state_i_attributes, mapper.readValue(response[1], Property.class));
 
-            response = ITUtil.runShellCommand(deleteCurlPropertyForAdmin("p2"));
+            response = ITUtil.runShellCommand(ITUtilProperties.deleteCurlPropertyForAdmin("p2"));
             ITUtil.assertResponseLength2CodeOK(response);
 
             // refresh elastic indices
@@ -744,7 +744,7 @@ class OlogPropertiesIT {
                     mapper.readValue(response[1], Property[].class),
                     default_properties[0]);
 
-            response = ITUtil.runShellCommand(createCurlPropertyForAdmin("p1", mapper.writeValueAsString(property_p1_owner_a_state_a_attributes)));
+            response = ITUtil.runShellCommand(ITUtilProperties.createCurlPropertyForAdmin("p1", mapper.writeValueAsString(property_p1_owner_a_state_a_attributes)));
             ITUtil.assertResponseLength2CodeOK(response);
             assertEquals(property_p1_owner_a_state_a_attributes, mapper.readValue(response[1], Property.class));
 
@@ -763,7 +763,7 @@ class OlogPropertiesIT {
             ITUtil.assertResponseLength2CodeOK(response);
             assertEquals(property_p1_owner_a_state_a_attributes, mapper.readValue(response[1], Property.class));
 
-            response = ITUtil.runShellCommand(createCurlPropertyForAdmin("p1", mapper.writeValueAsString(property_p1_owner_a_state_i_attributes)));
+            response = ITUtil.runShellCommand(ITUtilProperties.createCurlPropertyForAdmin("p1", mapper.writeValueAsString(property_p1_owner_a_state_i_attributes)));
             ITUtil.assertResponseLength2CodeOK(response);
 
             // refresh elastic indices
@@ -780,7 +780,7 @@ class OlogPropertiesIT {
             ITUtil.assertResponseLength2CodeOK(response);
             assertEquals(property_p1_owner_a_state_i_attributes, mapper.readValue(response[1], Property.class));
 
-            response = ITUtil.runShellCommand(deleteCurlPropertyForAdmin("p1"));
+            response = ITUtil.runShellCommand(ITUtilProperties.deleteCurlPropertyForAdmin("p1"));
             ITUtil.assertResponseLength2CodeOK(response);
 
             // refresh elastic indices
@@ -855,19 +855,19 @@ class OlogPropertiesIT {
                     property_check
             };
 
-            response = ITUtil.runShellCommand(createCurlPropertiesForAdmin(mapper.writeValueAsString(properties)));
+            response = ITUtil.runShellCommand(ITUtilProperties.createCurlPropertiesForAdmin(mapper.writeValueAsString(properties)));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
             property_check.setName(null);
             properties[10] = property_check;
 
-            response = ITUtil.runShellCommand(createCurlPropertiesForAdmin(mapper.writeValueAsString(properties)));
+            response = ITUtil.runShellCommand(ITUtilProperties.createCurlPropertiesForAdmin(mapper.writeValueAsString(properties)));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
             property_check.setName("");
             properties[10] = property_check;
 
-            response = ITUtil.runShellCommand(createCurlPropertiesForAdmin(mapper.writeValueAsString(properties)));
+            response = ITUtil.runShellCommand(ITUtilProperties.createCurlPropertiesForAdmin(mapper.writeValueAsString(properties)));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
             property_check.setName("asdf");
@@ -876,7 +876,7 @@ class OlogPropertiesIT {
             property_check.setAttributes(null);
             properties[10] = property_check;
 
-            response = ITUtil.runShellCommand(createCurlPropertiesForAdmin(mapper.writeValueAsString(properties)));
+            response = ITUtil.runShellCommand(ITUtilProperties.createCurlPropertiesForAdmin(mapper.writeValueAsString(properties)));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_INTERNAL_ERROR);
 
             property_check = new Property();
@@ -886,7 +886,7 @@ class OlogPropertiesIT {
             property_check.addAttributes(attribute_check);
             properties[10] = property_check;
 
-            response = ITUtil.runShellCommand(createCurlPropertiesForAdmin(mapper.writeValueAsString(properties)));
+            response = ITUtil.runShellCommand(ITUtilProperties.createCurlPropertiesForAdmin(mapper.writeValueAsString(properties)));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
             attribute_check.setName(null);
@@ -894,7 +894,7 @@ class OlogPropertiesIT {
             property_check.addAttributes(attribute_check);
             properties[10] = property_check;
 
-            response = ITUtil.runShellCommand(createCurlPropertiesForAdmin(mapper.writeValueAsString(properties)));
+            response = ITUtil.runShellCommand(ITUtilProperties.createCurlPropertiesForAdmin(mapper.writeValueAsString(properties)));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
             attribute_check.setName("");
@@ -902,7 +902,7 @@ class OlogPropertiesIT {
             property_check.addAttributes(attribute_check);
             properties[10] = property_check;
 
-            response = ITUtil.runShellCommand(createCurlPropertiesForAdmin(mapper.writeValueAsString(properties)));
+            response = ITUtil.runShellCommand(ITUtilProperties.createCurlPropertiesForAdmin(mapper.writeValueAsString(properties)));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
             response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES);
@@ -970,7 +970,7 @@ class OlogPropertiesIT {
                     mapper.readValue(response[1], Property[].class),
                     default_properties[0]);
 
-            response = ITUtil.runShellCommand(createCurlPropertiesForAdmin(mapper.writeValueAsString(properties_active_inactive)));
+            response = ITUtil.runShellCommand(ITUtilProperties.createCurlPropertiesForAdmin(mapper.writeValueAsString(properties_active_inactive)));
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsProperties(
                     mapper.readValue(response[1], Property[].class),
@@ -1048,19 +1048,19 @@ class OlogPropertiesIT {
             ITUtil.assertResponseLength2CodeOK(response);
             assertEquals(property_p10_owner_a_state_i_attributes, mapper.readValue(response[1], Property.class));
 
-            response = ITUtil.runShellCommand(deleteCurlPropertyForAdmin("p1"));
+            response = ITUtil.runShellCommand(ITUtilProperties.deleteCurlPropertyForAdmin("p1"));
             ITUtil.assertResponseLength2CodeOK(response);
 
-            response = ITUtil.runShellCommand(deleteCurlPropertyForAdmin("p2"));
+            response = ITUtil.runShellCommand(ITUtilProperties.deleteCurlPropertyForAdmin("p2"));
             ITUtil.assertResponseLength2CodeOK(response);
 
-            response = ITUtil.runShellCommand(deleteCurlPropertyForAdmin("p3"));
+            response = ITUtil.runShellCommand(ITUtilProperties.deleteCurlPropertyForAdmin("p3"));
             ITUtil.assertResponseLength2CodeOK(response);
 
-            response = ITUtil.runShellCommand(deleteCurlPropertyForAdmin("p9"));
+            response = ITUtil.runShellCommand(ITUtilProperties.deleteCurlPropertyForAdmin("p9"));
             ITUtil.assertResponseLength2CodeOK(response);
 
-            response = ITUtil.runShellCommand(deleteCurlPropertyForAdmin("p10"));
+            response = ITUtil.runShellCommand(ITUtilProperties.deleteCurlPropertyForAdmin("p10"));
             ITUtil.assertResponseLength2CodeOK(response);
 
             // refresh elastic indices
@@ -1089,19 +1089,19 @@ class OlogPropertiesIT {
                     mapper.readValue(response[1], Property[].class),
                     properties_active_inactive);
 
-            response = ITUtil.runShellCommand(deleteCurlPropertyForAdmin("p4"));
+            response = ITUtil.runShellCommand(ITUtilProperties.deleteCurlPropertyForAdmin("p4"));
             ITUtil.assertResponseLength2CodeOK(response);
 
-            response = ITUtil.runShellCommand(deleteCurlPropertyForAdmin("p5"));
+            response = ITUtil.runShellCommand(ITUtilProperties.deleteCurlPropertyForAdmin("p5"));
             ITUtil.assertResponseLength2CodeOK(response);
 
-            response = ITUtil.runShellCommand(deleteCurlPropertyForAdmin("p6"));
+            response = ITUtil.runShellCommand(ITUtilProperties.deleteCurlPropertyForAdmin("p6"));
             ITUtil.assertResponseLength2CodeOK(response);
 
-            response = ITUtil.runShellCommand(deleteCurlPropertyForAdmin("p7"));
+            response = ITUtil.runShellCommand(ITUtilProperties.deleteCurlPropertyForAdmin("p7"));
             ITUtil.assertResponseLength2CodeOK(response);
 
-            response = ITUtil.runShellCommand(deleteCurlPropertyForAdmin("p8"));
+            response = ITUtil.runShellCommand(ITUtilProperties.deleteCurlPropertyForAdmin("p8"));
             ITUtil.assertResponseLength2CodeOK(response);
 
             // refresh elastic indices
@@ -1132,58 +1132,6 @@ class OlogPropertiesIT {
         } catch (Exception e) {
             fail();
         }
-    }
-
-    /**
-     * Utility method to return curl to create property for regular user.
-     *
-     * @param propertyName property name
-     * @param propertyJson property json
-     * @return curl to create property
-     */
-    private static String createCurlPropertyForUser(String propertyName, String propertyJson) {
-        return "curl -H " + ITUtil.HEADER_JSON + " -XPUT -i " + ITUtil.HTTP_AUTH_USER_IP_PORT_OLOG_PROPERTIES + "/" + propertyName + " -d '" + propertyJson + "'";
-    }
-
-    /**
-     * Utility method to return curl to create property for admin user.
-     *
-     * @param propertyName property name
-     * @param propertyJson property json
-     * @return curl to create property
-     */
-    private static String createCurlPropertyForAdmin(String propertyName, String propertyJson) {
-        return "curl -H " + ITUtil.HEADER_JSON + " -XPUT -i " + ITUtil.HTTP_AUTH_ADMIN_IP_PORT_OLOG_PROPERTIES + "/" + propertyName + " -d '" + propertyJson + "'";
-    }
-
-    /**
-     * Utility method to return curl to create properties for admin user.
-     *
-     * @param propertiesJson properties json
-     * @return curl to create properties
-     */
-    private static String createCurlPropertiesForAdmin(String propertiesJson) {
-        return "curl -H " + ITUtil.HEADER_JSON + " -XPUT -i " + ITUtil.HTTP_AUTH_ADMIN_IP_PORT_OLOG_PROPERTIES + " -d '" + propertiesJson + "'";
-    }
-
-    /**
-     * Utility method to return curl to delete property for regular user.
-     *
-     * @param propertyName property name
-     * @return curl to delete property
-     */
-    private static String deleteCurlPropertyForUser(String propertyName) {
-        return "curl -H " + ITUtil.HEADER_JSON + " -XDELETE -i " + ITUtil.HTTP_AUTH_USER_IP_PORT_OLOG_PROPERTIES + "/" + propertyName;
-    }
-
-    /**
-     * Utility method to return curl to delete property for admin user.
-     *
-     * @param propertyName property name
-     * @return curl to delete property
-     */
-    private static String deleteCurlPropertyForAdmin(String propertyName) {
-        return "curl -H " + ITUtil.HEADER_JSON + " -XDELETE -i " + ITUtil.HTTP_AUTH_ADMIN_IP_PORT_OLOG_PROPERTIES + "/" + propertyName;
     }
 
 }

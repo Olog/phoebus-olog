@@ -154,31 +154,31 @@ class OlogLogsIT {
             String[] response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS);
             ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
 
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(json_incomplete1));
+            response = ITUtil.runShellCommand(ITUtilLogs.createCurlLogForAdmin(json_incomplete1));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(json_incomplete2));
+            response = ITUtil.runShellCommand(ITUtilLogs.createCurlLogForAdmin(json_incomplete2));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(json_incomplete3));
+            response = ITUtil.runShellCommand(ITUtilLogs.createCurlLogForAdmin(json_incomplete3));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(json_incomplete4));
+            response = ITUtil.runShellCommand(ITUtilLogs.createCurlLogForAdmin(json_incomplete4));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(json_incomplete5));
+            response = ITUtil.runShellCommand(ITUtilLogs.createCurlLogForAdmin(json_incomplete5));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(json_incomplete6));
+            response = ITUtil.runShellCommand(ITUtilLogs.createCurlLogForAdmin(json_incomplete6));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(json_incomplete7));
+            response = ITUtil.runShellCommand(ITUtilLogs.createCurlLogForAdmin(json_incomplete7));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(json_incomplete8));
+            response = ITUtil.runShellCommand(ITUtilLogs.createCurlLogForAdmin(json_incomplete8));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(json_incomplete9));
+            response = ITUtil.runShellCommand(ITUtilLogs.createCurlLogForAdmin(json_incomplete9));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
             response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS);
@@ -222,10 +222,10 @@ class OlogLogsIT {
             String[] response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS);
             ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
 
-            response = ITUtil.runShellCommand(createCurlLogForUser(mapper.writeValueAsString(log_check)));
+            response = ITUtil.runShellCommand(ITUtilLogs.createCurlLogForUser(mapper.writeValueAsString(log_check)));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(mapper.writeValueAsString(log_check)));
+            response = ITUtil.runShellCommand(ITUtilLogs.createCurlLogForAdmin(mapper.writeValueAsString(log_check)));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
             response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS);
@@ -237,26 +237,6 @@ class OlogLogsIT {
         } catch (Exception e) {
             fail();
         }
-    }
-
-    /**
-     * Utility method to return curl to create log for regular user.
-     *
-     * @param logJson log json
-     * @return curl to create log
-     */
-    private static String createCurlLogForUser(String logJson) {
-        return "curl -H " + ITUtil.HEADER_JSON + " -XPUT -i " + ITUtil.HTTP_AUTH_USER_IP_PORT_OLOG_LOGS + " -d '" + logJson + "'";
-    }
-
-    /**
-     * Utility method to return curl to create log for admin user.
-     *
-     * @param logJson log json
-     * @return curl to create log
-     */
-    private static String createCurlLogForAdmin(String logJson) {
-        return "curl -H " + ITUtil.HEADER_JSON + " -XPUT -i " + ITUtil.HTTP_AUTH_ADMIN_IP_PORT_OLOG_LOGS + " -d '" + logJson + "'";
     }
 
 }

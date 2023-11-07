@@ -194,10 +194,10 @@ class OlogTagsIT {
             // might be both 401, 404
             //     401 UNAUTHORIZED
             //     404 NOT_FOUND
-            String[] response = ITUtil.runShellCommand(deleteCurlTagForUser("t11"));
+            String[] response = ITUtil.runShellCommand(ITUtilTags.deleteCurlTagForUser("t11"));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_NOT_FOUND);
 
-            response = ITUtil.runShellCommand(deleteCurlTagForAdmin("t11"));
+            response = ITUtil.runShellCommand(ITUtilTags.deleteCurlTagForAdmin("t11"));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_NOT_FOUND);
         } catch (IOException e) {
             fail();
@@ -248,37 +248,37 @@ class OlogTagsIT {
                     mapper.readValue(response[1], Tag[].class),
                     default_tags[0]);
 
-            response = ITUtil.runShellCommand(createCurlTagForAdmin("t1", json_incomplete1));
+            response = ITUtil.runShellCommand(ITUtilTags.createCurlTagForAdmin("t1", json_incomplete1));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
-            response = ITUtil.runShellCommand(createCurlTagForAdmin("t1", json_incomplete2));
+            response = ITUtil.runShellCommand(ITUtilTags.createCurlTagForAdmin("t1", json_incomplete2));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
-            response = ITUtil.runShellCommand(createCurlTagForAdmin("t1", json_incomplete3));
+            response = ITUtil.runShellCommand(ITUtilTags.createCurlTagForAdmin("t1", json_incomplete3));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
-            response = ITUtil.runShellCommand(createCurlTagForAdmin("t1", json_incomplete4));
+            response = ITUtil.runShellCommand(ITUtilTags.createCurlTagForAdmin("t1", json_incomplete4));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
-            response = ITUtil.runShellCommand(createCurlTagForAdmin("t1", json_incomplete5));
+            response = ITUtil.runShellCommand(ITUtilTags.createCurlTagForAdmin("t1", json_incomplete5));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
-            response = ITUtil.runShellCommand(createCurlTagForAdmin("t1", json_incomplete7));
+            response = ITUtil.runShellCommand(ITUtilTags.createCurlTagForAdmin("t1", json_incomplete7));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
-            response = ITUtil.runShellCommand(createCurlTagForAdmin("t1", json_incomplete8));
+            response = ITUtil.runShellCommand(ITUtilTags.createCurlTagForAdmin("t1", json_incomplete8));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
-            response = ITUtil.runShellCommand(createCurlTagForAdmin("t1", json_incomplete9));
+            response = ITUtil.runShellCommand(ITUtilTags.createCurlTagForAdmin("t1", json_incomplete9));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
-            response = ITUtil.runShellCommand(createCurlTagForAdmin("t1", json_tag_t1_name_na));
+            response = ITUtil.runShellCommand(ITUtilTags.createCurlTagForAdmin("t1", json_tag_t1_name_na));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
-            response = ITUtil.runShellCommand(createCurlTagForAdmin("t1", json_tag_t1_state_empty));
+            response = ITUtil.runShellCommand(ITUtilTags.createCurlTagForAdmin("t1", json_tag_t1_state_empty));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
-            response = ITUtil.runShellCommand(createCurlTagForAdmin("t1", json_tag_t1_state_asdf));
+            response = ITUtil.runShellCommand(ITUtilTags.createCurlTagForAdmin("t1", json_tag_t1_state_asdf));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
             response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_TAGS);
@@ -329,20 +329,20 @@ class OlogTagsIT {
             // response = ITUtil.runShellCommand(createCurlTagForUser("t1", mapper.writeValueAsString(tag_t1_state_a)));
             // ITUtil.assertResponseLength2Code(HttpURLConnection.HTTP_UNAUTHORIZED, response);
 
-            response = ITUtil.runShellCommand(createCurlTagForUser("asdf", mapper.writeValueAsString(tag_check)));
+            response = ITUtil.runShellCommand(ITUtilTags.createCurlTagForUser("asdf", mapper.writeValueAsString(tag_check)));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
-            response = ITUtil.runShellCommand(createCurlTagForAdmin("asdf", mapper.writeValueAsString(tag_check)));
+            response = ITUtil.runShellCommand(ITUtilTags.createCurlTagForAdmin("asdf", mapper.writeValueAsString(tag_check)));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
             tag_check.setName(null);
 
-            response = ITUtil.runShellCommand(createCurlTagForAdmin("asdf", mapper.writeValueAsString(tag_check)));
+            response = ITUtil.runShellCommand(ITUtilTags.createCurlTagForAdmin("asdf", mapper.writeValueAsString(tag_check)));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
             tag_check.setName("");
 
-            response = ITUtil.runShellCommand(createCurlTagForAdmin("asdf", mapper.writeValueAsString(tag_check)));
+            response = ITUtil.runShellCommand(ITUtilTags.createCurlTagForAdmin("asdf", mapper.writeValueAsString(tag_check)));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
             response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_TAGS);
@@ -385,7 +385,7 @@ class OlogTagsIT {
                     mapper.readValue(response[1], Tag[].class),
                     default_tags[0]);
 
-            response = ITUtil.runShellCommand(createCurlTagForAdmin("t1", mapper.writeValueAsString(tag_t1_state_a)));
+            response = ITUtil.runShellCommand(ITUtilTags.createCurlTagForAdmin("t1", mapper.writeValueAsString(tag_t1_state_a)));
             ITUtil.assertResponseLength2CodeOK(response);
             assertEquals(tag_t1_state_a, mapper.readValue(response[1], Tag.class));
 
@@ -407,7 +407,7 @@ class OlogTagsIT {
             // response = ITUtil.runShellCommand(deleteCurlTagForUser("t1"));
             // ITUtil.assertResponseLength2Code(HttpURLConnection.HTTP_UNAUTHORIZED, response);
 
-            response = ITUtil.runShellCommand(deleteCurlTagForAdmin("t1"));
+            response = ITUtil.runShellCommand(ITUtilTags.deleteCurlTagForAdmin("t1"));
             ITUtil.assertResponseLength2CodeOK(response);
 
             // refresh elastic indices
@@ -457,11 +457,11 @@ class OlogTagsIT {
                     mapper.readValue(response[1], Tag[].class),
                     default_tags[0]);
 
-            response = ITUtil.runShellCommand(createCurlTagForAdmin("t1", mapper.writeValueAsString(tag_t1_state_a)));
+            response = ITUtil.runShellCommand(ITUtilTags.createCurlTagForAdmin("t1", mapper.writeValueAsString(tag_t1_state_a)));
             ITUtil.assertResponseLength2CodeOK(response);
             assertEquals(tag_t1_state_a, mapper.readValue(response[1], Tag.class));
 
-            response = ITUtil.runShellCommand(createCurlTagForAdmin("t2", mapper.writeValueAsString(tag_t2_state_a)));
+            response = ITUtil.runShellCommand(ITUtilTags.createCurlTagForAdmin("t2", mapper.writeValueAsString(tag_t2_state_a)));
             ITUtil.assertResponseLength2CodeOK(response);
             assertEquals(tag_t2_state_a, mapper.readValue(response[1], Tag.class));
 
@@ -485,7 +485,7 @@ class OlogTagsIT {
             ITUtil.assertResponseLength2CodeOK(response);
             assertEquals(tag_t2_state_a, mapper.readValue(response[1], Tag.class));
 
-            response = ITUtil.runShellCommand(deleteCurlTagForAdmin("t1"));
+            response = ITUtil.runShellCommand(ITUtilTags.deleteCurlTagForAdmin("t1"));
             ITUtil.assertResponseLength2CodeOK(response);
 
             // refresh elastic indices
@@ -503,7 +503,7 @@ class OlogTagsIT {
             ITUtil.assertResponseLength2CodeOK(response);
             assertEquals(tag_t1_state_i, mapper.readValue(response[1], Tag.class));
 
-            response = ITUtil.runShellCommand(deleteCurlTagForAdmin("t2"));
+            response = ITUtil.runShellCommand(ITUtilTags.deleteCurlTagForAdmin("t2"));
             ITUtil.assertResponseLength2CodeOK(response);
 
             // refresh elastic indices
@@ -553,7 +553,7 @@ class OlogTagsIT {
                     mapper.readValue(response[1], Tag[].class),
                     default_tags[0]);
 
-            response = ITUtil.runShellCommand(createCurlTagForAdmin("t1", mapper.writeValueAsString(tag_t1_state_a)));
+            response = ITUtil.runShellCommand(ITUtilTags.createCurlTagForAdmin("t1", mapper.writeValueAsString(tag_t1_state_a)));
             ITUtil.assertResponseLength2CodeOK(response);
             assertEquals(tag_t1_state_a, mapper.readValue(response[1], Tag.class));
 
@@ -572,7 +572,7 @@ class OlogTagsIT {
             ITUtil.assertResponseLength2CodeOK(response);
             assertEquals(tag_t1_state_a, mapper.readValue(response[1], Tag.class));
 
-            response = ITUtil.runShellCommand(createCurlTagForAdmin("t1", mapper.writeValueAsString(tag_t1_state_i)));
+            response = ITUtil.runShellCommand(ITUtilTags.createCurlTagForAdmin("t1", mapper.writeValueAsString(tag_t1_state_i)));
             ITUtil.assertResponseLength2CodeOK(response);
 
             // refresh elastic indices
@@ -589,7 +589,7 @@ class OlogTagsIT {
             ITUtil.assertResponseLength2CodeOK(response);
             assertEquals(tag_t1_state_i, mapper.readValue(response[1], Tag.class));
 
-            response = ITUtil.runShellCommand(deleteCurlTagForAdmin("t1"));
+            response = ITUtil.runShellCommand(ITUtilTags.deleteCurlTagForAdmin("t1"));
             ITUtil.assertResponseLength2CodeOK(response);
 
             // refresh elastic indices
@@ -659,19 +659,19 @@ class OlogTagsIT {
                     tag_check
             };
 
-            response = ITUtil.runShellCommand(createCurlTagsForAdmin(mapper.writeValueAsString(tags)));
+            response = ITUtil.runShellCommand(ITUtilTags.createCurlTagsForAdmin(mapper.writeValueAsString(tags)));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
             tag_check.setName(null);
             tags[10] = tag_check;
 
-            response = ITUtil.runShellCommand(createCurlTagsForAdmin(mapper.writeValueAsString(tags)));
+            response = ITUtil.runShellCommand(ITUtilTags.createCurlTagsForAdmin(mapper.writeValueAsString(tags)));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
             tag_check.setName("");
             tags[10] = tag_check;
 
-            response = ITUtil.runShellCommand(createCurlTagsForAdmin(mapper.writeValueAsString(tags)));
+            response = ITUtil.runShellCommand(ITUtilTags.createCurlTagsForAdmin(mapper.writeValueAsString(tags)));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
             response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_TAGS);
@@ -726,7 +726,7 @@ class OlogTagsIT {
                     mapper.readValue(response[1], Tag[].class),
                     default_tags[0]);
 
-            response = ITUtil.runShellCommand(createCurlTagsForAdmin(mapper.writeValueAsString(tags_active_inactive)));
+            response = ITUtil.runShellCommand(ITUtilTags.createCurlTagsForAdmin(mapper.writeValueAsString(tags_active_inactive)));
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsTags(
                     mapper.readValue(response[1], Tag[].class),
@@ -787,19 +787,19 @@ class OlogTagsIT {
             ITUtil.assertResponseLength2CodeOK(response);
             assertEquals(tag_t10_state_i, mapper.readValue(response[1], Tag.class));
 
-            response = ITUtil.runShellCommand(deleteCurlTagForAdmin("t1"));
+            response = ITUtil.runShellCommand(ITUtilTags.deleteCurlTagForAdmin("t1"));
             ITUtil.assertResponseLength2CodeOK(response);
 
-            response = ITUtil.runShellCommand(deleteCurlTagForAdmin("t2"));
+            response = ITUtil.runShellCommand(ITUtilTags.deleteCurlTagForAdmin("t2"));
             ITUtil.assertResponseLength2CodeOK(response);
 
-            response = ITUtil.runShellCommand(deleteCurlTagForAdmin("t3"));
+            response = ITUtil.runShellCommand(ITUtilTags.deleteCurlTagForAdmin("t3"));
             ITUtil.assertResponseLength2CodeOK(response);
 
-            response = ITUtil.runShellCommand(deleteCurlTagForAdmin("t9"));
+            response = ITUtil.runShellCommand(ITUtilTags.deleteCurlTagForAdmin("t9"));
             ITUtil.assertResponseLength2CodeOK(response);
 
-            response = ITUtil.runShellCommand(deleteCurlTagForAdmin("t10"));
+            response = ITUtil.runShellCommand(ITUtilTags.deleteCurlTagForAdmin("t10"));
             ITUtil.assertResponseLength2CodeOK(response);
 
             // refresh elastic indices
@@ -814,19 +814,19 @@ class OlogTagsIT {
                     tag_t4_state_a,
                     tag_t5_state_a);
 
-            response = ITUtil.runShellCommand(deleteCurlTagForAdmin("t4"));
+            response = ITUtil.runShellCommand(ITUtilTags.deleteCurlTagForAdmin("t4"));
             ITUtil.assertResponseLength2CodeOK(response);
 
-            response = ITUtil.runShellCommand(deleteCurlTagForAdmin("t5"));
+            response = ITUtil.runShellCommand(ITUtilTags.deleteCurlTagForAdmin("t5"));
             ITUtil.assertResponseLength2CodeOK(response);
 
-            response = ITUtil.runShellCommand(deleteCurlTagForAdmin("t6"));
+            response = ITUtil.runShellCommand(ITUtilTags.deleteCurlTagForAdmin("t6"));
             ITUtil.assertResponseLength2CodeOK(response);
 
-            response = ITUtil.runShellCommand(deleteCurlTagForAdmin("t7"));
+            response = ITUtil.runShellCommand(ITUtilTags.deleteCurlTagForAdmin("t7"));
             ITUtil.assertResponseLength2CodeOK(response);
 
-            response = ITUtil.runShellCommand(deleteCurlTagForAdmin("t8"));
+            response = ITUtil.runShellCommand(ITUtilTags.deleteCurlTagForAdmin("t8"));
             ITUtil.assertResponseLength2CodeOK(response);
 
             // refresh elastic indices
@@ -842,58 +842,6 @@ class OlogTagsIT {
         } catch (Exception e) {
             fail();
         }
-    }
-
-    /**
-     * Utility method to return curl to create tag for regular user.
-     *
-     * @param tagName tag name
-     * @param tagJson tag json
-     * @return curl to create tag
-     */
-    private static String createCurlTagForUser(String tagName, String tagJson) {
-        return "curl -H " + ITUtil.HEADER_JSON + " -XPUT -i " + ITUtil.HTTP_AUTH_USER_IP_PORT_OLOG_TAGS + "/" + tagName + " -d '" + tagJson + "'";
-    }
-
-    /**
-     * Utility method to return curl to create tag for admin user.
-     *
-     * @param tagName tag name
-     * @param tagJson tag json
-     * @return curl to create tag
-     */
-    private static String createCurlTagForAdmin(String tagName, String tagJson) {
-        return "curl -H " + ITUtil.HEADER_JSON + " -XPUT -i " + ITUtil.HTTP_AUTH_ADMIN_IP_PORT_OLOG_TAGS + "/" + tagName + " -d '" + tagJson + "'";
-    }
-
-    /**
-     * Utility method to return curl to create tags for admin user.
-     *
-     * @param tagsJson tags json
-     * @return curl to create tags
-     */
-    private static String createCurlTagsForAdmin(String tagsJson) {
-        return "curl -H " + ITUtil.HEADER_JSON + " -XPUT -i " + ITUtil.HTTP_AUTH_ADMIN_IP_PORT_OLOG_TAGS + " -d '" + tagsJson + "'";
-    }
-
-    /**
-     * Utility method to return curl to delete tag for regular user.
-     *
-     * @param tagName tag name
-     * @return curl to delete tag
-     */
-    private static String deleteCurlTagForUser(String tagName) {
-        return "curl -H " + ITUtil.HEADER_JSON + " -XDELETE -i " + ITUtil.HTTP_AUTH_USER_IP_PORT_OLOG_TAGS + "/" + tagName;
-    }
-
-    /**
-     * Utility method to return curl to delete tag for admin user.
-     *
-     * @param tagName tag name
-     * @return curl to delete tag
-     */
-    private static String deleteCurlTagForAdmin(String tagName) {
-        return "curl -H " + ITUtil.HEADER_JSON + " -XDELETE -i " + ITUtil.HTTP_AUTH_ADMIN_IP_PORT_OLOG_TAGS + "/" + tagName;
     }
 
 }

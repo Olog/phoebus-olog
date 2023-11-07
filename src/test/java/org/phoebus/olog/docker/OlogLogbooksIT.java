@@ -197,10 +197,10 @@ class OlogLogbooksIT {
             // might be both 401, 404
             //     401 UNAUTHORIZED
             //     404 NOT_FOUND
-            String[] response = ITUtil.runShellCommand(deleteCurlLogbookForUser("l11"));
+            String[] response = ITUtil.runShellCommand(ITUtilLogbooks.deleteCurlLogbookForUser("l11"));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_NOT_FOUND);
 
-            response = ITUtil.runShellCommand(deleteCurlLogbookForAdmin("l11"));
+            response = ITUtil.runShellCommand(ITUtilLogbooks.deleteCurlLogbookForAdmin("l11"));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_NOT_FOUND);
         } catch (IOException e) {
             fail();
@@ -252,34 +252,34 @@ class OlogLogbooksIT {
                     default_logbooks[1],
                     default_logbooks[0]);
 
-            response = ITUtil.runShellCommand(createCurlLogbookForAdmin("l1", json_incomplete1));
+            response = ITUtil.runShellCommand(ITUtilLogbooks.createCurlLogbookForAdmin("l1", json_incomplete1));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
-            response = ITUtil.runShellCommand(createCurlLogbookForAdmin("l1", json_incomplete2));
+            response = ITUtil.runShellCommand(ITUtilLogbooks.createCurlLogbookForAdmin("l1", json_incomplete2));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
-            response = ITUtil.runShellCommand(createCurlLogbookForAdmin("l1", json_incomplete3));
+            response = ITUtil.runShellCommand(ITUtilLogbooks.createCurlLogbookForAdmin("l1", json_incomplete3));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
-            response = ITUtil.runShellCommand(createCurlLogbookForAdmin("l1", json_incomplete4));
+            response = ITUtil.runShellCommand(ITUtilLogbooks.createCurlLogbookForAdmin("l1", json_incomplete4));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
-            response = ITUtil.runShellCommand(createCurlLogbookForAdmin("l1", json_incomplete5));
+            response = ITUtil.runShellCommand(ITUtilLogbooks.createCurlLogbookForAdmin("l1", json_incomplete5));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
-            response = ITUtil.runShellCommand(createCurlLogbookForAdmin("l1", json_incomplete6));
+            response = ITUtil.runShellCommand(ITUtilLogbooks.createCurlLogbookForAdmin("l1", json_incomplete6));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
-            response = ITUtil.runShellCommand(createCurlLogbookForAdmin("l1", json_incomplete7));
+            response = ITUtil.runShellCommand(ITUtilLogbooks.createCurlLogbookForAdmin("l1", json_incomplete7));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
-            response = ITUtil.runShellCommand(createCurlLogbookForAdmin("l1", json_incomplete8));
+            response = ITUtil.runShellCommand(ITUtilLogbooks.createCurlLogbookForAdmin("l1", json_incomplete8));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
-            response = ITUtil.runShellCommand(createCurlLogbookForAdmin("l1", json_incomplete9));
+            response = ITUtil.runShellCommand(ITUtilLogbooks.createCurlLogbookForAdmin("l1", json_incomplete9));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
-            response = ITUtil.runShellCommand(createCurlLogbookForAdmin("l1", json_logbook_l1_name_na));
+            response = ITUtil.runShellCommand(ITUtilLogbooks.createCurlLogbookForAdmin("l1", json_logbook_l1_name_na));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
             // refresh elastic indices
@@ -337,20 +337,20 @@ class OlogLogbooksIT {
             // response = ITUtil.runShellCommand(createCurlLogbookForUser("l1", mapper.writeValueAsString(logbook_l1_owner_a_state_a)));
             // ITUtil.assertResponseLength2Code(HttpURLConnection.HTTP_UNAUTHORIZED, response);
 
-            response = ITUtil.runShellCommand(createCurlLogbookForUser("asdf", mapper.writeValueAsString(logbook_check)));
+            response = ITUtil.runShellCommand(ITUtilLogbooks.createCurlLogbookForUser("asdf", mapper.writeValueAsString(logbook_check)));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
-            response = ITUtil.runShellCommand(createCurlLogbookForAdmin("asdf", mapper.writeValueAsString(logbook_check)));
+            response = ITUtil.runShellCommand(ITUtilLogbooks.createCurlLogbookForAdmin("asdf", mapper.writeValueAsString(logbook_check)));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
             logbook_check.setName(null);
 
-            response = ITUtil.runShellCommand(createCurlLogbookForAdmin("asdf", mapper.writeValueAsString(logbook_check)));
+            response = ITUtil.runShellCommand(ITUtilLogbooks.createCurlLogbookForAdmin("asdf", mapper.writeValueAsString(logbook_check)));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
             logbook_check.setName("");
 
-            response = ITUtil.runShellCommand(createCurlLogbookForAdmin("asdf", mapper.writeValueAsString(logbook_check)));
+            response = ITUtil.runShellCommand(ITUtilLogbooks.createCurlLogbookForAdmin("asdf", mapper.writeValueAsString(logbook_check)));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
             response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGBOOKS);
@@ -395,7 +395,7 @@ class OlogLogbooksIT {
                     default_logbooks[1],
                     default_logbooks[0]);
 
-            response = ITUtil.runShellCommand(createCurlLogbookForAdmin("l1", mapper.writeValueAsString(logbook_l1_owner_a_state_a)));
+            response = ITUtil.runShellCommand(ITUtilLogbooks.createCurlLogbookForAdmin("l1", mapper.writeValueAsString(logbook_l1_owner_a_state_a)));
             ITUtil.assertResponseLength2CodeOK(response);
             assertTrue(logbook_l1_owner_a_state_a.equals(mapper.readValue(response[1], Logbook.class)));
 
@@ -418,7 +418,7 @@ class OlogLogbooksIT {
             // response = ITUtil.runShellCommand(deleteCurlLogbookForUser("l1"));
             // ITUtil.assertResponseLength2Code(HttpURLConnection.HTTP_UNAUTHORIZED, response);
 
-            response = ITUtil.runShellCommand(deleteCurlLogbookForAdmin("l1"));
+            response = ITUtil.runShellCommand(ITUtilLogbooks.deleteCurlLogbookForAdmin("l1"));
             ITUtil.assertResponseLength2CodeOK(response);
 
             // refresh elastic indices
@@ -470,11 +470,11 @@ class OlogLogbooksIT {
                     default_logbooks[1],
                     default_logbooks[0]);
 
-            response = ITUtil.runShellCommand(createCurlLogbookForAdmin("l1", mapper.writeValueAsString(logbook_l1_owner_a_state_a)));
+            response = ITUtil.runShellCommand(ITUtilLogbooks.createCurlLogbookForAdmin("l1", mapper.writeValueAsString(logbook_l1_owner_a_state_a)));
             ITUtil.assertResponseLength2CodeOK(response);
             assertTrue(logbook_l1_owner_a_state_a.equals(mapper.readValue(response[1], Logbook.class)));
 
-            response = ITUtil.runShellCommand(createCurlLogbookForAdmin("l2", mapper.writeValueAsString(logbook_l2_owner_a_state_a)));
+            response = ITUtil.runShellCommand(ITUtilLogbooks.createCurlLogbookForAdmin("l2", mapper.writeValueAsString(logbook_l2_owner_a_state_a)));
             ITUtil.assertResponseLength2CodeOK(response);
             assertTrue(logbook_l2_owner_a_state_a.equals(mapper.readValue(response[1], Logbook.class)));
 
@@ -499,7 +499,7 @@ class OlogLogbooksIT {
             ITUtil.assertResponseLength2CodeOK(response);
             assertTrue(logbook_l2_owner_a_state_a.equals(mapper.readValue(response[1], Logbook.class)));
 
-            response = ITUtil.runShellCommand(deleteCurlLogbookForAdmin("l1"));
+            response = ITUtil.runShellCommand(ITUtilLogbooks.deleteCurlLogbookForAdmin("l1"));
             ITUtil.assertResponseLength2CodeOK(response);
 
             // refresh elastic indices
@@ -518,7 +518,7 @@ class OlogLogbooksIT {
             ITUtil.assertResponseLength2CodeOK(response);
             assertTrue(logbook_l1_owner_a_state_i.equals(mapper.readValue(response[1], Logbook.class)));
 
-            response = ITUtil.runShellCommand(deleteCurlLogbookForAdmin("l2"));
+            response = ITUtil.runShellCommand(ITUtilLogbooks.deleteCurlLogbookForAdmin("l2"));
             ITUtil.assertResponseLength2CodeOK(response);
 
             // refresh elastic indices
@@ -570,7 +570,7 @@ class OlogLogbooksIT {
                     default_logbooks[1],
                     default_logbooks[0]);
 
-            response = ITUtil.runShellCommand(createCurlLogbookForAdmin("l1", mapper.writeValueAsString(logbook_l1_owner_a_state_a)));
+            response = ITUtil.runShellCommand(ITUtilLogbooks.createCurlLogbookForAdmin("l1", mapper.writeValueAsString(logbook_l1_owner_a_state_a)));
             ITUtil.assertResponseLength2CodeOK(response);
             assertTrue(logbook_l1_owner_a_state_a.equals(mapper.readValue(response[1], Logbook.class)));
 
@@ -590,7 +590,7 @@ class OlogLogbooksIT {
             ITUtil.assertResponseLength2CodeOK(response);
             assertTrue(logbook_l1_owner_a_state_a.equals(mapper.readValue(response[1], Logbook.class)));
 
-            response = ITUtil.runShellCommand(createCurlLogbookForAdmin("l1", mapper.writeValueAsString(logbook_l1_owner_a_state_i)));
+            response = ITUtil.runShellCommand(ITUtilLogbooks.createCurlLogbookForAdmin("l1", mapper.writeValueAsString(logbook_l1_owner_a_state_i)));
             ITUtil.assertResponseLength2CodeOK(response);
 
             // refresh elastic indices
@@ -608,7 +608,7 @@ class OlogLogbooksIT {
             ITUtil.assertResponseLength2CodeOK(response);
             assertTrue(logbook_l1_owner_a_state_i.equals(mapper.readValue(response[1], Logbook.class)));
 
-            response = ITUtil.runShellCommand(deleteCurlLogbookForAdmin("l1"));
+            response = ITUtil.runShellCommand(ITUtilLogbooks.deleteCurlLogbookForAdmin("l1"));
             ITUtil.assertResponseLength2CodeOK(response);
 
             // refresh elastic indices
@@ -681,19 +681,19 @@ class OlogLogbooksIT {
                     logbook_check
             };
 
-            response = ITUtil.runShellCommand(createCurlLogbooksForAdmin(mapper.writeValueAsString(logbooks)));
+            response = ITUtil.runShellCommand(ITUtilLogbooks.createCurlLogbooksForAdmin(mapper.writeValueAsString(logbooks)));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
             logbook_check.setName(null);
             logbooks[10] = logbook_check;
 
-            response = ITUtil.runShellCommand(createCurlLogbooksForAdmin(mapper.writeValueAsString(logbooks)));
+            response = ITUtil.runShellCommand(ITUtilLogbooks.createCurlLogbooksForAdmin(mapper.writeValueAsString(logbooks)));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
             logbook_check.setName("");
             logbooks[10] = logbook_check;
 
-            response = ITUtil.runShellCommand(createCurlLogbooksForAdmin(mapper.writeValueAsString(logbooks)));
+            response = ITUtil.runShellCommand(ITUtilLogbooks.createCurlLogbooksForAdmin(mapper.writeValueAsString(logbooks)));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
             response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGBOOKS);
@@ -750,7 +750,7 @@ class OlogLogbooksIT {
                     default_logbooks[1],
                     default_logbooks[0]);
 
-            response = ITUtil.runShellCommand(createCurlLogbooksForAdmin(mapper.writeValueAsString(logbooks_active_inactive)));
+            response = ITUtil.runShellCommand(ITUtilLogbooks.createCurlLogbooksForAdmin(mapper.writeValueAsString(logbooks_active_inactive)));
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsLogbooks(
                     mapper.readValue(response[1], Logbook[].class),
@@ -812,19 +812,19 @@ class OlogLogbooksIT {
             ITUtil.assertResponseLength2CodeOK(response);
             assertEquals(logbook_l10_owner_a_state_i, mapper.readValue(response[1], Logbook.class));
 
-            response = ITUtil.runShellCommand(deleteCurlLogbookForAdmin("l1"));
+            response = ITUtil.runShellCommand(ITUtilLogbooks.deleteCurlLogbookForAdmin("l1"));
             ITUtil.assertResponseLength2CodeOK(response);
 
-            response = ITUtil.runShellCommand(deleteCurlLogbookForAdmin("l2"));
+            response = ITUtil.runShellCommand(ITUtilLogbooks.deleteCurlLogbookForAdmin("l2"));
             ITUtil.assertResponseLength2CodeOK(response);
 
-            response = ITUtil.runShellCommand(deleteCurlLogbookForAdmin("l3"));
+            response = ITUtil.runShellCommand(ITUtilLogbooks.deleteCurlLogbookForAdmin("l3"));
             ITUtil.assertResponseLength2CodeOK(response);
 
-            response = ITUtil.runShellCommand(deleteCurlLogbookForAdmin("l9"));
+            response = ITUtil.runShellCommand(ITUtilLogbooks.deleteCurlLogbookForAdmin("l9"));
             ITUtil.assertResponseLength2CodeOK(response);
 
-            response = ITUtil.runShellCommand(deleteCurlLogbookForAdmin("l10"));
+            response = ITUtil.runShellCommand(ITUtilLogbooks.deleteCurlLogbookForAdmin("l10"));
             ITUtil.assertResponseLength2CodeOK(response);
 
             // refresh elastic indices
@@ -840,19 +840,19 @@ class OlogLogbooksIT {
                     logbook_l5_owner_a_state_a,
                     default_logbooks[0]);
 
-            response = ITUtil.runShellCommand(deleteCurlLogbookForAdmin("l4"));
+            response = ITUtil.runShellCommand(ITUtilLogbooks.deleteCurlLogbookForAdmin("l4"));
             ITUtil.assertResponseLength2CodeOK(response);
 
-            response = ITUtil.runShellCommand(deleteCurlLogbookForAdmin("l5"));
+            response = ITUtil.runShellCommand(ITUtilLogbooks.deleteCurlLogbookForAdmin("l5"));
             ITUtil.assertResponseLength2CodeOK(response);
 
-            response = ITUtil.runShellCommand(deleteCurlLogbookForAdmin("l6"));
+            response = ITUtil.runShellCommand(ITUtilLogbooks.deleteCurlLogbookForAdmin("l6"));
             ITUtil.assertResponseLength2CodeOK(response);
 
-            response = ITUtil.runShellCommand(deleteCurlLogbookForAdmin("l7"));
+            response = ITUtil.runShellCommand(ITUtilLogbooks.deleteCurlLogbookForAdmin("l7"));
             ITUtil.assertResponseLength2CodeOK(response);
 
-            response = ITUtil.runShellCommand(deleteCurlLogbookForAdmin("l8"));
+            response = ITUtil.runShellCommand(ITUtilLogbooks.deleteCurlLogbookForAdmin("l8"));
             ITUtil.assertResponseLength2CodeOK(response);
 
             // refresh elastic indices
@@ -868,58 +868,6 @@ class OlogLogbooksIT {
         } catch (Exception e) {
             fail();
         }
-    }
-
-    /**
-     * Utility method to return curl to create logbook for regular user.
-     *
-     * @param logbookName logbook name
-     * @param logbookJson logbook json
-     * @return curl to create logbook
-     */
-    private static String createCurlLogbookForUser(String logbookName, String logbookJson) {
-        return "curl -H " + ITUtil.HEADER_JSON + " -XPUT -i " + ITUtil.HTTP_AUTH_USER_IP_PORT_OLOG_LOGBOOKS + "/" + logbookName + " -d '" + logbookJson + "'";
-    }
-
-    /**
-     * Utility method to return curl to create logbook for admin user.
-     *
-     * @param logbookName logbook name
-     * @param logbookJson logbook json
-     * @return curl to create logbook
-     */
-    private static String createCurlLogbookForAdmin(String logbookName, String logbookJson) {
-        return "curl -H " + ITUtil.HEADER_JSON + " -XPUT -i " + ITUtil.HTTP_AUTH_ADMIN_IP_PORT_OLOG_LOGBOOKS + "/" + logbookName + " -d '" + logbookJson + "'";
-    }
-
-    /**
-     * Utility method to return curl to create logbooks for admin user.
-     *
-     * @param logbooksJson logbooks json
-     * @return curl to create logbooks
-     */
-    private static String createCurlLogbooksForAdmin(String logbooksJson) {
-        return "curl -H " + ITUtil.HEADER_JSON + " -XPUT -i " + ITUtil.HTTP_AUTH_ADMIN_IP_PORT_OLOG_LOGBOOKS + " -d '" + logbooksJson + "'";
-    }
-
-    /**
-     * Utility method to return curl to delete logbook for regular user.
-     *
-     * @param logbookName logbook name
-     * @return curl to delete logbook
-     */
-    private static String deleteCurlLogbookForUser(String logbookName) {
-        return "curl -H " + ITUtil.HEADER_JSON + " -XDELETE -i " + ITUtil.HTTP_AUTH_USER_IP_PORT_OLOG_LOGBOOKS + "/" + logbookName;
-    }
-
-    /**
-     * Utility method to return curl to delete logbook for admin user.
-     *
-     * @param logbookName logbook name
-     * @return curl to delete logbook
-     */
-    private static String deleteCurlLogbookForAdmin(String logbookName) {
-        return "curl -H " + ITUtil.HEADER_JSON + " -XDELETE -i " + ITUtil.HTTP_AUTH_ADMIN_IP_PORT_OLOG_LOGBOOKS + "/" + logbookName;
     }
 
 }
