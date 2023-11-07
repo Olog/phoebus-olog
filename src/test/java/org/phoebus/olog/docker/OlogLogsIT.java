@@ -78,12 +78,6 @@ class OlogLogsIT {
     //                                                              (POST)        uploadMultipleAttachments(String, MultipartFile[])
     //     ------------------------------------------------------------------------------------------------
 
-    static final String LOGS = "/logs";
-
-    static final String HTTP_IP_PORT_OLOG_LOGS            = ITUtil.HTTP +                           ITUtil.IP_PORT_OLOG + LOGS;
-    static final String HTTP_AUTH_USER_IP_PORT_OLOG_LOGS  = ITUtil.HTTP + ITUtil.AUTH_USER  + "@" + ITUtil.IP_PORT_OLOG + LOGS;
-    static final String HTTP_AUTH_ADMIN_IP_PORT_OLOG_LOGS = ITUtil.HTTP + ITUtil.AUTH_ADMIN + "@" + ITUtil.IP_PORT_OLOG + LOGS;
-
     @Container
     public static final ComposeContainer ENVIRONMENT = ITUtil.defaultComposeContainers();
 
@@ -117,7 +111,7 @@ class OlogLogsIT {
         //         Upload multiple attachments
 
         try {
-            String[] response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_LOGS + "/l11");
+            String[] response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "/l11");
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_NOT_FOUND);
         } catch (IOException e) {
             fail();
@@ -157,7 +151,7 @@ class OlogLogsIT {
         String json_incomplete9 = "\"";
 
         try {
-            String[] response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_LOGS);
+            String[] response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS);
             ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
 
             response = ITUtil.runShellCommand(createCurlLogForAdmin(json_incomplete1));
@@ -187,7 +181,7 @@ class OlogLogsIT {
             response = ITUtil.runShellCommand(createCurlLogForAdmin(json_incomplete9));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_LOGS);
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS);
             ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
         } catch (IOException e) {
             fail();
@@ -225,7 +219,7 @@ class OlogLogsIT {
         ObjectMapper mapper = new ObjectMapper();
 
         try {
-            String[] response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_LOGS);
+            String[] response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS);
             ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
 
             response = ITUtil.runShellCommand(createCurlLogForUser(mapper.writeValueAsString(log_check)));
@@ -234,7 +228,7 @@ class OlogLogsIT {
             response = ITUtil.runShellCommand(createCurlLogForAdmin(mapper.writeValueAsString(log_check)));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_LOGS);
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS);
             ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
         } catch (IOException e) {
             fail();
@@ -252,7 +246,7 @@ class OlogLogsIT {
      * @return curl to create log
      */
     private static String createCurlLogForUser(String logJson) {
-        return "curl -H " + ITUtil.HEADER_JSON + " -XPUT -i " + HTTP_AUTH_USER_IP_PORT_OLOG_LOGS + " -d '" + logJson + "'";
+        return "curl -H " + ITUtil.HEADER_JSON + " -XPUT -i " + ITUtil.HTTP_AUTH_USER_IP_PORT_OLOG_LOGS + " -d '" + logJson + "'";
     }
 
     /**
@@ -262,7 +256,7 @@ class OlogLogsIT {
      * @return curl to create log
      */
     private static String createCurlLogForAdmin(String logJson) {
-        return "curl -H " + ITUtil.HEADER_JSON + " -XPUT -i " + HTTP_AUTH_ADMIN_IP_PORT_OLOG_LOGS + " -d '" + logJson + "'";
+        return "curl -H " + ITUtil.HEADER_JSON + " -XPUT -i " + ITUtil.HTTP_AUTH_ADMIN_IP_PORT_OLOG_LOGS + " -d '" + logJson + "'";
     }
 
 }

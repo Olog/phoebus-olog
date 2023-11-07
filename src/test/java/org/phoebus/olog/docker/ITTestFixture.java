@@ -454,7 +454,7 @@ public class ITTestFixture {
             // clean start
             // --------------------------------------------------------------------------------
 
-            String[] response = ITUtil.doGetJson(OlogLogbooksIT.HTTP_IP_PORT_OLOG_LOGBOOKS);
+            String[] response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGBOOKS);
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsLogbooks(
                     mapper.readValue(response[1], Logbook[].class),
@@ -518,7 +518,7 @@ public class ITTestFixture {
             // well defined state
             // --------------------------------------------------------------------------------
 
-            response = ITUtil.doGetJson(OlogLogbooksIT.HTTP_IP_PORT_OLOG_LOGBOOKS);
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGBOOKS);
             ITUtil.assertResponseLength2CodeOK(response);
             Logbook[] logbooks = mapper.readValue(response[1], Logbook[].class);
             assertNotNull(logbooks);
@@ -549,7 +549,7 @@ public class ITTestFixture {
             // clean start
             // --------------------------------------------------------------------------------
 
-            String[] response = ITUtil.doGetJson(OlogTagsIT.HTTP_IP_PORT_OLOG_TAGS);
+            String[] response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_TAGS);
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsTags(
                     mapper.readValue(response[1], Tag[].class),
@@ -607,7 +607,7 @@ public class ITTestFixture {
             // well defined state
             // --------------------------------------------------------------------------------
 
-            response = ITUtil.doGetJson(OlogTagsIT.HTTP_IP_PORT_OLOG_TAGS);
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_TAGS);
             ITUtil.assertResponseLength2CodeOK(response);
             Tag[] tags = mapper.readValue(response[1], Tag[].class);
             assertNotNull(tags);
@@ -638,7 +638,7 @@ public class ITTestFixture {
             // clean start
             // --------------------------------------------------------------------------------
 
-            String[] response = ITUtil.doGetJson(OlogPropertiesIT.HTTP_IP_PORT_OLOG_PROPERTIES);
+            String[] response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES);
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsProperties(
                     mapper.readValue(response[1], Property[].class),
@@ -676,7 +676,7 @@ public class ITTestFixture {
             // well defined state
             // --------------------------------------------------------------------------------
 
-            response = ITUtil.doGetJson(OlogPropertiesIT.HTTP_IP_PORT_OLOG_PROPERTIES);
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES);
             ITUtil.assertResponseLength2CodeOK(response);
             Property[] properties = mapper.readValue(response[1], Property[].class);
             assertNotNull(properties);
@@ -712,7 +712,7 @@ public class ITTestFixture {
             // clean start
             // --------------------------------------------------------------------------------
 
-            String[] response = ITUtil.doGetJson(OlogLogsIT.HTTP_IP_PORT_OLOG_LOGS);
+            String[] response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS);
             ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
 
             // --------------------------------------------------------------------------------
@@ -967,7 +967,7 @@ public class ITTestFixture {
             // well defined state
             // --------------------------------------------------------------------------------
 
-            response = ITUtil.doGetJson(OlogLogsIT.HTTP_IP_PORT_OLOG_LOGS);
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS);
             ITUtil.assertResponseLength2CodeOK(response);
             Log[] logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
@@ -1146,7 +1146,7 @@ public class ITTestFixture {
      * @return curl to create logbook
      */
     private static String createCurlLogbookForAdmin(String logbookName, String logbookJson) {
-        return "curl -H " + ITUtil.HEADER_JSON + " -XPUT -i " + OlogLogbooksIT.HTTP_AUTH_ADMIN_IP_PORT_OLOG_LOGBOOKS + "/" + logbookName + " -d '" + logbookJson + "'";
+        return "curl -H " + ITUtil.HEADER_JSON + " -XPUT -i " + ITUtil.HTTP_AUTH_ADMIN_IP_PORT_OLOG_LOGBOOKS + "/" + logbookName + " -d '" + logbookJson + "'";
     }
 
     /**
@@ -1157,7 +1157,7 @@ public class ITTestFixture {
      * @return curl to create tag
      */
     private static String createCurlTagForAdmin(String tagName, String tagJson) {
-        return "curl -H " + ITUtil.HEADER_JSON + " -XPUT -i " + OlogTagsIT.HTTP_AUTH_ADMIN_IP_PORT_OLOG_TAGS + "/" + tagName + " -d '" + tagJson + "'";
+        return "curl -H " + ITUtil.HEADER_JSON + " -XPUT -i " + ITUtil.HTTP_AUTH_ADMIN_IP_PORT_OLOG_TAGS + "/" + tagName + " -d '" + tagJson + "'";
     }
 
     /**
@@ -1168,7 +1168,7 @@ public class ITTestFixture {
      * @return curl to create property
      */
     private static String createCurlPropertyForAdmin(String propertyName, String propertyJson) {
-        return "curl -H " + ITUtil.HEADER_JSON + " -XPUT -i " + OlogPropertiesIT.HTTP_AUTH_ADMIN_IP_PORT_OLOG_PROPERTIES + "/" + propertyName + " -d '" + propertyJson + "'";
+        return "curl -H " + ITUtil.HEADER_JSON + " -XPUT -i " + ITUtil.HTTP_AUTH_ADMIN_IP_PORT_OLOG_PROPERTIES + "/" + propertyName + " -d '" + propertyJson + "'";
     }
 
     /**
@@ -1178,7 +1178,7 @@ public class ITTestFixture {
      * @return curl to create log
      */
     private static String createCurlLogForAdmin(String logJson) {
-        return "curl -H " + ITUtil.HEADER_JSON + " -XPUT -i " + OlogLogsIT.HTTP_AUTH_ADMIN_IP_PORT_OLOG_LOGS + " -d '" + logJson + "'";
+        return "curl -H " + ITUtil.HEADER_JSON + " -XPUT -i " + ITUtil.HTTP_AUTH_ADMIN_IP_PORT_OLOG_LOGS + " -d '" + logJson + "'";
     }
 
 }

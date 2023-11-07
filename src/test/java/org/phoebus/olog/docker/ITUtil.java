@@ -39,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
- * Utility class to help (Docker) integration tests for Olog and Elasticsearch.
+ * Utility class to help (Docker) integration tests for Olog and Elasticsearch with focus on support common behavior for tests.
  *
  * @author Lars Johansson
  */
@@ -58,8 +58,29 @@ public class ITUtil {
     static final String IP_PORT_OLOG          = "127.0.0.1:8080/Olog";
     static final String IP_PORT_ELASTICSEARCH = "127.0.0.1:9200";
 
+    static final String LOGBOOKS   = "/logbooks";
+    static final String LOGS       = "/logs";
+    static final String PROPERTIES = "/properties";
+    static final String TAGS       = "/tags";
+
     static final String HTTP_IP_PORT_OLOG          = HTTP + IP_PORT_OLOG;
     static final String HTTP_IP_PORT_ELASTICSEARCH = HTTP + IP_PORT_ELASTICSEARCH;
+
+    static final String HTTP_IP_PORT_OLOG_LOGBOOKS              = ITUtil.HTTP +                           ITUtil.IP_PORT_OLOG + LOGBOOKS;
+    static final String HTTP_AUTH_USER_IP_PORT_OLOG_LOGBOOKS    = ITUtil.HTTP + ITUtil.AUTH_USER  + "@" + ITUtil.IP_PORT_OLOG + LOGBOOKS;
+    static final String HTTP_AUTH_ADMIN_IP_PORT_OLOG_LOGBOOKS   = ITUtil.HTTP + ITUtil.AUTH_ADMIN + "@" + ITUtil.IP_PORT_OLOG + LOGBOOKS;
+
+    static final String HTTP_IP_PORT_OLOG_LOGS                  = ITUtil.HTTP +                           ITUtil.IP_PORT_OLOG + LOGS;
+    static final String HTTP_AUTH_USER_IP_PORT_OLOG_LOGS        = ITUtil.HTTP + ITUtil.AUTH_USER  + "@" + ITUtil.IP_PORT_OLOG + LOGS;
+    static final String HTTP_AUTH_ADMIN_IP_PORT_OLOG_LOGS       = ITUtil.HTTP + ITUtil.AUTH_ADMIN + "@" + ITUtil.IP_PORT_OLOG + LOGS;
+
+    static final String HTTP_IP_PORT_OLOG_PROPERTIES            = ITUtil.HTTP +                           ITUtil.IP_PORT_OLOG + PROPERTIES;
+    static final String HTTP_AUTH_USER_IP_PORT_OLOG_PROPERTIES  = ITUtil.HTTP + ITUtil.AUTH_USER  + "@" + ITUtil.IP_PORT_OLOG + PROPERTIES;
+    static final String HTTP_AUTH_ADMIN_IP_PORT_OLOG_PROPERTIES = ITUtil.HTTP + ITUtil.AUTH_ADMIN + "@" + ITUtil.IP_PORT_OLOG + PROPERTIES;
+
+    static final String HTTP_IP_PORT_OLOG_TAGS                  = ITUtil.HTTP +                           ITUtil.IP_PORT_OLOG + TAGS;
+    static final String HTTP_AUTH_USER_IP_PORT_OLOG_TAGS        = ITUtil.HTTP + ITUtil.AUTH_USER  + "@" + ITUtil.IP_PORT_OLOG + TAGS;
+    static final String HTTP_AUTH_ADMIN_IP_PORT_OLOG_TAGS       = ITUtil.HTTP + ITUtil.AUTH_ADMIN + "@" + ITUtil.IP_PORT_OLOG + TAGS;
 
     private static final String BRACKET_BEGIN     = "[";
     private static final String BRACKET_END       = "]";

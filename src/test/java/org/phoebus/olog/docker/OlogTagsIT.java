@@ -77,12 +77,6 @@ class OlogTagsIT {
     //     Remove Tag            .../tags/<name>        (DELETE)        deleteTag(String)
     //     ------------------------------------------------------------------------------------------------
 
-    static final String TAGS = "/tags";
-
-    static final String HTTP_IP_PORT_OLOG_TAGS            = ITUtil.HTTP +                           ITUtil.IP_PORT_OLOG + TAGS;
-    static final String HTTP_AUTH_USER_IP_PORT_OLOG_TAGS  = ITUtil.HTTP + ITUtil.AUTH_USER  + "@" + ITUtil.IP_PORT_OLOG + TAGS;
-    static final String HTTP_AUTH_ADMIN_IP_PORT_OLOG_TAGS = ITUtil.HTTP + ITUtil.AUTH_ADMIN + "@" + ITUtil.IP_PORT_OLOG + TAGS;
-
     // test data
     //     tags t1 - t10, state Active - Inactive
     //     tags t1 - t2,  state Inactive
@@ -173,7 +167,7 @@ class OlogTagsIT {
         //         Remove Tag
 
         try {
-            String[] response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_TAGS + "/t11");
+            String[] response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_TAGS + "/t11");
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_NOT_FOUND);
         } catch (IOException e) {
             fail();
@@ -248,7 +242,7 @@ class OlogTagsIT {
         ObjectMapper mapper = new ObjectMapper();
 
         try {
-            String[] response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_TAGS);
+            String[] response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_TAGS);
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsTags(
                     mapper.readValue(response[1], Tag[].class),
@@ -287,7 +281,7 @@ class OlogTagsIT {
             response = ITUtil.runShellCommand(createCurlTagForAdmin("t1", json_tag_t1_state_asdf));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_TAGS);
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_TAGS);
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsTags(
                     mapper.readValue(response[1], Tag[].class),
@@ -326,7 +320,7 @@ class OlogTagsIT {
         ObjectMapper mapper = new ObjectMapper();
 
         try {
-            String[] response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_TAGS);
+            String[] response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_TAGS);
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsTags(
                     mapper.readValue(response[1], Tag[].class),
@@ -351,7 +345,7 @@ class OlogTagsIT {
             response = ITUtil.runShellCommand(createCurlTagForAdmin("asdf", mapper.writeValueAsString(tag_check)));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_TAGS);
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_TAGS);
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsTags(
                     mapper.readValue(response[1], Tag[].class),
@@ -385,7 +379,7 @@ class OlogTagsIT {
         ObjectMapper mapper = new ObjectMapper();
 
         try {
-            String[] response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_TAGS);
+            String[] response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_TAGS);
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsTags(
                     mapper.readValue(response[1], Tag[].class),
@@ -399,14 +393,14 @@ class OlogTagsIT {
             response = ITUtil.refreshElasticIndices();
             ITUtil.assertResponseLength2CodeOK(response);
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_TAGS);
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_TAGS);
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsTags(
                     mapper.readValue(response[1], Tag[].class),
                     default_tags[0],
                     tag_t1_state_a);
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_TAGS + "/t1");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_TAGS + "/t1");
             ITUtil.assertResponseLength2CodeOK(response);
             assertEquals(tag_t1_state_a, mapper.readValue(response[1], Tag.class));
 
@@ -420,11 +414,11 @@ class OlogTagsIT {
             response = ITUtil.refreshElasticIndices();
             ITUtil.assertResponseLength2CodeOK(response);
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_TAGS + "/t1");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_TAGS + "/t1");
             ITUtil.assertResponseLength2CodeOK(response);
             assertEquals(tag_t1_state_i, mapper.readValue(response[1], Tag.class));
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_TAGS);
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_TAGS);
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsTags(
                     mapper.readValue(response[1], Tag[].class),
@@ -457,7 +451,7 @@ class OlogTagsIT {
         ObjectMapper mapper = new ObjectMapper();
 
         try {
-            String[] response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_TAGS);
+            String[] response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_TAGS);
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsTags(
                     mapper.readValue(response[1], Tag[].class),
@@ -475,7 +469,7 @@ class OlogTagsIT {
             response = ITUtil.refreshElasticIndices();
             ITUtil.assertResponseLength2CodeOK(response);
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_TAGS);
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_TAGS);
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsTags(
                     mapper.readValue(response[1], Tag[].class),
@@ -483,11 +477,11 @@ class OlogTagsIT {
                     tag_t1_state_a,
                     tag_t2_state_a);
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_TAGS + "/t1");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_TAGS + "/t1");
             ITUtil.assertResponseLength2CodeOK(response);
             assertEquals(tag_t1_state_a, mapper.readValue(response[1], Tag.class));
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_TAGS + "/t2");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_TAGS + "/t2");
             ITUtil.assertResponseLength2CodeOK(response);
             assertEquals(tag_t2_state_a, mapper.readValue(response[1], Tag.class));
 
@@ -498,14 +492,14 @@ class OlogTagsIT {
             response = ITUtil.refreshElasticIndices();
             ITUtil.assertResponseLength2CodeOK(response);
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_TAGS);
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_TAGS);
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsTags(
                     mapper.readValue(response[1], Tag[].class),
                     default_tags[0],
                     tag_t2_state_a);
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_TAGS + "/t1");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_TAGS + "/t1");
             ITUtil.assertResponseLength2CodeOK(response);
             assertEquals(tag_t1_state_i, mapper.readValue(response[1], Tag.class));
 
@@ -516,11 +510,11 @@ class OlogTagsIT {
             response = ITUtil.refreshElasticIndices();
             ITUtil.assertResponseLength2CodeOK(response);
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_TAGS + "/t2");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_TAGS + "/t2");
             ITUtil.assertResponseLength2CodeOK(response);
             assertEquals(tag_t2_state_i, mapper.readValue(response[1], Tag.class));
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_TAGS);
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_TAGS);
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsTags(
                     mapper.readValue(response[1], Tag[].class),
@@ -553,7 +547,7 @@ class OlogTagsIT {
         ObjectMapper mapper = new ObjectMapper();
 
         try {
-            String[] response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_TAGS);
+            String[] response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_TAGS);
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsTags(
                     mapper.readValue(response[1], Tag[].class),
@@ -567,14 +561,14 @@ class OlogTagsIT {
             response = ITUtil.refreshElasticIndices();
             ITUtil.assertResponseLength2CodeOK(response);
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_TAGS);
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_TAGS);
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsTags(
                     mapper.readValue(response[1], Tag[].class),
                     default_tags[0],
                     tag_t1_state_a);
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_TAGS + "/t1");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_TAGS + "/t1");
             ITUtil.assertResponseLength2CodeOK(response);
             assertEquals(tag_t1_state_a, mapper.readValue(response[1], Tag.class));
 
@@ -585,13 +579,13 @@ class OlogTagsIT {
             response = ITUtil.refreshElasticIndices();
             ITUtil.assertResponseLength2CodeOK(response);
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_TAGS);
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_TAGS);
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsTags(
                     mapper.readValue(response[1], Tag[].class),
                     default_tags[0]);
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_TAGS + "/t1");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_TAGS + "/t1");
             ITUtil.assertResponseLength2CodeOK(response);
             assertEquals(tag_t1_state_i, mapper.readValue(response[1], Tag.class));
 
@@ -602,11 +596,11 @@ class OlogTagsIT {
             response = ITUtil.refreshElasticIndices();
             ITUtil.assertResponseLength2CodeOK(response);
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_TAGS + "/t1");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_TAGS + "/t1");
             ITUtil.assertResponseLength2CodeOK(response);
             assertEquals(tag_t1_state_i, mapper.readValue(response[1], Tag.class));
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_TAGS);
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_TAGS);
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsTags(
                     mapper.readValue(response[1], Tag[].class),
@@ -645,7 +639,7 @@ class OlogTagsIT {
         ObjectMapper mapper = new ObjectMapper();
 
         try {
-            String[] response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_TAGS);
+            String[] response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_TAGS);
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsTags(
                     mapper.readValue(response[1], Tag[].class),
@@ -680,7 +674,7 @@ class OlogTagsIT {
             response = ITUtil.runShellCommand(createCurlTagsForAdmin(mapper.writeValueAsString(tags)));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_TAGS);
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_TAGS);
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsTags(
                     mapper.readValue(response[1], Tag[].class),
@@ -726,7 +720,7 @@ class OlogTagsIT {
         ObjectMapper mapper = new ObjectMapper();
 
         try {
-            String[] response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_TAGS);
+            String[] response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_TAGS);
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsTags(
                     mapper.readValue(response[1], Tag[].class),
@@ -742,7 +736,7 @@ class OlogTagsIT {
             response = ITUtil.refreshElasticIndices();
             ITUtil.assertResponseLength2CodeOK(response);
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_TAGS);
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_TAGS);
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsTags(
                     mapper.readValue(response[1], Tag[].class),
@@ -753,43 +747,43 @@ class OlogTagsIT {
                     tag_t4_state_a,
                     tag_t5_state_a);
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_TAGS + "/t1");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_TAGS + "/t1");
             ITUtil.assertResponseLength2CodeOK(response);
             assertEquals(tag_t1_state_a, mapper.readValue(response[1], Tag.class));
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_TAGS + "/t2");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_TAGS + "/t2");
             ITUtil.assertResponseLength2CodeOK(response);
             assertEquals(tag_t2_state_a, mapper.readValue(response[1], Tag.class));
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_TAGS + "/t3");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_TAGS + "/t3");
             ITUtil.assertResponseLength2CodeOK(response);
             assertEquals(tag_t3_state_a, mapper.readValue(response[1], Tag.class));
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_TAGS + "/t4");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_TAGS + "/t4");
             ITUtil.assertResponseLength2CodeOK(response);
             assertEquals(tag_t4_state_a, mapper.readValue(response[1], Tag.class));
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_TAGS + "/t5");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_TAGS + "/t5");
             ITUtil.assertResponseLength2CodeOK(response);
             assertEquals(tag_t5_state_a, mapper.readValue(response[1], Tag.class));
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_TAGS + "/t6");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_TAGS + "/t6");
             ITUtil.assertResponseLength2CodeOK(response);
             assertEquals(tag_t6_state_i, mapper.readValue(response[1], Tag.class));
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_TAGS + "/t7");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_TAGS + "/t7");
             ITUtil.assertResponseLength2CodeOK(response);
             assertEquals(tag_t7_state_i, mapper.readValue(response[1], Tag.class));
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_TAGS + "/t8");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_TAGS + "/t8");
             ITUtil.assertResponseLength2CodeOK(response);
             assertEquals(tag_t8_state_i, mapper.readValue(response[1], Tag.class));
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_TAGS + "/t9");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_TAGS + "/t9");
             ITUtil.assertResponseLength2CodeOK(response);
             assertEquals(tag_t9_state_i, mapper.readValue(response[1], Tag.class));
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_TAGS + "/t10");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_TAGS + "/t10");
             ITUtil.assertResponseLength2CodeOK(response);
             assertEquals(tag_t10_state_i, mapper.readValue(response[1], Tag.class));
 
@@ -812,7 +806,7 @@ class OlogTagsIT {
             response = ITUtil.refreshElasticIndices();
             ITUtil.assertResponseLength2CodeOK(response);
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_TAGS);
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_TAGS);
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsTags(
                     mapper.readValue(response[1], Tag[].class),
@@ -839,7 +833,7 @@ class OlogTagsIT {
             response = ITUtil.refreshElasticIndices();
             ITUtil.assertResponseLength2CodeOK(response);
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_TAGS);
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_TAGS);
             ITUtil.assertResponseLength2CodeOK(response);
         } catch (IOException e) {
             fail();
@@ -858,7 +852,7 @@ class OlogTagsIT {
      * @return curl to create tag
      */
     private static String createCurlTagForUser(String tagName, String tagJson) {
-        return "curl -H " + ITUtil.HEADER_JSON + " -XPUT -i " + HTTP_AUTH_USER_IP_PORT_OLOG_TAGS + "/" + tagName + " -d '" + tagJson + "'";
+        return "curl -H " + ITUtil.HEADER_JSON + " -XPUT -i " + ITUtil.HTTP_AUTH_USER_IP_PORT_OLOG_TAGS + "/" + tagName + " -d '" + tagJson + "'";
     }
 
     /**
@@ -869,7 +863,7 @@ class OlogTagsIT {
      * @return curl to create tag
      */
     private static String createCurlTagForAdmin(String tagName, String tagJson) {
-        return "curl -H " + ITUtil.HEADER_JSON + " -XPUT -i " + HTTP_AUTH_ADMIN_IP_PORT_OLOG_TAGS + "/" + tagName + " -d '" + tagJson + "'";
+        return "curl -H " + ITUtil.HEADER_JSON + " -XPUT -i " + ITUtil.HTTP_AUTH_ADMIN_IP_PORT_OLOG_TAGS + "/" + tagName + " -d '" + tagJson + "'";
     }
 
     /**
@@ -879,7 +873,7 @@ class OlogTagsIT {
      * @return curl to create tags
      */
     private static String createCurlTagsForAdmin(String tagsJson) {
-        return "curl -H " + ITUtil.HEADER_JSON + " -XPUT -i " + HTTP_AUTH_ADMIN_IP_PORT_OLOG_TAGS + " -d '" + tagsJson + "'";
+        return "curl -H " + ITUtil.HEADER_JSON + " -XPUT -i " + ITUtil.HTTP_AUTH_ADMIN_IP_PORT_OLOG_TAGS + " -d '" + tagsJson + "'";
     }
 
     /**
@@ -889,7 +883,7 @@ class OlogTagsIT {
      * @return curl to delete tag
      */
     private static String deleteCurlTagForUser(String tagName) {
-        return "curl -H " + ITUtil.HEADER_JSON + " -XDELETE -i " + HTTP_AUTH_USER_IP_PORT_OLOG_TAGS + "/" + tagName;
+        return "curl -H " + ITUtil.HEADER_JSON + " -XDELETE -i " + ITUtil.HTTP_AUTH_USER_IP_PORT_OLOG_TAGS + "/" + tagName;
     }
 
     /**
@@ -899,7 +893,7 @@ class OlogTagsIT {
      * @return curl to delete tag
      */
     private static String deleteCurlTagForAdmin(String tagName) {
-        return "curl -H " + ITUtil.HEADER_JSON + " -XDELETE -i " + HTTP_AUTH_ADMIN_IP_PORT_OLOG_TAGS + "/" + tagName;
+        return "curl -H " + ITUtil.HEADER_JSON + " -XDELETE -i " + ITUtil.HTTP_AUTH_ADMIN_IP_PORT_OLOG_TAGS + "/" + tagName;
     }
 
 }

@@ -80,12 +80,6 @@ class OlogPropertiesIT {
     //     Remove Property            .../properties/<name>        (DELETE)        deleteProperty(String)
     //     ------------------------------------------------------------------------------------------------
 
-    static final String PROPERTIES = "/properties";
-
-    static final String HTTP_IP_PORT_OLOG_PROPERTIES            = ITUtil.HTTP +                           ITUtil.IP_PORT_OLOG + PROPERTIES;
-    static final String HTTP_AUTH_USER_IP_PORT_OLOG_PROPERTIES  = ITUtil.HTTP + ITUtil.AUTH_USER  + "@" + ITUtil.IP_PORT_OLOG + PROPERTIES;
-    static final String HTTP_AUTH_ADMIN_IP_PORT_OLOG_PROPERTIES = ITUtil.HTTP + ITUtil.AUTH_ADMIN + "@" + ITUtil.IP_PORT_OLOG + PROPERTIES;
-
     // test data
     //     properties p1 - p10, owner admin, state Active - Inactive
     //     properties p1 - p2,  owner admin, state Inactive
@@ -250,7 +244,7 @@ class OlogPropertiesIT {
         //         Remove Property
 
         try {
-            String[] response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES + "/p11");
+            String[] response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES + "/p11");
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_NOT_FOUND);
         } catch (IOException e) {
             fail();
@@ -331,7 +325,7 @@ class OlogPropertiesIT {
         ObjectMapper mapper = new ObjectMapper();
 
         try {
-            String[] response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES);
+            String[] response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES);
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsProperties(
                     mapper.readValue(response[1], Property[].class),
@@ -370,7 +364,7 @@ class OlogPropertiesIT {
             response = ITUtil.runShellCommand(createCurlPropertyForAdmin("p1", json_property_p1_attribute_2_state_hyperactive));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES);
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES);
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsProperties(
                     mapper.readValue(response[1], Property[].class),
@@ -414,7 +408,7 @@ class OlogPropertiesIT {
         ObjectMapper mapper = new ObjectMapper();
 
         try {
-            String[] response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES);
+            String[] response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES);
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsProperties(
                     mapper.readValue(response[1], Property[].class),
@@ -470,7 +464,7 @@ class OlogPropertiesIT {
             response = ITUtil.runShellCommand(createCurlPropertyForAdmin("asdf", mapper.writeValueAsString(property_check)));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES);
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES);
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsProperties(
                     mapper.readValue(response[1], Property[].class),
@@ -504,7 +498,7 @@ class OlogPropertiesIT {
         ObjectMapper mapper = new ObjectMapper();
 
         try {
-            String[] response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES);
+            String[] response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES);
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsProperties(
                     mapper.readValue(response[1], Property[].class),
@@ -518,28 +512,28 @@ class OlogPropertiesIT {
             response = ITUtil.refreshElasticIndices();
             ITUtil.assertResponseLength2CodeOK(response);
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES);
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES);
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsProperties(
                     mapper.readValue(response[1], Property[].class),
                     property_p1_owner_a_state_a_attributes,
                     default_properties[0]);
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES + "?inactive=false");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES + "?inactive=false");
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsProperties(
                     mapper.readValue(response[1], Property[].class),
                     property_p1_owner_a_state_a_attributes,
                     default_properties[0]);
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES + "?inactive=true");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES + "?inactive=true");
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsProperties(
                     mapper.readValue(response[1], Property[].class),
                     property_p1_owner_a_state_a_attributes,
                     default_properties[0]);
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES + "/p1");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES + "/p1");
             ITUtil.assertResponseLength2CodeOK(response);
             assertTrue(property_p1_owner_a_state_a_attributes.equals(mapper.readValue(response[1], Property.class)));
 
@@ -553,24 +547,24 @@ class OlogPropertiesIT {
             response = ITUtil.refreshElasticIndices();
             ITUtil.assertResponseLength2CodeOK(response);
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES + "/p1");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES + "/p1");
             ITUtil.assertResponseLength2CodeOK(response);
             assertTrue(property_p1_owner_a_state_i_attributes.equals(mapper.readValue(response[1], Property.class)));
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES + "?inactive=false");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES + "?inactive=false");
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsProperties(
                     mapper.readValue(response[1], Property[].class),
                     default_properties[0]);
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES + "?inactive=true");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES + "?inactive=true");
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsProperties(
                     mapper.readValue(response[1], Property[].class),
                     property_p1_owner_a_state_i_attributes,
                     default_properties[0]);
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES);
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES);
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsProperties(
                     mapper.readValue(response[1], Property[].class),
@@ -603,7 +597,7 @@ class OlogPropertiesIT {
         ObjectMapper mapper = new ObjectMapper();
 
         try {
-            String[] response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES);
+            String[] response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES);
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsProperties(
                     mapper.readValue(response[1], Property[].class),
@@ -621,7 +615,7 @@ class OlogPropertiesIT {
             response = ITUtil.refreshElasticIndices();
             ITUtil.assertResponseLength2CodeOK(response);
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES);
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES);
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsProperties(
                     mapper.readValue(response[1], Property[].class),
@@ -629,7 +623,7 @@ class OlogPropertiesIT {
                     property_p2_owner_a_state_a_attributes,
                     default_properties[0]);
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES + "?inactive=false");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES + "?inactive=false");
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsProperties(
                     mapper.readValue(response[1], Property[].class),
@@ -637,7 +631,7 @@ class OlogPropertiesIT {
                     property_p2_owner_a_state_a_attributes,
                     default_properties[0]);
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES + "?inactive=true");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES + "?inactive=true");
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsProperties(
                     mapper.readValue(response[1], Property[].class),
@@ -645,11 +639,11 @@ class OlogPropertiesIT {
                     property_p2_owner_a_state_a_attributes,
                     default_properties[0]);
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES + "/p1");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES + "/p1");
             ITUtil.assertResponseLength2CodeOK(response);
             assertEquals(property_p1_owner_a_state_a_attributes, mapper.readValue(response[1], Property.class));
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES + "/p2");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES + "/p2");
             ITUtil.assertResponseLength2CodeOK(response);
             assertEquals(property_p2_owner_a_state_a_attributes, mapper.readValue(response[1], Property.class));
 
@@ -660,21 +654,21 @@ class OlogPropertiesIT {
             response = ITUtil.refreshElasticIndices();
             ITUtil.assertResponseLength2CodeOK(response);
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES);
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES);
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsProperties(
                     mapper.readValue(response[1], Property[].class),
                     property_p2_owner_a_state_a_attributes,
                     default_properties[0]);
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES + "?inactive=false");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES + "?inactive=false");
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsProperties(
                     mapper.readValue(response[1], Property[].class),
                     property_p2_owner_a_state_a_attributes,
                     default_properties[0]);
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES + "?inactive=true");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES + "?inactive=true");
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsProperties(
                     mapper.readValue(response[1], Property[].class),
@@ -682,7 +676,7 @@ class OlogPropertiesIT {
                     property_p2_owner_a_state_a_attributes,
                     default_properties[0]);
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES + "/p1");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES + "/p1");
             ITUtil.assertResponseLength2CodeOK(response);
             assertEquals(property_p1_owner_a_state_i_attributes, mapper.readValue(response[1], Property.class));
 
@@ -693,17 +687,17 @@ class OlogPropertiesIT {
             response = ITUtil.refreshElasticIndices();
             ITUtil.assertResponseLength2CodeOK(response);
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES + "/p2");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES + "/p2");
             ITUtil.assertResponseLength2CodeOK(response);
             assertEquals(property_p2_owner_a_state_i_attributes, mapper.readValue(response[1], Property.class));
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES + "?inactive=false");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES + "?inactive=false");
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsProperties(
                     mapper.readValue(response[1], Property[].class),
                     default_properties[0]);
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES + "?inactive=true");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES + "?inactive=true");
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsProperties(
                     mapper.readValue(response[1], Property[].class),
@@ -711,7 +705,7 @@ class OlogPropertiesIT {
                     property_p2_owner_a_state_i_attributes,
                     default_properties[0]);
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES);
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES);
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsProperties(
                     mapper.readValue(response[1], Property[].class),
@@ -744,7 +738,7 @@ class OlogPropertiesIT {
         ObjectMapper mapper = new ObjectMapper();
 
         try {
-            String[] response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES);
+            String[] response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES);
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsProperties(
                     mapper.readValue(response[1], Property[].class),
@@ -758,14 +752,14 @@ class OlogPropertiesIT {
             response = ITUtil.refreshElasticIndices();
             ITUtil.assertResponseLength2CodeOK(response);
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES);
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES);
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsProperties(
                     mapper.readValue(response[1], Property[].class),
                     property_p1_owner_a_state_a_attributes,
                     default_properties[0]);
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES + "/p1");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES + "/p1");
             ITUtil.assertResponseLength2CodeOK(response);
             assertEquals(property_p1_owner_a_state_a_attributes, mapper.readValue(response[1], Property.class));
 
@@ -776,13 +770,13 @@ class OlogPropertiesIT {
             response = ITUtil.refreshElasticIndices();
             ITUtil.assertResponseLength2CodeOK(response);
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES);
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES);
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsProperties(
                     mapper.readValue(response[1], Property[].class),
                     default_properties[0]);
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES + "/p1");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES + "/p1");
             ITUtil.assertResponseLength2CodeOK(response);
             assertEquals(property_p1_owner_a_state_i_attributes, mapper.readValue(response[1], Property.class));
 
@@ -793,11 +787,11 @@ class OlogPropertiesIT {
             response = ITUtil.refreshElasticIndices();
             ITUtil.assertResponseLength2CodeOK(response);
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES + "/p1");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES + "/p1");
             ITUtil.assertResponseLength2CodeOK(response);
             assertEquals(property_p1_owner_a_state_i_attributes, mapper.readValue(response[1], Property.class));
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES);
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES);
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsProperties(
                     mapper.readValue(response[1], Property[].class),
@@ -841,7 +835,7 @@ class OlogPropertiesIT {
         ObjectMapper mapper = new ObjectMapper();
 
         try {
-            String[] response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES);
+            String[] response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES);
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsProperties(
                     mapper.readValue(response[1], Property[].class),
@@ -911,7 +905,7 @@ class OlogPropertiesIT {
             response = ITUtil.runShellCommand(createCurlPropertiesForAdmin(mapper.writeValueAsString(properties)));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES);
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES);
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsProperties(
                     mapper.readValue(response[1], Property[].class),
@@ -970,7 +964,7 @@ class OlogPropertiesIT {
         ObjectMapper mapper = new ObjectMapper();
 
         try {
-            String[] response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES);
+            String[] response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES);
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsProperties(
                     mapper.readValue(response[1], Property[].class),
@@ -986,7 +980,7 @@ class OlogPropertiesIT {
             response = ITUtil.refreshElasticIndices();
             ITUtil.assertResponseLength2CodeOK(response);
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES);
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES);
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsProperties(
                     mapper.readValue(response[1], Property[].class),
@@ -997,7 +991,7 @@ class OlogPropertiesIT {
                     property_p5_owner_a_state_a_attributes,
                     default_properties[0]);
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES + "?inactive=false");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES + "?inactive=false");
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsProperties(
                     mapper.readValue(response[1], Property[].class),
@@ -1008,49 +1002,49 @@ class OlogPropertiesIT {
                     property_p5_owner_a_state_a_attributes,
                     default_properties[0]);
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES + "?inactive=true");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES + "?inactive=true");
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsProperties(
                     mapper.readValue(response[1], Property[].class),
                     properties_active_inactive);
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES + "/p1");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES + "/p1");
             ITUtil.assertResponseLength2CodeOK(response);
             assertEquals(property_p1_owner_a_state_a_attributes, mapper.readValue(response[1], Property.class));
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES + "/p2");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES + "/p2");
             ITUtil.assertResponseLength2CodeOK(response);
             assertEquals(property_p2_owner_a_state_a_attributes, mapper.readValue(response[1], Property.class));
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES + "/p3");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES + "/p3");
             ITUtil.assertResponseLength2CodeOK(response);
             assertEquals(property_p3_owner_a_state_a_attributes, mapper.readValue(response[1], Property.class));
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES + "/p4");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES + "/p4");
             ITUtil.assertResponseLength2CodeOK(response);
             assertEquals(property_p4_owner_a_state_a_attributes, mapper.readValue(response[1], Property.class));
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES + "/p5");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES + "/p5");
             ITUtil.assertResponseLength2CodeOK(response);
             assertEquals(property_p5_owner_a_state_a_attributes, mapper.readValue(response[1], Property.class));
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES + "/p6");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES + "/p6");
             ITUtil.assertResponseLength2CodeOK(response);
             assertEquals(property_p6_owner_a_state_i_attributes, mapper.readValue(response[1], Property.class));
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES + "/p7");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES + "/p7");
             ITUtil.assertResponseLength2CodeOK(response);
             assertEquals(property_p7_owner_a_state_i_attributes, mapper.readValue(response[1], Property.class));
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES + "/p8");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES + "/p8");
             ITUtil.assertResponseLength2CodeOK(response);
             assertEquals(property_p8_owner_a_state_i_attributes, mapper.readValue(response[1], Property.class));
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES + "/p9");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES + "/p9");
             ITUtil.assertResponseLength2CodeOK(response);
             assertEquals(property_p9_owner_a_state_i_attributes, mapper.readValue(response[1], Property.class));
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES + "/p10");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES + "/p10");
             ITUtil.assertResponseLength2CodeOK(response);
             assertEquals(property_p10_owner_a_state_i_attributes, mapper.readValue(response[1], Property.class));
 
@@ -1073,7 +1067,7 @@ class OlogPropertiesIT {
             response = ITUtil.refreshElasticIndices();
             ITUtil.assertResponseLength2CodeOK(response);
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES);
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES);
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsProperties(
                     mapper.readValue(response[1], Property[].class),
@@ -1081,7 +1075,7 @@ class OlogPropertiesIT {
                     property_p5_owner_a_state_a_attributes,
                     default_properties[0]);
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES + "?inactive=false");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES + "?inactive=false");
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsProperties(
                     mapper.readValue(response[1], Property[].class),
@@ -1089,7 +1083,7 @@ class OlogPropertiesIT {
                     property_p5_owner_a_state_a_attributes,
                     default_properties[0]);
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES + "?inactive=true");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES + "?inactive=true");
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsProperties(
                     mapper.readValue(response[1], Property[].class),
@@ -1114,19 +1108,19 @@ class OlogPropertiesIT {
             response = ITUtil.refreshElasticIndices();
             ITUtil.assertResponseLength2CodeOK(response);
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES + "?inactive=false");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES + "?inactive=false");
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsProperties(
                     mapper.readValue(response[1], Property[].class),
                     default_properties[0]);
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES + "?inactive=true");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES + "?inactive=true");
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsProperties(
                     mapper.readValue(response[1], Property[].class),
                     properties_inactive);
 
-            response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_PROPERTIES);
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES);
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsProperties(
                     mapper.readValue(response[1], Property[].class),
@@ -1148,7 +1142,7 @@ class OlogPropertiesIT {
      * @return curl to create property
      */
     private static String createCurlPropertyForUser(String propertyName, String propertyJson) {
-        return "curl -H " + ITUtil.HEADER_JSON + " -XPUT -i " + HTTP_AUTH_USER_IP_PORT_OLOG_PROPERTIES + "/" + propertyName + " -d '" + propertyJson + "'";
+        return "curl -H " + ITUtil.HEADER_JSON + " -XPUT -i " + ITUtil.HTTP_AUTH_USER_IP_PORT_OLOG_PROPERTIES + "/" + propertyName + " -d '" + propertyJson + "'";
     }
 
     /**
@@ -1159,7 +1153,7 @@ class OlogPropertiesIT {
      * @return curl to create property
      */
     private static String createCurlPropertyForAdmin(String propertyName, String propertyJson) {
-        return "curl -H " + ITUtil.HEADER_JSON + " -XPUT -i " + HTTP_AUTH_ADMIN_IP_PORT_OLOG_PROPERTIES + "/" + propertyName + " -d '" + propertyJson + "'";
+        return "curl -H " + ITUtil.HEADER_JSON + " -XPUT -i " + ITUtil.HTTP_AUTH_ADMIN_IP_PORT_OLOG_PROPERTIES + "/" + propertyName + " -d '" + propertyJson + "'";
     }
 
     /**
@@ -1169,7 +1163,7 @@ class OlogPropertiesIT {
      * @return curl to create properties
      */
     private static String createCurlPropertiesForAdmin(String propertiesJson) {
-        return "curl -H " + ITUtil.HEADER_JSON + " -XPUT -i " + HTTP_AUTH_ADMIN_IP_PORT_OLOG_PROPERTIES + " -d '" + propertiesJson + "'";
+        return "curl -H " + ITUtil.HEADER_JSON + " -XPUT -i " + ITUtil.HTTP_AUTH_ADMIN_IP_PORT_OLOG_PROPERTIES + " -d '" + propertiesJson + "'";
     }
 
     /**
@@ -1179,7 +1173,7 @@ class OlogPropertiesIT {
      * @return curl to delete property
      */
     private static String deleteCurlPropertyForUser(String propertyName) {
-        return "curl -H " + ITUtil.HEADER_JSON + " -XDELETE -i " + HTTP_AUTH_USER_IP_PORT_OLOG_PROPERTIES + "/" + propertyName;
+        return "curl -H " + ITUtil.HEADER_JSON + " -XDELETE -i " + ITUtil.HTTP_AUTH_USER_IP_PORT_OLOG_PROPERTIES + "/" + propertyName;
     }
 
     /**
@@ -1189,7 +1183,7 @@ class OlogPropertiesIT {
      * @return curl to delete property
      */
     private static String deleteCurlPropertyForAdmin(String propertyName) {
-        return "curl -H " + ITUtil.HEADER_JSON + " -XDELETE -i " + HTTP_AUTH_ADMIN_IP_PORT_OLOG_PROPERTIES + "/" + propertyName;
+        return "curl -H " + ITUtil.HEADER_JSON + " -XDELETE -i " + ITUtil.HTTP_AUTH_ADMIN_IP_PORT_OLOG_PROPERTIES + "/" + propertyName;
     }
 
 }

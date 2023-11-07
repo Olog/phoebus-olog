@@ -82,12 +82,6 @@ class OlogLogsQueryIT {
     //                                                              (POST)        uploadMultipleAttachments(String, MultipartFile[])
     //     ------------------------------------------------------------------------------------------------
 
-    static final String LOGS = "/logs";
-
-    static final String HTTP_IP_PORT_OLOG_LOGS            = ITUtil.HTTP +                           ITUtil.IP_PORT_OLOG + LOGS;
-    static final String HTTP_AUTH_USER_IP_PORT_OLOG_LOGS  = ITUtil.HTTP + ITUtil.AUTH_USER  + "@" + ITUtil.IP_PORT_OLOG + LOGS;
-    static final String HTTP_AUTH_ADMIN_IP_PORT_OLOG_LOGS = ITUtil.HTTP + ITUtil.AUTH_ADMIN + "@" + ITUtil.IP_PORT_OLOG + LOGS;
-
     @Container
     public static final ComposeContainer ENVIRONMENT = ITUtil.defaultComposeContainers();
 
@@ -164,7 +158,7 @@ class OlogLogsQueryIT {
         ObjectMapper mapper = new ObjectMapper();
 
         try {
-            String[] response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS);
+            String[] response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS);
             ITUtil.assertResponseLength2CodeOK(response);
             Log[] logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
@@ -175,145 +169,145 @@ class OlogLogsQueryIT {
             // ----------------------------------------------------------------------------------------------------
 
             // desc, description, text
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?desc");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?desc");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(60, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?desc=asdf");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?desc=asdf");
             ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?desc=Initial");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?desc=Initial");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(2, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?desc=check");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?desc=check");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(0, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?desc=Check");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?desc=Check");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(0, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?desc=complete");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?desc=complete");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(0, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?desc=Complete");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?desc=Complete");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(0, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?desc=check complete");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?desc=check complete");
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?desc='check complete'");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?desc='check complete'");
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?desc=Maintenance");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?desc=Maintenance");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(17, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?desc=maintenance");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?desc=maintenance");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(17, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?desc=after");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?desc=after");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(3, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?desc=Maintenance&desc=after");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?desc=Maintenance&desc=after");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(3, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?desc=maintenance&desc=after");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?desc=maintenance&desc=after");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(3, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?desc=after&desc=maintenance");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?desc=after&desc=maintenance");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(3, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?desc=after&desc=Maintenance");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?desc=after&desc=Maintenance");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(3, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?desc="+URLEncoder.encode("after maintenance", StandardCharsets.UTF_8));
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?desc="+URLEncoder.encode("after maintenance", StandardCharsets.UTF_8));
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(3, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?desc='"+URLEncoder.encode("after maintenance", StandardCharsets.UTF_8)+"'");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?desc='"+URLEncoder.encode("after maintenance", StandardCharsets.UTF_8)+"'");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(0, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?desc=\""+URLEncoder.encode("after maintenance", StandardCharsets.UTF_8)+"\"");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?desc=\""+URLEncoder.encode("after maintenance", StandardCharsets.UTF_8)+"\"");
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?desc=check&desc=complete");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?desc=check&desc=complete");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(0, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?desc="+URLEncoder.encode("check complete", StandardCharsets.UTF_8));
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?desc="+URLEncoder.encode("check complete", StandardCharsets.UTF_8));
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(0, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?desc='"+URLEncoder.encode("check complete", StandardCharsets.UTF_8)+"'");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?desc='"+URLEncoder.encode("check complete", StandardCharsets.UTF_8)+"'");
             ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?desc="+URLEncoder.encode("CHECK COMPLETE", StandardCharsets.UTF_8));
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?desc="+URLEncoder.encode("CHECK COMPLETE", StandardCharsets.UTF_8));
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(0, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?desc='"+URLEncoder.encode("CHECK COMPLETE", StandardCharsets.UTF_8)+"'");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?desc='"+URLEncoder.encode("CHECK COMPLETE", StandardCharsets.UTF_8)+"'");
             ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?desc=chec?");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?desc=chec?");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(0, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?desc=?omplete");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?desc=?omplete");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(0, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?desc=c*");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?desc=c*");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
@@ -322,82 +316,82 @@ class OlogLogsQueryIT {
             // ----------------------------------------------------------------------------------------------------
 
             // title
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?title");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?title");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(60, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?title=asdf");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?title=asdf");
             ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?title=shift");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?title=shift");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(43, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?title=Shift");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?title=Shift");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(43, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?title=update");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?title=update");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(37, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?title=Update");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?title=Update");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(37, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?title=shift update");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?title=shift update");
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?title='shift update'");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?title='shift update'");
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?title=shift&title=update");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?title=shift&title=update");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(37, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?title="+URLEncoder.encode("shift update", StandardCharsets.UTF_8));
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?title="+URLEncoder.encode("shift update", StandardCharsets.UTF_8));
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(37, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?title='"+URLEncoder.encode("shift update", StandardCharsets.UTF_8)+"'");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?title='"+URLEncoder.encode("shift update", StandardCharsets.UTF_8)+"'");
             ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?title="+URLEncoder.encode("SHIFT UPDATE", StandardCharsets.UTF_8));
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?title="+URLEncoder.encode("SHIFT UPDATE", StandardCharsets.UTF_8));
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(37, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?title='"+URLEncoder.encode("SHIFT UPDATE", StandardCharsets.UTF_8)+"'");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?title='"+URLEncoder.encode("SHIFT UPDATE", StandardCharsets.UTF_8)+"'");
             ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?title=Shif?");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?title=Shif?");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(43, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?title=??ift");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?title=??ift");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(43, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?title=S*t");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?title=S*t");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
@@ -410,128 +404,128 @@ class OlogLogsQueryIT {
             //     description
             //     title
             //     level
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?fuzzy");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?fuzzy");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(60, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?fuzzy&description=cmplete");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?fuzzy&description=cmplete");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(0, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?fuzzy&description=cmplte");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?fuzzy&description=cmplte");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(0, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?fuzzy&title=Shif");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?fuzzy&title=Shif");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(43, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?fuzzy&title=Shif?");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?fuzzy&title=Shif?");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(43, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?fuzzy&title=Shif*");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?fuzzy&title=Shif*");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(43, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?fuzzy&title=Shi??");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?fuzzy&title=Shi??");
             ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?fuzzy&title=hif");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?fuzzy&title=hif");
             ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?fuzzy&level=pdate");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?fuzzy&level=pdate");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(54, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?fuzzy&level=Upd");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?fuzzy&level=Upd");
             ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
 
             // ----------------------------------------------------------------------------------------------------
 
             // phrase
             //     phrase for description
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?phrase");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?phrase");
             ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?phrase=asdf");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?phrase=asdf");
             ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?phrase=Initial");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?phrase=Initial");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(2, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?phrase=check");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?phrase=check");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(0, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?phrase=Check");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?phrase=Check");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(0, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?phrase=complete");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?phrase=complete");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(0, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?phrase=Complete");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?phrase=Complete");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(0, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?phrase=check complete");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?phrase=check complete");
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?phrase='check complete'");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?phrase='check complete'");
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?phrase=check&phrase=complete");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?phrase=check&phrase=complete");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(0, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?phrase="+URLEncoder.encode("check complete", StandardCharsets.UTF_8));
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?phrase="+URLEncoder.encode("check complete", StandardCharsets.UTF_8));
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(0, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?phrase='"+URLEncoder.encode("check complete", StandardCharsets.UTF_8)+"'");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?phrase='"+URLEncoder.encode("check complete", StandardCharsets.UTF_8)+"'");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(0, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?phrase="+URLEncoder.encode("CHECK COMPLETE", StandardCharsets.UTF_8));
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?phrase="+URLEncoder.encode("CHECK COMPLETE", StandardCharsets.UTF_8));
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(0, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?phrase='"+URLEncoder.encode("CHECK COMPLETE", StandardCharsets.UTF_8)+"'");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?phrase='"+URLEncoder.encode("CHECK COMPLETE", StandardCharsets.UTF_8)+"'");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
@@ -540,28 +534,28 @@ class OlogLogsQueryIT {
             // ----------------------------------------------------------------------------------------------------
 
             // owner
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?owner");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?owner");
             ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?owner=asdf");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?owner=asdf");
             ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?owner=admin");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?owner=admin");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(60, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?owner=adm?n");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?owner=adm?n");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(60, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?owner=adm?m");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?owner=adm?m");
             ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?owner=adm*");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?owner=adm*");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
@@ -571,88 +565,88 @@ class OlogLogsQueryIT {
 
             // tags
             //     name
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?tags");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?tags");
             ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?tags=asdf");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?tags=asdf");
             ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?tags=cryo");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?tags=cryo");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(10, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?tags=Cryo");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?tags=Cryo");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(10, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?tags=Cry");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?tags=Cry");
             ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?tags=Power");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?tags=Power");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(2, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?tags=Safety");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?tags=Safety");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(2, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?tags=Source");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?tags=Source");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(2, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?tags=Initial");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?tags=Initial");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(2, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?tags=Radio");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?tags=Radio");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(2, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?tags=Magnet");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?tags=Magnet");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(2, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?tags=Supra");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?tags=Supra");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(3, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?tags=Magnet&tags=Supra");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?tags=Magnet&tags=Supra");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(5, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?tags=?ryo");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?tags=?ryo");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(10, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?tags=*yo");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?tags=*yo");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(10, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?tags=C???");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?tags=C???");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
@@ -662,100 +656,100 @@ class OlogLogsQueryIT {
 
             // logbooks
             //     name
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?logbooks");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?logbooks");
             ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?logbooks=asdf");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?logbooks=asdf");
             ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?logbooks=Buildings");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?logbooks=Buildings");
             ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?logbooks=Communication");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?logbooks=Communication");
             ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?logbooks=Experiments");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?logbooks=Experiments");
             ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?logbooks=Facilities");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?logbooks=Facilities");
             ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?logbooks=Maintenance");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?logbooks=Maintenance");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(17, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?logbooks=operations");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?logbooks=operations");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(49, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?logbooks=Operations");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?logbooks=Operations");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(49, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?logbooks=operation");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?logbooks=operation");
             ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?logbooks=Power");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?logbooks=Power");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(2, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?logbooks=Services");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?logbooks=Services");
             ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?logbooks=Water");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?logbooks=Water");
             ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?logbooks=Maintenance&logbooks=Power");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?logbooks=Maintenance&logbooks=Power");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(18, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?logbooks=Maint*");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?logbooks=Maint*");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(17, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?logbooks=?e?");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?logbooks=?e?");
             ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?logbooks=*e*");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?logbooks=*e*");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(60, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?logbooks=x*x");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?logbooks=x*x");
             ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
 
             // ----------------------------------------------------------------------------------------------------
 
             // time
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?start");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?start");
             ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?start=asdf");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?start=asdf");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(60, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?end");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?end");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(60, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?end=asdf");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?end=asdf");
             ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
 
             // ----------------------------------------------------------------------------------------------------
@@ -764,85 +758,85 @@ class OlogLogsQueryIT {
             //     name
             //     attribute name
             //     attribute value
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?properties");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?properties");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(60, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?properties=asdf");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?properties=asdf");
             ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?properties=a");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?properties=a");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(20, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?properties=A");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?properties=A");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(20, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?properties=B");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?properties=B");
             ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?properties=C");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?properties=C");
             ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?properties=Shift Info C");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?properties=Shift Info C");
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?properties='Shift Info C'");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?properties='Shift Info C'");
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?properties="+URLEncoder.encode("Shift Info C", StandardCharsets.UTF_8));
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?properties="+URLEncoder.encode("Shift Info C", StandardCharsets.UTF_8));
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(20, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?properties='"+URLEncoder.encode("Shift Info C", StandardCharsets.UTF_8)+"'");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?properties='"+URLEncoder.encode("Shift Info C", StandardCharsets.UTF_8)+"'");
             ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?properties=.operator");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?properties=.operator");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(60, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?properties=.Operator");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?properties=.Operator");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(60, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?properties=..12345678c");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?properties=..12345678c");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(60, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?properties=..12345678C");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?properties=..12345678C");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(60, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?properties=..*C");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?properties=..*C");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(60, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?properties=..12345678?");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?properties=..12345678?");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(60, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?properties=..12345*");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?properties=..12345*");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
@@ -851,79 +845,79 @@ class OlogLogsQueryIT {
             // ----------------------------------------------------------------------------------------------------
 
             // level
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?level");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?level");
             ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?level=asdf");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?level=asdf");
             ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?level=shift");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?level=shift");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(60, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?level=Shift");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?level=Shift");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(60, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?level=update");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?level=update");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(54, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?level=Update");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?level=Update");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(54, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?level=shift update");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?level=shift update");
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?level='shift update'");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?level='shift update'");
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?level=shift&level=update");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?level=shift&level=update");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(60, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?level="+URLEncoder.encode("shift update", StandardCharsets.UTF_8));
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?level="+URLEncoder.encode("shift update", StandardCharsets.UTF_8));
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(60, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?level='"+URLEncoder.encode("shift update", StandardCharsets.UTF_8)+"'");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?level='"+URLEncoder.encode("shift update", StandardCharsets.UTF_8)+"'");
             ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?level="+URLEncoder.encode("SHIFT UPDATE", StandardCharsets.UTF_8));
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?level="+URLEncoder.encode("SHIFT UPDATE", StandardCharsets.UTF_8));
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(60, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?level='"+URLEncoder.encode("SHIFT UPDATE", StandardCharsets.UTF_8)+"'");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?level='"+URLEncoder.encode("SHIFT UPDATE", StandardCharsets.UTF_8)+"'");
             ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?level=?pdate");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?level=?pdate");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(54, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?level=upd??e");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?level=upd??e");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(54, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?level=*ate");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?level=*ate");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
@@ -935,50 +929,50 @@ class OlogLogsQueryIT {
 
             // default
             //     unsupported search parameters are ignored
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?zxcv");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?zxcv");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(60, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?zxcv=asdf");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?zxcv=asdf");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(60, logs.length);
 
             // combinations
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?logbooks=*&description=maintenance");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?logbooks=*&description=maintenance");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(17, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?tags=*&description=maintenance");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?tags=*&description=maintenance");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(12, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?properties=..12345678A&phrase="+URLEncoder.encode("Start-up after maintenance", StandardCharsets.UTF_8));
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?properties=..12345678A&phrase="+URLEncoder.encode("Start-up after maintenance", StandardCharsets.UTF_8));
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(3, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?properties=..12345678C&phrase="+URLEncoder.encode("Start-up after maintenance", StandardCharsets.UTF_8));
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?properties=..12345678C&phrase="+URLEncoder.encode("Start-up after maintenance", StandardCharsets.UTF_8));
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(3, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?properties=..123*&phrase="+URLEncoder.encode("Start-up after maintenance", StandardCharsets.UTF_8));
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?properties=..123*&phrase="+URLEncoder.encode("Start-up after maintenance", StandardCharsets.UTF_8));
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
             assertEquals(3, logs.length);
 
-            response = ITUtil.doGetJson(OlogLogsQueryIT.HTTP_IP_PORT_OLOG_LOGS + "?properties=..123*&description=maintenance");
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?properties=..123*&description=maintenance");
             ITUtil.assertResponseLength2CodeOK(response);
             logs = mapper.readValue(response[1], Log[].class);
             assertNotNull(logs);
