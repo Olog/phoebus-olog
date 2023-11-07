@@ -47,7 +47,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  * @see org.phoebus.olog.LogResource
  */
 @Testcontainers
-public class OlogLogsQueryIT {
+class OlogLogsQueryIT {
 
     // Note
     //     ------------------------------------------------------------------------------------------------
@@ -92,7 +92,7 @@ public class OlogLogsQueryIT {
     public static final ComposeContainer ENVIRONMENT = ITUtil.defaultComposeContainers();
 
     @Test
-    public void ologUp() {
+    void ologUp() {
         try {
             String address = ITUtil.HTTP_IP_PORT_OLOG;
             int responseCode = ITUtil.doGet(address);
@@ -107,7 +107,7 @@ public class OlogLogsQueryIT {
      * Test {@link org.phoebus.olog.OlogResourceDescriptors#LOG_RESOURCE_URI}.
      */
     @Test
-    public void handleLogsQueryByPattern() {
+    void handleLogsQueryByPattern() {
         // what
         //     query by pattern
         //     --------------------------------------------------------------------------------

@@ -48,7 +48,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  * @see org.phoebus.olog.LogbooksResource
  */
 @Testcontainers
-public class OlogLogbooksIT {
+class OlogLogbooksIT {
 
     // Note
     //     ------------------------------------------------------------------------------------------------
@@ -148,7 +148,7 @@ public class OlogLogbooksIT {
     }
 
     @Test
-    public void ologUp() {
+    void ologUp() {
         try {
             String address = ITUtil.HTTP_IP_PORT_OLOG;
             int responseCode = ITUtil.doGet(address);
@@ -163,7 +163,7 @@ public class OlogLogbooksIT {
      * Test {@link org.phoebus.olog.OlogResourceDescriptors#LOGBOOK_RESOURCE_URI}.
      */
     @Test
-    public void handleLogbookRetrieveCheck() {
+    void handleLogbookRetrieveCheck() {
         // what
         //     check(s) for retrieve logbook
         //         e.g.
@@ -187,7 +187,7 @@ public class OlogLogbooksIT {
      * Test {@link org.phoebus.olog.OlogResourceDescriptors#LOGBOOK_RESOURCE_URI}.
      */
     @Test
-    public void handleLogbookRemoveCheck() {
+    void handleLogbookRemoveCheck() {
         // what
         //     check(s) for remove logbook
         //         e.g.
@@ -219,7 +219,7 @@ public class OlogLogbooksIT {
      * Test {@link org.phoebus.olog.OlogResourceDescriptors#LOGBOOK_RESOURCE_URI}.
      */
     @Test
-    public void handleLogbookCreateCheckJson() {
+    void handleLogbookCreateCheckJson() {
         // what
         //     check(s) for create logbook
         //         e.g.
@@ -311,7 +311,7 @@ public class OlogLogbooksIT {
      * Test {@link org.phoebus.olog.OlogResourceDescriptors#LOGBOOK_RESOURCE_URI}.
      */
     @Test
-    public void handleLogbookCreateCheck() {
+    void handleLogbookCreateCheck() {
         // what
         //     check(s) for create logbook
         //         e.g.
@@ -378,7 +378,7 @@ public class OlogLogbooksIT {
      * Test {@link org.phoebus.olog.OlogResourceDescriptors#LOGBOOK_RESOURCE_URI}.
      */
     @Test
-    public void handleLogbook() {
+    void handleLogbook() {
         // what
         //     user with required role
         //     create tag
@@ -454,7 +454,7 @@ public class OlogLogbooksIT {
      * Test {@link org.phoebus.olog.OlogResourceDescriptors#LOGBOOK_RESOURCE_URI}.
      */
     @Test
-    public void handleLogbook2() {
+    void handleLogbook2() {
         // what
         //     create logbooks, one by one
         //     --------------------------------------------------------------------------------
@@ -554,7 +554,7 @@ public class OlogLogbooksIT {
      * Test {@link org.phoebus.olog.OlogResourceDescriptors#LOGBOOK_RESOURCE_URI}.
      */
     @Test
-    public void handleLogbook3ChangeState() {
+    void handleLogbook3ChangeState() {
         // what
         //     replace logbook, change state
         //     --------------------------------------------------------------------------------
@@ -644,7 +644,7 @@ public class OlogLogbooksIT {
      * Test {@link org.phoebus.olog.OlogResourceDescriptors#LOGBOOK_RESOURCE_URI}.
      */
     @Test
-    public void handleLogbooksCreateCheck() {
+    void handleLogbooksCreateCheck() {
         // what
         //     check(s) for create logbooks
         //         e.g.
@@ -721,7 +721,7 @@ public class OlogLogbooksIT {
      * Test {@link org.phoebus.olog.OlogResourceDescriptors#LOGBOOK_RESOURCE_URI}.
      */
     @Test
-    public void handleLogbooks() {
+    void handleLogbooks() {
         // what
         //     create logbooks
         //     --------------------------------------------------------------------------------

@@ -39,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  * @author Lars Johansson
  */
 @Testcontainers
-public class OlogIT {
+class OlogIT {
 
     // Note
     //     ------------------------------------------------------------------------------------------------
@@ -61,7 +61,7 @@ public class OlogIT {
     public static final ComposeContainer ENVIRONMENT = ITUtil.defaultComposeContainers();
 
     @Test
-    public void ologUp() {
+    void ologUp() {
         try {
             String address = ITUtil.HTTP_IP_PORT_OLOG;
             int responseCode = ITUtil.doGet(address);
@@ -72,7 +72,7 @@ public class OlogIT {
         }
     }
     @Test
-    public void ologUpTags() {
+    void ologUpTags() {
         try {
             String address = ITUtil.HTTP_IP_PORT_OLOG + "/tags";
             int responseCode = ITUtil.doGet(address);
@@ -83,7 +83,7 @@ public class OlogIT {
         }
     }
     @Test
-    public void ologUpLogbooks() {
+    void ologUpLogbooks() {
         try {
             String address = ITUtil.HTTP_IP_PORT_OLOG + "/logbooks";
             int responseCode = ITUtil.doGet(address);
@@ -94,7 +94,7 @@ public class OlogIT {
         }
     }
     @Test
-    public void ologUpProperties() {
+    void ologUpProperties() {
         try {
             String address = ITUtil.HTTP_IP_PORT_OLOG + "/properties";
             int responseCode = ITUtil.doGet(address);
@@ -105,7 +105,7 @@ public class OlogIT {
         }
     }
     @Test
-    public void ologUpLogs() {
+    void ologUpLogs() {
         try {
             String address = ITUtil.HTTP_IP_PORT_OLOG + "/logs";
             int responseCode = ITUtil.doGet(address);
@@ -116,7 +116,7 @@ public class OlogIT {
         }
     }
     @Test
-    public void ologUpConfiguration() {
+    void ologUpConfiguration() {
         try {
             String address = ITUtil.HTTP_IP_PORT_OLOG + "/configuration";
             int responseCode = ITUtil.doGet(address);
@@ -127,7 +127,7 @@ public class OlogIT {
         }
     }
     @Test
-    public void ologUpAttachment() {
+    void ologUpAttachment() {
         try {
             String address = ITUtil.HTTP_IP_PORT_OLOG + "/attachment";
             int responseCode = ITUtil.doGet(address);

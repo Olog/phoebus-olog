@@ -47,7 +47,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  * @see org.phoebus.olog.TagsResource
  */
 @Testcontainers
-public class OlogTagsIT {
+class OlogTagsIT {
 
     // Note
     //     ------------------------------------------------------------------------------------------------
@@ -145,7 +145,7 @@ public class OlogTagsIT {
     }
 
     @Test
-    public void ologUp() {
+    void ologUp() {
         try {
             String address = ITUtil.HTTP_IP_PORT_OLOG;
             int responseCode = ITUtil.doGet(address);
@@ -160,7 +160,7 @@ public class OlogTagsIT {
      * Test {@link org.phoebus.olog.OlogResourceDescriptors#TAG_RESOURCE_URI}.
      */
     @Test
-    public void handleTagRetrieveCheck() {
+    void handleTagRetrieveCheck() {
         // what
         //     check(s) for retrieve tag
         //         e.g.
@@ -184,7 +184,7 @@ public class OlogTagsIT {
      * Test {@link org.phoebus.olog.OlogResourceDescriptors#TAG_RESOURCE_URI}.
      */
     @Test
-    public void handleTagRemoveCheck() {
+    void handleTagRemoveCheck() {
         // what
         //     check(s) for remove tag
         //         e.g.
@@ -216,7 +216,7 @@ public class OlogTagsIT {
      * Test {@link org.phoebus.olog.OlogResourceDescriptors#TAG_RESOURCE_URI}.
      */
     @Test
-    public void handleTagCreateCheckJson() {
+    void handleTagCreateCheckJson() {
         // what
         //     check(s) for create tag
         //         e.g.
@@ -305,7 +305,7 @@ public class OlogTagsIT {
      * Test {@link org.phoebus.olog.OlogResourceDescriptors#TAG_RESOURCE_URI}.
      */
     @Test
-    public void handleTagCreateCheck() {
+    void handleTagCreateCheck() {
         // what
         //     check(s) for create tag
         //         e.g.
@@ -369,7 +369,7 @@ public class OlogTagsIT {
      * Test {@link org.phoebus.olog.OlogResourceDescriptors#TAG_RESOURCE_URI}.
      */
     @Test
-    public void handleTag() {
+    void handleTag() {
         // what
         //     user with required role TagMod
         //     create tag
@@ -442,7 +442,7 @@ public class OlogTagsIT {
      * Test {@link org.phoebus.olog.OlogResourceDescriptors#TAG_RESOURCE_URI}.
      */
     @Test
-    public void handleTag2() {
+    void handleTag2() {
         // what
         //     create tags, one by one
         //     --------------------------------------------------------------------------------
@@ -538,7 +538,7 @@ public class OlogTagsIT {
      * Test {@link org.phoebus.olog.OlogResourceDescriptors#TAG_RESOURCE_URI}.
      */
     @Test
-    public void handleTag3ChangeState() {
+    void handleTag3ChangeState() {
         // what
         //     replace tag, change state
         //     --------------------------------------------------------------------------------
@@ -624,7 +624,7 @@ public class OlogTagsIT {
      * Test {@link org.phoebus.olog.OlogResourceDescriptors#TAG_RESOURCE_URI}.
      */
     @Test
-    public void handleTagsCreateCheck() {
+    void handleTagsCreateCheck() {
         // what
         //     check(s) for create tags
         //         e.g.
@@ -698,7 +698,7 @@ public class OlogTagsIT {
      * Test {@link org.phoebus.olog.OlogResourceDescriptors#TAG_RESOURCE_URI}.
      */
     @Test
-    public void handleTags() {
+    void handleTags() {
         // what
         //     create tags
         //     --------------------------------------------------------------------------------

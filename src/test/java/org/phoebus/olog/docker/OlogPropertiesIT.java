@@ -50,7 +50,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  * @see org.phoebus.olog.PropertiesResource
  */
 @Testcontainers
-public class OlogPropertiesIT {
+class OlogPropertiesIT {
 
     // Note
     //     ------------------------------------------------------------------------------------------------
@@ -222,7 +222,7 @@ public class OlogPropertiesIT {
     }
 
     @Test
-    public void ologUp() {
+    void ologUp() {
         try {
             String address = ITUtil.HTTP_IP_PORT_OLOG;
             int responseCode = ITUtil.doGet(address);
@@ -237,7 +237,7 @@ public class OlogPropertiesIT {
      * Test {@link org.phoebus.olog.OlogResourceDescriptors#PROPERTY_RESOURCE_URI}.
      */
     @Test
-    public void handlePropertyRetrieveCheck() {
+    void handlePropertyRetrieveCheck() {
         // what
         //     check(s) for retrieve property
         //         e.g.
@@ -261,7 +261,7 @@ public class OlogPropertiesIT {
      * Test {@link org.phoebus.olog.OlogResourceDescriptors#PROPERTY_RESOURCE_URI}.
      */
     @Test
-    public void handlePropertyRemoveCheck() {
+    void handlePropertyRemoveCheck() {
         // what
         //     check(s) for remove property
         //         e.g.
@@ -293,7 +293,7 @@ public class OlogPropertiesIT {
      * Test {@link org.phoebus.olog.OlogResourceDescriptors#PROPERTY_RESOURCE_URI}.
      */
     @Test
-    public void handlePropertyCreateCheckJson() {
+    void handlePropertyCreateCheckJson() {
         // what
         //     check(s) for create property
         //         e.g.
@@ -388,7 +388,7 @@ public class OlogPropertiesIT {
      * Test {@link org.phoebus.olog.OlogResourceDescriptors#PROPERTY_RESOURCE_URI}.
      */
     @Test
-    public void handlePropertyCreateCheck() {
+    void handlePropertyCreateCheck() {
         // what
         //     check(s) for create property
         //         e.g.
@@ -488,7 +488,7 @@ public class OlogPropertiesIT {
      * Test {@link org.phoebus.olog.OlogResourceDescriptors#PROPERTY_RESOURCE_URI}.
      */
     @Test
-    public void handleProperty() {
+    void handleProperty() {
         // what
         //     user with required role
         //     create property
@@ -588,7 +588,7 @@ public class OlogPropertiesIT {
      * Test {@link org.phoebus.olog.OlogResourceDescriptors#PROPERTY_RESOURCE_URI}.
      */
     @Test
-    public void handleProperty2() {
+    void handleProperty2() {
         // what
         //     create properties, one by one
         //     --------------------------------------------------------------------------------
@@ -729,7 +729,7 @@ public class OlogPropertiesIT {
      * Test {@link org.phoebus.olog.OlogResourceDescriptors#PROPERTY_RESOURCE_URI}.
      */
     @Test
-    public void handleProperty3ChangeState() {
+    void handleProperty3ChangeState() {
         // what
         //     replace property, change state
         //     --------------------------------------------------------------------------------
@@ -815,7 +815,7 @@ public class OlogPropertiesIT {
      * Test {@link org.phoebus.olog.OlogResourceDescriptors#PROPERTY_RESOURCE_URI}.
      */
     @Test
-    public void handlePropertiesCreateCheck() {
+    void handlePropertiesCreateCheck() {
         // what
         //     check(s) for create properties
         //         e.g.
@@ -929,7 +929,7 @@ public class OlogPropertiesIT {
      * Test {@link org.phoebus.olog.OlogResourceDescriptors#PROPERTY_RESOURCE_URI}.
      */
     @Test
-    public void handleProperties() {
+    void handleProperties() {
         // what
         //     create properties
         //     --------------------------------------------------------------------------------
