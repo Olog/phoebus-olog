@@ -55,13 +55,13 @@ public class OlogLogbooksIT {
     //     Olog - Service Documentation
     //         https://olog.readthedocs.io/en/latest/
     //     ------------------------------------------------------------------------------------------------
-    //     OLOG API                                     LogbooksResource
-    //     --------------------                         --------------------
-    //     Retrieve a Logbook    .../logbooks/<name>    (GET)       findByTitle(String)
-    //     List Logbooks         .../logbooks           (GET)       findAll()
-    //     Create a Logbook      .../logbooks/<name>    (PUT)       createLogbook(String, Logbook, Principal)
-    //     Create Logbooks       .../logbooks           (PUT)       updateLogbooks(List<Logbook>)
-    //     Remove Logbook        .../logbooks/<name>    (DELETE)    deleteLogbook(String)
+    //     OLOG API                                             LogbooksResource
+    //     --------------------                                 --------------------
+    //     Retrieve a Logbook        .../logbooks/<name>        (GET)           findByTitle(String)
+    //     List Logbooks             .../logbooks               (GET)           findAll()
+    //     Create a Logbook          .../logbooks/<name>        (PUT)           createLogbook(String, Logbook, Principal)
+    //     Create Logbooks           .../logbooks               (PUT)           updateLogbooks(List<Logbook>)
+    //     Remove Logbook            .../logbooks/<name>        (DELETE)        deleteLogbook(String)
     //     ------------------------------------------------------------------------------------------------
 
     static final String LOGBOOKS = "/logbooks";
@@ -73,6 +73,8 @@ public class OlogLogbooksIT {
     // test data
     //     logbooks l1 - l10, owner admin, state Active - Inactive
     //     logbooks l1 - l2   owner admin, state Inactive
+
+    static Logbook[] default_logbooks;
 
     static Logbook logbook_l1_owner_a_state_a;
     static Logbook logbook_l2_owner_a_state_a;
@@ -93,6 +95,10 @@ public class OlogLogbooksIT {
 
     @BeforeAll
     public static void setupObjects() {
+        default_logbooks = new Logbook[] {
+                new Logbook("operations", "olog-logs", State.Active),
+                new Logbook("controls", null, State.Active)};
+
         logbook_l1_owner_a_state_a  = new Logbook("l1",  "admin", State.Active);
         logbook_l2_owner_a_state_a  = new Logbook("l2",  "admin", State.Active);
         logbook_l3_owner_a_state_a  = new Logbook("l3",  "admin", State.Active);
@@ -110,6 +116,8 @@ public class OlogLogbooksIT {
 
     @AfterAll
     public static void tearDownObjects() {
+        default_logbooks = null;
+
         logbook_l1_owner_a_state_a  = null;
         logbook_l2_owner_a_state_a  = null;
         logbook_l3_owner_a_state_a  = null;
@@ -226,9 +234,15 @@ public class OlogLogbooksIT {
 
         String json_logbook_l1_name_na     = "{\"na\":\"l1\",\"owner\":\"admin\",\"state\":\"Active\"}";
 
+        ObjectMapper mapper = new ObjectMapper();
+
         try {
             String[] response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_LOGBOOKS);
-            ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
+            ITUtil.assertResponseLength2CodeOK(response);
+            ITUtil.assertEqualsLogbooks(
+                    mapper.readValue(response[1], Logbook[].class),
+                    default_logbooks[1],
+                    default_logbooks[0]);
 
             response = ITUtil.runShellCommand(createCurlLogbookForAdmin("l1", json_incomplete1));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
@@ -260,8 +274,16 @@ public class OlogLogbooksIT {
             response = ITUtil.runShellCommand(createCurlLogbookForAdmin("l1", json_logbook_l1_name_na));
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
+            // refresh elastic indices
+            response = ITUtil.refreshElasticIndices();
+            ITUtil.assertResponseLength2CodeOK(response);
+
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_LOGBOOKS);
-            ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
+            ITUtil.assertResponseLength2CodeOK(response);
+            ITUtil.assertEqualsLogbooks(
+                    mapper.readValue(response[1], Logbook[].class),
+                    default_logbooks[1],
+                    default_logbooks[0]);
         } catch (IOException e) {
             fail();
         } catch (InterruptedException e) {
@@ -298,7 +320,11 @@ public class OlogLogbooksIT {
 
         try {
             String[] response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_LOGBOOKS);
-            ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
+            ITUtil.assertResponseLength2CodeOK(response);
+            ITUtil.assertEqualsLogbooks(
+                    mapper.readValue(response[1], Logbook[].class),
+                    default_logbooks[1],
+                    default_logbooks[0]);
 
             // response = ITUtil.runShellCommand(createCurlLogbookForUser("l1", mapper.writeValueAsString(logbook_l1_owner_a_state_a)));
             // ITUtil.assertResponseLength2Code(HttpURLConnection.HTTP_UNAUTHORIZED, response);
@@ -320,7 +346,11 @@ public class OlogLogbooksIT {
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_LOGBOOKS);
-            ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
+            ITUtil.assertResponseLength2CodeOK(response);
+            ITUtil.assertEqualsLogbooks(
+                    mapper.readValue(response[1], Logbook[].class),
+                    default_logbooks[1],
+                    default_logbooks[0]);
         } catch (IOException e) {
             fail();
         } catch (InterruptedException e) {
@@ -351,7 +381,11 @@ public class OlogLogbooksIT {
 
         try {
             String[] response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_LOGBOOKS);
-            ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
+            ITUtil.assertResponseLength2CodeOK(response);
+            ITUtil.assertEqualsLogbooks(
+                    mapper.readValue(response[1], Logbook[].class),
+                    default_logbooks[1],
+                    default_logbooks[0]);
 
             response = ITUtil.runShellCommand(createCurlLogbookForAdmin("l1", mapper.writeValueAsString(logbook_l1_owner_a_state_a)));
             ITUtil.assertResponseLength2CodeOK(response);
@@ -365,7 +399,9 @@ public class OlogLogbooksIT {
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsLogbooks(
                     mapper.readValue(response[1], Logbook[].class),
-                    logbook_l1_owner_a_state_a);
+                    default_logbooks[1],
+                    logbook_l1_owner_a_state_a,
+                    default_logbooks[0]);
 
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_LOGBOOKS + "/l1");
             ITUtil.assertResponseLength2CodeOK(response);
@@ -377,12 +413,20 @@ public class OlogLogbooksIT {
             response = ITUtil.runShellCommand(deleteCurlLogbookForAdmin("l1"));
             ITUtil.assertResponseLength2CodeOK(response);
 
+            // refresh elastic indices
+            response = ITUtil.refreshElasticIndices();
+            ITUtil.assertResponseLength2CodeOK(response);
+
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_LOGBOOKS + "/l1");
             ITUtil.assertResponseLength2CodeOK(response);
             assertTrue(logbook_l1_owner_a_state_i.equals(mapper.readValue(response[1], Logbook.class)));
 
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_LOGBOOKS);
-            ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
+            ITUtil.assertResponseLength2CodeOK(response);
+            ITUtil.assertEqualsLogbooks(
+                    mapper.readValue(response[1], Logbook[].class),
+                    default_logbooks[1],
+                    default_logbooks[0]);
         } catch (IOException e) {
             fail();
         } catch (InterruptedException e) {
@@ -412,7 +456,11 @@ public class OlogLogbooksIT {
 
         try {
             String[] response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_LOGBOOKS);
-            ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
+            ITUtil.assertResponseLength2CodeOK(response);
+            ITUtil.assertEqualsLogbooks(
+                    mapper.readValue(response[1], Logbook[].class),
+                    default_logbooks[1],
+                    default_logbooks[0]);
 
             response = ITUtil.runShellCommand(createCurlLogbookForAdmin("l1", mapper.writeValueAsString(logbook_l1_owner_a_state_a)));
             ITUtil.assertResponseLength2CodeOK(response);
@@ -430,8 +478,10 @@ public class OlogLogbooksIT {
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsLogbooks(
                     mapper.readValue(response[1], Logbook[].class),
+                    default_logbooks[1],
                     logbook_l1_owner_a_state_a,
-                    logbook_l2_owner_a_state_a);
+                    logbook_l2_owner_a_state_a,
+                    default_logbooks[0]);
 
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_LOGBOOKS + "/l1");
             ITUtil.assertResponseLength2CodeOK(response);
@@ -444,11 +494,17 @@ public class OlogLogbooksIT {
             response = ITUtil.runShellCommand(deleteCurlLogbookForAdmin("l1"));
             ITUtil.assertResponseLength2CodeOK(response);
 
+            // refresh elastic indices
+            response = ITUtil.refreshElasticIndices();
+            ITUtil.assertResponseLength2CodeOK(response);
+
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_LOGBOOKS);
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsLogbooks(
                     mapper.readValue(response[1], Logbook[].class),
-                    logbook_l2_owner_a_state_a);
+                    default_logbooks[1],
+                    logbook_l2_owner_a_state_a,
+                    default_logbooks[0]);
 
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_LOGBOOKS + "/l1");
             ITUtil.assertResponseLength2CodeOK(response);
@@ -457,12 +513,20 @@ public class OlogLogbooksIT {
             response = ITUtil.runShellCommand(deleteCurlLogbookForAdmin("l2"));
             ITUtil.assertResponseLength2CodeOK(response);
 
+            // refresh elastic indices
+            response = ITUtil.refreshElasticIndices();
+            ITUtil.assertResponseLength2CodeOK(response);
+
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_LOGBOOKS + "/l2");
             ITUtil.assertResponseLength2CodeOK(response);
             assertTrue(logbook_l2_owner_a_state_i.equals(mapper.readValue(response[1], Logbook.class)));
 
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_LOGBOOKS);
-            ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
+            ITUtil.assertResponseLength2CodeOK(response);
+            ITUtil.assertEqualsLogbooks(
+                    mapper.readValue(response[1], Logbook[].class),
+                    default_logbooks[1],
+                    default_logbooks[0]);
         } catch (IOException e) {
             fail();
         } catch (InterruptedException e) {
@@ -492,7 +556,11 @@ public class OlogLogbooksIT {
 
         try {
             String[] response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_LOGBOOKS);
-            ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
+            ITUtil.assertResponseLength2CodeOK(response);
+            ITUtil.assertEqualsLogbooks(
+                    mapper.readValue(response[1], Logbook[].class),
+                    default_logbooks[1],
+                    default_logbooks[0]);
 
             response = ITUtil.runShellCommand(createCurlLogbookForAdmin("l1", mapper.writeValueAsString(logbook_l1_owner_a_state_a)));
             ITUtil.assertResponseLength2CodeOK(response);
@@ -506,7 +574,9 @@ public class OlogLogbooksIT {
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsLogbooks(
                     mapper.readValue(response[1], Logbook[].class),
-                    logbook_l1_owner_a_state_a);
+                    default_logbooks[1],
+                    logbook_l1_owner_a_state_a,
+                    default_logbooks[0]);
 
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_LOGBOOKS + "/l1");
             ITUtil.assertResponseLength2CodeOK(response);
@@ -515,8 +585,16 @@ public class OlogLogbooksIT {
             response = ITUtil.runShellCommand(createCurlLogbookForAdmin("l1", mapper.writeValueAsString(logbook_l1_owner_a_state_i)));
             ITUtil.assertResponseLength2CodeOK(response);
 
+            // refresh elastic indices
+            response = ITUtil.refreshElasticIndices();
+            ITUtil.assertResponseLength2CodeOK(response);
+
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_LOGBOOKS);
-            ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
+            ITUtil.assertResponseLength2CodeOK(response);
+            ITUtil.assertEqualsLogbooks(
+                    mapper.readValue(response[1], Logbook[].class),
+                    default_logbooks[1],
+                    default_logbooks[0]);
 
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_LOGBOOKS + "/l1");
             ITUtil.assertResponseLength2CodeOK(response);
@@ -525,12 +603,20 @@ public class OlogLogbooksIT {
             response = ITUtil.runShellCommand(deleteCurlLogbookForAdmin("l1"));
             ITUtil.assertResponseLength2CodeOK(response);
 
+            // refresh elastic indices
+            response = ITUtil.refreshElasticIndices();
+            ITUtil.assertResponseLength2CodeOK(response);
+
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_LOGBOOKS + "/l1");
             ITUtil.assertResponseLength2CodeOK(response);
             assertTrue(logbook_l1_owner_a_state_i.equals(mapper.readValue(response[1], Logbook.class)));
 
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_LOGBOOKS);
-            ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
+            ITUtil.assertResponseLength2CodeOK(response);
+            ITUtil.assertEqualsLogbooks(
+                    mapper.readValue(response[1], Logbook[].class),
+                    default_logbooks[1],
+                    default_logbooks[0]);
         } catch (IOException e) {
             fail();
         } catch (InterruptedException e) {
@@ -567,7 +653,11 @@ public class OlogLogbooksIT {
 
         try {
             String[] response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_LOGBOOKS);
-            ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
+            ITUtil.assertResponseLength2CodeOK(response);
+            ITUtil.assertEqualsLogbooks(
+                    mapper.readValue(response[1], Logbook[].class),
+                    default_logbooks[1],
+                    default_logbooks[0]);
 
             Logbook[] logbooks = new Logbook[] {
                     logbook_l1_owner_a_state_a,
@@ -599,7 +689,11 @@ public class OlogLogbooksIT {
             ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
 
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_LOGBOOKS);
-            ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
+            ITUtil.assertResponseLength2CodeOK(response);
+            ITUtil.assertEqualsLogbooks(
+                    mapper.readValue(response[1], Logbook[].class),
+                    default_logbooks[1],
+                    default_logbooks[0]);
         } catch (IOException e) {
             fail();
         } catch (InterruptedException e) {
@@ -642,7 +736,11 @@ public class OlogLogbooksIT {
 
         try {
             String[] response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_LOGBOOKS);
-            ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
+            ITUtil.assertResponseLength2CodeOK(response);
+            ITUtil.assertEqualsLogbooks(
+                    mapper.readValue(response[1], Logbook[].class),
+                    default_logbooks[1],
+                    default_logbooks[0]);
 
             response = ITUtil.runShellCommand(createCurlLogbooksForAdmin(mapper.writeValueAsString(logbooks_active_inactive)));
             ITUtil.assertResponseLength2CodeOK(response);
@@ -658,11 +756,13 @@ public class OlogLogbooksIT {
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsLogbooks(
                     mapper.readValue(response[1], Logbook[].class),
+                    default_logbooks[1],
                     logbook_l1_owner_a_state_a,
                     logbook_l2_owner_a_state_a,
                     logbook_l3_owner_a_state_a,
                     logbook_l4_owner_a_state_a,
-                    logbook_l5_owner_a_state_a);
+                    logbook_l5_owner_a_state_a,
+                    default_logbooks[0]);
 
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_LOGBOOKS + "/l1");
             ITUtil.assertResponseLength2CodeOK(response);
@@ -719,12 +819,18 @@ public class OlogLogbooksIT {
             response = ITUtil.runShellCommand(deleteCurlLogbookForAdmin("l10"));
             ITUtil.assertResponseLength2CodeOK(response);
 
+            // refresh elastic indices
+            response = ITUtil.refreshElasticIndices();
+            ITUtil.assertResponseLength2CodeOK(response);
+
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_LOGBOOKS);
             ITUtil.assertResponseLength2CodeOK(response);
             ITUtil.assertEqualsLogbooks(
                     mapper.readValue(response[1], Logbook[].class),
+                    default_logbooks[1],
                     logbook_l4_owner_a_state_a,
-                    logbook_l5_owner_a_state_a);
+                    logbook_l5_owner_a_state_a,
+                    default_logbooks[0]);
 
             response = ITUtil.runShellCommand(deleteCurlLogbookForAdmin("l4"));
             ITUtil.assertResponseLength2CodeOK(response);
@@ -739,6 +845,10 @@ public class OlogLogbooksIT {
             ITUtil.assertResponseLength2CodeOK(response);
 
             response = ITUtil.runShellCommand(deleteCurlLogbookForAdmin("l8"));
+            ITUtil.assertResponseLength2CodeOK(response);
+
+            // refresh elastic indices
+            response = ITUtil.refreshElasticIndices();
             ITUtil.assertResponseLength2CodeOK(response);
 
             response = ITUtil.doGetJson(HTTP_IP_PORT_OLOG_LOGBOOKS);

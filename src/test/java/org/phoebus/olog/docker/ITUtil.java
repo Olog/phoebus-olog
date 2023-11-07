@@ -241,8 +241,8 @@ public class ITUtil {
     /**
      * Assert that arrays are equal with same length and same content in each array position.
      *
-     * @param actual actual array of XmlTag objects
-     * @param expected expected arbitrary number of XmlTag objects
+     * @param actual actual array of Tag objects
+     * @param expected expected arbitrary number of Tag objects
      */
     static void assertEqualsTags(Tag[] actual, Tag... expected) {
         if (expected != null) {
@@ -259,8 +259,8 @@ public class ITUtil {
     /**
      * Assert that arrays are equal with same length and same content in each array position.
      *
-     * @param actual actual array of XmlTag objects
-     * @param expected expected arbitrary number of XmlTag objects
+     * @param actual actual array of Logbook objects
+     * @param expected expected arbitrary number of Logbook objects
      */
     static void assertEqualsLogbooks(Logbook[] actual, Logbook... expected) {
         if (expected != null) {
@@ -277,8 +277,8 @@ public class ITUtil {
     /**
      * Assert that arrays are equal with same length and same content in each array position.
      *
-     * @param actual actual array of XmlTag objects
-     * @param expected expected arbitrary number of XmlTag objects
+     * @param actual actual array of Property objects
+     * @param expected expected arbitrary number of Property objects
      */
     static void assertEqualsProperties(Property[] actual, Property... expected) {
         if (expected != null) {
@@ -295,8 +295,8 @@ public class ITUtil {
     /**
      * Assert that arrays are equal with same length and same content in each array position.
      *
-     * @param actual actual array of XmlTag objects
-     * @param expected expected arbitrary number of XmlTag objects
+     * @param actual actual array of Log objects
+     * @param expected expected arbitrary number of Log objects
      */
     static void assertEqualsLogs(Log[] actual, Log... expected) {
         if (expected != null) {

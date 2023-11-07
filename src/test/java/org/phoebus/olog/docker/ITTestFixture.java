@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.util.HashSet;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -62,6 +63,9 @@ public class ITTestFixture {
     static final String SHIFT_END        = "Shift End";
 
     // test data
+    static Logbook[]  default_logbooks;
+    static Tag[]      default_tags;
+    static Property[] default_properties;
 
     static Logbook logbookBuildings;
     static Logbook logbookCommunication;
@@ -166,6 +170,14 @@ public class ITTestFixture {
         //         to add items to logs (logbooks, tags, properties, attachments)
         //         for assert statements
 
+        default_logbooks = new Logbook[] {
+                new Logbook("operations", "olog-logs", State.Active),
+                new Logbook("controls", null, State.Active)};
+        default_tags = new Tag[] {new Tag("alarm", State.Active)};
+        default_properties = new Property[] {new Property("resource", null, State.Active, new HashSet<Attribute>())};
+        default_properties[0].addAttributes(new Attribute("name", null, State.Active));
+        default_properties[0].addAttributes(new Attribute("file", null, State.Active));
+
         setupLogbooks();
         setupTags();
         setupProperties();
@@ -184,6 +196,10 @@ public class ITTestFixture {
         // note
         //     not necessary to remove items from logs in order to tear down (logbooks, tags, properties, attachments)
         //         items can be deleted regardless
+
+        default_logbooks = null;
+        default_tags = null;
+        default_properties = null;
 
         tearDownLogbooks();
         tearDownTags();
@@ -425,7 +441,11 @@ public class ITTestFixture {
             // --------------------------------------------------------------------------------
 
             String[] response = ITUtil.doGetJson(OlogLogbooksIT.HTTP_IP_PORT_OLOG_LOGBOOKS);
-            ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
+            ITUtil.assertResponseLength2CodeOK(response);
+            ITUtil.assertEqualsLogbooks(
+                    mapper.readValue(response[1], Logbook[].class),
+                    default_logbooks[1],
+                    default_logbooks[0]);
 
             // --------------------------------------------------------------------------------
             // create
@@ -488,7 +508,7 @@ public class ITTestFixture {
             ITUtil.assertResponseLength2CodeOK(response);
             Logbook[] logbooks = mapper.readValue(response[1], Logbook[].class);
             assertNotNull(logbooks);
-            assertEquals(9, logbooks.length);
+            assertEquals(10, logbooks.length);
             for (Logbook logbook : logbooks) {
                 assertNotNull(logbook);
             }
@@ -516,7 +536,10 @@ public class ITTestFixture {
             // --------------------------------------------------------------------------------
 
             String[] response = ITUtil.doGetJson(OlogTagsIT.HTTP_IP_PORT_OLOG_TAGS);
-            ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
+            ITUtil.assertResponseLength2CodeOK(response);
+            ITUtil.assertEqualsTags(
+                    mapper.readValue(response[1], Tag[].class),
+                    default_tags[0]);
 
             // --------------------------------------------------------------------------------
             // create
@@ -574,7 +597,7 @@ public class ITTestFixture {
             ITUtil.assertResponseLength2CodeOK(response);
             Tag[] tags = mapper.readValue(response[1], Tag[].class);
             assertNotNull(tags);
-            assertEquals(8, tags.length);
+            assertEquals(9, tags.length);
             for (Tag tag : tags) {
                 assertNotNull(tag);
             }
@@ -602,7 +625,10 @@ public class ITTestFixture {
             // --------------------------------------------------------------------------------
 
             String[] response = ITUtil.doGetJson(OlogPropertiesIT.HTTP_IP_PORT_OLOG_PROPERTIES);
-            ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
+            ITUtil.assertResponseLength2CodeOK(response);
+            ITUtil.assertEqualsProperties(
+                    mapper.readValue(response[1], Property[].class),
+                    default_properties[0]);
 
             // --------------------------------------------------------------------------------
             // create
@@ -640,7 +666,7 @@ public class ITTestFixture {
             ITUtil.assertResponseLength2CodeOK(response);
             Property[] properties = mapper.readValue(response[1], Property[].class);
             assertNotNull(properties);
-            assertEquals(4, properties.length);
+            assertEquals(5, properties.length);
             for (Property property : properties) {
                 assertNotNull(property);
             }
