@@ -18,9 +18,7 @@
 
 package org.phoebus.olog.docker;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
-import org.phoebus.olog.entity.Log;
 import org.testcontainers.containers.ComposeContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -31,7 +29,6 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /**
@@ -155,247 +152,61 @@ class OlogLogsQueryIT {
         //         non-existing
         //     --------------------------------------------------------------------------------
 
-        ObjectMapper mapper = new ObjectMapper();
-
         try {
-            String[] response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS);
-            ITUtil.assertResponseLength2CodeOK(response);
-            Log[] logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(60, logs.length);
+            ITUtilLogs.assertListLogs(60);
 
             // ----------------------------------------------------------------------------------------------------
             // keyword
             // ----------------------------------------------------------------------------------------------------
 
             // desc, description, text
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?desc");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(60, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?desc=asdf");
-            ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?desc=Initial");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(2, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?desc=check");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(0, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?desc=Check");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(0, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?desc=complete");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(0, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?desc=Complete");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(0, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?desc=check complete");
-            ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?desc='check complete'");
-            ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?desc=Maintenance");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(17, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?desc=maintenance");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(17, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?desc=after");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(3, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?desc=Maintenance&desc=after");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(3, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?desc=maintenance&desc=after");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(3, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?desc=after&desc=maintenance");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(3, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?desc=after&desc=Maintenance");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(3, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?desc="+URLEncoder.encode("after maintenance", StandardCharsets.UTF_8));
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(3, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?desc='"+URLEncoder.encode("after maintenance", StandardCharsets.UTF_8)+"'");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(0, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?desc=\""+URLEncoder.encode("after maintenance", StandardCharsets.UTF_8)+"\"");
-            ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?desc=check&desc=complete");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(0, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?desc="+URLEncoder.encode("check complete", StandardCharsets.UTF_8));
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(0, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?desc='"+URLEncoder.encode("check complete", StandardCharsets.UTF_8)+"'");
-            ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?desc="+URLEncoder.encode("CHECK COMPLETE", StandardCharsets.UTF_8));
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(0, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?desc='"+URLEncoder.encode("CHECK COMPLETE", StandardCharsets.UTF_8)+"'");
-            ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?desc=chec?");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(0, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?desc=?omplete");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(0, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?desc=c*");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(9, logs.length);
+            ITUtilLogs.assertListLogs("?desc", 60);
+            ITUtilLogs.assertListLogs("?desc=asdf", 0);
+            ITUtilLogs.assertListLogs("?desc=Initial", 2);
+            ITUtilLogs.assertListLogs("?desc=check", 0);
+            ITUtilLogs.assertListLogs("?desc=Check", 0);
+            ITUtilLogs.assertListLogs("?desc=complete", 0);
+            ITUtilLogs.assertListLogs("?desc=Complete", 0);
+            ITUtilLogs.assertListLogs("?desc=check complete", HttpURLConnection.HTTP_BAD_REQUEST, -1, -1);
+            ITUtilLogs.assertListLogs("?desc='check complete'", HttpURLConnection.HTTP_BAD_REQUEST, -1, -1);
+            ITUtilLogs.assertListLogs("?desc=Maintenance", 17);
+            ITUtilLogs.assertListLogs("?desc=maintenance", 17);
+            ITUtilLogs.assertListLogs("?desc=after", 3);
+            ITUtilLogs.assertListLogs("?desc=Maintenance&desc=after", 3);
+            ITUtilLogs.assertListLogs("?desc=maintenance&desc=after", 3);
+            ITUtilLogs.assertListLogs("?desc=after&desc=maintenance", 3);
+            ITUtilLogs.assertListLogs("?desc=after&desc=Maintenance", 3);
+            ITUtilLogs.assertListLogs("?desc="+URLEncoder.encode("after maintenance", StandardCharsets.UTF_8), 3);
+            ITUtilLogs.assertListLogs("?desc='"+URLEncoder.encode("after maintenance", StandardCharsets.UTF_8)+"'", 0);
+            ITUtilLogs.assertListLogs("?desc=\""+URLEncoder.encode("after maintenance", StandardCharsets.UTF_8)+"\"", HttpURLConnection.HTTP_BAD_REQUEST, -1, -1);
+            ITUtilLogs.assertListLogs("?desc=check&desc=complete", 0);
+            ITUtilLogs.assertListLogs("?desc="+URLEncoder.encode("check complete", StandardCharsets.UTF_8), 0);
+            ITUtilLogs.assertListLogs("?desc='"+URLEncoder.encode("check complete", StandardCharsets.UTF_8)+"'", 0);
+            ITUtilLogs.assertListLogs("?desc="+URLEncoder.encode("CHECK COMPLETE", StandardCharsets.UTF_8), 0);
+            ITUtilLogs.assertListLogs("?desc='"+URLEncoder.encode("CHECK COMPLETE", StandardCharsets.UTF_8)+"'", 0);
+            ITUtilLogs.assertListLogs("?desc=chec?", 0);
+            ITUtilLogs.assertListLogs("?desc=?omplete", 0);
+            ITUtilLogs.assertListLogs("?desc=c*", 9);
 
             // ----------------------------------------------------------------------------------------------------
 
             // title
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?title");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(60, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?title=asdf");
-            ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?title=shift");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(43, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?title=Shift");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(43, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?title=update");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(37, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?title=Update");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(37, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?title=shift update");
-            ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?title='shift update'");
-            ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?title=shift&title=update");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(37, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?title="+URLEncoder.encode("shift update", StandardCharsets.UTF_8));
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(37, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?title='"+URLEncoder.encode("shift update", StandardCharsets.UTF_8)+"'");
-            ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?title="+URLEncoder.encode("SHIFT UPDATE", StandardCharsets.UTF_8));
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(37, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?title='"+URLEncoder.encode("SHIFT UPDATE", StandardCharsets.UTF_8)+"'");
-            ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?title=Shif?");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(43, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?title=??ift");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(43, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?title=S*t");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(43, logs.length);
+            ITUtilLogs.assertListLogs("?title", 60);
+            ITUtilLogs.assertListLogs("?title=asdf", 0);
+            ITUtilLogs.assertListLogs("?title=shift", 43);
+            ITUtilLogs.assertListLogs("?title=Shift", 43);
+            ITUtilLogs.assertListLogs("?title=update", 37);
+            ITUtilLogs.assertListLogs("?title=Update", 37);
+            ITUtilLogs.assertListLogs("?title=shift update", HttpURLConnection.HTTP_BAD_REQUEST, -1, -1);
+            ITUtilLogs.assertListLogs("?title='shift update'", HttpURLConnection.HTTP_BAD_REQUEST, -1, -1);
+            ITUtilLogs.assertListLogs("?title=shift&title=update", 37);
+            ITUtilLogs.assertListLogs("?title="+URLEncoder.encode("shift update", StandardCharsets.UTF_8), 37);
+            ITUtilLogs.assertListLogs("?title='"+URLEncoder.encode("shift update", StandardCharsets.UTF_8)+"'", 0);
+            ITUtilLogs.assertListLogs("?title="+URLEncoder.encode("SHIFT UPDATE", StandardCharsets.UTF_8), 37);
+            ITUtilLogs.assertListLogs("?title='"+URLEncoder.encode("SHIFT UPDATE", StandardCharsets.UTF_8)+"'", 0);
+            ITUtilLogs.assertListLogs("?title=Shif?", 43);
+            ITUtilLogs.assertListLogs("?title=??ift", 43);
+            ITUtilLogs.assertListLogs("?title=S*t", 43);
 
             // ----------------------------------------------------------------------------------------------------
 
@@ -404,353 +215,98 @@ class OlogLogsQueryIT {
             //     description
             //     title
             //     level
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?fuzzy");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(60, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?fuzzy&description=cmplete");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(0, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?fuzzy&description=cmplte");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(0, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?fuzzy&title=Shif");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(43, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?fuzzy&title=Shif?");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(43, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?fuzzy&title=Shif*");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(43, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?fuzzy&title=Shi??");
-            ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?fuzzy&title=hif");
-            ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?fuzzy&level=pdate");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(54, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?fuzzy&level=Upd");
-            ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
+            ITUtilLogs.assertListLogs("?fuzzy", 60);
+            ITUtilLogs.assertListLogs("?fuzzy&description=cmplete", 0);
+            ITUtilLogs.assertListLogs("?fuzzy&description=cmplte", 0);
+            ITUtilLogs.assertListLogs("?fuzzy&title=Shif", 43);
+            ITUtilLogs.assertListLogs("?fuzzy&title=Shif?", 43);
+            ITUtilLogs.assertListLogs("?&title=Shif*", 43);
+            ITUtilLogs.assertListLogs("?fuzzy&title=Shi??", 0);
+            ITUtilLogs.assertListLogs("?fuzzy&title=hif", 0);
+            ITUtilLogs.assertListLogs("?fuzzy&level=pdate", 54);
+            ITUtilLogs.assertListLogs("?fuzzy&level=Upd", 0);
 
             // ----------------------------------------------------------------------------------------------------
 
             // phrase
             //     phrase for description
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?phrase");
-            ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?phrase=asdf");
-            ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?phrase=Initial");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(2, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?phrase=check");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(0, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?phrase=Check");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(0, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?phrase=complete");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(0, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?phrase=Complete");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(0, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?phrase=check complete");
-            ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?phrase='check complete'");
-            ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?phrase=check&phrase=complete");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(0, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?phrase="+URLEncoder.encode("check complete", StandardCharsets.UTF_8));
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(0, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?phrase='"+URLEncoder.encode("check complete", StandardCharsets.UTF_8)+"'");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(0, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?phrase="+URLEncoder.encode("CHECK COMPLETE", StandardCharsets.UTF_8));
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(0, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?phrase='"+URLEncoder.encode("CHECK COMPLETE", StandardCharsets.UTF_8)+"'");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(0, logs.length);
+            ITUtilLogs.assertListLogs("?phrase", 0);
+            ITUtilLogs.assertListLogs("?phrase=asdf", 0);
+            ITUtilLogs.assertListLogs("?phrase=Initial", 2);
+            ITUtilLogs.assertListLogs("?phrase=check", 0);
+            ITUtilLogs.assertListLogs("?phrase=Check", 0);
+            ITUtilLogs.assertListLogs("?phrase=complete", 0);
+            ITUtilLogs.assertListLogs("?phrase=Complete", 0);
+            ITUtilLogs.assertListLogs("?phrase=check complete", HttpURLConnection.HTTP_BAD_REQUEST, -1, -1);
+            ITUtilLogs.assertListLogs("??phrase='check complete'", HttpURLConnection.HTTP_BAD_REQUEST, -1, -1);
+            ITUtilLogs.assertListLogs("?phrase=check&phrase=complete", 0);
+            ITUtilLogs.assertListLogs("?phrase="+URLEncoder.encode("check complete", StandardCharsets.UTF_8), 0);
+            ITUtilLogs.assertListLogs("?phrase='"+URLEncoder.encode("check complete", StandardCharsets.UTF_8)+"'", 0);
+            ITUtilLogs.assertListLogs("?phrase="+URLEncoder.encode("CHECK COMPLETE", StandardCharsets.UTF_8), 0);
+            ITUtilLogs.assertListLogs("?phrase='"+URLEncoder.encode("CHECK COMPLETE", StandardCharsets.UTF_8)+"'", 0);
 
             // ----------------------------------------------------------------------------------------------------
 
             // owner
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?owner");
-            ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?owner=asdf");
-            ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?owner=admin");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(60, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?owner=adm?n");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(60, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?owner=adm?m");
-            ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?owner=adm*");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(60, logs.length);
+            ITUtilLogs.assertListLogs("?owner", 0);
+            ITUtilLogs.assertListLogs("?owner=asdf", 0);
+            ITUtilLogs.assertListLogs("?owner=admin", 60);
+            ITUtilLogs.assertListLogs("?owner=adm?n", 60);
+            ITUtilLogs.assertListLogs("?owner=adm?m", 0);
+            ITUtilLogs.assertListLogs("?owner=adm*", 60);
 
             // ----------------------------------------------------------------------------------------------------
 
             // tags
             //     name
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?tags");
-            ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?tags=asdf");
-            ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?tags=cryo");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(10, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?tags=Cryo");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(10, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?tags=Cry");
-            ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?tags=Power");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(2, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?tags=Safety");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(2, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?tags=Source");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(2, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?tags=Initial");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(2, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?tags=Radio");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(2, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?tags=Magnet");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(2, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?tags=Supra");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(3, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?tags=Magnet&tags=Supra");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(5, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?tags=?ryo");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(10, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?tags=*yo");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(10, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?tags=C???");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(10, logs.length);
+            ITUtilLogs.assertListLogs("?tags", 0);
+            ITUtilLogs.assertListLogs("?tags=asdf", 0);
+            ITUtilLogs.assertListLogs("?tags=cryo", 10);
+            ITUtilLogs.assertListLogs("?tags=Cryo", 10);
+            ITUtilLogs.assertListLogs("?tags=Cry", 0);
+            ITUtilLogs.assertListLogs("?tags=Power", 2);
+            ITUtilLogs.assertListLogs("?tags=Safety", 2);
+            ITUtilLogs.assertListLogs("?tags=Source", 2);
+            ITUtilLogs.assertListLogs("?tags=Initial", 2);
+            ITUtilLogs.assertListLogs("?tags=Radio", 2);
+            ITUtilLogs.assertListLogs("?tags=Magnet", 2);
+            ITUtilLogs.assertListLogs("?tags=Supra", 3);
+            ITUtilLogs.assertListLogs("?tags=Magnet&tags=Supra", 5);
+            ITUtilLogs.assertListLogs("?tags=?ryo", 10);
+            ITUtilLogs.assertListLogs("?tags=*yo", 10);
+            ITUtilLogs.assertListLogs("?tags=C???", 10);
 
             // ----------------------------------------------------------------------------------------------------
 
             // logbooks
             //     name
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?logbooks");
-            ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?logbooks=asdf");
-            ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?logbooks=Buildings");
-            ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?logbooks=Communication");
-            ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?logbooks=Experiments");
-            ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?logbooks=Facilities");
-            ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?logbooks=Maintenance");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(17, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?logbooks=operations");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(49, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?logbooks=Operations");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(49, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?logbooks=operation");
-            ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?logbooks=Power");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(2, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?logbooks=Services");
-            ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?logbooks=Water");
-            ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?logbooks=Maintenance&logbooks=Power");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(18, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?logbooks=Maint*");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(17, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?logbooks=?e?");
-            ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?logbooks=*e*");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(60, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?logbooks=x*x");
-            ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
+            ITUtilLogs.assertListLogs("?logbooks", 0);
+            ITUtilLogs.assertListLogs("?logbooks=asdf", 0);
+            ITUtilLogs.assertListLogs("?logbooks=Buildings", 0);
+            ITUtilLogs.assertListLogs("?logbooks=Communication", 0);
+            ITUtilLogs.assertListLogs("?logbooks=Experiments", 0);
+            ITUtilLogs.assertListLogs("?logbooks=Facilities", 0);
+            ITUtilLogs.assertListLogs("?logbooks=Maintenance", 17);
+            ITUtilLogs.assertListLogs("?logbooks=operations", 49);
+            ITUtilLogs.assertListLogs("?logbooks=Operations", 49);
+            ITUtilLogs.assertListLogs("?logbooks=operation", 0);
+            ITUtilLogs.assertListLogs("?logbooks=Power", 2);
+            ITUtilLogs.assertListLogs("?logbooks=Services", 0);
+            ITUtilLogs.assertListLogs("?logbooks=Water", 0);
+            ITUtilLogs.assertListLogs("?logbooks=Maintenance&logbooks=Power", 18);
+            ITUtilLogs.assertListLogs("?logbooks=Maint*", 17);
+            ITUtilLogs.assertListLogs("?logbooks=?e?", 0);
+            ITUtilLogs.assertListLogs("?logbooks=*e*", 60);
+            ITUtilLogs.assertListLogs("?logbooks=x*x", 0);
 
             // ----------------------------------------------------------------------------------------------------
 
-            // time
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?start");
-            ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?start=asdf");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(60, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?end");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(60, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?end=asdf");
-            ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
+            // start
+            // end
+            ITUtilLogs.assertListLogs("?start", 0);
+            ITUtilLogs.assertListLogs("?start=asdf", 60);
+            ITUtilLogs.assertListLogs("?end", 60);
+            ITUtilLogs.assertListLogs("?end=asdf", 0);
 
             // ----------------------------------------------------------------------------------------------------
 
@@ -758,170 +314,43 @@ class OlogLogsQueryIT {
             //     name
             //     attribute name
             //     attribute value
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?properties");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(60, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?properties=asdf");
-            ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?properties=a");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(20, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?properties=A");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(20, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?properties=B");
-            ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?properties=C");
-            ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?properties=Shift Info C");
-            ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?properties='Shift Info C'");
-            ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?properties="+URLEncoder.encode("Shift Info C", StandardCharsets.UTF_8));
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(20, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?properties='"+URLEncoder.encode("Shift Info C", StandardCharsets.UTF_8)+"'");
-            ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?properties=.operator");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(60, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?properties=.Operator");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(60, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?properties=..12345678c");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(60, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?properties=..12345678C");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(60, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?properties=..*C");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(60, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?properties=..12345678?");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(60, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?properties=..12345*");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(60, logs.length);
+            ITUtilLogs.assertListLogs("?properties", 60);
+            ITUtilLogs.assertListLogs("?properties=asdf", 0);
+            ITUtilLogs.assertListLogs("?properties=a", 20);
+            ITUtilLogs.assertListLogs("?properties=A", 20);
+            ITUtilLogs.assertListLogs("?properties=B", 0);
+            ITUtilLogs.assertListLogs("?properties=C", 0);
+            ITUtilLogs.assertListLogs("?properties=Shift Info C", HttpURLConnection.HTTP_BAD_REQUEST, -1, -1);
+            ITUtilLogs.assertListLogs("?properties='Shift Info C'", HttpURLConnection.HTTP_BAD_REQUEST, -1, -1);
+            ITUtilLogs.assertListLogs("?properties="+URLEncoder.encode("Shift Info C", StandardCharsets.UTF_8), 20);
+            ITUtilLogs.assertListLogs("?properties='"+URLEncoder.encode("Shift Info C", StandardCharsets.UTF_8)+"'", 0);
+            ITUtilLogs.assertListLogs("?properties=.operator", 60);
+            ITUtilLogs.assertListLogs("?properties=.Operator", 60);
+            ITUtilLogs.assertListLogs("?properties=..12345678c", 60);
+            ITUtilLogs.assertListLogs("?properties=..12345678C", 60);
+            ITUtilLogs.assertListLogs("?properties=..*C", 60);
+            ITUtilLogs.assertListLogs("?properties=..12345678?", 60);
+            ITUtilLogs.assertListLogs("?properties=..12345*", 60);
 
             // ----------------------------------------------------------------------------------------------------
 
             // level
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?level");
-            ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?level=asdf");
-            ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?level=shift");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(60, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?level=Shift");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(60, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?level=update");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(54, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?level=Update");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(54, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?level=shift update");
-            ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?level='shift update'");
-            ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?level=shift&level=update");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(60, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?level="+URLEncoder.encode("shift update", StandardCharsets.UTF_8));
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(60, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?level='"+URLEncoder.encode("shift update", StandardCharsets.UTF_8)+"'");
-            ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?level="+URLEncoder.encode("SHIFT UPDATE", StandardCharsets.UTF_8));
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(60, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?level='"+URLEncoder.encode("SHIFT UPDATE", StandardCharsets.UTF_8)+"'");
-            ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?level=?pdate");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(54, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?level=upd??e");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(54, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?level=*ate");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(54, logs.length);
+            ITUtilLogs.assertListLogs("?level", 0);
+            ITUtilLogs.assertListLogs("?level=asdf", 0);
+            ITUtilLogs.assertListLogs("?level=shift", 60);
+            ITUtilLogs.assertListLogs("?level=Shift", 60);
+            ITUtilLogs.assertListLogs("?level=update", 54);
+            ITUtilLogs.assertListLogs("?level=Update", 54);
+            ITUtilLogs.assertListLogs("?level=shift update", HttpURLConnection.HTTP_BAD_REQUEST, -1, -1);
+            ITUtilLogs.assertListLogs("?level='shift update'", HttpURLConnection.HTTP_BAD_REQUEST, -1, -1);
+            ITUtilLogs.assertListLogs("?level=shift&level=update", 60);
+            ITUtilLogs.assertListLogs("?level="+URLEncoder.encode("shift update", StandardCharsets.UTF_8), 60);
+            ITUtilLogs.assertListLogs("?level='"+URLEncoder.encode("shift update", StandardCharsets.UTF_8)+"'", 0);
+            ITUtilLogs.assertListLogs("?level="+URLEncoder.encode("SHIFT UPDATE", StandardCharsets.UTF_8), 60);
+            ITUtilLogs.assertListLogs("?level='"+URLEncoder.encode("SHIFT UPDATE", StandardCharsets.UTF_8)+"'", 0);
+            ITUtilLogs.assertListLogs("?level=?pdate", 54);
+            ITUtilLogs.assertListLogs("?level=upd??e", 54);
+            ITUtilLogs.assertListLogs("?level=*ate", 54);
 
             // ----------------------------------------------------------------------------------------------------
             // keyword combinations
@@ -929,56 +358,16 @@ class OlogLogsQueryIT {
 
             // default
             //     unsupported search parameters are ignored
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?zxcv");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(60, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?zxcv=asdf");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(60, logs.length);
+            ITUtilLogs.assertListLogs("?zxcv", 60);
+            ITUtilLogs.assertListLogs("?zxcv=asdf", 60);
 
             // combinations
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?logbooks=*&description=maintenance");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(17, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?tags=*&description=maintenance");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(12, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?properties=..12345678A&phrase="+URLEncoder.encode("Start-up after maintenance", StandardCharsets.UTF_8));
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(3, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?properties=..12345678C&phrase="+URLEncoder.encode("Start-up after maintenance", StandardCharsets.UTF_8));
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(3, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?properties=..123*&phrase="+URLEncoder.encode("Start-up after maintenance", StandardCharsets.UTF_8));
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(3, logs.length);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "?properties=..123*&description=maintenance");
-            ITUtil.assertResponseLength2CodeOK(response);
-            logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(17, logs.length);
-        } catch (IOException e) {
-            fail();
+            ITUtilLogs.assertListLogs("?logbooks=*&description=maintenance", 17);
+            ITUtilLogs.assertListLogs("?tags=*&description=maintenance", 12);
+            ITUtilLogs.assertListLogs("?properties=..12345678A&phrase="+URLEncoder.encode("Start-up after maintenance", StandardCharsets.UTF_8), 3);
+            ITUtilLogs.assertListLogs("?properties=..12345678C&phrase="+URLEncoder.encode("Start-up after maintenance", StandardCharsets.UTF_8), 3);
+            ITUtilLogs.assertListLogs("?properties=..123*&phrase="+URLEncoder.encode("Start-up after maintenance", StandardCharsets.UTF_8), 3);
+            ITUtilLogs.assertListLogs("?properties=..123*&description=maintenance", 17);
         } catch (Exception e) {
             fail();
         }

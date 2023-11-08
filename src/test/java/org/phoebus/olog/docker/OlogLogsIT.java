@@ -18,8 +18,8 @@
 
 package org.phoebus.olog.docker;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
+import org.phoebus.olog.docker.ITUtil.AuthorizationChoice;
 import org.phoebus.olog.entity.Log;
 import org.testcontainers.containers.ComposeContainer;
 import org.testcontainers.junit.jupiter.Container;
@@ -110,12 +110,7 @@ class OlogLogsIT {
         //         Upload attachment
         //         Upload multiple attachments
 
-        try {
-            String[] response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "/l11");
-            ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_NOT_FOUND);
-        } catch (IOException e) {
-            fail();
-        }
+    	ITUtilTags.assertRetrieveTag("/l11", HttpURLConnection.HTTP_NOT_FOUND);
     }
 
     /**
@@ -150,46 +145,19 @@ class OlogLogsIT {
         String json_incomplete8 = "}";
         String json_incomplete9 = "\"";
 
-        try {
-            String[] response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS);
-            ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
+        ITUtilLogs.assertListLogs(0);
 
-            response = ITUtil.runShellCommand(ITUtilLogs.createCurlLogForAdmin(json_incomplete1));
-            ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
+        ITUtilLogs.assertCreateLog(AuthorizationChoice.ADMIN, "", json_incomplete1, HttpURLConnection.HTTP_BAD_REQUEST);
+        ITUtilLogs.assertCreateLog(AuthorizationChoice.ADMIN, "", json_incomplete2, HttpURLConnection.HTTP_BAD_REQUEST);
+        ITUtilLogs.assertCreateLog(AuthorizationChoice.ADMIN, "", json_incomplete3, HttpURLConnection.HTTP_BAD_REQUEST);
+        ITUtilLogs.assertCreateLog(AuthorizationChoice.ADMIN, "", json_incomplete4, HttpURLConnection.HTTP_BAD_REQUEST);
+        ITUtilLogs.assertCreateLog(AuthorizationChoice.ADMIN, "", json_incomplete5, HttpURLConnection.HTTP_BAD_REQUEST);
+        ITUtilLogs.assertCreateLog(AuthorizationChoice.ADMIN, "", json_incomplete6, HttpURLConnection.HTTP_BAD_REQUEST);
+        ITUtilLogs.assertCreateLog(AuthorizationChoice.ADMIN, "", json_incomplete7, HttpURLConnection.HTTP_BAD_REQUEST);
+        ITUtilLogs.assertCreateLog(AuthorizationChoice.ADMIN, "", json_incomplete8, HttpURLConnection.HTTP_BAD_REQUEST);
+        ITUtilLogs.assertCreateLog(AuthorizationChoice.ADMIN, "", json_incomplete9, HttpURLConnection.HTTP_BAD_REQUEST);
 
-            response = ITUtil.runShellCommand(ITUtilLogs.createCurlLogForAdmin(json_incomplete2));
-            ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
-
-            response = ITUtil.runShellCommand(ITUtilLogs.createCurlLogForAdmin(json_incomplete3));
-            ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
-
-            response = ITUtil.runShellCommand(ITUtilLogs.createCurlLogForAdmin(json_incomplete4));
-            ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
-
-            response = ITUtil.runShellCommand(ITUtilLogs.createCurlLogForAdmin(json_incomplete5));
-            ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
-
-            response = ITUtil.runShellCommand(ITUtilLogs.createCurlLogForAdmin(json_incomplete6));
-            ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
-
-            response = ITUtil.runShellCommand(ITUtilLogs.createCurlLogForAdmin(json_incomplete7));
-            ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
-
-            response = ITUtil.runShellCommand(ITUtilLogs.createCurlLogForAdmin(json_incomplete8));
-            ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
-
-            response = ITUtil.runShellCommand(ITUtilLogs.createCurlLogForAdmin(json_incomplete9));
-            ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS);
-            ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
-        } catch (IOException e) {
-            fail();
-        } catch (InterruptedException e) {
-            fail();
-        } catch (Exception e) {
-            fail();
-        }
+        ITUtilLogs.assertListLogs(0);
     }
 
     /**
@@ -214,29 +182,14 @@ class OlogLogsIT {
         //         Upload attachment
         //         Upload multiple attachments
 
-        Log log_check = new Log.LogBuilder().build();
+    	Log log_check = new Log.LogBuilder().build();
 
-        ObjectMapper mapper = new ObjectMapper();
+    	ITUtilLogs.assertListLogs(0);
 
-        try {
-            String[] response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS);
-            ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
+    	ITUtilLogs.assertCreateLog(AuthorizationChoice.ADMIN, "", log_check, HttpURLConnection.HTTP_BAD_REQUEST);
+    	ITUtilLogs.assertCreateLog(AuthorizationChoice.ADMIN, "", log_check, HttpURLConnection.HTTP_BAD_REQUEST);
 
-            response = ITUtil.runShellCommand(ITUtilLogs.createCurlLogForUser(mapper.writeValueAsString(log_check)));
-            ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
-
-            response = ITUtil.runShellCommand(ITUtilLogs.createCurlLogForAdmin(mapper.writeValueAsString(log_check)));
-            ITUtil.assertResponseLength2Code(response, HttpURLConnection.HTTP_BAD_REQUEST);
-
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS);
-            ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
-        } catch (IOException e) {
-            fail();
-        } catch (InterruptedException e) {
-            fail();
-        } catch (Exception e) {
-            fail();
-        }
+    	ITUtilLogs.assertListLogs(0);
     }
 
 }

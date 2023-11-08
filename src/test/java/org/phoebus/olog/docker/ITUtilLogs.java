@@ -18,6 +18,21 @@
 
 package org.phoebus.olog.docker;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
+
+import java.io.IOException;
+import java.net.HttpURLConnection;
+
+import org.phoebus.olog.docker.ITUtil.AuthorizationChoice;
+import org.phoebus.olog.docker.ITUtil.EndpointChoice;
+import org.phoebus.olog.docker.ITUtil.MethodChoice;
+import org.phoebus.olog.entity.Log;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 /**
  * Utility class to help (Docker) integration tests for Olog and Elasticsearch with focus on support test of behavior for log endpoints.
  *
@@ -27,11 +42,210 @@ package org.phoebus.olog.docker;
  */
 public class ITUtilLogs {
 
+    static final ObjectMapper mapper = new ObjectMapper();
+
+    static final Log[] LOGS_NULL = null;
+    static final Log   LOG_NULL  = null;
+
     /**
      * This class is not to be instantiated.
      */
     private ITUtilLogs() {
         throw new IllegalStateException("Utility class");
+    }
+
+    // ----------------------------------------------------------------------------------------------------
+
+    /**
+     * Return string for log.
+     *
+     * @param value log
+     * @return string for log
+     */
+    static String object2Json(Log value) {
+        try {
+            return mapper.writeValueAsString(value);
+        } catch (JsonProcessingException e) {
+            fail();
+        }
+        return null;
+    }
+    /**
+     * Return string for log array.
+     *
+     * @param value log array
+     * @return string for log array
+     */
+    static String object2Json(Log[] value) {
+        try {
+            return mapper.writeValueAsString(value);
+        } catch (JsonProcessingException e) {
+            fail();
+        }
+        return null;
+    }
+
+    // ----------------------------------------------------------------------------------------------------
+
+    /**
+     * @see ITUtilLogs#assertRetrieveLog(String, int, Log)
+     */
+    public static Log assertRetrieveLog(String path, int expectedResponseCode) {
+        return assertRetrieveLog(path, expectedResponseCode, LOG_NULL);
+    }
+    /**
+     * @see ITUtilLogs#assertRetrieveLog(String, int, Log)
+     */
+    public static Log assertRetrieveLog(String path, Log expected) {
+        return assertRetrieveLog(path, HttpURLConnection.HTTP_OK, expected);
+    }
+    /**
+     * Utility method to return the log with the given name.
+     *
+     * @param path path
+     * @param expectedResponseCode expected response code
+     * @param expected expected response log
+     */
+    public static Log assertRetrieveLog(String path, int expectedResponseCode, Log expected) {
+        try {
+            String[] response = null;
+            Log actual = null;
+
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + path);
+            ITUtil.assertResponseLength2Code(response, expectedResponseCode);
+            if (HttpURLConnection.HTTP_OK == expectedResponseCode) {
+                actual = mapper.readValue(response[1], Log.class);
+            }
+
+            if (expected != null) {
+                assertEquals(expected, actual);
+            }
+
+            return actual;
+        } catch (IOException e) {
+            fail();
+        } catch (Exception e) {
+            fail();
+        }
+        return null;
+    }
+
+    // ----------------------------------------------------------------------------------------------------
+
+    /**
+     * @see ITUtilLogs#assertListLogs(String, int, int, int, Log...)
+     */
+    public static Log[] assertListLogs(int expectedEqual, Log... expected) {
+        return assertListLogs("", HttpURLConnection.HTTP_OK, expectedEqual, expectedEqual, expected);
+    }
+    /**
+     * @see ITUtilLogs#assertListLogs(String, int, int, int, Log...)
+     */
+    public static Log[] assertListLogs(String queryString, int expectedEqual, Log... expected) {
+        return assertListLogs(queryString, HttpURLConnection.HTTP_OK, expectedEqual, expectedEqual, expected);
+    }
+    /**
+     * Utility method to return the list of all logs in the directory.
+     *
+     * @param queryString query string
+     * @param expectedResponseCode expected response code
+     * @param expectedGreaterThanOrEqual (if non-negative number) greater than or equal to this number of items
+     * @param expectedLessThanOrEqual (if non-negative number) less than or equal to this number of items
+     * @param expected expected response logs
+     * @return number of logs
+     */
+    public static Log[] assertListLogs(String queryString, int expectedResponseCode, int expectedGreaterThanOrEqual, int expectedLessThanOrEqual, Log... expected) {
+        try {
+            String[] response = null;
+            Log[] actual = null;
+
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + queryString);
+            ITUtil.assertResponseLength2Code(response, expectedResponseCode);
+            if (HttpURLConnection.HTTP_OK == expectedResponseCode) {
+                actual = mapper.readValue(response[1], Log[].class);
+            }
+
+            // expected number of items in list
+            //     (if non-negative number)
+            //     expectedGreaterThanOrEqual <= nbr of items <= expectedLessThanOrEqual
+            if (expectedGreaterThanOrEqual >= 0) {
+                assertTrue(actual.length >= expectedGreaterThanOrEqual);
+            }
+            if (expectedLessThanOrEqual >= 0) {
+                assertTrue(actual.length <= expectedLessThanOrEqual);
+            }
+
+            // expected content
+            if (expected != null && expected.length > 0) {
+                ITUtil.assertEqualsLogs(actual, expected);
+            }
+
+            return actual;
+        } catch (IOException e) {
+            fail();
+        } catch (Exception e) {
+            fail();
+        }
+        return null;
+    }
+
+    // ----------------------------------------------------------------------------------------------------
+
+    /**
+     * @see ITUtilLogs#assertCreateLog(AuthorizationChoice, String, String, int, Log)
+     */
+    public static Log assertCreateLog(String path, Log value) {
+        return assertCreateLog(AuthorizationChoice.ADMIN, path, object2Json(value), HttpURLConnection.HTTP_OK, LOG_NULL);
+    }
+    /**
+     * @see ITUtilLogs#assertCreateLog(AuthorizationChoice, String, String, int, Log)
+     */
+    public static Log assertCreateLog(AuthorizationChoice authorizationChoice, String path, Log value) {
+        return assertCreateLog(authorizationChoice, path, object2Json(value), HttpURLConnection.HTTP_OK, LOG_NULL);
+    }
+    /**
+     * @see ITUtilLogs#assertCreateLog(AuthorizationChoice, String, String, int, Log)
+     */
+    public static Log assertCreateLog(AuthorizationChoice authorizationChoice, String path, Log value, int expectedResponseCode) {
+        return assertCreateLog(authorizationChoice, path, object2Json(value), expectedResponseCode, LOG_NULL);
+    }
+    /**
+     * @see ITUtilLogs#assertCreateLog(AuthorizationChoice, String, String, int, Log)
+     */
+    public static Log assertCreateLog(AuthorizationChoice authorizationChoice, String path, String json, int expectedResponseCode) {
+        return assertCreateLog(authorizationChoice, path, json, expectedResponseCode, LOG_NULL);
+    }
+    /**
+     * Utility method to create or completely replace the existing log name with the payload data.
+     *
+     * @param authorizationChoice authorization choice (none, user, admin)
+     * @param path path
+     * @param json json
+     * @param expectedResponseCode expected response code
+     * @param expected expected response log
+     */
+    public static Log assertCreateLog(AuthorizationChoice authorizationChoice, String path, String json, int expectedResponseCode, Log expected) {
+        try {
+            String[] response = null;
+            Log actual = null;
+
+            response = ITUtil.runShellCommand(ITUtil.curlMethodAuthEndpointPathJson(MethodChoice.PUT, authorizationChoice, EndpointChoice.LOGS, path, json));
+            ITUtil.assertResponseLength2Code(response, expectedResponseCode);
+            if (HttpURLConnection.HTTP_OK == expectedResponseCode) {
+                actual = mapper.readValue(response[1], Log.class);
+            }
+
+            if (expected != null) {
+                assertEquals(expected, actual);
+            }
+
+            return actual;
+        } catch (IOException e) {
+            fail();
+        } catch (Exception e) {
+            fail();
+        }
+        return null;
     }
 
     // ----------------------------------------------------------------------------------------------------
