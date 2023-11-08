@@ -542,83 +542,50 @@ public class ITTestFixture {
      * Create test fixture, tags.
      */
     private static void createTags() {
-        ObjectMapper mapper = new ObjectMapper();
-
         try {
             // --------------------------------------------------------------------------------
             // clean start
             // --------------------------------------------------------------------------------
 
-            String[] response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_TAGS);
-            ITUtil.assertResponseLength2CodeOK(response);
-            ITUtil.assertEqualsTags(
-                    mapper.readValue(response[1], Tag[].class),
-                    default_tags[0]);
+            ITUtilTags.assertListTags(1, default_tags[0]);
 
             // --------------------------------------------------------------------------------
             // create
             // --------------------------------------------------------------------------------
 
             String name = URLEncoder.encode(tagCryo.getName(), ITUtil.UTF_8);
-            response = ITUtil.runShellCommand(ITUtilTags.createCurlTagForAdmin(name, mapper.writeValueAsString(tagCryo)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(tagCryo.equals(mapper.readValue(response[1], Tag.class)));
+            ITUtilTags.assertCreateTag("/" + name, tagCryo);
 
             name = URLEncoder.encode(tagPower.getName(), ITUtil.UTF_8);
-            response = ITUtil.runShellCommand(ITUtilTags.createCurlTagForAdmin(name, mapper.writeValueAsString(tagPower)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(tagPower.equals(mapper.readValue(response[1], Tag.class)));
+            ITUtilTags.assertCreateTag("/" + name, tagPower);
 
             name = URLEncoder.encode(tagSafety.getName(), ITUtil.UTF_8);
-            response = ITUtil.runShellCommand(ITUtilTags.createCurlTagForAdmin(name, mapper.writeValueAsString(tagSafety)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(tagSafety.equals(mapper.readValue(response[1], Tag.class)));
+            ITUtilTags.assertCreateTag("/" + name, tagSafety);
 
             name = URLEncoder.encode(tagSource.getName(), ITUtil.UTF_8);
-            response = ITUtil.runShellCommand(ITUtilTags.createCurlTagForAdmin(name, mapper.writeValueAsString(tagSource)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(tagSource.equals(mapper.readValue(response[1], Tag.class)));
+            ITUtilTags.assertCreateTag("/" + name, tagSource);
 
             name = URLEncoder.encode(tagInitial.getName(), ITUtil.UTF_8);
-            response = ITUtil.runShellCommand(ITUtilTags.createCurlTagForAdmin(name, mapper.writeValueAsString(tagInitial)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(tagInitial.equals(mapper.readValue(response[1], Tag.class)));
+            ITUtilTags.assertCreateTag("/" + name, tagInitial);
 
             name = URLEncoder.encode(tagRadio.getName(), ITUtil.UTF_8);
-            response = ITUtil.runShellCommand(ITUtilTags.createCurlTagForAdmin(name, mapper.writeValueAsString(tagRadio)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(tagRadio.equals(mapper.readValue(response[1], Tag.class)));
+            ITUtilTags.assertCreateTag("/" + name, tagRadio);
 
             name = URLEncoder.encode(tagMagnet.getName(), ITUtil.UTF_8);
-            response = ITUtil.runShellCommand(ITUtilTags.createCurlTagForAdmin(name, mapper.writeValueAsString(tagMagnet)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(tagMagnet.equals(mapper.readValue(response[1], Tag.class)));
+            ITUtilTags.assertCreateTag("/" + name, tagMagnet);
 
             name = URLEncoder.encode(tagSupra.getName(), ITUtil.UTF_8);
-            response = ITUtil.runShellCommand(ITUtilTags.createCurlTagForAdmin(name, mapper.writeValueAsString(tagSupra)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertEquals(tagSupra, mapper.readValue(response[1], Tag.class));
+            ITUtilTags.assertCreateTag("/" + name, tagSupra);
 
             // refresh elastic indices
-            response = ITUtil.refreshElasticIndices();
-            ITUtil.assertResponseLength2CodeOK(response);
+            ITUtil.assertRefreshElasticIndices();
 
             // --------------------------------------------------------------------------------
             // well defined state
             // --------------------------------------------------------------------------------
 
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_TAGS);
-            ITUtil.assertResponseLength2CodeOK(response);
-            Tag[] tags = mapper.readValue(response[1], Tag[].class);
-            assertNotNull(tags);
-            assertEquals(9, tags.length);
-            for (Tag tag : tags) {
-                assertNotNull(tag);
-            }
+            ITUtilTags.assertListTags(9);
         } catch (IOException e) {
-            e.printStackTrace();
-            fail();
-        } catch (InterruptedException e) {
             e.printStackTrace();
             fail();
         } catch (Exception e) {

@@ -24,6 +24,7 @@ import org.phoebus.olog.entity.Property;
 import org.phoebus.olog.entity.Tag;
 import org.testcontainers.containers.ComposeContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.shaded.org.apache.commons.lang3.StringUtils;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -125,6 +126,16 @@ public class ITUtil {
     }
 
     /**
+     * Refresh Elastic indices and assert response is of length 2 and has response code HttpURLConnection.HTTP_OK.
+     *
+     * @throws IOException
+     */
+    static void assertRefreshElasticIndices() throws IOException {
+        String[] response = doGetJson(HTTP_IP_PORT_ELASTICSEARCH + "/_refresh");
+        ITUtil.assertResponseLength2CodeOK(response);
+    }
+
+    /**
      * Do GET request with given string as URL and return response code.
      *
      * @param spec string to parse as URL
@@ -218,6 +229,111 @@ public class ITUtil {
         return new String[] {responseCode, responseContent};
     }
 
+    // ----------------------------------------------------------------------------------------------------
+
+    // enum for http methods
+    static enum MethodChoice        {POST, GET, PUT, DELETE};
+
+    // enum for different authorizations
+    static enum AuthorizationChoice {NONE, USER, ADMIN};
+
+    // enum for different endpoints
+    static enum EndpointChoice      {LOGBOOKS, LOGS, PROPERTIES, TAGS};
+
+    /**
+     * Prepare curl command for test to run for contacting server.
+     *
+     * @param methodChoice method choice
+     * @param authorizationChoice authorization choice
+     * @param endpointChoice endpoint choice
+     * @param path particular path
+     * @param json json data
+     * @return curl command to run
+     */
+    static String curlMethodAuthEndpointPathJson(MethodChoice methodChoice, AuthorizationChoice authorizationChoice, EndpointChoice endpointChoice, String path, String json) {
+        String pathstr = !StringUtils.isEmpty(path)
+                ? path
+                : "";
+
+        String data = !StringUtils.isEmpty(json)
+                ? " -d '" + json + "'"
+                : "";
+
+        return "curl"
+            + " -H " + ITUtil.HEADER_JSON
+            + " -X"  + ITUtil.getMethodString(methodChoice)
+            + " -i "
+            + ITUtil.HTTP
+            + ITUtil.getAuthorizationString(authorizationChoice)
+            + ITUtil.IP_PORT_OLOG
+            + ITUtil.getEndpointString(endpointChoice)
+            + pathstr
+            + data;
+    }
+
+    /**
+     * Utility method to return string for http method. To be used when constructing url to send query to server.
+     *
+     * @param methodChoice method choice, i.e. POST, GET, PUT, DELETE, PATCH
+     * @return string for http method
+     */
+    private static String getMethodString(MethodChoice methodChoice) {
+        switch (methodChoice) {
+        case POST:
+            return "POST";
+        case GET:
+            return "GET";
+        case PUT:
+            return "PUT";
+        case DELETE:
+            return "DELETE";
+        default:
+            return "GET";
+        }
+    }
+
+    /**
+     * Utility method to return string for authorization. To be used when constructing url to send query to server.
+     *
+     * @param authorizationChoice authorization choice
+     * @return string for authorization
+     */
+    private static String getAuthorizationString(AuthorizationChoice authorizationChoice) {
+        switch (authorizationChoice) {
+        case ADMIN:
+            return ITUtil.AUTH_ADMIN + "@";
+        case USER:
+            return ITUtil.AUTH_USER + "@";
+        case NONE:
+            return StringUtils.EMPTY;
+        default:
+            return StringUtils.EMPTY;
+        }
+    }
+
+    /**
+     * Utility method to return string for endpoint. To be used when constructing url to send query to server.
+     *
+     * @param endpointChoice endpoint choice
+     * @return string for endpoint
+     */
+    private static String getEndpointString(EndpointChoice endpointChoice) {
+        switch (endpointChoice) {
+        case LOGBOOKS:
+            return ITUtil.LOGBOOKS;
+        case LOGS:
+            return ITUtil.LOGS;
+        case PROPERTIES:
+            return ITUtil.PROPERTIES;
+        case TAGS:
+            return ITUtil.TAGS;
+        default:
+            return StringUtils.EMPTY;
+        }
+    }
+
+    // ----------------------------------------------------------------------------------------------------
+
     /**
      * Assert that response object is as expected, an array with 2 elements
      * of which first contains response code OK (200).
@@ -235,14 +351,14 @@ public class ITUtil {
      * of which first element contains given response code.
      *
      * @param response string array with response of http request, response code and content
-     * @param responseCode expected response code
+     * @param expectedResponseCode expected response code
      *
      * @see HttpURLConnection for available response codes
      */
-    static void assertResponseLength2Code(String[] response, int responseCode) {
+    static void assertResponseLength2Code(String[] response, int expectedResponseCode) {
         assertNotNull(response);
         assertEquals(2, response.length);
-        assertEquals(responseCode, Integer.parseInt(response[0]));
+        assertEquals(expectedResponseCode, Integer.parseInt(response[0]));
     }
 
     /**
@@ -250,12 +366,12 @@ public class ITUtil {
      * of which first element contains response code OK (200) and second element contains given response content.
      *
      * @param response string array with response of http request, response code and content
-     * @param responseContent expected response content
+     * @param expectedResponseContent expected response content
      *
      * @see HttpURLConnection#HTTP_OK
      */
-    static void assertResponseLength2CodeOKContent(String[] response, String responseContent) {
-        assertResponseLength2CodeContent(response, HttpURLConnection.HTTP_OK, responseContent);
+    static void assertResponseLength2CodeOKContent(String[] response, String expectedResponseContent) {
+        assertResponseLength2CodeContent(response, HttpURLConnection.HTTP_OK, expectedResponseContent);
     }
 
     /**
@@ -263,14 +379,14 @@ public class ITUtil {
      * of which first element contains given response code and second element contains given response content.
      *
      * @param response string array with response of http request, response code and content
-     * @param responseCode expected response code
-     * @param responseContent expected response content
+     * @param expectedResponseCode expected response code
+     * @param expectedResponseContent expected response content
      *
      * @see HttpURLConnection for available response codes
      */
-    static void assertResponseLength2CodeContent(String[] response, int responseCode, String responseContent) {
-        assertResponseLength2Code(response, responseCode);
-        assertEquals(responseContent, response[1]);
+    static void assertResponseLength2CodeContent(String[] response, int expectedResponseCode, String expectedResponseContent) {
+        assertResponseLength2Code(response, expectedResponseCode);
+        assertEquals(expectedResponseContent, response[1]);
     }
 
     /**
