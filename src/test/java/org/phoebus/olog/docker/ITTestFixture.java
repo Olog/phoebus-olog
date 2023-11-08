@@ -598,69 +598,41 @@ public class ITTestFixture {
      * Create test fixture, properties.
      */
     private static void createProperties() {
-        ObjectMapper mapper = new ObjectMapper();
-        String curl = null;
         try {
             // --------------------------------------------------------------------------------
             // clean start
             // --------------------------------------------------------------------------------
 
-            String[] response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES);
-            ITUtil.assertResponseLength2CodeOK(response);
-            ITUtil.assertEqualsProperties(
-                    mapper.readValue(response[1], Property[].class),
-                    default_properties[0]);
+            ITUtilProperties.assertListProperties(1, default_properties[0]);
 
             // --------------------------------------------------------------------------------
             // create
             // --------------------------------------------------------------------------------
 
             String name = URLEncoder.encode(propertyShiftInfoCrewEmpty.getName(), StandardCharsets.UTF_8);
-            response = ITUtil.runShellCommand(ITUtilProperties.createCurlPropertyForAdmin(name, mapper.writeValueAsString(propertyShiftInfoCrewEmpty)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertEquals(propertyShiftInfoCrewEmpty, mapper.readValue(response[1], Property.class));
+            ITUtilProperties.assertCreateProperty("/" + name, propertyShiftInfoCrewEmpty);
 
             name = URLEncoder.encode(propertyShiftInfoACrew1.getName(), StandardCharsets.UTF_8);
-            response = ITUtil.runShellCommand(ITUtilProperties.createCurlPropertyForAdmin(name, mapper.writeValueAsString(propertyShiftInfoACrew1)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertEquals(propertyShiftInfoACrew1, mapper.readValue(response[1], Property.class));
+            ITUtilProperties.assertCreateProperty("/" + name, propertyShiftInfoACrew1);
 
             name = URLEncoder.encode(propertyShiftInfoBCrew2.getName(), StandardCharsets.UTF_8);
-            response = ITUtil.runShellCommand(ITUtilProperties.createCurlPropertyForAdmin(name, mapper.writeValueAsString(propertyShiftInfoBCrew2)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertEquals(propertyShiftInfoBCrew2, mapper.readValue(response[1], Property.class));
+            ITUtilProperties.assertCreateProperty("/" + name, propertyShiftInfoBCrew2);
 
             name = URLEncoder.encode(propertyShiftInfoCCrew3.getName(), StandardCharsets.UTF_8);
-            response = ITUtil.runShellCommand(ITUtilProperties.createCurlPropertyForAdmin(name, mapper.writeValueAsString(propertyShiftInfoCCrew3)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertEquals(propertyShiftInfoCCrew3, mapper.readValue(response[1], Property.class));
+            ITUtilProperties.assertCreateProperty("/" + name, propertyShiftInfoCCrew3);
 
             // refresh elastic indices
-            response = ITUtil.refreshElasticIndices();
-            ITUtil.assertResponseLength2CodeOK(response);
+            ITUtil.assertRefreshElasticIndices();
 
             // --------------------------------------------------------------------------------
             // well defined state
             // --------------------------------------------------------------------------------
 
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES);
-            ITUtil.assertResponseLength2CodeOK(response);
-            Property[] properties = mapper.readValue(response[1], Property[].class);
-            assertNotNull(properties);
-            assertEquals(5, properties.length);
-            for (Property property : properties) {
-                assertNotNull(property);
-            }
+            ITUtilProperties.assertListProperties(5);
         } catch (IOException e) {
-            System.out.println(curl);
-            e.printStackTrace();
-            fail();
-        } catch (InterruptedException e) {
-            System.out.println(curl);
             e.printStackTrace();
             fail();
         } catch (Exception e) {
-            System.out.println(curl);
             e.printStackTrace();
             fail();
         }
