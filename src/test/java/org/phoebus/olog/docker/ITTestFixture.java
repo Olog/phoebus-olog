@@ -36,7 +36,6 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /**
@@ -447,17 +446,12 @@ public class ITTestFixture {
      * Create test fixture, logbooks.
      */
     private static void createLogbooks() {
-        ObjectMapper mapper = new ObjectMapper();
-
         try {
             // --------------------------------------------------------------------------------
             // clean start
             // --------------------------------------------------------------------------------
 
-            String[] response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGBOOKS);
-            ITUtil.assertResponseLength2CodeOK(response);
-            ITUtil.assertEqualsLogbooks(
-                    mapper.readValue(response[1], Logbook[].class),
+            ITUtilLogbooks.assertListLogbooks(2,
                     default_logbooks[1],
                     default_logbooks[0]);
 
@@ -466,70 +460,41 @@ public class ITTestFixture {
             // --------------------------------------------------------------------------------
 
             String name = URLEncoder.encode(logbookBuildings.getName(), StandardCharsets.UTF_8);
-            response = ITUtil.runShellCommand(ITUtilLogbooks.createCurlLogbookForAdmin(name, mapper.writeValueAsString(logbookBuildings)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertEquals(logbookBuildings, mapper.readValue(response[1], Logbook.class));
+            ITUtilLogbooks.assertCreateLogbook("/" + name, logbookBuildings);
 
             name = URLEncoder.encode(logbookCommunication.getName(), StandardCharsets.UTF_8);
-            response = ITUtil.runShellCommand(ITUtilLogbooks.createCurlLogbookForAdmin(name, mapper.writeValueAsString(logbookCommunication)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertEquals(logbookCommunication, mapper.readValue(response[1], Logbook.class));
+            ITUtilLogbooks.assertCreateLogbook("/" + name, logbookCommunication);
 
             name = URLEncoder.encode(logbookExperiments.getName(), StandardCharsets.UTF_8);
-            response = ITUtil.runShellCommand(ITUtilLogbooks.createCurlLogbookForAdmin(name, mapper.writeValueAsString(logbookExperiments)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertEquals(logbookExperiments, mapper.readValue(response[1], Logbook.class));
+            ITUtilLogbooks.assertCreateLogbook("/" + name, logbookExperiments);
 
             name = URLEncoder.encode(logbookFacilities.getName(), StandardCharsets.UTF_8);
-            response = ITUtil.runShellCommand(ITUtilLogbooks.createCurlLogbookForAdmin(name, mapper.writeValueAsString(logbookFacilities)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertEquals(logbookFacilities, mapper.readValue(response[1], Logbook.class));
+            ITUtilLogbooks.assertCreateLogbook("/" + name, logbookFacilities);
 
             name = URLEncoder.encode(logbookMaintenance.getName(), StandardCharsets.UTF_8);
-            response = ITUtil.runShellCommand(ITUtilLogbooks.createCurlLogbookForAdmin(name, mapper.writeValueAsString(logbookMaintenance)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(logbookMaintenance.equals(mapper.readValue(response[1], Logbook.class)));
+            ITUtilLogbooks.assertCreateLogbook("/" + name, logbookMaintenance);
 
             name = URLEncoder.encode(logbookOperations.getName(), ITUtil.UTF_8);
-            response = ITUtil.runShellCommand(ITUtilLogbooks.createCurlLogbookForAdmin(name, mapper.writeValueAsString(logbookOperations)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(logbookOperations.equals(mapper.readValue(response[1], Logbook.class)));
+            ITUtilLogbooks.assertCreateLogbook("/" + name, logbookOperations);
 
             name = URLEncoder.encode(logbookPower.getName(), ITUtil.UTF_8);
-            response = ITUtil.runShellCommand(ITUtilLogbooks.createCurlLogbookForAdmin(name, mapper.writeValueAsString(logbookPower)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(logbookPower.equals(mapper.readValue(response[1], Logbook.class)));
+            ITUtilLogbooks.assertCreateLogbook("/" + name, logbookPower);
 
             name = URLEncoder.encode(logbookServices.getName(), ITUtil.UTF_8);
-            response = ITUtil.runShellCommand(ITUtilLogbooks.createCurlLogbookForAdmin(name, mapper.writeValueAsString(logbookServices)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(logbookServices.equals(mapper.readValue(response[1], Logbook.class)));
+            ITUtilLogbooks.assertCreateLogbook("/" + name, logbookServices);
 
             name = URLEncoder.encode(logbookWater.getName(), ITUtil.UTF_8);
-            response = ITUtil.runShellCommand(ITUtilLogbooks.createCurlLogbookForAdmin(name, mapper.writeValueAsString(logbookWater)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(logbookWater.equals(mapper.readValue(response[1], Logbook.class)));
+            ITUtilLogbooks.assertCreateLogbook("/" + name, logbookWater);
 
             // refresh elastic indices
-            response = ITUtil.refreshElasticIndices();
-            ITUtil.assertResponseLength2CodeOK(response);
+            ITUtil.assertRefreshElasticIndices();
 
             // --------------------------------------------------------------------------------
             // well defined state
             // --------------------------------------------------------------------------------
 
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGBOOKS);
-            ITUtil.assertResponseLength2CodeOK(response);
-            Logbook[] logbooks = mapper.readValue(response[1], Logbook[].class);
-            assertNotNull(logbooks);
-            assertEquals(10, logbooks.length);
-            for (Logbook logbook : logbooks) {
-                assertNotNull(logbook);
-            }
+            ITUtilLogbooks.assertListLogbooks(10);
         } catch (IOException e) {
-            e.printStackTrace();
-            fail();
-        } catch (InterruptedException e) {
             e.printStackTrace();
             fail();
         } catch (Exception e) {

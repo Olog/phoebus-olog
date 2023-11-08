@@ -18,6 +18,21 @@
 
 package org.phoebus.olog.docker;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
+
+import java.io.IOException;
+import java.net.HttpURLConnection;
+
+import org.phoebus.olog.docker.ITUtil.AuthorizationChoice;
+import org.phoebus.olog.docker.ITUtil.EndpointChoice;
+import org.phoebus.olog.docker.ITUtil.MethodChoice;
+import org.phoebus.olog.entity.Logbook;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 /**
  * Utility class to help (Docker) integration tests for Olog and Elasticsearch with focus on support test of behavior for logbook endpoints.
  *
@@ -26,6 +41,11 @@ package org.phoebus.olog.docker;
  * @see org.phoebus.olog.docker.ITUtil
  */
 public class ITUtilLogbooks {
+
+    static final ObjectMapper mapper = new ObjectMapper();
+
+    static final Logbook[] LOGBOOKS_NULL = null;
+    static final Logbook   LOGBOOK_NULL  = null;
 
     /**
      * This class is not to be instantiated.
@@ -37,55 +57,269 @@ public class ITUtilLogbooks {
     // ----------------------------------------------------------------------------------------------------
 
     /**
-     * Utility method to return curl to create logbook for regular user.
+     * Return string for logbook.
      *
-     * @param logbookName logbook name
-     * @param logbookJson logbook json
-     * @return curl to create logbook
+     * @param value logbook
+     * @return string for logbook
      */
-    public static String createCurlLogbookForUser(String logbookName, String logbookJson) {
-        return "curl -H " + ITUtil.HEADER_JSON + " -XPUT -i " + ITUtil.HTTP_AUTH_USER_IP_PORT_OLOG_LOGBOOKS + "/" + logbookName + " -d '" + logbookJson + "'";
+    static String object2Json(Logbook value) {
+        try {
+            return mapper.writeValueAsString(value);
+        } catch (JsonProcessingException e) {
+            fail();
+        }
+        return null;
+    }
+    /**
+     * Return string for logbook array.
+     *
+     * @param value logbook array
+     * @return string for logbook array
+     */
+    static String object2Json(Logbook[] value) {
+        try {
+            return mapper.writeValueAsString(value);
+        } catch (JsonProcessingException e) {
+            fail();
+        }
+        return null;
     }
 
-    /**
-     * Utility method to return curl to create logbook for admin user.
-     *
-     * @param logbookName logbook name
-     * @param logbookJson logbook json
-     * @return curl to create logbook
-     */
-    public static String createCurlLogbookForAdmin(String logbookName, String logbookJson) {
-        return "curl -H " + ITUtil.HEADER_JSON + " -XPUT -i " + ITUtil.HTTP_AUTH_ADMIN_IP_PORT_OLOG_LOGBOOKS + "/" + logbookName + " -d '" + logbookJson + "'";
-    }
+    // ----------------------------------------------------------------------------------------------------
 
     /**
-     * Utility method to return curl to create logbooks for admin user.
-     *
-     * @param logbooksJson logbooks json
-     * @return curl to create logbooks
+     * @see ITUtilLogbooks#assertRetrieveLogbook(String, int, Logbook)
      */
-    public static String createCurlLogbooksForAdmin(String logbooksJson) {
-        return "curl -H " + ITUtil.HEADER_JSON + " -XPUT -i " + ITUtil.HTTP_AUTH_ADMIN_IP_PORT_OLOG_LOGBOOKS + " -d '" + logbooksJson + "'";
+    public static Logbook assertRetrieveLogbook(String path, int expectedResponseCode) {
+        return assertRetrieveLogbook(path, expectedResponseCode, LOGBOOK_NULL);
+    }
+    /**
+     * @see ITUtilLogbooks#assertRetrieveLogbook(String, int, Logbook)
+     */
+    public static Logbook assertRetrieveLogbook(String path, Logbook expected) {
+        return assertRetrieveLogbook(path, HttpURLConnection.HTTP_OK, expected);
+    }
+    /**
+     * Utility method to return the logbook with the given name.
+     *
+     * @param path path
+     * @param expectedResponseCode expected response code
+     * @param expected expected response logbook
+     */
+    public static Logbook assertRetrieveLogbook(String path, int expectedResponseCode, Logbook expected) {
+        try {
+            String[] response = null;
+            Logbook actual = null;
+
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGBOOKS + path);
+            ITUtil.assertResponseLength2Code(response, expectedResponseCode);
+            if (HttpURLConnection.HTTP_OK == expectedResponseCode) {
+                actual = mapper.readValue(response[1], Logbook.class);
+            }
+
+            if (expected != null) {
+                assertEquals(expected, actual);
+            }
+
+            return actual;
+        } catch (IOException e) {
+            fail();
+        } catch (Exception e) {
+            fail();
+        }
+        return null;
     }
 
-    /**
-     * Utility method to return curl to delete logbook for regular user.
-     *
-     * @param logbookName logbook name
-     * @return curl to delete logbook
-     */
-    public static String deleteCurlLogbookForUser(String logbookName) {
-        return "curl -H " + ITUtil.HEADER_JSON + " -XDELETE -i " + ITUtil.HTTP_AUTH_USER_IP_PORT_OLOG_LOGBOOKS + "/" + logbookName;
-    }
+    // ----------------------------------------------------------------------------------------------------
 
     /**
-     * Utility method to return curl to delete logbook for admin user.
-     *
-     * @param logbookName logbook name
-     * @return curl to delete logbook
+     * @see ITUtilLogbooks#assertListLogbooks(int, int, int, Logbook...)
      */
-    public static String deleteCurlLogbookForAdmin(String logbookName) {
-        return "curl -H " + ITUtil.HEADER_JSON + " -XDELETE -i " + ITUtil.HTTP_AUTH_ADMIN_IP_PORT_OLOG_LOGBOOKS + "/" + logbookName;
+    public static Logbook[] assertListLogbooks(int expectedEqual, Logbook... expected) {
+        return assertListLogbooks(HttpURLConnection.HTTP_OK, expectedEqual, expectedEqual, expected);
+    }
+    /**
+     * Utility method to return the list of all logbooks in the directory.
+     *
+     * @param expectedResponseCode expected response code
+     * @param expectedGreaterThanOrEqual (if non-negative number) greater than or equal to this number of items
+     * @param expectedLessThanOrEqual (if non-negative number) less than or equal to this number of items
+     * @param expected expected response logbooks
+     * @return number of logbooks
+     */
+    public static Logbook[] assertListLogbooks(int expectedResponseCode, int expectedGreaterThanOrEqual, int expectedLessThanOrEqual, Logbook... expected) {
+        try {
+            String[] response = null;
+            Logbook[] actual = null;
+
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGBOOKS);
+            ITUtil.assertResponseLength2Code(response, expectedResponseCode);
+            if (HttpURLConnection.HTTP_OK == expectedResponseCode) {
+                actual = mapper.readValue(response[1], Logbook[].class);
+            }
+
+            // expected number of items in list
+            //     (if non-negative number)
+            //     expectedGreaterThanOrEqual <= nbr of items <= expectedLessThanOrEqual
+            if (expectedGreaterThanOrEqual >= 0) {
+                assertTrue(actual.length >= expectedGreaterThanOrEqual);
+            }
+            if (expectedLessThanOrEqual >= 0) {
+                assertTrue(actual.length <= expectedLessThanOrEqual);
+            }
+
+            // expected content
+            if (expected != null && expected.length > 0) {
+                ITUtil.assertEqualsLogbooks(actual, expected);
+            }
+
+            return actual;
+        } catch (IOException e) {
+            fail();
+        } catch (Exception e) {
+            fail();
+        }
+        return null;
+    }
+
+    // ----------------------------------------------------------------------------------------------------
+
+    /**
+     * @see ITUtilLogbooks#assertCreateLogbook(AuthorizationChoice, String, String, int, Logbook)
+     */
+    public static Logbook assertCreateLogbook(String path, Logbook value) {
+        return assertCreateLogbook(AuthorizationChoice.ADMIN, path, object2Json(value), HttpURLConnection.HTTP_OK, LOGBOOK_NULL);
+    }
+    /**
+     * @see ITUtilLogbooks#assertCreateLogbook(AuthorizationChoice, String, String, int, Logbook)
+     */
+    public static Logbook assertCreateLogbook(AuthorizationChoice authorizationChoice, String path, Logbook value) {
+        return assertCreateLogbook(authorizationChoice, path, object2Json(value), HttpURLConnection.HTTP_OK, LOGBOOK_NULL);
+    }
+    /**
+     * @see ITUtilLogbooks#assertCreateLogbook(AuthorizationChoice, String, String, int, Logbook)
+     */
+    public static Logbook assertCreateLogbook(AuthorizationChoice authorizationChoice, String path, Logbook value, int expectedResponseCode) {
+        return assertCreateLogbook(authorizationChoice, path, object2Json(value), expectedResponseCode, LOGBOOK_NULL);
+    }
+    /**
+     * @see ITUtilLogbooks#assertCreateLogbook(AuthorizationChoice, String, String, int, Logbook)
+     */
+    public static Logbook assertCreateLogbook(AuthorizationChoice authorizationChoice, String path, String json, int expectedResponseCode) {
+        return assertCreateLogbook(authorizationChoice, path, json, expectedResponseCode, LOGBOOK_NULL);
+    }
+    /**
+     * Utility method to create or completely replace the existing logbook name with the payload data.
+     *
+     * @param authorizationChoice authorization choice (none, user, admin)
+     * @param path path
+     * @param json json
+     * @param expectedResponseCode expected response code
+     * @param expected expected response logbook
+     */
+    public static Logbook assertCreateLogbook(AuthorizationChoice authorizationChoice, String path, String json, int expectedResponseCode, Logbook expected) {
+        try {
+            String[] response = null;
+            Logbook actual = null;
+
+            response = ITUtil.runShellCommand(ITUtil.curlMethodAuthEndpointPathJson(MethodChoice.PUT, authorizationChoice, EndpointChoice.LOGBOOKS, path, json));
+            ITUtil.assertResponseLength2Code(response, expectedResponseCode);
+            if (HttpURLConnection.HTTP_OK == expectedResponseCode) {
+                actual = mapper.readValue(response[1], Logbook.class);
+            }
+
+            if (expected != null) {
+                assertEquals(expected, actual);
+            }
+
+            return actual;
+        } catch (IOException e) {
+            fail();
+        } catch (Exception e) {
+            fail();
+        }
+        return null;
+    }
+
+    // ----------------------------------------------------------------------------------------------------
+
+    /**
+     * @see ITUtilLogbooks#assertCreateLogbooks(AuthorizationChoice, String, String, int, Logbook[])
+     */
+    public static Logbook[] assertCreateLogbooks(String path, Logbook[] value) {
+        return assertCreateLogbooks(AuthorizationChoice.ADMIN, path, object2Json(value), HttpURLConnection.HTTP_OK, LOGBOOKS_NULL);
+    }
+    /**
+     * @see ITUtilLogbooks#assertCreateLogbooks(AuthorizationChoice, String, String, int, Logbook[])
+     */
+    public static Logbook[] assertCreateLogbooks(String path, Logbook[] value, int expectedResponseCode) {
+        return assertCreateLogbooks(AuthorizationChoice.ADMIN, path, object2Json(value), expectedResponseCode, LOGBOOKS_NULL);
+    }
+    /**
+     * @see ITUtilLogbooks#assertCreateLogbooks(AuthorizationChoice, String, String, int, Logbook[])
+     */
+    public static Logbook[] assertCreateLogbooks(AuthorizationChoice authorizationChoice, String path, String json, int expectedResponseCode) {
+        return assertCreateLogbooks(authorizationChoice, path, json, expectedResponseCode, LOGBOOKS_NULL);
+    }
+    /**
+     * Utility method to add the logbooks in the payload to the directory.
+     *
+     * @param authorizationChoice authorization choice (none, user, admin)
+     * @param path path
+     * @param json json
+     * @param expectedResponseCode expected response code
+     * @param expected expected response logbooks
+     */
+    public static Logbook[] assertCreateLogbooks(AuthorizationChoice authorizationChoice, String path, String json, int expectedResponseCode, Logbook[] expected) {
+        try {
+            String[] response = null;
+            Logbook[] actual = null;
+
+            response = ITUtil.runShellCommand(ITUtil.curlMethodAuthEndpointPathJson(MethodChoice.PUT, authorizationChoice, EndpointChoice.LOGBOOKS, path, json));
+            ITUtil.assertResponseLength2Code(response, expectedResponseCode);
+            if (HttpURLConnection.HTTP_OK == expectedResponseCode) {
+                actual = mapper.readValue(response[1], Logbook[].class);
+            }
+
+            if (expected != null) {
+                ITUtil.assertEqualsLogbooks(expected, actual);
+            }
+
+            return actual;
+        } catch (IOException e) {
+            fail();
+        } catch (Exception e) {
+            fail();
+        }
+        return null;
+    }
+
+    // ----------------------------------------------------------------------------------------------------
+
+    /**
+     * @see ITUtilLogbooks#assertRemoveLogbook(AuthorizationChoice, String, int)
+     */
+    public static void assertRemoveLogbook(String path) {
+        assertRemoveLogbook(AuthorizationChoice.ADMIN, path, HttpURLConnection.HTTP_OK);
+    }
+    /**
+     * Utility method to remove logbook with the given name.
+     *
+     * @param authorizationChoice authorization choice (none, user, admin)
+     * @param path path
+     * @param expectedResponseCode expected response code
+     */
+    public static void assertRemoveLogbook(AuthorizationChoice authorizationChoice, String path, int expectedResponseCode) {
+        try {
+            String[] response = null;
+
+            response = ITUtil.runShellCommand(ITUtil.curlMethodAuthEndpointPathJson(MethodChoice.DELETE, authorizationChoice, EndpointChoice.LOGBOOKS, path, null));
+            ITUtil.assertResponseLength2Code(response, expectedResponseCode);
+        } catch (IOException e) {
+            fail();
+        } catch (Exception e) {
+            fail();
+        }
     }
 
 }
