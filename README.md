@@ -86,6 +86,7 @@ mvn failsafe:integration-test -DskipITs=false -Pintegrationtest-docker
 
 See
 * [How to run Integration test with Docker](src/test/resources/INTEGRATIONTEST_DOCKER_RUN.md)
+* [Tutorial for Integration test with Docker](src/test/resources/INTEGRATIONTEST_DOCKER_TUTORIAL.md)
 
 ### Release Olog Server binaries to maven central
 
