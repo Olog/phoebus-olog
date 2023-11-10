@@ -12,6 +12,11 @@ services:
       - mongo
       - elastic
     # Ensure that the elastic server is up before starting olog.
+    environment:
+      ldap.enabled: "false"
+      embedded_ldap.enabled: "false"
+      demo_auth.enabled: "true"
+      skipITCoverage: "true"
     command: >
       /bin/bash -c "
           while ! curl -s -f elastic:9200/_cluster/health?wait_for_status=yellow;
@@ -19,6 +24,9 @@ services:
           echo Waiting for Elasticsearch;
           sleep 1;
         done;
+        if [ ${skipITCoverage} == false ]; then
+          export JAVA_TOOL_OPTIONS=-javaagent:/olog-target/jacocoagent.jar=destfile=/olog-target/jacoco.exec,output=file,append=false
+        fi
         java -jar /olog-target/service-olog*.jar --spring.config.name=application-docker
       "
 

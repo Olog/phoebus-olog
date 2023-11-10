@@ -26,6 +26,9 @@ RUN useradd -ms /bin/bash olog
 # deployment unit
 COPY /target/service-olog*.jar /olog-target/service-olog*.jar
 
+# code coverage
+COPY target/jacoco/jacocoagent.jar /olog-target/jacocoagent.jar
+
 RUN chown olog:olog /olog-target
 USER olog
 EXPOSE 8080

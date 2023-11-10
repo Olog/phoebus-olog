@@ -94,6 +94,13 @@ public class ITUtil {
     public static final String INTEGRATIONTEST_DOCKER_COMPOSE = "docker-compose-integrationtest.yml";
     public static final String INTEGRATIONTEST_LOG_MESSAGE    = ".*Started Application.*";
 
+    // code coverage
+
+    public static final String JACOCO_EXEC_PATH      = "/olog-target/jacoco.exec";
+    public static final String JACOCO_TARGET_PREFIX  = "target/jacoco_";
+    public static final String JACOCO_TARGET_SUFFIX  = ".exec";
+    public static final String JACOCO_SKIPITCOVERAGE = "skipITCoverage";
+
     /**
      * This class is not to be instantiated.
      */
@@ -111,6 +118,7 @@ public class ITUtil {
      */
     public static ComposeContainer defaultComposeContainers() {
         return new ComposeContainer(new File(ITUtil.INTEGRATIONTEST_DOCKER_COMPOSE))
+                .withEnv(ITUtil.JACOCO_SKIPITCOVERAGE, System.getProperty(ITUtil.JACOCO_SKIPITCOVERAGE))
                 .withLocalCompose(true)
                 .waitingFor(ITUtil.OLOG, Wait.forLogMessage(ITUtil.INTEGRATIONTEST_LOG_MESSAGE, 1));
     }
