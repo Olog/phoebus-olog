@@ -70,18 +70,18 @@ public class HelpResource {
                                  HttpServletRequest request) {
         String language = determineLang(lang, request);
         String content;
-        logger.log(Level.INFO, "Requesting " + what + " for language=" + language);
+        logger.log(Level.INFO, () -> "Requesting " + what + " for language=" + language);
         InputStream inputStream;
         try {
             inputStream = getClass().getResourceAsStream("/static/" + what + "_" + language + ".html");
             return readInputStream(inputStream);
         } catch (Exception e) {
-            logger.log(Level.SEVERE, "Unable to read " + what + " resource for language=" + language + ", defaulting to 'en'");
+            logger.log(Level.SEVERE, () -> "Unable to read " + what + " resource for language=" + language + ", defaulting to 'en'");
             try {
                 inputStream = getClass().getResourceAsStream("/static/" + what + "_en.html");
                 return readInputStream(inputStream);
             } catch (Exception ioException) {
-                logger.log(Level.SEVERE, "Unable to read find resource " + what + "_en.html");
+                logger.log(Level.SEVERE, () -> "Unable to read find resource " + what + "_en.html");
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND);
             }
         }

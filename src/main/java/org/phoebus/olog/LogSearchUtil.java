@@ -234,7 +234,7 @@ public class LogSearchUtil {
                         try {
                             searchResultSize = Integer.valueOf(maxSize.get());
                         } catch (NumberFormatException e) {
-                            LOGGER.log(Level.WARNING, "Cannot parse size value\"" + maxSize.get() + "\" as number");
+                            LOGGER.log(Level.WARNING, () -> "Cannot parse size value\"" + maxSize.get() + "\" as number");
                         }
                     }
                     break;
@@ -244,7 +244,7 @@ public class LogSearchUtil {
                         try {
                             from = Integer.valueOf(maxFrom.get());
                         } catch (NumberFormatException e) {
-                            LOGGER.log(Level.WARNING, "Cannot parse from value\"" + maxFrom.get() + "\" as number");
+                            LOGGER.log(Level.WARNING, () -> "Cannot parse from value\"" + maxFrom.get() + "\" as number");
                         }
                     }
                     break;

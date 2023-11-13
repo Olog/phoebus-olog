@@ -220,7 +220,7 @@ public class TagRepository implements CrudRepository<Tag, String> {
                 UpdateResponse<Tag> updateResponse =
                         client.update(updateRequest, Tag.class);
                 if (updateResponse.result().equals(co.elastic.clients.elasticsearch._types.Result.Updated)) {
-                    logger.log(Level.INFO, "Deleted tag " + tagName);
+                    logger.log(Level.INFO, () -> "Deleted tag " + tagName);
                 }
             }
         } catch (Exception e) {

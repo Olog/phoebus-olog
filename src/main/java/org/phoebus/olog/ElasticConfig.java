@@ -175,7 +175,7 @@ public class ElasticConfig {
                 CreateIndexResponse result = client.indices().create(
                         request
                 );
-                logger.info("Created index: " + ES_SEQ_INDEX + " : acknowledged " + result.acknowledged());
+                logger.info(() -> "Created index: " + ES_SEQ_INDEX + " : acknowledged " + result.acknowledged());
             }
         } catch (IOException e) {
             logger.log(Level.WARNING, "Failed to create index " + ES_SEQ_INDEX, e);
@@ -190,7 +190,7 @@ public class ElasticConfig {
                 );
                 logCreateIndexRequest(request);
                 CreateIndexResponse result = client.indices().create(request);
-                logger.info("Created index: " + ES_LOGBOOK_INDEX + " : acknowledged " + result.acknowledged());
+                logger.info(() -> "Created index: " + ES_LOGBOOK_INDEX + " : acknowledged " + result.acknowledged());
             }
         } catch (IOException e) {
             logger.log(Level.WARNING, "Failed to create index " + ES_LOGBOOK_INDEX, e);
@@ -205,7 +205,7 @@ public class ElasticConfig {
                 );
                 logCreateIndexRequest(request);
                 CreateIndexResponse result = client.indices().create(request);
-                logger.info("Created index: " + ES_TAG_INDEX + " : acknowledged " + result.acknowledged());
+                logger.info(() -> "Created index: " + ES_TAG_INDEX + " : acknowledged " + result.acknowledged());
             }
         } catch (IOException e) {
             logger.log(Level.WARNING, "Failed to create index " + ES_TAG_INDEX, e);
@@ -220,7 +220,7 @@ public class ElasticConfig {
                 );
                 logCreateIndexRequest(request);
                 CreateIndexResponse result = client.indices().create(request);
-                logger.info("Created index: " + ES_PROPERTY_INDEX + " : acknowledged " + result.acknowledged());
+                logger.info(() -> "Created index: " + ES_PROPERTY_INDEX + " : acknowledged " + result.acknowledged());
             }
         } catch (IOException e) {
             logger.log(Level.WARNING, "Failed to create index " + ES_PROPERTY_INDEX, e);
@@ -235,7 +235,7 @@ public class ElasticConfig {
                 );
                 logCreateIndexRequest(request);
                 CreateIndexResponse result = client.indices().create(request);
-                logger.info("Created index: " + ES_LOG_INDEX + " : acknowledged " + result.acknowledged());
+                logger.info(() -> "Created index: " + ES_LOG_INDEX + " : acknowledged " + result.acknowledged());
             }
         } catch (IOException e) {
             logger.log(Level.WARNING, "Failed to create index " + ES_LOG_INDEX, e);
@@ -249,7 +249,7 @@ public class ElasticConfig {
                 );
                 logCreateIndexRequest(request);
                 CreateIndexResponse result = client.indices().create(request);
-                logger.info("Created index: " + "archived_" + ES_LOG_ARCHIVE_INDEX + " : acknowledged " + result.acknowledged());
+                logger.info(() -> "Created index: " + "archived_" + ES_LOG_ARCHIVE_INDEX + " : acknowledged " + result.acknowledged());
             }
         } catch (IOException e) {
             logger.log(Level.WARNING, "Failed to create index " + ES_LOG_ARCHIVE_INDEX, e);

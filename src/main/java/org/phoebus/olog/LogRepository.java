@@ -150,7 +150,7 @@ public class LogRepository implements CrudRepository<Log, String> {
             GetResponse<Log> resp = client.get(GetRequest.of(g ->
                     g.index(ES_LOG_INDEX).id(String.valueOf(log.getId()))), Log.class);
             if(!resp.found()) {
-                logger.log(Level.SEVERE, "Failed to archive log with id: " + log.getId());
+                logger.log(Level.SEVERE, () -> "Failed to archive log with id: " + log.getId());
             } else {
                 Log originalDocument = resp.source();
                 String updatedVersion = originalDocument.getId() + "_v" + resp.version();
@@ -167,7 +167,7 @@ public class LogRepository implements CrudRepository<Log, String> {
                                     g.index(ES_LOG_ARCHIVE_INDEX).id(response.id()));
                     return client.get(getRequest, Log.class).source();
                 } else {
-                    logger.log(Level.SEVERE, "Failed to archiver log with id: " + updatedVersion);
+                    logger.log(Level.SEVERE, () -> "Failed to archiver log with id: " + updatedVersion);
                 }
             }
         } catch (IOException e) {

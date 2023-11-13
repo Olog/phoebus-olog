@@ -231,7 +231,7 @@ public class PropertyRepository implements CrudRepository<Property, String> {
                 UpdateResponse<Property> updateResponse =
                         client.update(updateRequest, Property.class);
                 if (updateResponse.result().equals(co.elastic.clients.elasticsearch._types.Result.Updated)) {
-                    logger.log(Level.INFO, "Deleted property " + propertyName);
+                    logger.log(Level.INFO, () -> "Deleted property " + propertyName);
                 }
             }
         } catch (Exception e) {
@@ -244,7 +244,7 @@ public class PropertyRepository implements CrudRepository<Property, String> {
         try {
             Optional<Property> optional = findById(propertyName);
             if (optional.isEmpty()) {
-                logger.log(Level.SEVERE, "Cannot delete attribute " + attributeName +
+                logger.log(Level.SEVERE, () -> "Cannot delete attribute " + attributeName +
                         " from property " + propertyName + " as the property does not exist");
                 return;
             }
@@ -270,7 +270,7 @@ public class PropertyRepository implements CrudRepository<Property, String> {
                 GetResponse<Property> resp =
                         client.get(getRequest, Property.class);
                 Property deletedProperty = resp.source();
-                logger.log(Level.INFO, "Deleted property attribute" + deletedProperty.toLogger());
+                logger.log(Level.INFO, () -> "Deleted property attribute" + deletedProperty.toLogger());
             }
         } catch (Exception e) {
             logger.log(Level.SEVERE, e.getMessage(), e);

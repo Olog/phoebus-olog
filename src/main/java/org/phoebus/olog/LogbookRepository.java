@@ -225,7 +225,7 @@ public class LogbookRepository implements CrudRepository<Logbook, String> {
                 UpdateResponse<Logbook> updateResponse =
                         client.update(updateRequest, Logbook.class);
                 if (updateResponse.result().equals(co.elastic.clients.elasticsearch._types.Result.Updated)) {
-                    logger.log(Level.INFO, "Deleted logbook " + logbookName);
+                    logger.log(Level.INFO, () -> "Deleted logbook " + logbookName);
                 }
             }
         } catch (Exception e) {

@@ -114,7 +114,7 @@ public class LogResource {
             Set<Attachment> attachments = log.get().getAttachments().stream().filter(attachment -> attachment.getFilename().equals(attachmentName)).collect(Collectors.toSet());
             if (attachments.size() == 1) {
                 Attachment attachment = attachments.iterator().next();
-                this.logger.log(Level.INFO, "Requesting attachment " + attachment.getId() + ": " + attachment.getFilename());
+                this.logger.log(Level.INFO, () -> "Requesting attachment " + attachment.getId() + ": " + attachment.getFilename());
                 Attachment foundAttachment = attachmentRepository.findById(attachment.getId()).get();
                 InputStreamResource resource;
                 try {
@@ -245,7 +245,7 @@ public class LogResource {
         Log newLogEntry = logRepository.save(log);
         sendToNotifiers(newLogEntry);
 
-        logger.log(Level.INFO, "Entry id " + newLogEntry.getId() + " created from " + clientInfo);
+        logger.log(Level.INFO, () -> "Entry id " + newLogEntry.getId() + " created from " + clientInfo);
 
         return newLogEntry;
     }
@@ -289,7 +289,7 @@ public class LogResource {
                         logEntry.getAttachments().stream()
                                 .filter(a -> a.getFilename() != null && a.getFilename().equals(originalFileName)).findFirst();
                 if (attachment.isEmpty()) { // Should not happen if client behaves correctly
-                    logger.log(Level.WARNING, "File " + originalFileName + " not matched with attachment meta-data");
+                    logger.log(Level.WARNING, () -> "File " + originalFileName + " not matched with attachment meta-data");
                     continue;
                 }
                 uploadAttachment(Long.toString(newLogEntry.getId()),
@@ -300,7 +300,7 @@ public class LogResource {
             }
         }
 
-        logger.log(Level.INFO, "Entry id " + newLogEntry.getId() + " created from " + clientInfo);
+        logger.log(Level.INFO, () -> "Entry id " + newLogEntry.getId() + " created from " + clientInfo);
 
         return newLogEntry;
     }
@@ -395,7 +395,7 @@ public class LogResource {
     @SuppressWarnings("unused")
     @PostMapping(value = "/group")
     public void groupLogEntries(@RequestBody List<Long> logEntryIds) {
-        logger.log(Level.INFO, "Grouping log entries: " + logEntryIds.stream().map(id -> Long.toString(id)).collect(Collectors.joining(",")));
+        logger.log(Level.INFO, () -> "Grouping log entries: " + logEntryIds.stream().map(id -> Long.toString(id)).collect(Collectors.joining(",")));
         Property existingLogEntryGroupProperty = null;
         List<Log> logs = new ArrayList<>();
         // Check prerequisites: if two (or more) log entries are already contained in a group, they must all be contained in
@@ -543,7 +543,7 @@ public class LogResource {
         String toLog = allSearchParameters.entrySet().stream()
                 .map((e) -> e.getKey().trim() + "=" + e.getValue().stream().collect(Collectors.joining(",")))
                 .collect(Collectors.joining("&"));
-        logger.log(Level.INFO, "Query " + toLog + " from client " + clientInfo);
+        logger.log(Level.INFO, () -> "Query " + toLog + " from client " + clientInfo);
     }
 
     /**

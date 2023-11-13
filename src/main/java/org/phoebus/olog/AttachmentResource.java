@@ -49,7 +49,7 @@ public class AttachmentResource
      */
     @GetMapping("{attachmentId}")
     public ResponseEntity<Resource> getAttachment(@PathVariable String attachmentId) {
-        log.log(Level.INFO, "Requesting attachment " + attachmentId);
+        log.log(Level.INFO, () -> "Requesting attachment " + attachmentId);
         Optional<Attachment> attachment = attachmentRepository.findById(attachmentId);
         if(attachment.isPresent()){
             InputStreamResource resource;
@@ -75,7 +75,7 @@ public class AttachmentResource
         }
         else{
             Logger.getLogger(LogResource.class.getName())
-                .log(Level.WARNING, "Attachment with id " + attachmentId + " not found");
+                .log(Level.WARNING, () -> "Attachment with id " + attachmentId + " not found");
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }

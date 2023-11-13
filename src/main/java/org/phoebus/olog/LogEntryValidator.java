@@ -71,7 +71,7 @@ public class LogEntryValidator implements Validator {
 
         for(Logbook logbook : log.getLogbooks()){
             if(!existingLogbookNames.contains(logbook.getName())){
-                logger.log(Level.INFO, "Logbook '" + logbook.getName() + "' is invalid.");
+                logger.log(Level.INFO, () -> "Logbook '" + logbook.getName() + "' is invalid.");
                 errors.rejectValue("logbooks", "invalid.logbooks");
             }
         }
@@ -80,7 +80,7 @@ public class LogEntryValidator implements Validator {
         tagRepository.findAll().forEach(t -> existingTagNames.add(t.getName()));
         for(Tag tag : log.getTags()){
             if(!existingTagNames.contains(tag.getName())){
-                logger.log(Level.INFO, "Tag '" + tag.getName() + "' is invalid.");
+                logger.log(Level.INFO, () -> "Tag '" + tag.getName() + "' is invalid.");
                 errors.rejectValue("tags", "invalid.tags");
             }
         }
