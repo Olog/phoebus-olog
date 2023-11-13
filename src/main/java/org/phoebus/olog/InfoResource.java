@@ -48,10 +48,10 @@ public class InfoResource
     @Value("${spring.servlet.multipart.max-request-size:50MB}")
     private String maxRequestSize;
 
-    private final static ObjectMapper objectMapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
+    private static final ObjectMapper objectMapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
 
     /**
-     * 
+     *
      * @return Information about the Olog service
      */
     @GetMapping

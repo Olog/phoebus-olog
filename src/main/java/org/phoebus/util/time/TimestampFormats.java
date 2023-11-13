@@ -28,36 +28,36 @@ import java.time.format.DateTimeFormatter;
  *  @author Kay Kasemir
  */
 @SuppressWarnings("nls")
-public class TimestampFormats
-{
-    final private static ZoneId zone = ZoneId.systemDefault();
-    final private static String FULL_PATTERN = "yyyy-MM-dd HH:mm:ss.nnnnnnnnn";
-    final private static String MILLI_PATTERN = "yyyy-MM-dd HH:mm:ss.SSS";
-    final private static String SECONDS_PATTERN = "yyyy-MM-dd HH:mm:ss";
-    final private static String DATETIME_PATTERN = "yyyy-MM-dd HH:mm";
-    final private static String DATE_PATTERN = "yyyy-MM-dd";
-    final private static String TIME_PATTERN = "HH:mm:ss";
+public class TimestampFormats {
+
+    private static final ZoneId zone = ZoneId.systemDefault();
+    private static final String FULL_PATTERN = "yyyy-MM-dd HH:mm:ss.nnnnnnnnn";
+    private static final String MILLI_PATTERN = "yyyy-MM-dd HH:mm:ss.SSS";
+    private static final String SECONDS_PATTERN = "yyyy-MM-dd HH:mm:ss";
+    private static final String DATETIME_PATTERN = "yyyy-MM-dd HH:mm";
+    private static final String DATE_PATTERN = "yyyy-MM-dd";
+    private static final String TIME_PATTERN = "HH:mm:ss";
 
     /** Time stamp format for 'full' time stamp */
-    final public static DateTimeFormatter FULL_FORMAT= DateTimeFormatter.ofPattern(FULL_PATTERN).withZone(zone);
+    public static final DateTimeFormatter FULL_FORMAT= DateTimeFormatter.ofPattern(FULL_PATTERN).withZone(zone);
 
     /** Time stamp format for time stamp down to milliseconds */
-    final public static DateTimeFormatter MILLI_FORMAT= DateTimeFormatter.ofPattern(MILLI_PATTERN).withZone(zone);
+    public static final DateTimeFormatter MILLI_FORMAT= DateTimeFormatter.ofPattern(MILLI_PATTERN).withZone(zone);
 
     /** Time stamp format for time stamp up to seconds, but not nanoseconds */
-    final public static DateTimeFormatter SECONDS_FORMAT = DateTimeFormatter.ofPattern(SECONDS_PATTERN).withZone(zone);
+    public static final DateTimeFormatter SECONDS_FORMAT = DateTimeFormatter.ofPattern(SECONDS_PATTERN).withZone(zone);
 
     /** Time stamp format for time date and time, no seconds */
-    final public static DateTimeFormatter DATETIME_FORMAT = DateTimeFormatter.ofPattern(DATETIME_PATTERN).withZone(zone);
+    public static final DateTimeFormatter DATETIME_FORMAT = DateTimeFormatter.ofPattern(DATETIME_PATTERN).withZone(zone);
 
     /** Time stamp format for time stamp up to seconds, but no date */
-    final public static DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern(TIME_PATTERN).withZone(zone);
+    public static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern(TIME_PATTERN).withZone(zone);
 
     /** Time stamp format for date, no time */
-    final public static DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern(DATE_PATTERN).withZone(zone);
+    public static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern(DATE_PATTERN).withZone(zone);
 
     // Internal
-    final private static DateTimeFormatter MONTH_FORMAT = DateTimeFormatter.ofPattern("MM-dd HH:mm").withZone(zone);
+    private static final DateTimeFormatter MONTH_FORMAT = DateTimeFormatter.ofPattern("MM-dd HH:mm").withZone(zone);
 
     /** Format date and time in a 'compact' way.
      *
@@ -68,30 +68,26 @@ public class TimestampFormats
      *  @param timestamp {@link Instant}
      *  @return Date and time of the data in preferred text format
      */
-    public static String formatCompactDateTime(final Instant timestamp)
-    {
+    public static String formatCompactDateTime(final Instant timestamp) {
        if (timestamp == null)
            return "?";
 
        final LocalDateTime now = LocalDateTime.now();
        final LocalDateTime local = LocalDateTime.ofInstant(timestamp, zone);
 
-       if (now.getYear() == local.getYear())
-       {
+       if (now.getYear() == local.getYear()) {
            // Same day, show time down to HH:mm:ss
            if (now.getDayOfYear() == local.getDayOfYear())
                return TIME_FORMAT.format(timestamp);
            else
                // Different day, same year, show month, day, down to minutes
                return MONTH_FORMAT.format(timestamp);
-       }
-       else
+       } else
            // Different year, show yyyy-MM-dd";
            return DATE_FORMAT.format(timestamp);
    }
 
-    private static final DateTimeFormatter absolute_parsers[] = new DateTimeFormatter[]
-    {
+    private static final DateTimeFormatter absolute_parsers[] = new DateTimeFormatter[] {
         TimestampFormats.FULL_FORMAT,
         TimestampFormats.MILLI_FORMAT,
         TimestampFormats.SECONDS_FORMAT,
@@ -103,19 +99,14 @@ public class TimestampFormats
      *  @param text Text with date, time
      *  @return {@link Instant} or <code>null</code>
      */
-    public static Instant parse(final String text)
-    {
-        for (DateTimeFormatter format : absolute_parsers)
-        {
-            try
-            {
+    public static Instant parse(final String text) {
+        for (DateTimeFormatter format : absolute_parsers) {
+            try {
                 // DATE_FORMAT lacks seconds
                 if (format == DATE_FORMAT)
                     return Instant.from(DATETIME_FORMAT.parse(text + " 00:00"));
                 return Instant.from(format.parse(text));
-            }
-            catch (Throwable ex)
-            {
+            } catch (Throwable ex) {
                 // Ignore
             }
         }

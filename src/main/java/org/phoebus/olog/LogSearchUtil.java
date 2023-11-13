@@ -45,8 +45,8 @@ import java.util.stream.Collectors;
 @Service
 public class LogSearchUtil {
 
-    final private static String MILLI_PATTERN = "yyyy-MM-dd HH:mm:ss.SSS";
-    final public static DateTimeFormatter MILLI_FORMAT = DateTimeFormatter.ofPattern(MILLI_PATTERN).withZone(ZoneId.systemDefault());
+    private static final String MILLI_PATTERN = "yyyy-MM-dd HH:mm:ss.SSS";
+    public static final DateTimeFormatter MILLI_FORMAT = DateTimeFormatter.ofPattern(MILLI_PATTERN).withZone(ZoneId.systemDefault());
 
     @SuppressWarnings("unused")
     @Value("${elasticsearch.log.index:olog_logs}")
