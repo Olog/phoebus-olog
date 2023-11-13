@@ -139,7 +139,7 @@ public class LogResourceTest extends ResourcesTestBase {
     }
 
     @Test
-    public void testGetLogById() throws Exception {
+    void testGetLogById() throws Exception {
         when(logRepository.findById("1")).thenAnswer(invocationOnMock -> Optional.of(log1));
 
         MockHttpServletRequestBuilder request = get("/" + OlogResourceDescriptors.LOG_RESOURCE_URI + "/1");
@@ -152,7 +152,7 @@ public class LogResourceTest extends ResourcesTestBase {
     }
 
     @Test
-    public void testGetLogByIdRepositoryThrowsException() throws Exception {
+    void testGetLogByIdRepositoryThrowsException() throws Exception {
         when(logRepository.findById("1")).thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, ""));
 
         MockHttpServletRequestBuilder request = get("/" + OlogResourceDescriptors.LOG_RESOURCE_URI + "/1");
@@ -162,7 +162,7 @@ public class LogResourceTest extends ResourcesTestBase {
     }
 
     @Test
-    public void testFindLogs() throws Exception {
+    void testFindLogs() throws Exception {
         MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
         map.put("a", List.of("b"));
 
@@ -184,7 +184,7 @@ public class LogResourceTest extends ResourcesTestBase {
     }
 
     @Test
-    public void testSearchLogs() throws Exception {
+    void testSearchLogs() throws Exception {
         MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
         map.put("a", List.of("b"));
 
@@ -202,7 +202,7 @@ public class LogResourceTest extends ResourcesTestBase {
     }
 
     @Test
-    public void testSearchLogsUnsupportedTemporals() throws Exception {
+    void testSearchLogsUnsupportedTemporals() throws Exception {
         MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
         map.put("start", List.of("2 years"));
 
@@ -221,7 +221,7 @@ public class LogResourceTest extends ResourcesTestBase {
     }
 
     @Test
-    public void testCreateLogUnauthorized() throws Exception {
+    void testCreateLogUnauthorized() throws Exception {
         MockHttpServletRequestBuilder request = put("/" + OlogResourceDescriptors.LOG_RESOURCE_URI)
                 .content(objectMapper.writeValueAsString(log1))
                 .contentType(JSON);
@@ -229,8 +229,7 @@ public class LogResourceTest extends ResourcesTestBase {
     }
 
     @Test
-    public void testCreateLog() throws Exception {
-
+    void testCreateLog() throws Exception {
         Log log = LogBuilder.createLog()
                 .id(1L)
                 .owner("user")
@@ -262,8 +261,7 @@ public class LogResourceTest extends ResourcesTestBase {
      * @throws Exception
      */
     @Test
-    public void testUpdateExisting() throws Exception {
-
+    void testUpdateExisting() throws Exception {
         Property property1 = new Property();
         property1.setName("prop1");
         property1.addAttributes(new Attribute("name1", "value1"));
@@ -293,8 +291,7 @@ public class LogResourceTest extends ResourcesTestBase {
     }
 
     @Test
-    public void testUpdateBadRequest() throws Exception {
-
+    void testUpdateBadRequest() throws Exception {
         Property property1 = new Property();
         property1.setName("prop1");
         property1.addAttributes(new Attribute("name1", "value1"));
@@ -327,14 +324,14 @@ public class LogResourceTest extends ResourcesTestBase {
      * @throws Exception
      */
     @Test
-    public void testGetAttachment() throws Exception {
+    void testGetAttachment() throws Exception {
         MockHttpServletRequestBuilder request = get("/" + OlogResourceDescriptors.LOG_RESOURCE_URI
                 + "/attachments/1/attachmentName");
         mockMvc.perform(request).andExpect(status().isOk());
     }
 
     @Test
-    public void testCreateAttachmentUnauthroized() throws Exception {
+    void testCreateAttachmentUnauthroized() throws Exception {
         MockHttpServletRequestBuilder request = put("/" + OlogResourceDescriptors.LOG_RESOURCE_URI
                 + "/attachments/1");
         mockMvc.perform(request).andExpect(status().isUnauthorized());
@@ -346,8 +343,7 @@ public class LogResourceTest extends ResourcesTestBase {
      * @throws Exception
      */
     @Test
-    public void testCreateAttachment() throws Exception {
-
+    void testCreateAttachment() throws Exception {
         when(logRepository.findById("1")).thenReturn(Optional.of(log1));
         MockMultipartFile file =
                 new MockMultipartFile("file", "filename.txt", "text/plain", "some xml".getBytes());
@@ -365,7 +361,7 @@ public class LogResourceTest extends ResourcesTestBase {
     }
 
     @Test
-    public void testCreateLogMultipart() throws Exception{
+    void testCreateLogMultipart() throws Exception {
         Attachment attachment = new Attachment();
         attachment.setId("attachmentId");
         attachment.setFilename("filename1.txt");
@@ -408,7 +404,7 @@ public class LogResourceTest extends ResourcesTestBase {
     }
 
     @Test
-    public void testCreateLogMultipartNoAttachments() throws Exception{
+    void testCreateLogMultipartNoAttachments() throws Exception {
         Log log = LogBuilder.createLog()
                 .id(1L)
                 .owner("user")
@@ -442,7 +438,7 @@ public class LogResourceTest extends ResourcesTestBase {
     }
 
     @Test
-    public void testCreateLogMultipartFileAndAttachmentMismatch() throws Exception{
+    void testCreateLogMultipartFileAndAttachmentMismatch() throws Exception {
         Attachment attachment = new Attachment();
         attachment.setId("attachmentId");
         attachment.setFilename("filename1.txt");
@@ -486,7 +482,6 @@ public class LogResourceTest extends ResourcesTestBase {
         reset(logRepository);
     }
 
-
     /**
      * A matcher used to work around issues with {@link Log#equals(Object)} when using the mocks.
      */
@@ -512,7 +507,7 @@ public class LogResourceTest extends ResourcesTestBase {
     }
 
     @Test
-    public void testReplyInvalidLogEntryId() throws Exception {
+    void testReplyInvalidLogEntryId() throws Exception {
         when(logbookRepository.findAll()).thenReturn(Arrays.asList(logbook1, logbook2));
         when(tagRepository.findAll()).thenReturn(Arrays.asList(tag1, tag2));
         when(logRepository.findById("7"))
@@ -526,7 +521,7 @@ public class LogResourceTest extends ResourcesTestBase {
     }
 
     @Test
-    public void testReplyValidLogEntryId() throws Exception {
+    void testReplyValidLogEntryId() throws Exception {
         when(logbookRepository.findAll()).thenReturn(Arrays.asList(logbook1, logbook2));
         when(tagRepository.findAll()).thenReturn(Arrays.asList(tag1, tag2));
         when(logRepository.findById("7"))
@@ -542,7 +537,7 @@ public class LogResourceTest extends ResourcesTestBase {
     }
 
     @Test
-    public void testGroupNonExistingLogEntryId() throws Exception {
+    void testGroupNonExistingLogEntryId() throws Exception {
         when(logRepository.findById("1")).thenReturn(Optional.of(Log.LogBuilder.createLog().build()));
         when(logRepository.findById("2")).thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Not found."));
 
@@ -558,7 +553,7 @@ public class LogResourceTest extends ResourcesTestBase {
     }
 
     @Test
-    public void testGroupMultipleGroupIdsFound() throws Exception {
+    void testGroupMultipleGroupIdsFound() throws Exception {
         Property logEntryGroupProperty1 = LogEntryGroupHelper.createNewLogEntryProperty();
         Log log1 = Log.LogBuilder.createLog().id(1L).setProperties(Set.of(logEntryGroupProperty1)).build();
         Property logEntryGroupProperty2 = LogEntryGroupHelper.createNewLogEntryProperty();
@@ -578,7 +573,7 @@ public class LogResourceTest extends ResourcesTestBase {
     }
 
     @Test
-    public void testGroupWithExisting1() throws Exception {
+    void testGroupWithExisting1() throws Exception {
         Property logEntryGroupProperty1 = LogEntryGroupHelper.createNewLogEntryProperty();
         Log log1 = Log.LogBuilder.createLog().id(1L).setProperties(Set.of(logEntryGroupProperty1)).build();
         Log log2 = Log.LogBuilder.createLog().id(2L).setProperties(Set.of(logEntryGroupProperty1)).build();
@@ -597,7 +592,7 @@ public class LogResourceTest extends ResourcesTestBase {
     }
 
     @Test
-    public void testGroupWithExisting2() throws Exception {
+    void testGroupWithExisting2() throws Exception {
         Property logEntryGroupProperty1 = LogEntryGroupHelper.createNewLogEntryProperty();
         Log log1 = Log.LogBuilder.createLog().id(1L).setProperties(Set.of(logEntryGroupProperty1)).build();
         Log log2 = Log.LogBuilder.createLog().id(2L).build();
@@ -616,7 +611,7 @@ public class LogResourceTest extends ResourcesTestBase {
     }
 
     @Test
-    public void testGroupNoExisting() throws Exception {
+    void testGroupNoExisting() throws Exception {
         Log log1 = Log.LogBuilder.createLog().id(1L).build();
         Log log2 = Log.LogBuilder.createLog().id(2L).build();
         when(logRepository.findById("1")).thenReturn(Optional.of(log1));

@@ -33,10 +33,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.phoebus.olog.LogSearchUtil.MILLI_FORMAT;
 
 @TestPropertySource(locations = "classpath:no_ldap_test_application.properties")
-public class LogSearchUtilTest {
+class LogSearchUtilTest {
 
     @Test
-    public void testSortOrder() {
+    void testSortOrder() {
         LogSearchUtil logSearchUtil = new LogSearchUtil();
 
         // Test DESC and ASC
@@ -117,8 +117,7 @@ public class LogSearchUtilTest {
     }
 
     @Test
-    public void checkForInvalidTimeRanges() {
-
+    void checkForInvalidTimeRanges() {
         LogSearchUtil logSearchUtil = new LogSearchUtil();
         String expectedMessage = "CAUSE: Invalid start and end times";
 
@@ -136,7 +135,7 @@ public class LogSearchUtilTest {
     }
 
     @Test
-    public void testGetSearchTerms(){
+    void testGetSearchTerms() {
         LogSearchUtil logSearchUtil = new LogSearchUtil();
         String userInput = "";
         List<String> parsed = logSearchUtil.getSearchTerms(userInput);

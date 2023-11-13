@@ -112,7 +112,7 @@ public class ResourcesTestConfig {
     }
 
     @Bean
-    public LogEntryValidator logEntryValidator(){
+    public LogEntryValidator logEntryValidator() {
         LogEntryValidator logEntryValidator = Mockito.mock(LogEntryValidator.class);
         when(logEntryValidator.supports(Mockito.any(Class.class))).thenReturn(true);
         return logEntryValidator;

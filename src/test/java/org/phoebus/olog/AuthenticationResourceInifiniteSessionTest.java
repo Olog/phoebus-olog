@@ -49,14 +49,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ContextHierarchy({@ContextConfiguration(classes = {AuthenticationResourceTestConfig.class})})
 @WebMvcTest(AuthenticationResourceInifiniteSessionTest.class)
 @TestPropertySource(locations = "classpath:no_ldap_test_application_infinite_session_duration.properties")
-public class AuthenticationResourceInifiniteSessionTest extends ResourcesTestBase {
+class AuthenticationResourceInifiniteSessionTest extends ResourcesTestBase {
 
 
     @Autowired
     private AuthenticationManager authenticationManager;
 
     @Test
-    public void testSuccessfullLogin() throws Exception {
+    void testSuccessfullLogin() throws Exception {
         SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_ADMIN");
         Authentication mockAuthentication = mock(Authentication.class);
         Set authorities = new HashSet();

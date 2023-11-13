@@ -22,10 +22,10 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertNull;
 
-public class ServiceConfigurationTest {
+class ServiceConfigurationTest {
 
     @Test
-    public void testNoArgsConstructor() {
+    void testNoArgsConstructor() {
         ServiceConfiguration serviceConfiguration = new ServiceConfiguration();
         assertNull(serviceConfiguration.getLevels());
         assertNull(serviceConfiguration.getTags());

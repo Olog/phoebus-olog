@@ -49,7 +49,7 @@ public class LogResourceTestConfig {
     }
 
     //@Bean
-    //public GridFSBucket gridFSBucket(){
+    //public GridFSBucket gridFSBucket() {
     //    return Mockito.mock(GridFSBucket.class);
     //}
 

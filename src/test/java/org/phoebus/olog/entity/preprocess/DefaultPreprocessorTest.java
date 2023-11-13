@@ -25,12 +25,12 @@ import org.phoebus.olog.entity.preprocess.impl.DefaultMarkupCleaner;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class DefaultPreprocessorTest {
+class DefaultPreprocessorTest {
 
     private DefaultMarkupCleaner defaultPreprocessor = new DefaultMarkupCleaner();
 
     @Test
-    public void testSourceNull(){
+    void testSourceNull() {
         Log log = LogBuilder.createLog()
                 .description("description")
                 .source(null)

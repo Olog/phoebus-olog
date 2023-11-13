@@ -28,7 +28,7 @@ import java.nio.file.Files;
 @ContextConfiguration(classes = ElasticConfig.class)
 @SuppressWarnings("unused")
 @TestPropertySource(locations = "classpath:test_application.properties")
-public class AttachmentRepositoryIT {
+class AttachmentRepositoryIT {
     @Autowired
     private GridFsTemplate gridFsTemplate;
     @Autowired
@@ -43,7 +43,7 @@ public class AttachmentRepositoryIT {
      * Test the creation of a image attachment
      */
     @Test
-    public void createImageAttachment() {
+    void createImageAttachment() {
         try {
             File testFile = new File("src/test/resources/Tulips.jpg");
             MockMultipartFile mock;
@@ -75,7 +75,7 @@ public class AttachmentRepositoryIT {
      * Test the creation of a simple text attachment
      */
     @Test
-    public void createTextAttachment() {
+    void createTextAttachment() {
         try {
             File testFile = new File("src/test/resources/SampleTextFile_100kb.txt");
             MockMultipartFile mock;
@@ -108,7 +108,7 @@ public class AttachmentRepositoryIT {
      * Test the retrieval of an image attachment
      */
     @Test
-    public void retrieveImageAttachment() {
+    void retrieveImageAttachment() {
         try {
             File testFile = new File("src/test/resources/SampleTextFile_100kb.txt");
             MockMultipartFile mock;

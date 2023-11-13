@@ -52,8 +52,7 @@ public class LogEntryGroupHelperTest {
     }
 
     @Test
-    public void testAddLogEntryGroupPorpertyNoProperties(){
-
+    void testAddLogEntryGroupPorpertyNoProperties() {
         Log originalLog = LogBuilder.createLog()
                 .owner("user")
                 .title("original title")
@@ -69,8 +68,7 @@ public class LogEntryGroupHelperTest {
     }
 
     @Test
-    public void testAddLogEntryGroupPorpertyOriginalHasLogEntryGroup(){
-
+    void testAddLogEntryGroupPorpertyOriginalHasLogEntryGroup() {
         Log originalLog = LogBuilder.createLog()
                 .owner("user")
                 .title("original title")

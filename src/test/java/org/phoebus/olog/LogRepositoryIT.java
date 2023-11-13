@@ -62,7 +62,7 @@ import static org.springframework.data.mongodb.core.query.Criteria.where;
 @ContextConfiguration(classes = ElasticConfig.class)
 @TestPropertySource(locations = "classpath:test_application.properties")
 @SuppressWarnings("unused")
-public class LogRepositoryIT {
+class LogRepositoryIT {
 
 
     @Autowired
@@ -125,7 +125,7 @@ public class LogRepositoryIT {
      * @throws IOException
      */
     @Test
-    public void createLog() throws IOException {
+    void createLog() throws IOException {
         try {
             logbookRepository.save(TEST_LOGBOOK_1);
             tagRepository.save(TEST_TAG_1);
@@ -170,7 +170,7 @@ public class LogRepositoryIT {
      * @throws IOException
      */
     @Test
-    public void createLogWithEvents() throws IOException {
+    void createLogWithEvents() throws IOException {
         try {
             logbookRepository.save(TEST_LOGBOOK_1);
             tagRepository.save(TEST_TAG_1);
@@ -204,7 +204,7 @@ public class LogRepositoryIT {
      * @throws IOException
      */
     @Test
-    public void createLogWithAttachment() throws IOException {
+    void createLogWithAttachment() throws IOException {
         logbookRepository.save(TEST_LOGBOOK_1);
         tagRepository.save(TEST_TAG_1);
         propertyRepository.save(TEST_PROPERTY_1);
@@ -254,7 +254,7 @@ public class LogRepositoryIT {
      * @throws IOException
      */
     @Test
-    public void createLogs(){
+    void createLogs() {
         logbookRepository.save(TEST_LOGBOOK_1);
         tagRepository.save(TEST_TAG_1);
         propertyRepository.save(TEST_PROPERTY_1);
@@ -287,7 +287,7 @@ public class LogRepositoryIT {
      * @throws IOException
      */
     @Test
-    public void archiveLog() throws IOException {
+    void archiveLog() throws IOException {
         try {
             logbookRepository.save(TEST_LOGBOOK_1);
             tagRepository.save(TEST_TAG_1);
@@ -325,7 +325,7 @@ public class LogRepositoryIT {
      * @throws IOException
      */
     @Test
-    public void archiveLogs() throws IOException {
+    void archiveLogs() throws IOException {
         try {
             logbookRepository.save(TEST_LOGBOOK_1);
             tagRepository.save(TEST_TAG_1);
@@ -373,7 +373,7 @@ public class LogRepositoryIT {
      * @throws IOException
      */
     @Test
-    public void updateLog() throws IOException {
+    void updateLog() throws IOException {
         try {
             logbookRepository.save(TEST_LOGBOOK_1);
             tagRepository.save(TEST_TAG_1);
@@ -406,8 +406,8 @@ public class LogRepositoryIT {
     }
 
     @Test
-    public void checkLogExists() throws IOException {
-        // check for non existing log entry 
+    void checkLogExists() throws IOException {
+        // check for non existing log entry
         assertFalse(logRepository.existsById("123456789"), "Failed to check non existance of log entry 123456789");
 
         // check for an existing log entry
@@ -422,7 +422,7 @@ public class LogRepositoryIT {
 
 
     @Test
-    public void findLogsById() throws IOException {
+    void findLogsById() throws IOException {
         // check for an existing log entry
         Log log = Log.LogBuilder.createLog("This is a test entry").owner(TEST_OWNER).withLogbook(TEST_LOGBOOK_1).build();
         Log createdLog = logRepository.save(log);
@@ -434,13 +434,13 @@ public class LogRepositoryIT {
     }
 
     @Test
-    public void findLogsByNonExistingId() throws IOException {
-        // check for non existing log entry 
+    void findLogsByNonExistingId() throws IOException {
+        // check for non existing log entry
         assertFalse(logRepository.existsById("123456789"), "Failed to check non existance of log entry 123456789");
     }
 
     @Test
-    public void findLogsByIds() throws IOException {
+    void findLogsByIds() throws IOException {
         // check for an existing log entry
         Log log1 = Log.LogBuilder.createLog("This is a test entry").owner(TEST_OWNER).withLogbook(TEST_LOGBOOK_1).build();
         Log log2 = Log.LogBuilder.createLog("This is a test entry").owner(TEST_OWNER).withLogbook(TEST_LOGBOOK_1).build();

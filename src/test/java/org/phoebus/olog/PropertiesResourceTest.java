@@ -70,7 +70,7 @@ public class PropertiesResourceTest extends ResourcesTestBase {
     }
 
     @Test
-    public void testFindAll() throws Exception {
+    void testFindAll() throws Exception {
         when(propertyRepository.findAll()).thenReturn(Arrays.asList(property1, property2));
 
         MockHttpServletRequestBuilder request = get("/" + OlogResourceDescriptors.PROPERTY_RESOURCE_URI);
@@ -84,7 +84,7 @@ public class PropertiesResourceTest extends ResourcesTestBase {
     }
 
     @Test
-    public void testFindById() throws Exception {
+    void testFindById() throws Exception {
         when(propertyRepository.findById("property1")).thenReturn(Optional.of(property1));
         MockHttpServletRequestBuilder request = get("/" +
                 OlogResourceDescriptors.PROPERTY_RESOURCE_URI +
@@ -98,7 +98,7 @@ public class PropertiesResourceTest extends ResourcesTestBase {
     }
 
     @Test
-    public void testCreatePropertyUnauthorized() throws Exception {
+    void testCreatePropertyUnauthorized() throws Exception {
         MockHttpServletRequestBuilder request = put("/" +
                 OlogResourceDescriptors.PROPERTY_RESOURCE_URI +
                 "/property1");
@@ -106,8 +106,7 @@ public class PropertiesResourceTest extends ResourcesTestBase {
     }
 
     @Test
-    public void testCreateProperty() throws Exception {
-
+    void testCreateProperty() throws Exception {
         Property property = new Property("property1");
         property.setOwner("user");
 
@@ -126,8 +125,7 @@ public class PropertiesResourceTest extends ResourcesTestBase {
     }
 
     @Test
-    public void testUpdatePropertyUnauthoroized() throws Exception {
-
+    void testUpdatePropertyUnauthoroized() throws Exception {
         MockHttpServletRequestBuilder request = put("/" +
                 OlogResourceDescriptors.PROPERTY_RESOURCE_URI)
                 .session(new MockHttpSession());
@@ -135,8 +133,7 @@ public class PropertiesResourceTest extends ResourcesTestBase {
     }
 
     @Test
-    public void testUpdateProperty() throws Exception {
-
+    void testUpdateProperty() throws Exception {
         Property property = new Property("property1");
         property.setOwner("user");
 
@@ -156,7 +153,7 @@ public class PropertiesResourceTest extends ResourcesTestBase {
     }
 
     @Test
-    public void testDeleteUnauthorized() throws Exception {
+    void testDeleteUnauthorized() throws Exception {
         MockHttpServletRequestBuilder request = delete("/" +
                 OlogResourceDescriptors.PROPERTY_RESOURCE_URI +
                 "/property1");
@@ -164,7 +161,7 @@ public class PropertiesResourceTest extends ResourcesTestBase {
     }
 
     @Test
-    public void testDelete() throws Exception {
+    void testDelete() throws Exception {
         MockHttpServletRequestBuilder request = delete("/" +
                 OlogResourceDescriptors.PROPERTY_RESOURCE_URI +
                 "/property1")
@@ -172,7 +169,6 @@ public class PropertiesResourceTest extends ResourcesTestBase {
         mockMvc.perform(request).andExpect(status().isNotFound());
         reset(propertyRepository);
     }
-
 
     /**
      * A matcher used to work around issues with {@link Property#equals(Object)} when using the mocks.

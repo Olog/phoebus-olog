@@ -62,7 +62,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ContextHierarchy({@ContextConfiguration(classes = {AuthenticationResourceTestConfig.class})})
 @WebMvcTest(AuthenticationResourceTest.class)
 @TestPropertySource(locations = "classpath:no_ldap_test_application.properties")
-public class AuthenticationResourceTest extends ResourcesTestBase {
+class AuthenticationResourceTest extends ResourcesTestBase {
 
 
     @Autowired
@@ -72,7 +72,7 @@ public class AuthenticationResourceTest extends ResourcesTestBase {
     private int sessionTimeout;
 
     @Test
-    public void testSuccessfullLogin() throws Exception {
+    void testSuccessfullLogin() throws Exception {
         SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_ADMIN");
         Authentication mockAuthentication = mock(Authentication.class);
         Set authorities = new HashSet();
@@ -115,14 +115,13 @@ public class AuthenticationResourceTest extends ResourcesTestBase {
     }
 
     @Test
-    public void testGetUserWithNoCookie() throws Exception{
+    void testGetUserWithNoCookie() throws Exception {
         MockHttpServletRequestBuilder request = get("/user");
         mockMvc.perform(request).andExpect(status().isNotFound());
     }
 
     @Test
-    public void testGetUserNoSession() throws Exception{
-
+    void testGetUserNoSession() throws Exception {
         SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_ADMIN");
         Authentication mockAuthentication = mock(Authentication.class);
         Set authorities = new HashSet();
@@ -142,7 +141,7 @@ public class AuthenticationResourceTest extends ResourcesTestBase {
     }
 
     @Test
-    public void testSuccessfullFormLogin() throws Exception {
+    void testSuccessfullFormLogin() throws Exception {
         SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_ADMIN");
         Authentication mockAuthentication = mock(Authentication.class);
         Set authorities = new HashSet();
@@ -159,7 +158,7 @@ public class AuthenticationResourceTest extends ResourcesTestBase {
     }
 
     @Test
-    public void testFailedLogin() throws Exception {
+    void testFailedLogin() throws Exception {
         doThrow(new BadCredentialsException("bad")).when(authenticationManager).authenticate(any(Authentication.class));
         MockHttpServletRequestBuilder request = post("/" + OLOG_SERVICE + "/login?username=admin&password=badPass");
         mockMvc.perform(request).andExpect(status().isUnauthorized());
@@ -167,7 +166,7 @@ public class AuthenticationResourceTest extends ResourcesTestBase {
     }
 
     @Test
-    public void testLogout() throws Exception {
+    void testLogout() throws Exception {
         MockHttpServletRequestBuilder request = get("/" + OLOG_SERVICE + "/logout");
         mockMvc.perform(request).andExpect(status().isOk());
 

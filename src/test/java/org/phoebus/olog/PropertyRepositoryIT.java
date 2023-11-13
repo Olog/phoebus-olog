@@ -38,12 +38,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
         classes = AuthenticationResource.class)
 @ContextConfiguration(classes = ElasticConfig.class)
 @TestPropertySource(locations = "classpath:test_application.properties")
-public class PropertyRepositoryIT {
+class PropertyRepositoryIT {
 
     @Autowired
     @Qualifier("client")
     ElasticsearchClient client;
-
 
     @Autowired
     private PropertyRepository propertyRepository;
@@ -68,7 +67,7 @@ public class PropertyRepositoryIT {
      * Test the creation of a test property
      */
     @Test
-    public void createProperty() {
+    void createProperty() {
         propertyRepository.save(testProperty1);
         Optional<Property> result = propertyRepository.findById(testProperty1.getName());
         assertThat("Failed to create Property " + testProperty1,
@@ -82,7 +81,7 @@ public class PropertyRepositoryIT {
      * create a set of properties
      */
     @Test
-    public void createProperties() {
+    void createProperties() {
         List<Property> properties = Arrays.asList(testProperty1, testProperty2, testProperty3, testProperty4);
         List<Property> result = new ArrayList<>();
         propertyRepository.saveAll(properties).forEach(result::add);
@@ -99,7 +98,7 @@ public class PropertyRepositoryIT {
      * Test the deletion of a test property
      */
     @Test
-    public void deleteProperty() {
+    void deleteProperty() {
         propertyRepository.save(testProperty2);
         Optional<Property> result = propertyRepository.findById(testProperty2.getName());
         assertThat("Failed to create Property " + testProperty2,
@@ -118,7 +117,7 @@ public class PropertyRepositoryIT {
      * Test the deletion of a test property
      */
     @Test
-    public void deletePropertyAttribute() {
+    void deletePropertyAttribute() {
         propertyRepository.save(testProperty2);
         Optional<Property> result = propertyRepository.findById(testProperty2.getName());
         assertThat("Failed to create Property " + testProperty2,
@@ -142,7 +141,7 @@ public class PropertyRepositoryIT {
      * delete a set of properties
      */
     @Test
-    public void deleteproperties() {
+    void deleteproperties() {
         List<Property> properties = Arrays.asList(testProperty1, testProperty2, testProperty3, testProperty4);
         try {
             List<Property> result = new ArrayList<>();
@@ -163,7 +162,7 @@ public class PropertyRepositoryIT {
     }
 
     @Test
-    public void findAllproperties() {
+    void findAllproperties() {
         List<Property> properties = Arrays.asList(testProperty1, testProperty2, testProperty3, testProperty4);
         try {
             propertyRepository.saveAll(properties);
@@ -177,7 +176,7 @@ public class PropertyRepositoryIT {
     }
 
     @Test
-    public void findAllpropertiesByIds() {
+    void findAllpropertiesByIds() {
         List<Property> properties = Arrays.asList(testProperty1, testProperty2, testProperty3, testProperty4);
         try {
             propertyRepository.saveAll(properties);
@@ -195,7 +194,7 @@ public class PropertyRepositoryIT {
     }
 
     @Test
-    public void findPropertyById() {
+    void findPropertyById() {
         List<Property> properties = Arrays.asList(testProperty1, testProperty2);
         try {
             propertyRepository.saveAll(properties);
@@ -208,7 +207,7 @@ public class PropertyRepositoryIT {
     }
 
     @Test
-    public void checkPropertyExists() {
+    void checkPropertyExists() {
         List<Property> properties = Arrays.asList(testProperty1, testProperty2);
         try {
             propertyRepository.saveAll(properties);
@@ -225,7 +224,6 @@ public class PropertyRepositoryIT {
             cleanupProperties(properties);
         }
     }
-
 
     /**
      * Clean up the properties

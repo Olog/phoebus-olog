@@ -24,11 +24,10 @@ import org.springframework.http.MediaType;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-public class ContentTypeResolvertest {
+class ContentTypeResolvertest {
 
     @Test
-    public void testDetermineMediaType() {
-
+    void testDetermineMediaType() {
         assertNull(ContentTypeResolver.determineMediaType(null));
         assertNull(ContentTypeResolver.determineMediaType(""));
 

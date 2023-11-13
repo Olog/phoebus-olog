@@ -31,12 +31,12 @@ import org.springframework.context.annotation.Profile;
 public class LogEntryValidatorTestConfig {
 
     @Bean
-    public LogbookRepository logbookRepository(){
+    public LogbookRepository logbookRepository() {
         return Mockito.mock(LogbookRepository.class);
     }
 
     @Bean
-    public TagRepository tagRepository(){
+    public TagRepository tagRepository() {
         return Mockito.mock(TagRepository.class);
     }
 
@@ -46,7 +46,7 @@ public class LogEntryValidatorTestConfig {
     }
 
     @Bean
-    public LogEntryValidator logEntryValidator(){
+    public LogEntryValidator logEntryValidator() {
         return new LogEntryValidator();
     }
 }

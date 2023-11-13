@@ -33,7 +33,7 @@ import java.nio.file.Files;
 @ContextConfiguration(classes = {LogResource.class, LogRepository.class, ElasticConfig.class, GridFsOperations.class})
 @TestPropertySource(locations = "classpath:test_application.properties")
 @SuppressWarnings("unused")
-public class LogResourceIT {
+class LogResourceIT {
 
     @Autowired
     LogResource logResource;
@@ -58,7 +58,7 @@ public class LogResourceIT {
     private String ES_LOG_TYPE;
 
     @Test
-    public void retrieveAttachment() {
+    void retrieveAttachment() {
         File testFile = new File("src/test/resources/SampleTextFile_100kb.txt");
 
         try {

@@ -30,42 +30,42 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @ExtendWith(SpringExtension.class)
 @WebMvcTest(LogResource.class)
-public class HelpResourceTest extends ResourcesTestBase{
+class HelpResourceTest extends ResourcesTestBase{
 
     @Test
-    public void testGetCheatSheet() throws  Exception{
+    void testGetCheatSheet() throws  Exception {
         MockHttpServletRequestBuilder request = get("/" + OlogResourceDescriptors.HELP_URI + "/CommonmarkCheatsheet")
                 .header("Accept-Language", "en-US, en;q=0.9, fr;q=0.8, de;q=0.7, *;q=0.5");
         mockMvc.perform(request).andExpect(status().isOk());
     }
 
     @Test
-    public void testGetCheatSheetWithLanguageParameter() throws  Exception{
+    void testGetCheatSheetWithLanguageParameter() throws  Exception {
         MockHttpServletRequestBuilder request = get("/" + OlogResourceDescriptors.HELP_URI + "/CommonmarkCheatsheet?lang=en");
         mockMvc.perform(request).andExpect(status().isOk());
     }
 
     @Test
-    public void testGetSearchHelp() throws  Exception{
+    void testGetSearchHelp() throws  Exception {
         MockHttpServletRequestBuilder request = get("/" + OlogResourceDescriptors.HELP_URI + "/SearchHelp");
         mockMvc.perform(request).andExpect(status().isOk());
     }
 
     @Test
-    public void testGetCheatSheetUnrecognizedAcceptLanguage() throws  Exception{
+    void testGetCheatSheetUnrecognizedAcceptLanguage() throws  Exception {
         MockHttpServletRequestBuilder request = get("/" + OlogResourceDescriptors.HELP_URI + "/CommonmarkCheatsheet")
                 .header("Accept-Language", "xx-YY");
         mockMvc.perform(request).andExpect(status().isOk());
     }
 
     @Test
-    public void testGetCheatSheetUnsupportedLanguageParameter() throws  Exception{
+    void testGetCheatSheetUnsupportedLanguageParameter() throws  Exception {
         MockHttpServletRequestBuilder request = get("/" + OlogResourceDescriptors.HELP_URI + "/CommonmarkCheatsheet?lang=xx");
         mockMvc.perform(request).andExpect(status().isOk());
     }
 
     @Test
-    public void testGetCheatSheetUnsupportedHelpType() throws  Exception{
+    void testGetCheatSheetUnsupportedHelpType() throws  Exception {
         MockHttpServletRequestBuilder request = get("/" + OlogResourceDescriptors.HELP_URI + "/unsupported");
         mockMvc.perform(request).andExpect(status().isNotFound());
     }

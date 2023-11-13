@@ -72,7 +72,7 @@ public class SessionFilterTest {
     }
 
     @Test
-    public void testGetAuthorizationFromCookie() {
+    void testGetAuthorizationFromCookie() {
         HttpServletRequest httpServletRequest = Mockito.mock(HttpServletRequest.class);
         when(httpServletRequest.getCookies()).thenReturn(null);
 
@@ -103,7 +103,7 @@ public class SessionFilterTest {
     }
 
     @Test
-    public void testGetUsernameAndPasswordFromAuthorizationHeader() {
+    void testGetUsernameAndPasswordFromAuthorizationHeader() {
         assertNull(sessionFilter.getUsernameAndPassword(null));
         assertNull(sessionFilter.getUsernameAndPassword("Does not start with Basic"));
 
@@ -113,7 +113,7 @@ public class SessionFilterTest {
     }
 
     @Test
-    public void testFilterWithoutCookieOrAuthenticationHeader() throws Exception {
+    void testFilterWithoutCookieOrAuthenticationHeader() throws Exception {
         HttpServletRequest httpServletRequest = Mockito.mock(HttpServletRequest.class);
         when(httpServletRequest.getCookies()).thenReturn(null);
         when(httpServletRequest.getHeader("Authorization")).thenReturn(null);
@@ -127,7 +127,7 @@ public class SessionFilterTest {
     }
 
     @Test
-    public void testFilterWithNullSession() throws Exception {
+    void testFilterWithNullSession() throws Exception {
         HttpServletRequest httpServletRequest = Mockito.mock(HttpServletRequest.class);
         when(httpServletRequest.getCookies()).thenReturn(cookies);
         when(sessionRepository.findById("abc")).thenReturn(null);
@@ -136,7 +136,7 @@ public class SessionFilterTest {
     }
 
     @Test
-    public void testFilterWithValidSession() throws Exception {
+    void testFilterWithValidSession() throws Exception {
         HttpServletRequest httpServletRequest = Mockito.mock(HttpServletRequest.class);
         when(httpServletRequest.getCookies()).thenReturn(cookies);
         Session session = mock(Session.class);
@@ -152,7 +152,7 @@ public class SessionFilterTest {
     }
 
     @Test
-    public void testFilterWithWrongAuthorizationHeader() throws Exception {
+    void testFilterWithWrongAuthorizationHeader() throws Exception {
         HttpServletRequest httpServletRequest = Mockito.mock(HttpServletRequest.class);
         when(httpServletRequest.getCookies()).thenReturn(null);
         when(httpServletRequest.getHeader("Authorization")).thenReturn("wrong header value");
@@ -161,7 +161,7 @@ public class SessionFilterTest {
     }
 
     @Test
-    public void testFilterWithInvalidAuthorizationHeader() throws Exception {
+    void testFilterWithInvalidAuthorizationHeader() throws Exception {
         HttpServletRequest httpServletRequest = Mockito.mock(HttpServletRequest.class);
         when(httpServletRequest.getCookies()).thenReturn(null);
         when(httpServletRequest.getHeader("Authorization")).thenReturn("Basic YWRtaW46YWRtaW5QYXNz");
@@ -171,7 +171,7 @@ public class SessionFilterTest {
     }
 
     @Test
-    public void testFilterWithValidAuthorizationHeader() throws Exception {
+    void testFilterWithValidAuthorizationHeader() throws Exception {
         HttpServletRequest httpServletRequest = Mockito.mock(HttpServletRequest.class);
         when(httpServletRequest.getCookies()).thenReturn(null);
         when(httpServletRequest.getHeader("Authorization")).thenReturn("Basic YWRtaW46YWRtaW5QYXNz");

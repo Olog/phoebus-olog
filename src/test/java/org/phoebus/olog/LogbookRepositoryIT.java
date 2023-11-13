@@ -35,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
         classes = AuthenticationResource.class)
 @ContextConfiguration(classes = {LogbookRepository.class, ElasticConfig.class})
 @TestPropertySource(locations = "classpath:test_application.properties")
-public class LogbookRepositoryIT {
+class LogbookRepositoryIT {
 
     // Read the elastic index and type from the application.properties
     @Value("${elasticsearch.logbook.index:olog_logbooks}")
@@ -59,7 +59,7 @@ public class LogbookRepositoryIT {
      * Test the creation of a test logbook
      */
     @Test
-    public void createLogbook() {
+    void createLogbook() {
         try {
             logbookRepository.save(testLogbook1);
             Optional<Logbook> result = logbookRepository.findById(testLogbook1.getName());
@@ -73,7 +73,7 @@ public class LogbookRepositoryIT {
      * create a set of logbooks
      */
     @Test
-    public void createLogbooks() {
+    void createLogbooks() {
         List<Logbook> logbooks = Arrays.asList(testLogbook1, testLogbook2, testLogbook3, testLogbook4);
         try {
             List<Logbook> result = new ArrayList<>();
@@ -93,7 +93,7 @@ public class LogbookRepositoryIT {
      * Test the deletion of a logbook
      */
     @Test
-    public void deleteLogbook(){
+    void deleteLogbook() {
         try {
             logbookRepository.save(testLogbook2);
             Optional<Logbook> result = logbookRepository.findById(testLogbook2.getName());
@@ -113,7 +113,7 @@ public class LogbookRepositoryIT {
      * Delete a set of logbooks
      */
     @Test
-    public void deteleLogbooks(){
+    void deteleLogbooks() {
         List<Logbook> logbooks = Arrays.asList(testLogbook1, testLogbook2, testLogbook3, testLogbook4);
         try {
             List<Logbook> result = new ArrayList<>();
@@ -137,7 +137,7 @@ public class LogbookRepositoryIT {
      * Find all logbooks that are still Active
      */
     @Test
-    public void findAllLogbooks(){
+    void findAllLogbooks() {
         List<Logbook> logbooks = Arrays.asList(testLogbook1, testLogbook2, testLogbook3, testLogbook4);
         try {
             logbookRepository.saveAll(logbooks);
@@ -154,7 +154,7 @@ public class LogbookRepositoryIT {
      * Find a logbook with the given Id, the logbook is found irrespective of its State
      */
     @Test
-    public void findLogbooksById(){
+    void findLogbooksById() {
         List<Logbook> logbooks = Arrays.asList(testLogbook1, testLogbook2);
         try {
             logbookRepository.saveAll(logbooks);
@@ -170,7 +170,7 @@ public class LogbookRepositoryIT {
      * Find logbooks with the given Ids, the logbooks are found irrespective of its State
      */
     @Test
-    public void findAllLogbooksByIds(){
+    void findAllLogbooksByIds() {
         List<Logbook> logbooks = Arrays.asList(testLogbook1, testLogbook2, testLogbook3, testLogbook4);
         try {
             logbookRepository.saveAll(logbooks);
@@ -188,7 +188,7 @@ public class LogbookRepositoryIT {
     }
 
     @Test
-    public void checkLogbookExist(){
+    void checkLogbookExist() {
         List<Logbook> logbooks = Arrays.asList(testLogbook1, testLogbook2);
         try {
             logbookRepository.saveAll(logbooks);
@@ -206,7 +206,7 @@ public class LogbookRepositoryIT {
     }
 
     @Test
-    public void checkLogbooksExist() {
+    void checkLogbooksExist() {
         List<Logbook> logbooks = Arrays.asList(testLogbook1, testLogbook2);
         try {
             logbookRepository.saveAll(logbooks);
@@ -224,7 +224,6 @@ public class LogbookRepositoryIT {
             cleanupLogbook(logbooks);
         }
     }
-
 
     /**
      * Cleanup up the logbooks
