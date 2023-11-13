@@ -23,7 +23,6 @@ import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.mget.MultiGetResponseItem;
 import co.elastic.clients.elasticsearch.core.search.Hit;
-import org.apache.logging.log4j.util.Strings;
 import org.phoebus.olog.entity.Attachment;
 import org.phoebus.olog.entity.Log;
 import org.phoebus.olog.entity.Log.LogBuilder;

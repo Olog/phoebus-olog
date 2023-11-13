@@ -8,11 +8,10 @@ package org.phoebus.olog.entity;
 import org.springframework.core.io.InputStreamSource;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.springframework.data.mongodb.core.mapping.Document;
 
 /**
  * An object describing a log entry attachment.
- * 
+ *
  * @author Kunal Shroff
  *
  */
@@ -66,7 +65,7 @@ public class Attachment
 
     /**
      * Getter for attachment id
-     * 
+     *
      * @return attachment id
      */
     public String getId()
@@ -76,7 +75,7 @@ public class Attachment
 
     /**
      * Setter for attachment id
-     * 
+     *
      * @param id - the id for the attachment
      */
     public void setId(String id)

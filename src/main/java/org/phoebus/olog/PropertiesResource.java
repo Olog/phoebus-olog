@@ -7,7 +7,6 @@ package org.phoebus.olog;
 
 import static org.phoebus.olog.OlogResourceDescriptors.PROPERTY_RESOURCE_URI;
 
-import java.io.IOException;
 import java.security.Principal;
 import java.util.List;
 import java.util.Optional;

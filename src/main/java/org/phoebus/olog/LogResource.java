@@ -12,7 +12,6 @@ import org.phoebus.olog.entity.preprocess.MarkupCleaner;
 import org.phoebus.olog.notification.LogEntryNotifier;
 import org.phoebus.util.time.TimeParser;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.task.TaskExecutor;
