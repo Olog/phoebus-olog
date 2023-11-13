@@ -322,41 +322,41 @@ public class LogSearchUtil {
         // Add the description query. Multiple search terms will be AND:ed.
         if (!searchTerms.isEmpty()) {
             if (fuzzySearch) {
-                searchTerms.stream().forEach(searchTerm -> {
-                    boolQueryBuilder.must(FuzzyQuery.of(f -> f.field("description").value(searchTerm))._toQuery());
-                });
+                searchTerms.stream().forEach(searchTerm ->
+                    boolQueryBuilder.must(FuzzyQuery.of(f -> f.field("description").value(searchTerm))._toQuery())
+                );
             } else {
-                searchTerms.stream().forEach(searchTerm -> {
-                    boolQueryBuilder.must(WildcardQuery.of(w -> w.field("description").value(searchTerm))._toQuery());
-                });
+                searchTerms.stream().forEach(searchTerm ->
+                    boolQueryBuilder.must(WildcardQuery.of(w -> w.field("description").value(searchTerm))._toQuery())
+                );
             }
         }
 
         // Add phrase queries for description key. Multiple search terms will be AND:ed.
         if (!descriptionPhraseSearchTerms.isEmpty()) {
-            descriptionPhraseSearchTerms.stream().forEach(phraseSearchTerm -> {
-                boolQueryBuilder.must(MatchPhraseQuery.of(m -> m.field("description").query(phraseSearchTerm))._toQuery());
-            });
+            descriptionPhraseSearchTerms.stream().forEach(phraseSearchTerm ->
+                boolQueryBuilder.must(MatchPhraseQuery.of(m -> m.field("description").query(phraseSearchTerm))._toQuery())
+            );
         }
 
         // Add the title query. Multiple search terms will be AND:ed.
         if (!titleSearchTerms.isEmpty()) {
             if (fuzzySearch) {
-                titleSearchTerms.stream().forEach(searchTerm -> {
-                    boolQueryBuilder.must(FuzzyQuery.of(f -> f.field("title").value(searchTerm))._toQuery());
-                });
+                titleSearchTerms.stream().forEach(searchTerm ->
+                    boolQueryBuilder.must(FuzzyQuery.of(f -> f.field("title").value(searchTerm))._toQuery())
+                );
             } else {
-                titleSearchTerms.stream().forEach(searchTerm -> {
-                    boolQueryBuilder.must(WildcardQuery.of(w -> w.field("title").value(searchTerm))._toQuery());
-                });
+                titleSearchTerms.stream().forEach(searchTerm ->
+                    boolQueryBuilder.must(WildcardQuery.of(w -> w.field("title").value(searchTerm))._toQuery())
+                );
             }
         }
 
         // Add phrase queries for title key. Multiple search terms will be AND:ed.
         if (!titlePhraseSearchTerms.isEmpty()) {
-            titlePhraseSearchTerms.stream().forEach(phraseSearchTerm -> {
-                boolQueryBuilder.must(MatchPhraseQuery.of(m -> m.field("title").query(phraseSearchTerm))._toQuery());
-            });
+            titlePhraseSearchTerms.stream().forEach(phraseSearchTerm ->
+                boolQueryBuilder.must(MatchPhraseQuery.of(m -> m.field("title").query(phraseSearchTerm))._toQuery())
+            );
         }
 
         // Add the level query
@@ -364,13 +364,13 @@ public class LogSearchUtil {
             DisMaxQuery.Builder levelQuery = new DisMaxQuery.Builder();
             List<Query> levelQueries = new ArrayList<>();
             if (fuzzySearch) {
-                levelSearchTerms.stream().forEach(searchTerm -> {
-                    levelQueries.add(FuzzyQuery.of(f -> f.field("level").value(searchTerm))._toQuery());
-                });
+                levelSearchTerms.stream().forEach(searchTerm ->
+                    levelQueries.add(FuzzyQuery.of(f -> f.field("level").value(searchTerm))._toQuery())
+                );
             } else {
-                levelSearchTerms.stream().forEach(searchTerm -> {
-                    levelQueries.add(WildcardQuery.of(w -> w.field("level").value(searchTerm))._toQuery());
-                });
+                levelSearchTerms.stream().forEach(searchTerm ->
+                    levelQueries.add(WildcardQuery.of(w -> w.field("level").value(searchTerm))._toQuery())
+                );
             }
             levelQuery.queries(levelQueries);
             boolQueryBuilder.must(levelQuery.build()._toQuery());

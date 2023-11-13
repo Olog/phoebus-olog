@@ -30,41 +30,41 @@ public class AuthorizationService {
     @Value("${admin-groups:olog-admins}")
     void initializeAdminRoles(String groups)
     {
-        this.admin_groups = Arrays.asList(groups.split(",")).stream().map(g -> {
-            return "ROLE_" + g.trim().toUpperCase();
-        }).collect(Collectors.toList());
+        this.admin_groups = Arrays.asList(groups.split(",")).stream().map(g ->
+            "ROLE_" + g.trim().toUpperCase()
+        ).collect(Collectors.toList());
     }
 
     @Value("${channel-groups:olog-logs}")
     void initializeChannelModRoles(String groups)
     {
-        this.log_groups = Arrays.asList(groups.split(",")).stream().map(g -> {
-            return "ROLE_" + g.trim().toUpperCase();
-        }).collect(Collectors.toList());
+        this.log_groups = Arrays.asList(groups.split(",")).stream().map(g ->
+            "ROLE_" + g.trim().toUpperCase()
+        ).collect(Collectors.toList());
     }
 
     @Value("${tag-groups:olog-tags}")
     void initializeTagRoles(String groups)
     {
-        this.tag_groups = Arrays.asList(groups.split(",")).stream().map(g -> {
-            return "ROLE_" + g.trim().toUpperCase();
-        }).collect(Collectors.toList());
+        this.tag_groups = Arrays.asList(groups.split(",")).stream().map(g ->
+            "ROLE_" + g.trim().toUpperCase()
+        ).collect(Collectors.toList());
     }
 
     @Value("${property-groups:olog-logbooks}")
     void initializeLogbookRoles(String groups)
     {
-        this.logbook_groups = Arrays.asList(groups.split(",")).stream().map(g -> {
-            return "ROLE_" + g.trim().toUpperCase();
-        }).collect(Collectors.toList());
+        this.logbook_groups = Arrays.asList(groups.split(",")).stream().map(g ->
+            "ROLE_" + g.trim().toUpperCase()
+        ).collect(Collectors.toList());
     }
 
     @Value("${property-groups:olog-properties}")
     void initializePropertyRoles(String groups)
     {
-        this.property_groups = Arrays.asList(groups.split(",")).stream().map(g -> {
-            return "ROLE_" + g.trim().toUpperCase();
-        }).collect(Collectors.toList());
+        this.property_groups = Arrays.asList(groups.split(",")).stream().map(g ->
+            "ROLE_" + g.trim().toUpperCase()
+        ).collect(Collectors.toList());
     }
 
     public enum ROLES
