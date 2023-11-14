@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
+import java.text.MessageFormat;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.logging.Level;
@@ -73,8 +74,8 @@ public class InfoResource
             elasticInfo.put("elasticHost", host);
             elasticInfo.put("elasticPort", String.valueOf(port));
         } catch (IOException e) {
-            Application.logger.log(Level.WARNING, "Failed to create Olog service info resource.", e);
-            elasticInfo.put("status", "Failed to connect to elastic " + e.getLocalizedMessage());
+            Application.logger.log(Level.WARNING, TextUtil.OLOG_FAILED_CREATE_SERVICE, e);
+            elasticInfo.put("status", MessageFormat.format(TextUtil.ELASTIC_FAILED_TO_CONNECT, e.getLocalizedMessage()));
         }
         ologServiceInfo.put("elastic", elasticInfo);
         ologServiceInfo.put("mongoDB", mongoClient.getClusterDescription().getShortDescription());
@@ -89,8 +90,8 @@ public class InfoResource
         try {
             return objectMapper.writeValueAsString(ologServiceInfo);
         } catch (JsonProcessingException e) {
-            Application.logger.log(Level.WARNING, "Failed to create Olog service info resource.", e);
-            return "Failed to gather Olog service info";
+            Application.logger.log(Level.WARNING, TextUtil.OLOG_FAILED_CREATE_SERVICE, e);
+            return TextUtil.OLOG_FAILED_CREATE_SERVICE;
         }
     }
 }

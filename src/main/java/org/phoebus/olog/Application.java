@@ -42,7 +42,7 @@ public class Application {
     private long propertyProvidersTimeout;
 
     public static void main(String[] args) {
-        logger.info("Starting Olog Service");
+        logger.log(Level.INFO, TextUtil.OLOG_STARTING);
         configureTruststore();
         ConfigurableApplicationContext olog = SpringApplication.run(Application.class, args);
     }
@@ -61,7 +61,7 @@ public class Application {
                 tempFile.deleteOnExit();
                 System.setProperty("javax.net.ssl.trustStore", tempFile.getAbsolutePath());
             } catch (IOException e) {
-                logger.log(Level.SEVERE, "failed to configure olog truststore", e);
+                logger.log(Level.SEVERE, TextUtil.OLOG_FAILED_CONFIGURE_TRUSTSTORE, e);
             }
         }
         if (System.getProperty("javax.net.ssl.trustStorePassword") == null) {

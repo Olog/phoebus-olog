@@ -25,6 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
 
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -56,7 +57,7 @@ public class LogEntryValidator implements Validator {
         Log log = (Log)object;
 
         if(log.getTitle() == null || log.getTitle().isEmpty()){
-            logger.log(Level.INFO, "Log title empty.");
+            logger.log(Level.INFO, TextUtil.LOG_NOT_TITLE);
             errors.rejectValue("logbooks", "no.title");
         }
 
@@ -65,13 +66,13 @@ public class LogEntryValidator implements Validator {
 
         Set<Logbook> logbooks = log.getLogbooks();
         if(logbooks.isEmpty()){
-            logger.log(Level.INFO, "No logbooks specified.");
+            logger.log(Level.INFO, TextUtil.LOGBOOKS_NOT_SPECIFIED);
             errors.rejectValue("logbooks", "no.logbooks");
         }
 
         for(Logbook logbook : log.getLogbooks()){
             if(!existingLogbookNames.contains(logbook.getName())){
-                logger.log(Level.INFO, () -> "Logbook '" + logbook.getName() + "' is invalid.");
+                logger.log(Level.INFO, () -> MessageFormat.format(TextUtil.LOGBOOK_INVALID, logbook.getName()));
                 errors.rejectValue("logbooks", "invalid.logbooks");
             }
         }
@@ -80,7 +81,7 @@ public class LogEntryValidator implements Validator {
         tagRepository.findAll().forEach(t -> existingTagNames.add(t.getName()));
         for(Tag tag : log.getTags()){
             if(!existingTagNames.contains(tag.getName())){
-                logger.log(Level.INFO, () -> "Tag '" + tag.getName() + "' is invalid.");
+                logger.log(Level.INFO, () -> MessageFormat.format(TextUtil.TAG_INVALID, tag.getName()));
                 errors.rejectValue("tags", "invalid.tags");
             }
         }

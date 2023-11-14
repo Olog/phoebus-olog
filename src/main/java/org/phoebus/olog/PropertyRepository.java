@@ -42,6 +42,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -88,8 +89,9 @@ public class PropertyRepository implements CrudRepository<Property, String> {
             }
             return null;
         } catch (Exception e) {
-            logger.log(Level.SEVERE, "Failed to create property: " + property, e);
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to create property: " + property);
+            String message = MessageFormat.format(TextUtil.PROPERTY_NOT_CREATED, property);
+            logger.log(Level.SEVERE, message, e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, message);
         }
     }
 
@@ -112,15 +114,16 @@ public class PropertyRepository implements CrudRepository<Property, String> {
                         logger.log(Level.SEVERE, responseItem.error().reason());
                     }
                 });
-                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-                        "Failed to create properties: " + properties);
+                String message = MessageFormat.format(TextUtil.PROPERTIES_NOT_CREATED, properties);
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, message);
             } else {
 
                 return properties;
             }
         } catch (IOException e) {
-            logger.log(Level.SEVERE, "Failed to create properties: " + properties, e);
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to create properties: " + properties);
+            String message = MessageFormat.format(TextUtil.PROPERTIES_NOT_CREATED, properties);
+            logger.log(Level.SEVERE, message, e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, message);
         }
     }
 
@@ -138,8 +141,9 @@ public class PropertyRepository implements CrudRepository<Property, String> {
                 return Optional.empty();
             }
         } catch (Exception e) {
-            logger.log(Level.SEVERE, "Failed to find property: " + propertyName, e);
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to find property: " + propertyName);
+            String message = MessageFormat.format(TextUtil.PROPERTY_NOT_FOUND, propertyName);
+            logger.log(Level.SEVERE, message, e);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, message);
         }
     }
 
@@ -150,9 +154,9 @@ public class PropertyRepository implements CrudRepository<Property, String> {
             builder.index(ES_PROPERTY_INDEX).id(propertyName);
             return client.exists(builder.build()).value();
         } catch (ElasticsearchException | IOException e) {
-            logger.log(Level.SEVERE, "Failed to check if property " + propertyName + " exists", e);
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-                    "Failed to check if property exists by id: " + propertyName, null);
+            String message = MessageFormat.format(TextUtil.PROPERTY_EXISTS_FAILED, propertyName);
+            logger.log(Level.SEVERE, message, e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, message, null);
         }
     }
 
@@ -182,8 +186,8 @@ public class PropertyRepository implements CrudRepository<Property, String> {
 
             return response.hits().hits().stream().map(Hit::source).collect(Collectors.toList());
         } catch (Exception e) {
-            logger.log(Level.SEVERE, "Failed to find properties", e);
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to find properties");
+            logger.log(Level.SEVERE, TextUtil.PROPERTIES_NOT_FOUND, e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, TextUtil.PROPERTIES_NOT_FOUND);
         }
     }
 
@@ -202,8 +206,9 @@ public class PropertyRepository implements CrudRepository<Property, String> {
             }
             return foundProperties;
         } catch (Exception e) {
-            logger.log(Level.SEVERE, "Failed to find properties: " + propertyNames, e);
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to find properties: " + propertyNames);
+            String message = MessageFormat.format(TextUtil.PROPERTIES_NOT_FOUND_1, propertyNames);
+            logger.log(Level.SEVERE, message, e);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, message);
         }
     }
 
@@ -231,12 +236,14 @@ public class PropertyRepository implements CrudRepository<Property, String> {
                 UpdateResponse<Property> updateResponse =
                         client.update(updateRequest, Property.class);
                 if (updateResponse.result().equals(co.elastic.clients.elasticsearch._types.Result.Updated)) {
-                    logger.log(Level.INFO, () -> "Deleted property " + propertyName);
+                    String message = MessageFormat.format(TextUtil.PROPERTY_DELETE, propertyName);
+                    logger.log(Level.INFO, () -> message);
                 }
             }
         } catch (Exception e) {
-            logger.log(Level.SEVERE, "Failed to delete property: " + propertyName, e);
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete property: " + propertyName);
+            String message = MessageFormat.format(TextUtil.PROPERTY_NOT_DELETED, propertyName);
+            logger.log(Level.SEVERE, message, e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, message);
         }
     }
 
@@ -244,8 +251,7 @@ public class PropertyRepository implements CrudRepository<Property, String> {
         try {
             Optional<Property> optional = findById(propertyName);
             if (optional.isEmpty()) {
-                logger.log(Level.SEVERE, () -> "Cannot delete attribute " + attributeName +
-                        " from property " + propertyName + " as the property does not exist");
+                logger.log(Level.SEVERE, () -> MessageFormat.format(TextUtil.PROPERTY_ATTRIBUTE_CANNOT_DELETE, attributeName, propertyName));
                 return;
             }
             Property property = optional.get();
@@ -270,7 +276,7 @@ public class PropertyRepository implements CrudRepository<Property, String> {
                 GetResponse<Property> resp =
                         client.get(getRequest, Property.class);
                 Property deletedProperty = resp.source();
-                logger.log(Level.INFO, () -> "Deleted property attribute" + deletedProperty.toLogger());
+                logger.log(Level.INFO, () -> MessageFormat.format(TextUtil.PROPERTY_ATTRIBUTE_DELETE, deletedProperty.toLogger()));
             }
         } catch (Exception e) {
             logger.log(Level.SEVERE, e.getMessage(), e);
@@ -289,7 +295,7 @@ public class PropertyRepository implements CrudRepository<Property, String> {
 
     @Override
     public void deleteAll() {
-        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Deleting all properties is not allowed");
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN, TextUtil.PROPERTIES_DELETE_ALL_NOT_ALLOWED);
     }
 
     @Override

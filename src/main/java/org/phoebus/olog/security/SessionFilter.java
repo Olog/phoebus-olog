@@ -20,6 +20,7 @@ package org.phoebus.olog.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import org.phoebus.olog.TextUtil;
 import org.phoebus.olog.WebSecurityConfig;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -41,6 +42,7 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.text.MessageFormat;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.List;
@@ -108,8 +110,7 @@ public class SessionFilter extends GenericFilterBean {
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 } catch (AuthenticationException e) {
                     Logger.getLogger(SessionFilter.class.getName())
-                            .log(Level.FINE, String.format("User %s not authenticated through authorization header",
-                                    usernameAndPassword[0]));
+                            .log(Level.FINE, MessageFormat.format(TextUtil.USER_NOT_AUTHENTICATED_THROUGH_AUTHORIZATION_HEADER, usernameAndPassword[0]));
                 }
             }
         }

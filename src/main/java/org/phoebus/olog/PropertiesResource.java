@@ -8,6 +8,7 @@ package org.phoebus.olog;
 import static org.phoebus.olog.OlogResourceDescriptors.PROPERTY_RESOURCE_URI;
 
 import java.security.Principal;
+import java.text.MessageFormat;
 import java.util.List;
 import java.util.Optional;
 import java.util.logging.Level;
@@ -64,8 +65,9 @@ public class PropertiesResource {
         if (foundProperty.isPresent()) {
             return foundProperty.get();
         } else {
-            log.log(Level.SEVERE, "Failed to find property: " + propertyName, new ResponseStatusException(HttpStatus.NOT_FOUND));
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to find property: " + propertyName);
+            String message = MessageFormat.format(TextUtil.PROPERTY_NOT_FOUND, propertyName);
+            log.log(Level.SEVERE, message, new ResponseStatusException(HttpStatus.NOT_FOUND));
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, message);
         }
     }
 
@@ -128,8 +130,9 @@ public class PropertiesResource {
             // delete existing property
             propertyRepository.deleteById(propertyName);
         } else {
-            log.log(Level.SEVERE, "The property with the name " + propertyName + " does not exist", new ResponseStatusException(HttpStatus.NOT_FOUND));
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "The property with the name " + propertyName + " does not exist");
+            String message = MessageFormat.format(TextUtil.PROPERTY_NOT_EXISTS, propertyName);
+            log.log(Level.SEVERE, message, new ResponseStatusException(HttpStatus.NOT_FOUND));
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, message);
         }
     }
 
@@ -163,9 +166,9 @@ public class PropertiesResource {
      */
     public void validatePropertyRequest(Property property) {
         if (property.getName() == null || property.getName().isEmpty()) {
-            log.log(Level.SEVERE, "The property name cannot be null or empty " + property.toString(), new ResponseStatusException(HttpStatus.BAD_REQUEST));
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "The property name cannot be null or empty " + property.toString(), null);
+            String message = MessageFormat.format(TextUtil.PROPERTY_NAME_CANNOT_BE_NULL_OR_EMPTY, property.toString());
+            log.log(Level.SEVERE, message, new ResponseStatusException(HttpStatus.BAD_REQUEST));
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, message, null);
         }
 
         validateAttributeRequest(property.getAttributes());
@@ -201,9 +204,9 @@ public class PropertiesResource {
      */
     public void validateAttributeRequest(Attribute attribute) {
         if (attribute.getName() == null || attribute.getName().isEmpty()) {
-            log.log(Level.SEVERE, "The attribute name cannot be null or empty " + attribute.toString(), new ResponseStatusException(HttpStatus.BAD_REQUEST));
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "The attribute name cannot be null or empty " + attribute.toString(), null);
+            String message = MessageFormat.format(TextUtil.ATTRIBUTE_NAME_CANNOT_BE_NULL_OR_EMPTY, attribute.toString());
+            log.log(Level.SEVERE, message, new ResponseStatusException(HttpStatus.BAD_REQUEST));
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, message, null);
         }
     }
 

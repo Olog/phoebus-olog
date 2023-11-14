@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.text.MessageFormat;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -234,7 +235,7 @@ public class LogSearchUtil {
                         try {
                             searchResultSize = Integer.valueOf(maxSize.get());
                         } catch (NumberFormatException e) {
-                            LOGGER.log(Level.WARNING, () -> "Cannot parse size value\"" + maxSize.get() + "\" as number");
+                            LOGGER.log(Level.WARNING, () -> MessageFormat.format(TextUtil.SEARCH_CANNOT_PARSE_SIZE_VALUE, maxSize.get()));
                         }
                     }
                     break;
@@ -244,7 +245,7 @@ public class LogSearchUtil {
                         try {
                             from = Integer.valueOf(maxFrom.get());
                         } catch (NumberFormatException e) {
-                            LOGGER.log(Level.WARNING, () -> "Cannot parse from value\"" + maxFrom.get() + "\" as number");
+                            LOGGER.log(Level.WARNING, () -> MessageFormat.format(TextUtil.SEARCH_CANNOT_PARSE_FROM_VALUE, maxFrom.get()));
                         }
                     }
                     break;
@@ -315,7 +316,7 @@ public class LogSearchUtil {
                 }
             } else {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                        "Failed to parse search parameters: " + searchParameters + ", CAUSE: Invalid start and end times");
+                        MessageFormat.format(TextUtil.SEARCH_FAILED_PARSE_PARAMETERS_INVALID_START_END, searchParameters));
             }
         }
 
@@ -407,7 +408,7 @@ public class LogSearchUtil {
             return Arrays.stream(searchQueryTerms.split("[\\|,;\\s+]")).filter(t -> t.length() > 0).collect(Collectors.toList());
         }
         if (quoteCount % 2 == 1) {
-            throw new IllegalArgumentException("Unbalanced quotes in search query");
+            throw new IllegalArgumentException(TextUtil.SEARCH_UNBALANCED_QUOTES);
         }
         // If we come this far then at least one quoted term is
         // contained in user input

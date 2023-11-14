@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 import static org.phoebus.olog.OlogResourceDescriptors.ATTACHMENT_URI;
 
 import java.io.IOException;
+import java.text.MessageFormat;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -49,12 +50,11 @@ public class AttachmentResource
      */
     @GetMapping("{attachmentId}")
     public ResponseEntity<Resource> getAttachment(@PathVariable String attachmentId) {
-        log.log(Level.INFO, () -> "Requesting attachment " + attachmentId);
+        log.log(Level.INFO, () -> MessageFormat.format(TextUtil.ATTACHMENT_REQUEST, attachmentId));
         Optional<Attachment> attachment = attachmentRepository.findById(attachmentId);
-        if(attachment.isPresent()){
+        if (attachment.isPresent()) {
             InputStreamResource resource;
-            try
-            {
+            try {
                 resource = new InputStreamResource(attachment.get().getAttachment().getInputStream());
                 ContentDisposition contentDisposition = ContentDisposition.builder("attachment")
                         .filename(attachment.get().getFilename())
@@ -66,16 +66,14 @@ public class AttachmentResource
                     httpHeaders.setContentType(mediaType);
                 }
                 return new ResponseEntity<>(resource, httpHeaders, HttpStatus.OK);
-            }
-            catch (IOException e) {
+            } catch (IOException e) {
                 Logger.getLogger(LogResource.class.getName())
-                    .log(Level.SEVERE, "Unable to retrieve attachment with id: " + attachmentId, e);
+                    .log(Level.SEVERE, MessageFormat.format(TextUtil.ATTACHMENT_NOT_RETRIEVED, attachmentId), e);
                 return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
             }
-        }
-        else{
+        } else {
             Logger.getLogger(LogResource.class.getName())
-                .log(Level.WARNING, () -> "Attachment with id " + attachmentId + " not found");
+                .log(Level.WARNING, () -> MessageFormat.format(TextUtil.ATTACHMENT_NOT_FOUND, attachmentId));
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }

@@ -7,6 +7,7 @@ package org.phoebus.olog;
 
 import static org.phoebus.olog.OlogResourceDescriptors.TAG_RESOURCE_URI;
 
+import java.text.MessageFormat;
 import java.util.List;
 import java.util.Optional;
 import java.util.logging.Level;
@@ -39,8 +40,7 @@ public class TagsResource {
     private TagRepository tagRepository;
 
     /** Creates a new instance of TagsResource */
-    public TagsResource()
-    {
+    public TagsResource() {
     }
 
     /**
@@ -49,8 +49,7 @@ public class TagsResource {
      * @return list of tags
      */
     @GetMapping
-    public Iterable<Tag> findAll()
-    {
+    public Iterable<Tag> findAll() {
         return tagRepository.findAll();
     }
 
@@ -61,14 +60,14 @@ public class TagsResource {
      * @return the matching tag, or null
      */
     @GetMapping("/{tagName}")
-    public Tag findByTitle(@PathVariable String tagName)
-    {
+    public Tag findByTitle(@PathVariable String tagName) {
         Optional<Tag> foundTag = tagRepository.findById(tagName);
         if (foundTag.isPresent()) {
             return foundTag.get();
         } else {
-            log.log(Level.SEVERE, "Failed to find tag: " + tagName, new ResponseStatusException(HttpStatus.NOT_FOUND));
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to find tag: " + tagName);
+            String message = MessageFormat.format(TextUtil.TAG_NOT_FOUND, tagName);
+            log.log(Level.SEVERE, message, new ResponseStatusException(HttpStatus.NOT_FOUND));
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, message);
         }
     }
 
@@ -80,8 +79,7 @@ public class TagsResource {
      * @return the created tag
      */
     @PutMapping("/{tagName}")
-    public Tag createTag(@PathVariable String tagName, @RequestBody final Tag tag)
-    {
+    public Tag createTag(@PathVariable String tagName, @RequestBody final Tag tag) {
         // TODO Check permissions
         // Validate
 
@@ -106,8 +104,7 @@ public class TagsResource {
      * @return the list of tags created
      */
     @PutMapping
-    public Iterable<Tag> updateTag(@RequestBody final List<Tag> tags)
-    {
+    public Iterable<Tag> updateTag(@RequestBody final List<Tag> tags) {
         // TODO Check permissions
         // Validate
 
@@ -127,8 +124,7 @@ public class TagsResource {
     }
 
     @DeleteMapping("/{tagName}")
-    public void deleteTag(@PathVariable String tagName)
-    {
+    public void deleteTag(@PathVariable String tagName) {
         // TODO Check permissions
 
         // check if present
@@ -137,8 +133,9 @@ public class TagsResource {
             // delete existing tag
             tagRepository.deleteById(tagName);
         } else {
-            log.log(Level.SEVERE, "The tag with the name " + tagName + " does not exist", new ResponseStatusException(HttpStatus.NOT_FOUND));
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "The tag with the name " + tagName + " does not exist");
+            String message = MessageFormat.format(TextUtil.TAG_NOT_EXISTS, tagName);
+            log.log(Level.SEVERE, message, new ResponseStatusException(HttpStatus.NOT_FOUND));
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, message);
         }
     }
 
@@ -170,9 +167,9 @@ public class TagsResource {
      */
     public void validateTagRequest(Tag tag) {
         if (tag.getName() == null || tag.getName().isEmpty()) {
-            log.log(Level.SEVERE, "The tag name cannot be null or empty " + tag.toString(), new ResponseStatusException(HttpStatus.BAD_REQUEST));
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "The tag name cannot be null or empty " + tag.toString(), null);
+            String message = MessageFormat.format(TextUtil.TAG_NAME_CANNOT_BE_NULL_OR_EMPTY, tag.toString());
+            log.log(Level.SEVERE, message, new ResponseStatusException(HttpStatus.BAD_REQUEST));
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, message, null);
         }
     }
 

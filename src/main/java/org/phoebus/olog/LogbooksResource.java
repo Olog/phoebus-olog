@@ -8,6 +8,7 @@ package org.phoebus.olog;
 import static org.phoebus.olog.OlogResourceDescriptors.LOGBOOK_RESOURCE_URI;
 
 import java.security.Principal;
+import java.text.MessageFormat;
 import java.util.List;
 import java.util.Optional;
 import java.util.logging.Level;
@@ -56,8 +57,9 @@ public class LogbooksResource {
         if (foundLogbook.isPresent()) {
             return foundLogbook.get();
         } else {
-            log.log(Level.SEVERE, "Failed to find logbook: " + logbookName, new ResponseStatusException(HttpStatus.NOT_FOUND));
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to find logbook: " + logbookName);
+            String message = MessageFormat.format(TextUtil.LOGBOOK_NOT_FOUND, logbookName);
+            log.log(Level.SEVERE, message, new ResponseStatusException(HttpStatus.NOT_FOUND));
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, message);
         }
     }
 
@@ -112,8 +114,9 @@ public class LogbooksResource {
             // delete existing logbook
             logbookRepository.deleteById(logbookName);
         } else {
-            log.log(Level.SEVERE, "The logbook with the name " + logbookName + " does not exist", new ResponseStatusException(HttpStatus.NOT_FOUND));
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "The logbook with the name " + logbookName + " does not exist");
+            String message = MessageFormat.format(TextUtil.LOGBOOK_NOT_EXISTS, logbookName);
+            log.log(Level.SEVERE, message, new ResponseStatusException(HttpStatus.NOT_FOUND));
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, message);
         }
     }
 
@@ -147,9 +150,9 @@ public class LogbooksResource {
      */
     public void validateLogbookRequest(Logbook logbook) {
         if (logbook.getName() == null || logbook.getName().isEmpty()) {
-            log.log(Level.SEVERE, "The logbook name cannot be null or empty " + logbook.toString(), new ResponseStatusException(HttpStatus.BAD_REQUEST));
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "The logbook name cannot be null or empty " + logbook.toString(), null);
+            String message = MessageFormat.format(TextUtil.LOGBOOK_NAME_CANNOT_BE_NULL_OR_EMPTY, logbook.toString());
+            log.log(Level.SEVERE, message, new ResponseStatusException(HttpStatus.BAD_REQUEST));
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, message, null);
         }
     }
 
