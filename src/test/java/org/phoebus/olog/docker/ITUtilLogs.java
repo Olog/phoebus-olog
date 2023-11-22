@@ -29,6 +29,7 @@ import org.phoebus.olog.docker.ITUtil.AuthorizationChoice;
 import org.phoebus.olog.docker.ITUtil.EndpointChoice;
 import org.phoebus.olog.docker.ITUtil.MethodChoice;
 import org.phoebus.olog.entity.Log;
+import org.phoebus.olog.entity.SearchResult;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -178,6 +179,65 @@ public class ITUtilLogs {
             // expected content
             if (expected != null && expected.length > 0) {
                 ITUtil.assertEqualsLogs(actual, expected);
+            }
+
+            return actual;
+        } catch (IOException e) {
+            fail();
+        } catch (Exception e) {
+            fail();
+        }
+        return null;
+    }
+
+    // ----------------------------------------------------------------------------------------------------
+
+    /**
+     * @see ITUtilLogs#assertSearchLogs(String, int, int, int, Log...)
+     */
+    public static SearchResult assertSearchLogs(int expectedEqual, Log... expected) {
+        return assertSearchLogs("", HttpURLConnection.HTTP_OK, expectedEqual, expectedEqual, expected);
+    }
+    /**
+     * @see ITUtilLogs#assertSearchLogs(String, int, int, int, Log...)
+     */
+    public static SearchResult assertSearchLogs(String queryString, int expectedEqual, Log... expected) {
+        return assertSearchLogs(queryString, HttpURLConnection.HTTP_OK, expectedEqual, expectedEqual, expected);
+    }
+    /**
+     * Utility method to return the list of all logs in the directory.
+     *
+     * @param queryString query string
+     * @param expectedResponseCode expected response code
+     * @param expectedGreaterThanOrEqual (if non-negative number) greater than or equal to this number of items
+     * @param expectedLessThanOrEqual (if non-negative number) less than or equal to this number of items
+     * @param expected expected response logs
+     * @return number of logs
+     */
+    public static SearchResult assertSearchLogs(String queryString, int expectedResponseCode, int expectedGreaterThanOrEqual, int expectedLessThanOrEqual, Log... expected) {
+        try {
+            String[] response = null;
+            SearchResult actual = null;
+
+            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "/search" + queryString);
+            ITUtil.assertResponseLength2Code(response, expectedResponseCode);
+            if (HttpURLConnection.HTTP_OK == expectedResponseCode) {
+                actual = mapper.readValue(response[1], SearchResult.class);
+            }
+
+            // expected number of items in list
+            //     (if non-negative number)
+            //     expectedGreaterThanOrEqual <= nbr of items <= expectedLessThanOrEqual
+            if (expectedGreaterThanOrEqual >= 0) {
+                assertTrue(actual.getHitCount() >= expectedGreaterThanOrEqual);
+            }
+            if (expectedLessThanOrEqual >= 0) {
+                assertTrue(actual.getHitCount() <= expectedLessThanOrEqual);
+            }
+
+            // expected content
+            if (expected != null && expected.length > 0) {
+                ITUtil.assertEqualsLogs((Log[]) actual.getLogs().toArray(), expected);
             }
 
             return actual;
