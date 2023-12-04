@@ -25,15 +25,11 @@ import org.phoebus.olog.docker.ITUtil.AuthorizationChoice;
 import org.phoebus.olog.entity.State;
 import org.phoebus.olog.entity.Tag;
 import org.testcontainers.containers.ComposeContainer;
-import org.testcontainers.containers.ContainerState;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import com.github.dockerjava.api.DockerClient;
-
 import java.io.IOException;
 import java.net.HttpURLConnection;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -145,23 +141,8 @@ class OlogTagsIT {
     @AfterAll
     public static void extractJacocoReport() {
         // extract jacoco report from container file system
-        //     stop jvm to make data available
-
-        if (!Boolean.FALSE.toString().equals(System.getProperty(ITUtil.JACOCO_SKIPITCOVERAGE))) {
-            return;
-        }
-
-        Optional<ContainerState> container = ENVIRONMENT.getContainerByServiceName(ITUtil.OLOG);
-        if (container.isPresent()) {
-            ContainerState cs = container.get();
-            DockerClient dc = cs.getDockerClient();
-            dc.stopContainerCmd(cs.getContainerId()).exec();
-            try {
-                cs.copyFileFromContainer(ITUtil.JACOCO_EXEC_PATH, ITUtil.JACOCO_TARGET_PREFIX + OlogTagsIT.class.getSimpleName() + ITUtil.JACOCO_TARGET_SUFFIX);
-            } catch (Exception e) {
-                // proceed if file cannot be copied
-            }
-        }
+        ITUtil.extractJacocoReport(ENVIRONMENT,
+                ITUtil.JACOCO_TARGET_PREFIX + OlogTagsIT.class.getSimpleName() + ITUtil.JACOCO_TARGET_SUFFIX);
     }
 
     @Test
