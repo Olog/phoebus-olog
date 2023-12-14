@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.text.MessageFormat;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -45,8 +46,8 @@ import java.util.stream.Collectors;
 @Service
 public class LogSearchUtil {
 
-    final private static String MILLI_PATTERN = "yyyy-MM-dd HH:mm:ss.SSS";
-    final public static DateTimeFormatter MILLI_FORMAT = DateTimeFormatter.ofPattern(MILLI_PATTERN).withZone(ZoneId.systemDefault());
+    private static final String MILLI_PATTERN = "yyyy-MM-dd HH:mm:ss.SSS";
+    public static final DateTimeFormatter MILLI_FORMAT = DateTimeFormatter.ofPattern(MILLI_PATTERN).withZone(ZoneId.systemDefault());
 
     @SuppressWarnings("unused")
     @Value("${elasticsearch.log.index:olog_logs}")
@@ -234,7 +235,7 @@ public class LogSearchUtil {
                         try {
                             searchResultSize = Integer.valueOf(maxSize.get());
                         } catch (NumberFormatException e) {
-                            LOGGER.log(Level.WARNING, "Cannot parse size value\"" + maxSize.get() + "\" as number");
+                            LOGGER.log(Level.WARNING, () -> MessageFormat.format(TextUtil.SEARCH_CANNOT_PARSE_SIZE_VALUE, maxSize.get()));
                         }
                     }
                     break;
@@ -244,7 +245,7 @@ public class LogSearchUtil {
                         try {
                             from = Integer.valueOf(maxFrom.get());
                         } catch (NumberFormatException e) {
-                            LOGGER.log(Level.WARNING, "Cannot parse from value\"" + maxFrom.get() + "\" as number");
+                            LOGGER.log(Level.WARNING, () -> MessageFormat.format(TextUtil.SEARCH_CANNOT_PARSE_FROM_VALUE, maxFrom.get()));
                         }
                     }
                     break;
@@ -315,48 +316,48 @@ public class LogSearchUtil {
                 }
             } else {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                        "Failed to parse search parameters: " + searchParameters + ", CAUSE: Invalid start and end times");
+                        MessageFormat.format(TextUtil.SEARCH_FAILED_PARSE_PARAMETERS_INVALID_START_END, searchParameters));
             }
         }
 
         // Add the description query. Multiple search terms will be AND:ed.
         if (!searchTerms.isEmpty()) {
             if (fuzzySearch) {
-                searchTerms.stream().forEach(searchTerm -> {
-                    boolQueryBuilder.must(FuzzyQuery.of(f -> f.field("description").value(searchTerm))._toQuery());
-                });
+                searchTerms.stream().forEach(searchTerm ->
+                    boolQueryBuilder.must(FuzzyQuery.of(f -> f.field("description").value(searchTerm))._toQuery())
+                );
             } else {
-                searchTerms.stream().forEach(searchTerm -> {
-                    boolQueryBuilder.must(WildcardQuery.of(w -> w.field("description").value(searchTerm))._toQuery());
-                });
+                searchTerms.stream().forEach(searchTerm ->
+                    boolQueryBuilder.must(WildcardQuery.of(w -> w.field("description").value(searchTerm))._toQuery())
+                );
             }
         }
 
         // Add phrase queries for description key. Multiple search terms will be AND:ed.
         if (!descriptionPhraseSearchTerms.isEmpty()) {
-            descriptionPhraseSearchTerms.stream().forEach(phraseSearchTerm -> {
-                boolQueryBuilder.must(MatchPhraseQuery.of(m -> m.field("description").query(phraseSearchTerm))._toQuery());
-            });
+            descriptionPhraseSearchTerms.stream().forEach(phraseSearchTerm ->
+                boolQueryBuilder.must(MatchPhraseQuery.of(m -> m.field("description").query(phraseSearchTerm))._toQuery())
+            );
         }
 
         // Add the title query. Multiple search terms will be AND:ed.
         if (!titleSearchTerms.isEmpty()) {
             if (fuzzySearch) {
-                titleSearchTerms.stream().forEach(searchTerm -> {
-                    boolQueryBuilder.must(FuzzyQuery.of(f -> f.field("title").value(searchTerm))._toQuery());
-                });
+                titleSearchTerms.stream().forEach(searchTerm ->
+                    boolQueryBuilder.must(FuzzyQuery.of(f -> f.field("title").value(searchTerm))._toQuery())
+                );
             } else {
-                titleSearchTerms.stream().forEach(searchTerm -> {
-                    boolQueryBuilder.must(WildcardQuery.of(w -> w.field("title").value(searchTerm))._toQuery());
-                });
+                titleSearchTerms.stream().forEach(searchTerm ->
+                    boolQueryBuilder.must(WildcardQuery.of(w -> w.field("title").value(searchTerm))._toQuery())
+                );
             }
         }
 
         // Add phrase queries for title key. Multiple search terms will be AND:ed.
         if (!titlePhraseSearchTerms.isEmpty()) {
-            titlePhraseSearchTerms.stream().forEach(phraseSearchTerm -> {
-                boolQueryBuilder.must(MatchPhraseQuery.of(m -> m.field("title").query(phraseSearchTerm))._toQuery());
-            });
+            titlePhraseSearchTerms.stream().forEach(phraseSearchTerm ->
+                boolQueryBuilder.must(MatchPhraseQuery.of(m -> m.field("title").query(phraseSearchTerm))._toQuery())
+            );
         }
 
         // Add the level query
@@ -364,13 +365,13 @@ public class LogSearchUtil {
             DisMaxQuery.Builder levelQuery = new DisMaxQuery.Builder();
             List<Query> levelQueries = new ArrayList<>();
             if (fuzzySearch) {
-                levelSearchTerms.stream().forEach(searchTerm -> {
-                    levelQueries.add(FuzzyQuery.of(f -> f.field("level").value(searchTerm))._toQuery());
-                });
+                levelSearchTerms.stream().forEach(searchTerm ->
+                    levelQueries.add(FuzzyQuery.of(f -> f.field("level").value(searchTerm))._toQuery())
+                );
             } else {
-                levelSearchTerms.stream().forEach(searchTerm -> {
-                    levelQueries.add(WildcardQuery.of(w -> w.field("level").value(searchTerm))._toQuery());
-                });
+                levelSearchTerms.stream().forEach(searchTerm ->
+                    levelQueries.add(WildcardQuery.of(w -> w.field("level").value(searchTerm))._toQuery())
+                );
             }
             levelQuery.queries(levelQueries);
             boolQueryBuilder.must(levelQuery.build()._toQuery());
@@ -407,7 +408,7 @@ public class LogSearchUtil {
             return Arrays.stream(searchQueryTerms.split("[\\|,;\\s+]")).filter(t -> t.length() > 0).collect(Collectors.toList());
         }
         if (quoteCount % 2 == 1) {
-            throw new IllegalArgumentException("Unbalanced quotes in search query");
+            throw new IllegalArgumentException(TextUtil.SEARCH_UNBALANCED_QUOTES);
         }
         // If we come this far then at least one quoted term is
         // contained in user input

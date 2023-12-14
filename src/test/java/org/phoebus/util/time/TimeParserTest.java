@@ -20,10 +20,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * @author shroffk
  */
 @SuppressWarnings("nls")
-public class TimeParserTest {
+class TimeParserTest {
 
     @Test
-    public void parse() {
+    void parse() {
         Instant now = Instant.now();
         // create time interval using string to define relative start and end
         // times
@@ -39,7 +39,7 @@ public class TimeParserTest {
      *
      */
     @Test
-    public void parseRelativeInterval() {
+    void parseRelativeInterval() {
         // Create an interval for January
         TimeRelativeInterval interval = TimeRelativeInterval.of(TimeParser.parseTemporalAmount("1 month"), LocalDateTime
                 .parse("2011-02-01T00:00:00", DateTimeFormatter.ISO_LOCAL_DATE_TIME).toInstant(ZoneOffset.UTC));
@@ -64,8 +64,7 @@ public class TimeParserTest {
     }
 
     @Test
-    public void testParseTemporalAmount()
-    {
+    void testParseTemporalAmount() {
         TemporalAmount amount = TimeParser.parseTemporalAmount("3 days");
         long seconds = LocalDateTime.ofEpochSecond(0, 0, ZoneOffset.UTC).plus(amount).toEpochSecond(ZoneOffset.UTC);
         assertEquals(3*24*60*60, seconds);
@@ -102,8 +101,7 @@ public class TimeParserTest {
     }
 
     @Test
-    public void testParseFactionalTemporalAmount()
-    {
+    void testParseFactionalTemporalAmount() {
         // Just having ".0" used to be an error before fractions were supported
         TemporalAmount amount = TimeParser.parseTemporalAmount("1.000 hour");
         System.out.println(TimeParser.format(amount));
@@ -166,8 +164,7 @@ public class TimeParserTest {
     }
 
     @Test
-    public void testFormatTemporalAmount()
-    {
+    void testFormatTemporalAmount() {
         String text = TimeParser.format(Duration.ofHours(2));
         assertEquals("2 hours", text);
 

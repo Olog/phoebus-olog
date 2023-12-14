@@ -1,29 +1,51 @@
 /*
  * Copyright (C) 2021 European Spallation Source ERIC.
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
 package org.phoebus.olog.docker;
 
+import org.junit.jupiter.api.AfterAll;
 import org.phoebus.olog.entity.Log;
 import org.phoebus.olog.entity.Logbook;
 import org.phoebus.olog.entity.Property;
 import org.phoebus.olog.entity.Tag;
+import org.testcontainers.containers.ComposeContainer;
+import org.testcontainers.containers.ContainerState;
+import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.shaded.org.apache.commons.lang3.StringUtils;
+
+import com.github.dockerjava.api.DockerClient;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Utility class to help (Docker) integration tests for Olog and Elasticsearch.
+ * Utility class to help (Docker) integration tests for Olog and Elasticsearch with focus on support common behavior for tests.
  *
  * @author Lars Johansson
  */
@@ -42,8 +64,29 @@ public class ITUtil {
     static final String IP_PORT_OLOG          = "127.0.0.1:8080/Olog";
     static final String IP_PORT_ELASTICSEARCH = "127.0.0.1:9200";
 
+    static final String LOGBOOKS   = "/logbooks";
+    static final String LOGS       = "/logs";
+    static final String PROPERTIES = "/properties";
+    static final String TAGS       = "/tags";
+
     static final String HTTP_IP_PORT_OLOG          = HTTP + IP_PORT_OLOG;
     static final String HTTP_IP_PORT_ELASTICSEARCH = HTTP + IP_PORT_ELASTICSEARCH;
+
+    static final String HTTP_IP_PORT_OLOG_LOGBOOKS              = ITUtil.HTTP +                           ITUtil.IP_PORT_OLOG + LOGBOOKS;
+    static final String HTTP_AUTH_USER_IP_PORT_OLOG_LOGBOOKS    = ITUtil.HTTP + ITUtil.AUTH_USER  + "@" + ITUtil.IP_PORT_OLOG + LOGBOOKS;
+    static final String HTTP_AUTH_ADMIN_IP_PORT_OLOG_LOGBOOKS   = ITUtil.HTTP + ITUtil.AUTH_ADMIN + "@" + ITUtil.IP_PORT_OLOG + LOGBOOKS;
+
+    static final String HTTP_IP_PORT_OLOG_LOGS                  = ITUtil.HTTP +                           ITUtil.IP_PORT_OLOG + LOGS;
+    static final String HTTP_AUTH_USER_IP_PORT_OLOG_LOGS        = ITUtil.HTTP + ITUtil.AUTH_USER  + "@" + ITUtil.IP_PORT_OLOG + LOGS;
+    static final String HTTP_AUTH_ADMIN_IP_PORT_OLOG_LOGS       = ITUtil.HTTP + ITUtil.AUTH_ADMIN + "@" + ITUtil.IP_PORT_OLOG + LOGS;
+
+    static final String HTTP_IP_PORT_OLOG_PROPERTIES            = ITUtil.HTTP +                           ITUtil.IP_PORT_OLOG + PROPERTIES;
+    static final String HTTP_AUTH_USER_IP_PORT_OLOG_PROPERTIES  = ITUtil.HTTP + ITUtil.AUTH_USER  + "@" + ITUtil.IP_PORT_OLOG + PROPERTIES;
+    static final String HTTP_AUTH_ADMIN_IP_PORT_OLOG_PROPERTIES = ITUtil.HTTP + ITUtil.AUTH_ADMIN + "@" + ITUtil.IP_PORT_OLOG + PROPERTIES;
+
+    static final String HTTP_IP_PORT_OLOG_TAGS                  = ITUtil.HTTP +                           ITUtil.IP_PORT_OLOG + TAGS;
+    static final String HTTP_AUTH_USER_IP_PORT_OLOG_TAGS        = ITUtil.HTTP + ITUtil.AUTH_USER  + "@" + ITUtil.IP_PORT_OLOG + TAGS;
+    static final String HTTP_AUTH_ADMIN_IP_PORT_OLOG_TAGS       = ITUtil.HTTP + ITUtil.AUTH_ADMIN + "@" + ITUtil.IP_PORT_OLOG + TAGS;
 
     private static final String BRACKET_BEGIN     = "[";
     private static final String BRACKET_END       = "]";
@@ -51,11 +94,66 @@ public class ITUtil {
     private static final String CURLY_BRACE_END   = "}";
     private static final String HTTP_REPLY        = "HTTP";
 
+    // integration test - docker
+
+    public static final String INTEGRATIONTEST_DOCKER_COMPOSE = "docker-compose-integrationtest.yml";
+    public static final String INTEGRATIONTEST_LOG_MESSAGE    = ".*Started Application.*";
+
+    // code coverage
+
+    public static final String JACOCO_EXEC_PATH      = "/olog-target/jacoco.exec";
+    public static final String JACOCO_TARGET_PREFIX  = "target/jacoco_";
+    public static final String JACOCO_TARGET_SUFFIX  = ".exec";
+    public static final String JACOCO_SKIPITCOVERAGE = "skipITCoverage";
+
     /**
      * This class is not to be instantiated.
      */
     private ITUtil() {
         throw new IllegalStateException("Utility class");
+    }
+
+    /**
+     * Provide a default compose setup for testing.
+     * For Docker Compose V2.
+     *
+     * Intended usage is as field annotated with @Container from class annotated with @Testcontainers.
+     *
+     * @return compose container
+     */
+    public static ComposeContainer defaultComposeContainers() {
+        return new ComposeContainer(new File(ITUtil.INTEGRATIONTEST_DOCKER_COMPOSE))
+                .withEnv(ITUtil.JACOCO_SKIPITCOVERAGE, System.getProperty(ITUtil.JACOCO_SKIPITCOVERAGE))
+                .withLocalCompose(true)
+                .waitingFor(ITUtil.OLOG, Wait.forLogMessage(ITUtil.INTEGRATIONTEST_LOG_MESSAGE, 1));
+    }
+
+    /**
+     * Extract coverage report from compose container to file system.
+     *
+     * @param environment compose container
+     * @param destinationPath destination path, i.e. where in file system to put coverage report
+     * that has been extracted from container
+     */
+    public static void extractJacocoReport(ComposeContainer environment, String destinationPath) {
+        // extract jacoco report from container file system
+        //     stop jvm to make data available
+
+        if (!Boolean.FALSE.toString().equals(System.getProperty(ITUtil.JACOCO_SKIPITCOVERAGE))) {
+            return;
+        }
+
+        Optional<ContainerState> container = environment.getContainerByServiceName(ITUtil.OLOG);
+        if (container.isPresent()) {
+            ContainerState cs = container.get();
+            DockerClient dc = cs.getDockerClient();
+            dc.stopContainerCmd(cs.getContainerId()).exec();
+            try {
+                cs.copyFileFromContainer(ITUtil.JACOCO_EXEC_PATH, destinationPath);
+            } catch (Exception e) {
+                // proceed if file cannot be copied
+            }
+        }
     }
 
     /**
@@ -66,6 +164,16 @@ public class ITUtil {
      */
     static String[] refreshElasticIndices() throws IOException {
         return doGetJson(HTTP_IP_PORT_ELASTICSEARCH + "/_refresh");
+    }
+
+    /**
+     * Refresh Elastic indices and assert response is of length 2 and has response code HttpURLConnection.HTTP_OK.
+     *
+     * @throws IOException
+     */
+    static void assertRefreshElasticIndices() throws IOException {
+        String[] response = doGetJson(HTTP_IP_PORT_ELASTICSEARCH + "/_refresh");
+        ITUtil.assertResponseLength2CodeOK(response);
     }
 
     /**
@@ -162,6 +270,111 @@ public class ITUtil {
         return new String[] {responseCode, responseContent};
     }
 
+    // ----------------------------------------------------------------------------------------------------
+
+    // enum for http methods
+    static enum MethodChoice        {POST, GET, PUT, DELETE};
+
+    // enum for different authorizations
+    static enum AuthorizationChoice {NONE, USER, ADMIN};
+
+    // enum for different endpoints
+    static enum EndpointChoice      {LOGBOOKS, LOGS, PROPERTIES, TAGS};
+
+    /**
+     * Prepare curl command for test to run for contacting server.
+     *
+     * @param methodChoice method choice
+     * @param authorizationChoice authorization choice
+     * @param endpointChoice endpoint choice
+     * @param path particular path
+     * @param json json data
+     * @return curl command to run
+     */
+    static String curlMethodAuthEndpointPathJson(MethodChoice methodChoice, AuthorizationChoice authorizationChoice, EndpointChoice endpointChoice, String path, String json) {
+        String pathstr = !StringUtils.isEmpty(path)
+                ? path
+                : "";
+
+        String data = !StringUtils.isEmpty(json)
+                ? " -d '" + json + "'"
+                : "";
+
+        return "curl"
+            + " -H " + ITUtil.HEADER_JSON
+            + " -X"  + ITUtil.getMethodString(methodChoice)
+            + " -i "
+            + ITUtil.HTTP
+            + ITUtil.getAuthorizationString(authorizationChoice)
+            + ITUtil.IP_PORT_OLOG
+            + ITUtil.getEndpointString(endpointChoice)
+            + pathstr
+            + data;
+    }
+
+    /**
+     * Utility method to return string for http method. To be used when constructing url to send query to server.
+     *
+     * @param methodChoice method choice, i.e. POST, GET, PUT, DELETE, PATCH
+     * @return string for http method
+     */
+    private static String getMethodString(MethodChoice methodChoice) {
+        switch (methodChoice) {
+        case POST:
+            return "POST";
+        case GET:
+            return "GET";
+        case PUT:
+            return "PUT";
+        case DELETE:
+            return "DELETE";
+        default:
+            return "GET";
+        }
+    }
+
+    /**
+     * Utility method to return string for authorization. To be used when constructing url to send query to server.
+     *
+     * @param authorizationChoice authorization choice
+     * @return string for authorization
+     */
+    private static String getAuthorizationString(AuthorizationChoice authorizationChoice) {
+        switch (authorizationChoice) {
+        case ADMIN:
+            return ITUtil.AUTH_ADMIN + "@";
+        case USER:
+            return ITUtil.AUTH_USER + "@";
+        case NONE:
+            return StringUtils.EMPTY;
+        default:
+            return StringUtils.EMPTY;
+        }
+    }
+
+    /**
+     * Utility method to return string for endpoint. To be used when constructing url to send query to server.
+     *
+     * @param endpointChoice endpoint choice
+     * @return string for endpoint
+     */
+    private static String getEndpointString(EndpointChoice endpointChoice) {
+        switch (endpointChoice) {
+        case LOGBOOKS:
+            return ITUtil.LOGBOOKS;
+        case LOGS:
+            return ITUtil.LOGS;
+        case PROPERTIES:
+            return ITUtil.PROPERTIES;
+        case TAGS:
+            return ITUtil.TAGS;
+        default:
+            return StringUtils.EMPTY;
+        }
+    }
+
+    // ----------------------------------------------------------------------------------------------------
+
     /**
      * Assert that response object is as expected, an array with 2 elements
      * of which first contains response code OK (200).
@@ -179,14 +392,14 @@ public class ITUtil {
      * of which first element contains given response code.
      *
      * @param response string array with response of http request, response code and content
-     * @param responseCode expected response code
+     * @param expectedResponseCode expected response code
      *
      * @see HttpURLConnection for available response codes
      */
-    static void assertResponseLength2Code(String[] response, int responseCode) {
+    static void assertResponseLength2Code(String[] response, int expectedResponseCode) {
         assertNotNull(response);
         assertEquals(2, response.length);
-        assertEquals(responseCode, Integer.parseInt(response[0]));
+        assertEquals(expectedResponseCode, Integer.parseInt(response[0]));
     }
 
     /**
@@ -194,12 +407,12 @@ public class ITUtil {
      * of which first element contains response code OK (200) and second element contains given response content.
      *
      * @param response string array with response of http request, response code and content
-     * @param responseContent expected response content
+     * @param expectedResponseContent expected response content
      *
      * @see HttpURLConnection#HTTP_OK
      */
-    static void assertResponseLength2CodeOKContent(String[] response, String responseContent) {
-        assertResponseLength2CodeContent(response, HttpURLConnection.HTTP_OK, responseContent);
+    static void assertResponseLength2CodeOKContent(String[] response, String expectedResponseContent) {
+        assertResponseLength2CodeContent(response, HttpURLConnection.HTTP_OK, expectedResponseContent);
     }
 
     /**
@@ -207,21 +420,21 @@ public class ITUtil {
      * of which first element contains given response code and second element contains given response content.
      *
      * @param response string array with response of http request, response code and content
-     * @param responseCode expected response code
-     * @param responseContent expected response content
+     * @param expectedResponseCode expected response code
+     * @param expectedResponseContent expected response content
      *
      * @see HttpURLConnection for available response codes
      */
-    static void assertResponseLength2CodeContent(String[] response, int responseCode, String responseContent) {
-        assertResponseLength2Code(response, responseCode);
-        assertEquals(responseContent, response[1]);
+    static void assertResponseLength2CodeContent(String[] response, int expectedResponseCode, String expectedResponseContent) {
+        assertResponseLength2Code(response, expectedResponseCode);
+        assertEquals(expectedResponseContent, response[1]);
     }
 
     /**
      * Assert that arrays are equal with same length and same content in each array position.
      *
-     * @param actual actual array of XmlTag objects
-     * @param expected expected arbitrary number of XmlTag objects
+     * @param actual actual array of Tag objects
+     * @param expected expected arbitrary number of Tag objects
      */
     static void assertEqualsTags(Tag[] actual, Tag... expected) {
         if (expected != null) {
@@ -238,8 +451,8 @@ public class ITUtil {
     /**
      * Assert that arrays are equal with same length and same content in each array position.
      *
-     * @param actual actual array of XmlTag objects
-     * @param expected expected arbitrary number of XmlTag objects
+     * @param actual actual array of Logbook objects
+     * @param expected expected arbitrary number of Logbook objects
      */
     static void assertEqualsLogbooks(Logbook[] actual, Logbook... expected) {
         if (expected != null) {
@@ -256,8 +469,8 @@ public class ITUtil {
     /**
      * Assert that arrays are equal with same length and same content in each array position.
      *
-     * @param actual actual array of XmlTag objects
-     * @param expected expected arbitrary number of XmlTag objects
+     * @param actual actual array of Property objects
+     * @param expected expected arbitrary number of Property objects
      */
     static void assertEqualsProperties(Property[] actual, Property... expected) {
         if (expected != null) {
@@ -274,8 +487,8 @@ public class ITUtil {
     /**
      * Assert that arrays are equal with same length and same content in each array position.
      *
-     * @param actual actual array of XmlTag objects
-     * @param expected expected arbitrary number of XmlTag objects
+     * @param actual actual array of Log objects
+     * @param expected expected arbitrary number of Log objects
      */
     static void assertEqualsLogs(Log[] actual, Log... expected) {
         if (expected != null) {

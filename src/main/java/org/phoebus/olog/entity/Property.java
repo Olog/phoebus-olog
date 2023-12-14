@@ -139,9 +139,9 @@ public class Property implements Serializable {
      */
     public Set<Attribute> getAttribute(String name)
     {
-        return attributes.stream().filter(attr -> {
-            return name.equals(attr.getName());
-        }).collect(Collectors.toSet());
+        return attributes.stream().filter(attr ->
+            name.equals(attr.getName())
+        ).collect(Collectors.toSet());
     }
 
     /**

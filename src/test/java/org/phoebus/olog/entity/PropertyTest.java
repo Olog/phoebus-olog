@@ -25,10 +25,10 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
-public class PropertyTest {
+class PropertyTest {
 
     @Test
-    public void testEquals(){
+    void testEquals() {
         Property p1 = new Property();
         Property p2 = new Property();
         assertEquals(p1, p2);
@@ -52,7 +52,7 @@ public class PropertyTest {
     }
 
     @Test
-    public void testHashCode(){
+    void testHashCode() {
         Property p1 = new Property();
         Property p2 = new Property();
         assertEquals(p1.hashCode(), p2.hashCode());

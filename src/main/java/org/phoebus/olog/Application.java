@@ -1,31 +1,16 @@
 package org.phoebus.olog;
 
-import co.elastic.clients.elasticsearch.ElasticsearchClient;
-import org.apache.catalina.connector.Connector;
-import org.apache.coyote.http11.AbstractHttp11Protocol;
 import org.phoebus.olog.notification.LogEntryNotifier;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.web.embedded.tomcat.TomcatConnectorCustomizer;
-import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
-import org.springframework.boot.web.servlet.server.ServletWebServerFactory;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.util.FileCopyUtils;
-import org.springframework.web.method.support.HandlerMethodArgumentResolver;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-import org.springframework.web.servlet.mvc.method.annotation.PrincipalMethodArgumentResolver;
 
-import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -57,7 +42,7 @@ public class Application {
     private long propertyProvidersTimeout;
 
     public static void main(String[] args) {
-        logger.info("Starting Olog Service");
+        logger.log(Level.INFO, TextUtil.OLOG_STARTING);
         configureTruststore();
         ConfigurableApplicationContext olog = SpringApplication.run(Application.class, args);
     }
@@ -76,7 +61,7 @@ public class Application {
                 tempFile.deleteOnExit();
                 System.setProperty("javax.net.ssl.trustStore", tempFile.getAbsolutePath());
             } catch (IOException e) {
-                logger.log(Level.SEVERE, "failed to configure olog truststore", e);
+                logger.log(Level.SEVERE, TextUtil.OLOG_FAILED_CONFIGURE_TRUSTSTORE, e);
             }
         }
         if (System.getProperty("javax.net.ssl.trustStorePassword") == null) {

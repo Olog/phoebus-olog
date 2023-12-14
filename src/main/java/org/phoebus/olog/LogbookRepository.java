@@ -39,13 +39,13 @@ import org.springframework.stereotype.Repository;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 @Repository
 public class LogbookRepository implements CrudRepository<Logbook, String> {
@@ -87,8 +87,9 @@ public class LogbookRepository implements CrudRepository<Logbook, String> {
             }
             return null;
         } catch (Exception e) {
-            logger.log(Level.SEVERE, "Failed to create logbook: " + logbook, e);
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to create logbook: " + logbook);
+            String message = MessageFormat.format(TextUtil.LOGBOOK_NOT_CREATED, logbook);
+            logger.log(Level.SEVERE, message, e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, message);
         }
     }
 
@@ -110,14 +111,15 @@ public class LogbookRepository implements CrudRepository<Logbook, String> {
                         logger.log(Level.SEVERE, responseItem.error().reason());
                     }
                 });
-                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-                        "Failed to create logbooks: " + logbooks);
+                String message = MessageFormat.format(TextUtil.LOGBOOKS_NOT_CREATED, logbooks);
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, message);
             } else {
                 return logbooks;
             }
         } catch (IOException e) {
-            logger.log(Level.SEVERE, "Failed to create logbooks: " + logbooks, e);
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to create logbooks: " + logbooks);
+            String message = MessageFormat.format(TextUtil.LOGBOOKS_NOT_CREATED, logbooks);
+            logger.log(Level.SEVERE, message, e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, message);
         }
     }
 
@@ -135,8 +137,9 @@ public class LogbookRepository implements CrudRepository<Logbook, String> {
                 return Optional.empty();
             }
         } catch (Exception e) {
-            logger.log(Level.SEVERE, "Failed to find logbook: " + logbookName, e);
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to find logbook: " + logbookName);
+            String message = MessageFormat.format(TextUtil.LOGBOOK_NOT_FOUND, logbookName);
+            logger.log(Level.SEVERE, message, e);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, message);
         }
     }
 
@@ -147,9 +150,9 @@ public class LogbookRepository implements CrudRepository<Logbook, String> {
             builder.index(ES_LOGBOOK_INDEX).id(logbookName);
             return client.exists(builder.build()).value();
         } catch (ElasticsearchException | IOException e) {
-            logger.log(Level.SEVERE, "Failed to check if logbook " + logbookName + " exists", e);
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-                    "Failed to check if logbook exists by id: " + logbookName, null);
+            String message = MessageFormat.format(TextUtil.LOGBOOK_EXISTS_FAILED, logbookName);
+            logger.log(Level.SEVERE, message, e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, message, null);
         }
     }
 
@@ -158,8 +161,9 @@ public class LogbookRepository implements CrudRepository<Logbook, String> {
             boolean b =  logbookNames.stream().allMatch(id -> existsById(id));
             return  b;
         } catch (Exception e) {
-            logger.log(Level.SEVERE, "Failed to find logbooks: " + logbookNames, e);
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to find logbooks: " + logbookNames);
+            String message = MessageFormat.format(TextUtil.LOGBOOKS_NOT_FOUND_1, logbookNames);
+            logger.log(Level.SEVERE, message, e);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, message);
         }
     }
 
@@ -178,8 +182,8 @@ public class LogbookRepository implements CrudRepository<Logbook, String> {
                     client.search(searchRequest, Logbook.class);
             return response.hits().hits().stream().map(Hit::source).collect(Collectors.toList());
         } catch (Exception e) {
-            logger.log(Level.SEVERE, "Failed to find logbooks", e);
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to find logbooks");
+            logger.log(Level.SEVERE, TextUtil.LOGBOOKS_NOT_FOUND, e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, TextUtil.LOGBOOKS_NOT_FOUND);
         }
     }
 
@@ -198,14 +202,15 @@ public class LogbookRepository implements CrudRepository<Logbook, String> {
             }
             return foundLogbooks;
         } catch (Exception e) {
-            logger.log(Level.SEVERE, "Failed to find logbooks: " + logbookNames, e);
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to find logbooks: " + logbookNames);
+            String message = MessageFormat.format(TextUtil.LOGBOOKS_NOT_FOUND_1, logbookNames);
+            logger.log(Level.SEVERE, message, e);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, message);
         }
     }
 
     @Override
     public long count() {
-        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Count is not implemented");
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN, TextUtil.COUNT_NOT_IMPLEMENTED);
     }
 
     @Override
@@ -226,12 +231,14 @@ public class LogbookRepository implements CrudRepository<Logbook, String> {
                 UpdateResponse<Logbook> updateResponse =
                         client.update(updateRequest, Logbook.class);
                 if (updateResponse.result().equals(co.elastic.clients.elasticsearch._types.Result.Updated)) {
-                    logger.log(Level.INFO, "Deleted logbook " + logbookName);
+                    String message = MessageFormat.format(TextUtil.LOGBOOK_DELETE, logbookName);
+                    logger.log(Level.INFO, () -> message);
                 }
             }
         } catch (Exception e) {
-            logger.log(Level.SEVERE, "Failed to delete logbook: " + logbookName, e);
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete logbook: " + logbookName);
+            String message = MessageFormat.format(TextUtil.LOGBOOK_NOT_DELETED, logbookName);
+            logger.log(Level.SEVERE, message, e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, message);
         }
     }
 
@@ -247,7 +254,7 @@ public class LogbookRepository implements CrudRepository<Logbook, String> {
 
     @Override
     public void deleteAll() {
-        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Deleting all logbooks is not allowed");
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN, TextUtil.LOGBOOKS_DELETE_ALL_NOT_ALLOWED);
     }
 
     @Override

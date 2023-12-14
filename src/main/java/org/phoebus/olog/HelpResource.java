@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.text.MessageFormat;
 import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -70,18 +71,18 @@ public class HelpResource {
                                  HttpServletRequest request) {
         String language = determineLang(lang, request);
         String content;
-        logger.log(Level.INFO, "Requesting " + what + " for language=" + language);
+        logger.log(Level.INFO, () -> MessageFormat.format(TextUtil.HELP_REQUEST_WHAT_FOR_LANGUAGE, language));
         InputStream inputStream;
         try {
             inputStream = getClass().getResourceAsStream("/static/" + what + "_" + language + ".html");
             return readInputStream(inputStream);
         } catch (Exception e) {
-            logger.log(Level.SEVERE, "Unable to read " + what + " resource for language=" + language + ", defaulting to 'en'");
+            logger.log(Level.SEVERE, () -> MessageFormat.format(TextUtil.HELP_UNABLE_READ_FOR_LANGUAGE_DEFAULT, what, language));
             try {
                 inputStream = getClass().getResourceAsStream("/static/" + what + "_en.html");
                 return readInputStream(inputStream);
             } catch (Exception ioException) {
-                logger.log(Level.SEVERE, "Unable to read find resource " + what + "_en.html");
+                logger.log(Level.SEVERE, () -> MessageFormat.format(TextUtil.HELP_UNABLE_FIND_RESOURCE, what));
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND);
             }
         }

@@ -70,7 +70,7 @@ public class ServiceConfigurationResourceTest extends ResourcesTestBase {
     }
 
     @Test
-    public void testServiceConfiguration() throws Exception {
+    void testServiceConfiguration() throws Exception {
         when(logbookRepository.findAll()).thenReturn(Arrays.asList(logbook1, logbook2));
         when(tagRepository.findAll()).thenReturn(Arrays.asList(tag1, tag2));
 

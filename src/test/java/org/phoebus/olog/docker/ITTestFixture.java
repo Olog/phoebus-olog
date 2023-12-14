@@ -1,10 +1,23 @@
 /*
  * Copyright (C) 2021 European Spallation Source ERIC.
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
 package org.phoebus.olog.docker;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.phoebus.olog.entity.Attribute;
 import org.phoebus.olog.entity.Event;
 import org.phoebus.olog.entity.Log;
@@ -17,11 +30,9 @@ import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.util.HashSet;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /**
@@ -62,6 +73,9 @@ public class ITTestFixture {
     static final String SHIFT_END        = "Shift End";
 
     // test data
+    static Logbook[]  default_logbooks;
+    static Tag[]      default_tags;
+    static Property[] default_properties;
 
     static Logbook logbookBuildings;
     static Logbook logbookCommunication;
@@ -166,6 +180,14 @@ public class ITTestFixture {
         //         to add items to logs (logbooks, tags, properties, attachments)
         //         for assert statements
 
+        default_logbooks = new Logbook[] {
+                new Logbook("operations", "olog-logs", State.Active),
+                new Logbook("controls", null, State.Active)};
+        default_tags = new Tag[] {new Tag("alarm", State.Active)};
+        default_properties = new Property[] {new Property("resource", null, State.Active, new HashSet<Attribute>())};
+        default_properties[0].addAttributes(new Attribute("name", null, State.Active));
+        default_properties[0].addAttributes(new Attribute("file", null, State.Active));
+
         setupLogbooks();
         setupTags();
         setupProperties();
@@ -184,6 +206,10 @@ public class ITTestFixture {
         // note
         //     not necessary to remove items from logs in order to tear down (logbooks, tags, properties, attachments)
         //         items can be deleted regardless
+
+        default_logbooks = null;
+        default_tags = null;
+        default_properties = null;
 
         tearDownLogbooks();
         tearDownTags();
@@ -417,85 +443,55 @@ public class ITTestFixture {
      * Create test fixture, logbooks.
      */
     private static void createLogbooks() {
-        ObjectMapper mapper = new ObjectMapper();
-
         try {
             // --------------------------------------------------------------------------------
             // clean start
             // --------------------------------------------------------------------------------
 
-            String[] response = ITUtil.doGetJson(OlogLogbooksIT.HTTP_IP_PORT_OLOG_LOGBOOKS);
-            ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
+            ITUtilLogbooks.assertListLogbooks(2,
+                    default_logbooks[1],
+                    default_logbooks[0]);
 
             // --------------------------------------------------------------------------------
             // create
             // --------------------------------------------------------------------------------
 
             String name = URLEncoder.encode(logbookBuildings.getName(), StandardCharsets.UTF_8);
-            response = ITUtil.runShellCommand(createCurlLogbookForAdmin(name, mapper.writeValueAsString(logbookBuildings)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertEquals(logbookBuildings, mapper.readValue(response[1], Logbook.class));
+            ITUtilLogbooks.assertCreateLogbook("/" + name, logbookBuildings);
 
             name = URLEncoder.encode(logbookCommunication.getName(), StandardCharsets.UTF_8);
-            response = ITUtil.runShellCommand(createCurlLogbookForAdmin(name, mapper.writeValueAsString(logbookCommunication)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertEquals(logbookCommunication, mapper.readValue(response[1], Logbook.class));
+            ITUtilLogbooks.assertCreateLogbook("/" + name, logbookCommunication);
 
             name = URLEncoder.encode(logbookExperiments.getName(), StandardCharsets.UTF_8);
-            response = ITUtil.runShellCommand(createCurlLogbookForAdmin(name, mapper.writeValueAsString(logbookExperiments)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertEquals(logbookExperiments, mapper.readValue(response[1], Logbook.class));
+            ITUtilLogbooks.assertCreateLogbook("/" + name, logbookExperiments);
 
             name = URLEncoder.encode(logbookFacilities.getName(), StandardCharsets.UTF_8);
-            response = ITUtil.runShellCommand(createCurlLogbookForAdmin(name, mapper.writeValueAsString(logbookFacilities)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertEquals(logbookFacilities, mapper.readValue(response[1], Logbook.class));
+            ITUtilLogbooks.assertCreateLogbook("/" + name, logbookFacilities);
 
             name = URLEncoder.encode(logbookMaintenance.getName(), StandardCharsets.UTF_8);
-            response = ITUtil.runShellCommand(createCurlLogbookForAdmin(name, mapper.writeValueAsString(logbookMaintenance)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(logbookMaintenance.equals(mapper.readValue(response[1], Logbook.class)));
+            ITUtilLogbooks.assertCreateLogbook("/" + name, logbookMaintenance);
 
             name = URLEncoder.encode(logbookOperations.getName(), ITUtil.UTF_8);
-            response = ITUtil.runShellCommand(createCurlLogbookForAdmin(name, mapper.writeValueAsString(logbookOperations)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(logbookOperations.equals(mapper.readValue(response[1], Logbook.class)));
+            ITUtilLogbooks.assertCreateLogbook("/" + name, logbookOperations);
 
             name = URLEncoder.encode(logbookPower.getName(), ITUtil.UTF_8);
-            response = ITUtil.runShellCommand(createCurlLogbookForAdmin(name, mapper.writeValueAsString(logbookPower)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(logbookPower.equals(mapper.readValue(response[1], Logbook.class)));
+            ITUtilLogbooks.assertCreateLogbook("/" + name, logbookPower);
 
             name = URLEncoder.encode(logbookServices.getName(), ITUtil.UTF_8);
-            response = ITUtil.runShellCommand(createCurlLogbookForAdmin(name, mapper.writeValueAsString(logbookServices)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(logbookServices.equals(mapper.readValue(response[1], Logbook.class)));
+            ITUtilLogbooks.assertCreateLogbook("/" + name, logbookServices);
 
             name = URLEncoder.encode(logbookWater.getName(), ITUtil.UTF_8);
-            response = ITUtil.runShellCommand(createCurlLogbookForAdmin(name, mapper.writeValueAsString(logbookWater)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(logbookWater.equals(mapper.readValue(response[1], Logbook.class)));
+            ITUtilLogbooks.assertCreateLogbook("/" + name, logbookWater);
 
             // refresh elastic indices
-            response = ITUtil.refreshElasticIndices();
-            ITUtil.assertResponseLength2CodeOK(response);
+            ITUtil.assertRefreshElasticIndices();
 
             // --------------------------------------------------------------------------------
             // well defined state
             // --------------------------------------------------------------------------------
 
-            response = ITUtil.doGetJson(OlogLogbooksIT.HTTP_IP_PORT_OLOG_LOGBOOKS);
-            ITUtil.assertResponseLength2CodeOK(response);
-            Logbook[] logbooks = mapper.readValue(response[1], Logbook[].class);
-            assertNotNull(logbooks);
-            assertEquals(9, logbooks.length);
-            for (Logbook logbook : logbooks) {
-                assertNotNull(logbook);
-            }
+            ITUtilLogbooks.assertListLogbooks(10);
         } catch (IOException e) {
-            e.printStackTrace();
-            fail();
-        } catch (InterruptedException e) {
             e.printStackTrace();
             fail();
         } catch (Exception e) {
@@ -508,80 +504,50 @@ public class ITTestFixture {
      * Create test fixture, tags.
      */
     private static void createTags() {
-        ObjectMapper mapper = new ObjectMapper();
-
         try {
             // --------------------------------------------------------------------------------
             // clean start
             // --------------------------------------------------------------------------------
 
-            String[] response = ITUtil.doGetJson(OlogTagsIT.HTTP_IP_PORT_OLOG_TAGS);
-            ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
+            ITUtilTags.assertListTags(1, default_tags[0]);
 
             // --------------------------------------------------------------------------------
             // create
             // --------------------------------------------------------------------------------
 
             String name = URLEncoder.encode(tagCryo.getName(), ITUtil.UTF_8);
-            response = ITUtil.runShellCommand(createCurlTagForAdmin(name, mapper.writeValueAsString(tagCryo)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(tagCryo.equals(mapper.readValue(response[1], Tag.class)));
+            ITUtilTags.assertCreateTag("/" + name, tagCryo);
 
             name = URLEncoder.encode(tagPower.getName(), ITUtil.UTF_8);
-            response = ITUtil.runShellCommand(createCurlTagForAdmin(name, mapper.writeValueAsString(tagPower)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(tagPower.equals(mapper.readValue(response[1], Tag.class)));
+            ITUtilTags.assertCreateTag("/" + name, tagPower);
 
             name = URLEncoder.encode(tagSafety.getName(), ITUtil.UTF_8);
-            response = ITUtil.runShellCommand(createCurlTagForAdmin(name, mapper.writeValueAsString(tagSafety)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(tagSafety.equals(mapper.readValue(response[1], Tag.class)));
+            ITUtilTags.assertCreateTag("/" + name, tagSafety);
 
             name = URLEncoder.encode(tagSource.getName(), ITUtil.UTF_8);
-            response = ITUtil.runShellCommand(createCurlTagForAdmin(name, mapper.writeValueAsString(tagSource)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(tagSource.equals(mapper.readValue(response[1], Tag.class)));
+            ITUtilTags.assertCreateTag("/" + name, tagSource);
 
             name = URLEncoder.encode(tagInitial.getName(), ITUtil.UTF_8);
-            response = ITUtil.runShellCommand(createCurlTagForAdmin(name, mapper.writeValueAsString(tagInitial)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(tagInitial.equals(mapper.readValue(response[1], Tag.class)));
+            ITUtilTags.assertCreateTag("/" + name, tagInitial);
 
             name = URLEncoder.encode(tagRadio.getName(), ITUtil.UTF_8);
-            response = ITUtil.runShellCommand(createCurlTagForAdmin(name, mapper.writeValueAsString(tagRadio)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(tagRadio.equals(mapper.readValue(response[1], Tag.class)));
+            ITUtilTags.assertCreateTag("/" + name, tagRadio);
 
             name = URLEncoder.encode(tagMagnet.getName(), ITUtil.UTF_8);
-            response = ITUtil.runShellCommand(createCurlTagForAdmin(name, mapper.writeValueAsString(tagMagnet)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertTrue(tagMagnet.equals(mapper.readValue(response[1], Tag.class)));
+            ITUtilTags.assertCreateTag("/" + name, tagMagnet);
 
             name = URLEncoder.encode(tagSupra.getName(), ITUtil.UTF_8);
-            response = ITUtil.runShellCommand(createCurlTagForAdmin(name, mapper.writeValueAsString(tagSupra)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertEquals(tagSupra, mapper.readValue(response[1], Tag.class));
+            ITUtilTags.assertCreateTag("/" + name, tagSupra);
 
             // refresh elastic indices
-            response = ITUtil.refreshElasticIndices();
-            ITUtil.assertResponseLength2CodeOK(response);
+            ITUtil.assertRefreshElasticIndices();
 
             // --------------------------------------------------------------------------------
             // well defined state
             // --------------------------------------------------------------------------------
 
-            response = ITUtil.doGetJson(OlogTagsIT.HTTP_IP_PORT_OLOG_TAGS);
-            ITUtil.assertResponseLength2CodeOK(response);
-            Tag[] tags = mapper.readValue(response[1], Tag[].class);
-            assertNotNull(tags);
-            assertEquals(8, tags.length);
-            for (Tag tag : tags) {
-                assertNotNull(tag);
-            }
+            ITUtilTags.assertListTags(9);
         } catch (IOException e) {
-            e.printStackTrace();
-            fail();
-        } catch (InterruptedException e) {
             e.printStackTrace();
             fail();
         } catch (Exception e) {
@@ -594,66 +560,41 @@ public class ITTestFixture {
      * Create test fixture, properties.
      */
     private static void createProperties() {
-        ObjectMapper mapper = new ObjectMapper();
-        String curl = null;
         try {
             // --------------------------------------------------------------------------------
             // clean start
             // --------------------------------------------------------------------------------
 
-            String[] response = ITUtil.doGetJson(OlogPropertiesIT.HTTP_IP_PORT_OLOG_PROPERTIES);
-            ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
+            ITUtilProperties.assertListProperties(1, default_properties[0]);
 
             // --------------------------------------------------------------------------------
             // create
             // --------------------------------------------------------------------------------
 
             String name = URLEncoder.encode(propertyShiftInfoCrewEmpty.getName(), StandardCharsets.UTF_8);
-            response = ITUtil.runShellCommand(createCurlPropertyForAdmin(name, mapper.writeValueAsString(propertyShiftInfoCrewEmpty)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertEquals(propertyShiftInfoCrewEmpty, mapper.readValue(response[1], Property.class));
+            ITUtilProperties.assertCreateProperty("/" + name, propertyShiftInfoCrewEmpty);
 
             name = URLEncoder.encode(propertyShiftInfoACrew1.getName(), StandardCharsets.UTF_8);
-            response = ITUtil.runShellCommand(createCurlPropertyForAdmin(name, mapper.writeValueAsString(propertyShiftInfoACrew1)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertEquals(propertyShiftInfoACrew1, mapper.readValue(response[1], Property.class));
+            ITUtilProperties.assertCreateProperty("/" + name, propertyShiftInfoACrew1);
 
             name = URLEncoder.encode(propertyShiftInfoBCrew2.getName(), StandardCharsets.UTF_8);
-            response = ITUtil.runShellCommand(createCurlPropertyForAdmin(name, mapper.writeValueAsString(propertyShiftInfoBCrew2)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertEquals(propertyShiftInfoBCrew2, mapper.readValue(response[1], Property.class));
+            ITUtilProperties.assertCreateProperty("/" + name, propertyShiftInfoBCrew2);
 
             name = URLEncoder.encode(propertyShiftInfoCCrew3.getName(), StandardCharsets.UTF_8);
-            response = ITUtil.runShellCommand(createCurlPropertyForAdmin(name, mapper.writeValueAsString(propertyShiftInfoCCrew3)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertEquals(propertyShiftInfoCCrew3, mapper.readValue(response[1], Property.class));
+            ITUtilProperties.assertCreateProperty("/" + name, propertyShiftInfoCCrew3);
 
             // refresh elastic indices
-            response = ITUtil.refreshElasticIndices();
-            ITUtil.assertResponseLength2CodeOK(response);
+            ITUtil.assertRefreshElasticIndices();
 
             // --------------------------------------------------------------------------------
             // well defined state
             // --------------------------------------------------------------------------------
 
-            response = ITUtil.doGetJson(OlogPropertiesIT.HTTP_IP_PORT_OLOG_PROPERTIES);
-            ITUtil.assertResponseLength2CodeOK(response);
-            Property[] properties = mapper.readValue(response[1], Property[].class);
-            assertNotNull(properties);
-            assertEquals(4, properties.length);
-            for (Property property : properties) {
-                assertNotNull(property);
-            }
+            ITUtilProperties.assertListProperties(5);
         } catch (IOException e) {
-            System.out.println(curl);
-            e.printStackTrace();
-            fail();
-        } catch (InterruptedException e) {
-            System.out.println(curl);
             e.printStackTrace();
             fail();
         } catch (Exception e) {
-            System.out.println(curl);
             e.printStackTrace();
             fail();
         }
@@ -664,281 +605,89 @@ public class ITTestFixture {
      */
     private static void createLogs() {
         // logbooks, tags, properties to be created before log is created
-
-        ObjectMapper mapper = new ObjectMapper();
-
         try {
             // --------------------------------------------------------------------------------
             // clean start
             // --------------------------------------------------------------------------------
 
-            String[] response = ITUtil.doGetJson(OlogLogsIT.HTTP_IP_PORT_OLOG_LOGS);
-            ITUtil.assertResponseLength2CodeOKContent(response, ITUtil.EMPTY_JSON);
+            ITUtilLogs.assertListLogs(0);
 
             // --------------------------------------------------------------------------------
             // create
             // --------------------------------------------------------------------------------
 
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(mapper.writeValueAsString(logShiftA1001)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertNotNull(mapper.readValue(response[1], Log.class));
+            ITUtilLogs.assertCreateLog("", logShiftA1001);
+            ITUtilLogs.assertCreateLog("", logShiftA1011);
+            ITUtilLogs.assertCreateLog("", logShiftA1021);
+            ITUtilLogs.assertCreateLog("", logShiftA1031);
+            ITUtilLogs.assertCreateLog("", logShiftA1041);
+            ITUtilLogs.assertCreateLog("", logShiftA1051);
+            ITUtilLogs.assertCreateLog("", logShiftA1061);
+            ITUtilLogs.assertCreateLog("", logShiftA1071);
+            ITUtilLogs.assertCreateLog("", logShiftA1081);
+            ITUtilLogs.assertCreateLog("", logShiftA1091);
+            ITUtilLogs.assertCreateLog("", logShiftA1101);
+            ITUtilLogs.assertCreateLog("", logShiftA1111);
+            ITUtilLogs.assertCreateLog("", logShiftA1121);
+            ITUtilLogs.assertCreateLog("", logShiftA1131);
+            ITUtilLogs.assertCreateLog("", logShiftA1141);
+            ITUtilLogs.assertCreateLog("", logShiftA1151);
+            ITUtilLogs.assertCreateLog("", logShiftA1161);
+            ITUtilLogs.assertCreateLog("", logShiftA1171);
+            ITUtilLogs.assertCreateLog("", logShiftA1181);
+            ITUtilLogs.assertCreateLog("", logShiftA1191);
 
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(mapper.writeValueAsString(logShiftA1011)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertNotNull(mapper.readValue(response[1], Log.class));
+            ITUtilLogs.assertCreateLog("", logShiftB2001);
+            ITUtilLogs.assertCreateLog("", logShiftB2011);
+            ITUtilLogs.assertCreateLog("", logShiftB2021);
+            ITUtilLogs.assertCreateLog("", logShiftB2031);
+            ITUtilLogs.assertCreateLog("", logShiftB2041);
+            ITUtilLogs.assertCreateLog("", logShiftB2051);
+            ITUtilLogs.assertCreateLog("", logShiftB2061);
+            ITUtilLogs.assertCreateLog("", logShiftB2071);
+            ITUtilLogs.assertCreateLog("", logShiftB2081);
+            ITUtilLogs.assertCreateLog("", logShiftB2091);
+            ITUtilLogs.assertCreateLog("", logShiftB2101);
+            ITUtilLogs.assertCreateLog("", logShiftB2111);
+            ITUtilLogs.assertCreateLog("", logShiftB2121);
+            ITUtilLogs.assertCreateLog("", logShiftB2131);
+            ITUtilLogs.assertCreateLog("", logShiftB2141);
+            ITUtilLogs.assertCreateLog("", logShiftB2151);
+            ITUtilLogs.assertCreateLog("", logShiftB2161);
+            ITUtilLogs.assertCreateLog("", logShiftB2171);
+            ITUtilLogs.assertCreateLog("", logShiftB2181);
+            ITUtilLogs.assertCreateLog("", logShiftB2191);
 
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(mapper.writeValueAsString(logShiftA1021)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertNotNull(mapper.readValue(response[1], Log.class));
-
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(mapper.writeValueAsString(logShiftA1031)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertNotNull(mapper.readValue(response[1], Log.class));
-
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(mapper.writeValueAsString(logShiftA1041)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertNotNull(mapper.readValue(response[1], Log.class));
-
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(mapper.writeValueAsString(logShiftA1051)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertNotNull(mapper.readValue(response[1], Log.class));
-
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(mapper.writeValueAsString(logShiftA1061)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertNotNull(mapper.readValue(response[1], Log.class));
-
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(mapper.writeValueAsString(logShiftA1071)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertNotNull(mapper.readValue(response[1], Log.class));
-
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(mapper.writeValueAsString(logShiftA1081)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertNotNull(mapper.readValue(response[1], Log.class));
-
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(mapper.writeValueAsString(logShiftA1091)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertNotNull(mapper.readValue(response[1], Log.class));
-
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(mapper.writeValueAsString(logShiftA1101)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertNotNull(mapper.readValue(response[1], Log.class));
-
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(mapper.writeValueAsString(logShiftA1111)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertNotNull(mapper.readValue(response[1], Log.class));
-
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(mapper.writeValueAsString(logShiftA1121)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertNotNull(mapper.readValue(response[1], Log.class));
-
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(mapper.writeValueAsString(logShiftA1131)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertNotNull(mapper.readValue(response[1], Log.class));
-
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(mapper.writeValueAsString(logShiftA1141)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertNotNull(mapper.readValue(response[1], Log.class));
-
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(mapper.writeValueAsString(logShiftA1151)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertNotNull(mapper.readValue(response[1], Log.class));
-
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(mapper.writeValueAsString(logShiftA1161)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertNotNull(mapper.readValue(response[1], Log.class));
-
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(mapper.writeValueAsString(logShiftA1171)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertNotNull(mapper.readValue(response[1], Log.class));
-
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(mapper.writeValueAsString(logShiftA1181)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertNotNull(mapper.readValue(response[1], Log.class));
-
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(mapper.writeValueAsString(logShiftA1191)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertNotNull(mapper.readValue(response[1], Log.class));
-
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(mapper.writeValueAsString(logShiftB2001)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertNotNull(mapper.readValue(response[1], Log.class));
-
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(mapper.writeValueAsString(logShiftB2011)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertNotNull(mapper.readValue(response[1], Log.class));
-
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(mapper.writeValueAsString(logShiftB2021)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertNotNull(mapper.readValue(response[1], Log.class));
-
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(mapper.writeValueAsString(logShiftB2031)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertNotNull(mapper.readValue(response[1], Log.class));
-
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(mapper.writeValueAsString(logShiftB2041)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertNotNull(mapper.readValue(response[1], Log.class));
-
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(mapper.writeValueAsString(logShiftB2051)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertNotNull(mapper.readValue(response[1], Log.class));
-
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(mapper.writeValueAsString(logShiftB2061)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertNotNull(mapper.readValue(response[1], Log.class));
-
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(mapper.writeValueAsString(logShiftB2071)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertNotNull(mapper.readValue(response[1], Log.class));
-
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(mapper.writeValueAsString(logShiftB2081)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertNotNull(mapper.readValue(response[1], Log.class));
-
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(mapper.writeValueAsString(logShiftB2091)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertNotNull(mapper.readValue(response[1], Log.class));
-
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(mapper.writeValueAsString(logShiftB2101)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertNotNull(mapper.readValue(response[1], Log.class));
-
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(mapper.writeValueAsString(logShiftB2111)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertNotNull(mapper.readValue(response[1], Log.class));
-
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(mapper.writeValueAsString(logShiftB2121)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertNotNull(mapper.readValue(response[1], Log.class));
-
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(mapper.writeValueAsString(logShiftB2131)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertNotNull(mapper.readValue(response[1], Log.class));
-
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(mapper.writeValueAsString(logShiftB2141)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertNotNull(mapper.readValue(response[1], Log.class));
-
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(mapper.writeValueAsString(logShiftB2151)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertNotNull(mapper.readValue(response[1], Log.class));
-
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(mapper.writeValueAsString(logShiftB2161)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertNotNull(mapper.readValue(response[1], Log.class));
-
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(mapper.writeValueAsString(logShiftB2171)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertNotNull(mapper.readValue(response[1], Log.class));
-
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(mapper.writeValueAsString(logShiftB2181)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertNotNull(mapper.readValue(response[1], Log.class));
-
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(mapper.writeValueAsString(logShiftB2191)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertNotNull(mapper.readValue(response[1], Log.class));
-
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(mapper.writeValueAsString(logShiftC3001)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertNotNull(mapper.readValue(response[1], Log.class));
-
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(mapper.writeValueAsString(logShiftC3011)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertNotNull(mapper.readValue(response[1], Log.class));
-
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(mapper.writeValueAsString(logShiftC3021)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertNotNull(mapper.readValue(response[1], Log.class));
-
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(mapper.writeValueAsString(logShiftC3031)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertNotNull(mapper.readValue(response[1], Log.class));
-
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(mapper.writeValueAsString(logShiftC3041)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertNotNull(mapper.readValue(response[1], Log.class));
-
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(mapper.writeValueAsString(logShiftC3051)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertNotNull(mapper.readValue(response[1], Log.class));
-
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(mapper.writeValueAsString(logShiftC3061)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertNotNull(mapper.readValue(response[1], Log.class));
-
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(mapper.writeValueAsString(logShiftC3071)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertNotNull(mapper.readValue(response[1], Log.class));
-
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(mapper.writeValueAsString(logShiftC3081)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertNotNull(mapper.readValue(response[1], Log.class));
-
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(mapper.writeValueAsString(logShiftC3091)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertNotNull(mapper.readValue(response[1], Log.class));
-
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(mapper.writeValueAsString(logShiftC3101)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertNotNull(mapper.readValue(response[1], Log.class));
-
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(mapper.writeValueAsString(logShiftC3111)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertNotNull(mapper.readValue(response[1], Log.class));
-
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(mapper.writeValueAsString(logShiftC3121)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertNotNull(mapper.readValue(response[1], Log.class));
-
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(mapper.writeValueAsString(logShiftC3131)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertNotNull(mapper.readValue(response[1], Log.class));
-
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(mapper.writeValueAsString(logShiftC3141)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertNotNull(mapper.readValue(response[1], Log.class));
-
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(mapper.writeValueAsString(logShiftC3151)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertNotNull(mapper.readValue(response[1], Log.class));
-
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(mapper.writeValueAsString(logShiftC3161)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertNotNull(mapper.readValue(response[1], Log.class));
-
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(mapper.writeValueAsString(logShiftC3171)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertNotNull(mapper.readValue(response[1], Log.class));
-
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(mapper.writeValueAsString(logShiftC3181)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertNotNull(mapper.readValue(response[1], Log.class));
-
-            response = ITUtil.runShellCommand(createCurlLogForAdmin(mapper.writeValueAsString(logShiftC3191)));
-            ITUtil.assertResponseLength2CodeOK(response);
-            assertNotNull(mapper.readValue(response[1], Log.class));
+            ITUtilLogs.assertCreateLog("", logShiftC3001);
+            ITUtilLogs.assertCreateLog("", logShiftC3011);
+            ITUtilLogs.assertCreateLog("", logShiftC3021);
+            ITUtilLogs.assertCreateLog("", logShiftC3031);
+            ITUtilLogs.assertCreateLog("", logShiftC3041);
+            ITUtilLogs.assertCreateLog("", logShiftC3051);
+            ITUtilLogs.assertCreateLog("", logShiftC3061);
+            ITUtilLogs.assertCreateLog("", logShiftC3071);
+            ITUtilLogs.assertCreateLog("", logShiftC3081);
+            ITUtilLogs.assertCreateLog("", logShiftC3091);
+            ITUtilLogs.assertCreateLog("", logShiftC3101);
+            ITUtilLogs.assertCreateLog("", logShiftC3111);
+            ITUtilLogs.assertCreateLog("", logShiftC3121);
+            ITUtilLogs.assertCreateLog("", logShiftC3131);
+            ITUtilLogs.assertCreateLog("", logShiftC3141);
+            ITUtilLogs.assertCreateLog("", logShiftC3151);
+            ITUtilLogs.assertCreateLog("", logShiftC3161);
+            ITUtilLogs.assertCreateLog("", logShiftC3171);
+            ITUtilLogs.assertCreateLog("", logShiftC3181);
+            ITUtilLogs.assertCreateLog("", logShiftC3191);
 
             // refresh elastic indices
-            response = ITUtil.refreshElasticIndices();
-            ITUtil.assertResponseLength2CodeOK(response);
+            ITUtil.assertRefreshElasticIndices();
 
             // --------------------------------------------------------------------------------
             // well defined state
             // --------------------------------------------------------------------------------
 
-            response = ITUtil.doGetJson(OlogLogsIT.HTTP_IP_PORT_OLOG_LOGS);
-            ITUtil.assertResponseLength2CodeOK(response);
-            Log[] logs = mapper.readValue(response[1], Log[].class);
-            assertNotNull(logs);
-            assertEquals(60, logs.length);
-            for (Log log : logs) {
-                assertNotNull(log);
-            }
+            ITUtilLogs.assertListLogs(60);
         } catch (IOException e) {
-            e.printStackTrace();
-            fail();
-        } catch (InterruptedException e) {
             e.printStackTrace();
             fail();
         } catch (Exception e) {
@@ -1096,49 +845,6 @@ public class ITTestFixture {
             log.getProperties().add(property);
         }
         return log;
-    }
-
-    /**
-     * Utility method to return curl to create logbook for admin user.
-     *
-     * @param logbookName logbook name
-     * @param logbookJson logbook json
-     * @return curl to create logbook
-     */
-    private static String createCurlLogbookForAdmin(String logbookName, String logbookJson) {
-        return "curl -H " + ITUtil.HEADER_JSON + " -XPUT -i " + OlogLogbooksIT.HTTP_AUTH_ADMIN_IP_PORT_OLOG_LOGBOOKS + "/" + logbookName + " -d '" + logbookJson + "'";
-    }
-
-    /**
-     * Utility method to return curl to create tag for admin user.
-     *
-     * @param tagName tag name
-     * @param tagJson tag json
-     * @return curl to create tag
-     */
-    private static String createCurlTagForAdmin(String tagName, String tagJson) {
-        return "curl -H " + ITUtil.HEADER_JSON + " -XPUT -i " + OlogTagsIT.HTTP_AUTH_ADMIN_IP_PORT_OLOG_TAGS + "/" + tagName + " -d '" + tagJson + "'";
-    }
-
-    /**
-     * Utility method to return curl to create property for admin user.
-     *
-     * @param propertyName property name
-     * @param propertyJson propery  json
-     * @return curl to create property
-     */
-    private static String createCurlPropertyForAdmin(String propertyName, String propertyJson) {
-        return "curl -H " + ITUtil.HEADER_JSON + " -XPUT -i " + OlogPropertiesIT.HTTP_AUTH_ADMIN_IP_PORT_OLOG_PROPERTIES + "/" + propertyName + " -d '" + propertyJson + "'";
-    }
-
-    /**
-     * Utility method to return curl to create log for admin user.
-     *
-     * @param logJson log json
-     * @return curl to create log
-     */
-    private static String createCurlLogForAdmin(String logJson) {
-        return "curl -H " + ITUtil.HEADER_JSON + " -XPUT -i " + OlogLogsIT.HTTP_AUTH_ADMIN_IP_PORT_OLOG_LOGS + " -d '" + logJson + "'";
     }
 
 }

@@ -13,7 +13,6 @@ import co.elastic.clients.transport.endpoints.BooleanResponse;
 import co.elastic.clients.transport.rest_client.RestClientTransport;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.concurrent.TimeUnit;
 import org.apache.http.HttpHost;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
@@ -29,6 +28,7 @@ import org.springframework.context.annotation.PropertySource;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.text.MessageFormat;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
@@ -103,7 +103,7 @@ public class ElasticConfig {
     }
 
     private void logCreateIndexRequest(CreateIndexRequest request) {
-        logger.log(Level.INFO, String.format(
+        logger.log(Level.INFO, () -> String.format(
                 "CreateIndexRequest: " +
                 "index: %s, " +
                 "timeout: %s, " +
@@ -119,7 +119,7 @@ public class ElasticConfig {
     public ElasticsearchClient getClient() {
         if (client == null) {
             // Create the low-level client
-            logger.info(String.format("Creating HTTP client with " +
+            logger.log(Level.INFO, () -> String.format("Creating HTTP client with " +
                             "host %s, " +
                             "port %s, " +
                             "protocol %s, " +
@@ -176,10 +176,10 @@ public class ElasticConfig {
                 CreateIndexResponse result = client.indices().create(
                         request
                 );
-                logger.info("Created index: " + ES_SEQ_INDEX + " : acknowledged " + result.acknowledged());
+                logger.log(Level.INFO, () -> MessageFormat.format(TextUtil.ELASTIC_CREATED_INDEX_ACKNOWLEDGED, ES_SEQ_INDEX, result.acknowledged()));
             }
         } catch (IOException e) {
-            logger.log(Level.WARNING, "Failed to create index " + ES_SEQ_INDEX, e);
+            logger.log(Level.WARNING, MessageFormat.format(TextUtil.ELASTIC_FAILED_TO_CREATE_INDEX, ES_SEQ_INDEX), e);
         }
 
         // Olog Logbook Index
@@ -191,10 +191,10 @@ public class ElasticConfig {
                 );
                 logCreateIndexRequest(request);
                 CreateIndexResponse result = client.indices().create(request);
-                logger.info("Created index: " + ES_LOGBOOK_INDEX + " : acknowledged " + result.acknowledged());
+                logger.log(Level.INFO, () -> MessageFormat.format(TextUtil.ELASTIC_CREATED_INDEX_ACKNOWLEDGED, ES_LOGBOOK_INDEX, result.acknowledged()));
             }
         } catch (IOException e) {
-            logger.log(Level.WARNING, "Failed to create index " + ES_LOGBOOK_INDEX, e);
+            logger.log(Level.WARNING, MessageFormat.format(TextUtil.ELASTIC_FAILED_TO_CREATE_INDEX, ES_LOGBOOK_INDEX), e);
         }
 
         // Olog Tag Index
@@ -206,10 +206,10 @@ public class ElasticConfig {
                 );
                 logCreateIndexRequest(request);
                 CreateIndexResponse result = client.indices().create(request);
-                logger.info("Created index: " + ES_TAG_INDEX + " : acknowledged " + result.acknowledged());
+                logger.log(Level.INFO, () -> MessageFormat.format(TextUtil.ELASTIC_CREATED_INDEX_ACKNOWLEDGED, ES_TAG_INDEX, result.acknowledged()));
             }
         } catch (IOException e) {
-            logger.log(Level.WARNING, "Failed to create index " + ES_TAG_INDEX, e);
+            logger.log(Level.WARNING, MessageFormat.format(TextUtil.ELASTIC_FAILED_TO_CREATE_INDEX, ES_TAG_INDEX), e);
         }
 
         // Olog Property Index
@@ -221,10 +221,10 @@ public class ElasticConfig {
                 );
                 logCreateIndexRequest(request);
                 CreateIndexResponse result = client.indices().create(request);
-                logger.info("Created index: " + ES_PROPERTY_INDEX + " : acknowledged " + result.acknowledged());
+                logger.log(Level.INFO, () -> MessageFormat.format(TextUtil.ELASTIC_CREATED_INDEX_ACKNOWLEDGED, ES_PROPERTY_INDEX, result.acknowledged()));
             }
         } catch (IOException e) {
-            logger.log(Level.WARNING, "Failed to create index " + ES_PROPERTY_INDEX, e);
+            logger.log(Level.WARNING, MessageFormat.format(TextUtil.ELASTIC_FAILED_TO_CREATE_INDEX, ES_PROPERTY_INDEX), e);
         }
 
         // Olog Log Template
@@ -236,10 +236,10 @@ public class ElasticConfig {
                 );
                 logCreateIndexRequest(request);
                 CreateIndexResponse result = client.indices().create(request);
-                logger.info("Created index: " + ES_LOG_INDEX + " : acknowledged " + result.acknowledged());
+                logger.log(Level.INFO, () -> MessageFormat.format(TextUtil.ELASTIC_CREATED_INDEX_ACKNOWLEDGED, ES_LOG_INDEX, result.acknowledged()));
             }
         } catch (IOException e) {
-            logger.log(Level.WARNING, "Failed to create index " + ES_LOG_INDEX, e);
+            logger.log(Level.WARNING, MessageFormat.format(TextUtil.ELASTIC_FAILED_TO_CREATE_INDEX, ES_LOG_INDEX), e);
         }
         // Olog Archived Log Template
         try (InputStream is = ElasticConfig.class.getResourceAsStream("/log_entry_mapping.json")) {
@@ -250,10 +250,10 @@ public class ElasticConfig {
                 );
                 logCreateIndexRequest(request);
                 CreateIndexResponse result = client.indices().create(request);
-                logger.info("Created index: " + "archived_" + ES_LOG_ARCHIVE_INDEX + " : acknowledged " + result.acknowledged());
+                logger.log(Level.INFO, () -> MessageFormat.format(TextUtil.ELASTIC_CREATED_INDEX_ACKNOWLEDGED, ES_LOG_ARCHIVE_INDEX, result.acknowledged()));
             }
         } catch (IOException e) {
-            logger.log(Level.WARNING, "Failed to create index " + ES_LOG_ARCHIVE_INDEX, e);
+            logger.log(Level.WARNING, MessageFormat.format(TextUtil.ELASTIC_FAILED_TO_CREATE_INDEX, ES_LOG_ARCHIVE_INDEX), e);
         }
     }
 
@@ -286,11 +286,11 @@ public class ElasticConfig {
                         IndexResponse response = client.index(indexRequest);
                     }
                 } catch (IOException e) {
-                    logger.log(Level.WARNING, "Failed to initialize logbook : " +logbook.getName(), e);
+                    logger.log(Level.WARNING, MessageFormat.format(TextUtil.ELASTIC_FAILED_TO_INITIALIZE_LOGBOOK, logbook.getName()), e);
                 }
             });
         } catch (IOException ex) {
-            logger.log(Level.WARNING, "Failed to initialize logbooks ", ex);
+            logger.log(Level.WARNING, TextUtil.ELASTIC_FAILED_TO_INITIALIZE_LOGBOOKS, ex);
         }
 
         // Setup the default tags
@@ -315,11 +315,11 @@ public class ElasticConfig {
                         IndexResponse response = client.index(indexRequest);
                     }
                 } catch (IOException e) {
-                    logger.log(Level.WARNING, "Failed to initialize tag : " +tag.getName(), e);
+                    logger.log(Level.WARNING, MessageFormat.format(TextUtil.ELASTIC_FAILED_TO_INITIALIZE_TAG, tag.getName()), e);
                 }
             });
         } catch (IOException ex) {
-            logger.log(Level.WARNING, "Failed to initialize tag ", ex);
+            logger.log(Level.WARNING, TextUtil.ELASTIC_FAILED_TO_INITIALIZE_TAGS, ex);
         }
 
         // Setup the default properties
@@ -344,11 +344,11 @@ public class ElasticConfig {
                         IndexResponse response = client.index(indexRequest);
                     }
                 } catch (IOException e) {
-                    logger.log(Level.WARNING, "Failed to initialize property : " +property.getName(), e);
+                    logger.log(Level.WARNING, MessageFormat.format(TextUtil.ELASTIC_FAILED_TO_INITIALIZE_PROPERTY, property.getName()), e);
                 }
             });
         } catch (IOException ex) {
-            logger.log(Level.WARNING, "Failed to initialize property ", ex);
+            logger.log(Level.WARNING, TextUtil.ELASTIC_FAILED_TO_INITIALIZE_PROPERTIES, ex);
         }
     }
 }

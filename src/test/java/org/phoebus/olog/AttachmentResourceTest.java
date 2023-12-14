@@ -50,13 +50,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ContextHierarchy({@ContextConfiguration(classes = {ResourcesTestConfig.class})})
 @WebMvcTest(AttachmentResource.class)
 @TestPropertySource(locations = "classpath:no_ldap_test_application.properties")
-public class AttachmentResourceTest extends ResourcesTestBase {
+class AttachmentResourceTest extends ResourcesTestBase {
 
     @Autowired
     private AttachmentRepository attachmentRepository;
 
     @Test
-    public void testGetAttachment() throws Exception {
+    void testGetAttachment() throws Exception {
         Attachment attachment = Mockito.mock(Attachment.class);
         InputStreamSource inputStreamSource = Mockito.mock(InputStreamSource.class);
         when(inputStreamSource.getInputStream()).thenReturn(new ByteArrayInputStream("data".getBytes()));
@@ -71,7 +71,7 @@ public class AttachmentResourceTest extends ResourcesTestBase {
     }
 
     @Test
-    public void testGetAttachmentIOException() throws Exception {
+    void testGetAttachmentIOException() throws Exception {
         Attachment attachment = Mockito.mock(Attachment.class);
         InputStreamSource inputStreamSource = Mockito.mock(InputStreamSource.class);
         when(inputStreamSource.getInputStream()).thenThrow(new IOException());
@@ -83,7 +83,7 @@ public class AttachmentResourceTest extends ResourcesTestBase {
     }
 
     @Test
-    public void testGetAttachmentInvalidId() throws Exception {
+    void testGetAttachmentInvalidId() throws Exception {
         when(attachmentRepository.findById("invalid")).thenReturn(Optional.empty());
         MockHttpServletRequestBuilder request = get("/" + OlogResourceDescriptors.ATTACHMENT_URI + "/invalid");
         mockMvc.perform(request).andExpect(status().isNotFound());

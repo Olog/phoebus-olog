@@ -1,0 +1,63 @@
+# Use the default network olog_default.
+version: "3.7"
+services:
+  olog:
+    build:
+      context: .
+      dockerfile: Dockerfile.integrationtest
+    ports:
+      - "8080:8080"
+      - "8181:8181"
+    depends_on:
+      - mongo
+      - elastic
+    # Ensure that the elastic server is up before starting olog.
+    environment:
+      ldap.enabled: "false"
+      embedded_ldap.enabled: "false"
+      demo_auth.enabled: "true"
+      skipITCoverage: "true"
+    command: >
+      /bin/bash -c "
+          while ! curl -s -f elastic:9200/_cluster/health?wait_for_status=yellow;
+        do
+          echo Waiting for Elasticsearch;
+          sleep 1;
+        done;
+        if [ ${skipITCoverage} == false ]; then
+          export JAVA_TOOL_OPTIONS=-javaagent:/olog-target/jacocoagent.jar=destfile=/olog-target/jacoco.exec,output=file,append=false
+        fi
+        java -jar /olog-target/service-olog*.jar --spring.config.name=application-docker
+      "
+
+  mongo:
+    image: mongo
+    ports:
+      - 27017:27017
+    volumes:
+      - olog-mongodata:/etc/mongo
+
+  elastic:
+    image: elasticsearch:8.2.3
+    environment:
+      cluster.name: elasticsearch
+      bootstrap.memory_lock: "true"
+      discovery.type: single-node
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+      xpack.security.enabled: "false"
+      xpack.security.http.ssl.enabled: "false"
+    ports:
+      - 9200:9200
+    volumes:
+      - olog-esdata:/usr/share/elasticsearch/data
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+
+# Configure persistent storage for mongo and elastic.
+volumes:
+  olog-esdata:
+    driver: local
+  olog-mongodata:
+    driver: local

@@ -26,12 +26,12 @@ import org.phoebus.olog.entity.preprocess.impl.CommonmarkCleaner;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class CommonmarkPreprocessorTest {
+class CommonmarkPreprocessorTest {
 
     private final CommonmarkCleaner commonmarkPreprocessor = new CommonmarkCleaner();
 
     @Test
-    public void testDescriptionNonNull(){
+    void testDescriptionNonNull() {
         Log log = LogBuilder.createLog()
                 .source("**BOLD** ![alt](http://foo.bar)")
                 .description(null)
@@ -44,7 +44,7 @@ public class CommonmarkPreprocessorTest {
     }
 
     @Test
-    public void testDescriptionNull(){
+    void testDescriptionNull() {
         Log log = LogBuilder.createLog()
                 .description(null)
                 .source(null)

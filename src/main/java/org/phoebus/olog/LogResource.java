@@ -12,7 +12,6 @@ import org.phoebus.olog.entity.preprocess.MarkupCleaner;
 import org.phoebus.olog.notification.LogEntryNotifier;
 import org.phoebus.util.time.TimeParser;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.task.TaskExecutor;
@@ -25,6 +24,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.security.Principal;
+import java.text.MessageFormat;
 import java.time.Instant;
 import java.time.temporal.TemporalAmount;
 import java.time.temporal.UnsupportedTemporalTypeException;
@@ -96,8 +96,9 @@ public class LogResource {
         if (foundLog.isPresent()) {
             return foundLog.get();
         } else {
-            logger.log(Level.SEVERE, "Failed to find log: " + logId, new ResponseStatusException(HttpStatus.NOT_FOUND));
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to find log: " + logId);
+            String message = MessageFormat.format(TextUtil.LOG_NOT_FOUND, logId);
+            logger.log(Level.SEVERE, message, new ResponseStatusException(HttpStatus.NOT_FOUND));
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, message);
         }
     }
 
@@ -115,7 +116,7 @@ public class LogResource {
             Set<Attachment> attachments = log.get().getAttachments().stream().filter(attachment -> attachment.getFilename().equals(attachmentName)).collect(Collectors.toSet());
             if (attachments.size() == 1) {
                 Attachment attachment = attachments.iterator().next();
-                this.logger.log(Level.INFO, "Requesting attachment " + attachment.getId() + ": " + attachment.getFilename());
+                this.logger.log(Level.INFO, () -> MessageFormat.format(TextUtil.ATTACHMENT_REQUEST_DETAILS, attachment.getId(), attachment.getFilename()));
                 Attachment foundAttachment = attachmentRepository.findById(attachment.getId()).get();
                 InputStreamResource resource;
                 try {
@@ -132,11 +133,11 @@ public class LogResource {
                     return new ResponseEntity<>(resource, httpHeaders, HttpStatus.OK);
                 } catch (IOException e) {
                     Logger.getLogger(LogResource.class.getName())
-                            .log(Level.WARNING, String.format("Unable to retrieve attachment %s for log id %s", attachmentName, logId), e);
+                            .log(Level.WARNING, MessageFormat.format(TextUtil.ATTACHMENT_UNABLE_TO_RETRIEVE_FOR_ID, attachmentName, logId), e);
                 }
             } else {
                 Logger.getLogger(LogResource.class.getName())
-                        .log(Level.WARNING, String.format("Found %d attachments named %s for log id %s", attachments.size(), attachmentName, logId));
+                        .log(Level.WARNING, () -> MessageFormat.format(TextUtil.ATTACHMENTS_NAMED_FOUND_FOR_ID, attachments.size(), attachmentName, logId));
             }
         }
         return null;
@@ -186,7 +187,7 @@ public class LogResource {
                     try {
                         allRequestParams.get(key).add(MILLI_FORMAT.format(Instant.now().minus((TemporalAmount) time)));
                     } catch (UnsupportedTemporalTypeException e) { // E.g. if client sends "months" or "years"
-                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unsupported date/time specified: " + value);
+                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, MessageFormat.format(TextUtil.UNSUPPORTED_DATE_TIME, value));
                     }
                 }
             }
@@ -217,10 +218,10 @@ public class LogResource {
                          @RequestBody Log log,
                          @AuthenticationPrincipal Principal principal) {
         if (log.getLogbooks().isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A log entry must specify at least one logbook");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, TextUtil.LOG_MUST_HAVE_LOGBOOK);
         }
         if (log.getTitle().isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A log entry must specify a title");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, TextUtil.LOG_MUST_HAVE_TITLE);
         }
         if (!inReplyTo.equals("-1")) {
             handleReply(inReplyTo, log);
@@ -230,7 +231,7 @@ public class LogResource {
         Set<String> persistedLogbookNames = new HashSet<>();
         logbookRepository.findAll().forEach(l -> persistedLogbookNames.add(l.getName()));
         if (!CollectionUtils.containsAll(persistedLogbookNames, logbookNames)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "One or more invalid logbook name(s)");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, TextUtil.LOG_INVALID_LOGBOOKS);
         }
         Set<Tag> tags = log.getTags();
         if (tags != null && !tags.isEmpty()) {
@@ -238,7 +239,7 @@ public class LogResource {
             Set<String> persistedTags = new HashSet<>();
             tagRepository.findAll().forEach(t -> persistedTags.add(t.getName()));
             if (!CollectionUtils.containsAll(persistedTags, tagNames)) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "One or more invalid tag name(s)");
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, TextUtil.LOG_INVALID_TAGS);
             }
         }
         log = cleanMarkup(markup, log);
@@ -246,7 +247,7 @@ public class LogResource {
         Log newLogEntry = logRepository.save(log);
         sendToNotifiers(newLogEntry);
 
-        logger.log(Level.INFO, "Entry id " + newLogEntry.getId() + " created from " + clientInfo);
+        logger.log(Level.INFO, () -> "Entry id " + newLogEntry.getId() + " created from " + clientInfo);
 
         return newLogEntry;
     }
@@ -278,7 +279,7 @@ public class LogResource {
                          @AuthenticationPrincipal Principal principal) {
 
         if (files != null && logEntry.getAttachments() != null && files.length != logEntry.getAttachments().size()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Attachment data invalid: file count does not match attachment count");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, TextUtil.ATTACHMENT_DATA_INVALID);
         }
 
         Log newLogEntry = createLog(clientInfo, markup, inReplyTo, logEntry, principal);
@@ -290,7 +291,7 @@ public class LogResource {
                         logEntry.getAttachments().stream()
                                 .filter(a -> a.getFilename() != null && a.getFilename().equals(originalFileName)).findFirst();
                 if (attachment.isEmpty()) { // Should not happen if client behaves correctly
-                    logger.log(Level.WARNING, "File " + originalFileName + " not matched with attachment meta-data");
+                    logger.log(Level.WARNING, () -> MessageFormat.format(TextUtil.ATTACHMENT_FILE_NOT_MATCHED_META_DATA, originalFileName));
                     continue;
                 }
                 uploadAttachment(Long.toString(newLogEntry.getId()),
@@ -301,7 +302,7 @@ public class LogResource {
             }
         }
 
-        logger.log(Level.INFO, "Entry id " + newLogEntry.getId() + " created from " + clientInfo);
+        logger.log(Level.INFO, () -> MessageFormat.format(TextUtil.LOG_ENTRY_ID_CREATED_FROM, newLogEntry.getId(), clientInfo));
 
         return newLogEntry;
     }
@@ -338,7 +339,7 @@ public class LogResource {
             log.setAttachments(existingAttachments);
             return logRepository.update(log);
         } else {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to retrieve log with id: " + logId);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, MessageFormat.format(TextUtil.LOG_NOT_RETRIEVED, logId));
         }
     }
 
@@ -368,7 +369,7 @@ public class LogResource {
 
         // In case a client sends a log record where the id does not match the path variable, return HTTP 400 (bad request)
         if (!logId.equals(Long.toString(log.getId()))) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Log entry id does not match path variable");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, TextUtil.LOG_ENTRY_NOT_MATCH_PATH);
         }
 
         Optional<Log> foundLog = logRepository.findById(logId);
@@ -389,14 +390,14 @@ public class LogResource {
 
             return logRepository.update(persistedLog);
         } else {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to retrieve log with id: " + logId);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, MessageFormat.format(TextUtil.LOG_NOT_RETRIEVED, logId));
         }
     }
 
     @SuppressWarnings("unused")
     @PostMapping(value = "/group")
     public void groupLogEntries(@RequestBody List<Long> logEntryIds) {
-        logger.log(Level.INFO, "Grouping log entries: " + logEntryIds.stream().map(id -> Long.toString(id)).collect(Collectors.joining(",")));
+        logger.log(Level.INFO, () -> "Grouping log entries: " + logEntryIds.stream().map(id -> Long.toString(id)).collect(Collectors.joining(",")));
         Property existingLogEntryGroupProperty = null;
         List<Log> logs = new ArrayList<>();
         // Check prerequisites: if two (or more) log entries are already contained in a group, they must all be contained in
@@ -407,13 +408,13 @@ public class LogResource {
                 try {
                     log = logRepository.findById(Long.toString(id));
                 } catch (ResponseStatusException exception) {
-                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Log id " + id + " not found");
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, MessageFormat.format(TextUtil.LOG_ID_NOT_FOUND, id));
                 }
                 Property logEntryGroupProperty = LogEntryGroupHelper.getLogEntryGroupProperty(log.get());
                 if (logEntryGroupProperty != null && existingLogEntryGroupProperty != null &&
                         !logEntryGroupProperty.getAttribute(LogEntryGroupHelper.ATTRIBUTE_ID).equals(existingLogEntryGroupProperty.getAttribute(LogEntryGroupHelper.ATTRIBUTE_ID))) {
-                    logger.log(Level.INFO, "Grouping not allowed due to conflicting log entry groups.");
-                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot group: at least two entries already contained in different groups");
+                    logger.log(Level.INFO, TextUtil.GROUPING_NOT_ALLOWED);
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, TextUtil.GROUPING_ENTRIES_IN_DIFFERENT_GROUPS);
                 }
                 if (logEntryGroupProperty != null) {
                     existingLogEntryGroupProperty = logEntryGroupProperty;
@@ -456,7 +457,7 @@ public class LogResource {
                 n.notify(log);
             } catch (Exception e) {
                 Logger.getLogger(LogResource.class.getName())
-                        .log(Level.WARNING, "LogEntryNotifier " + n.getClass().getName() + " throws exception", e);
+                        .log(Level.WARNING, MessageFormat.format(TextUtil.LOG_ENTRY_NOTIFIER, n.getClass().getName()), e);
             }
         }));
     }
@@ -493,7 +494,7 @@ public class LogResource {
             }
             return logRepository.findById(logId).get();
         } else {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to retrieve log with id: " + logId);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, MessageFormat.format(TextUtil.LOG_NOT_RETRIEVED, logId));
         }
     }
 
@@ -518,7 +519,7 @@ public class LogResource {
             allFutures.get(propertyProvidersTimeout, TimeUnit.MILLISECONDS);
         } catch (Exception e) {
             Logger.getLogger(LogResource.class.getName())
-                    .log(Level.SEVERE, "A property provider failed to return in time or threw exception", e);
+                    .log(Level.SEVERE, TextUtil.PROPERTY_PROVIDER_FAILED_TO_RETURN, e);
         }
         List<Property> providedProperties =
                 completableFutures.stream()
@@ -544,7 +545,7 @@ public class LogResource {
         String toLog = allSearchParameters.entrySet().stream()
                 .map((e) -> e.getKey().trim() + "=" + e.getValue().stream().collect(Collectors.joining(",")))
                 .collect(Collectors.joining("&"));
-        logger.log(Level.INFO, "Query " + toLog + " from client " + clientInfo);
+        logger.log(Level.INFO, () -> MessageFormat.format(TextUtil.QUERY_FROM_CLIENT, toLog, clientInfo));
     }
 
     /**
@@ -574,7 +575,7 @@ public class LogResource {
             }
         } catch (ResponseStatusException exception) {
             // Log entry not found, return HTTP 400
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot reply to log entry " + originalLogEntryId + " as it does not exist");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, MessageFormat.format(TextUtil.LOG_ENTRY_CANNOT_REPLY_NOT_EXISTS, originalLogEntryId));
         }
     }
 }

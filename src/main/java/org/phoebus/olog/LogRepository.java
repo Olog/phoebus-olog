@@ -23,7 +23,6 @@ import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.mget.MultiGetResponseItem;
 import co.elastic.clients.elasticsearch.core.search.Hit;
-import org.apache.logging.log4j.util.Strings;
 import org.phoebus.olog.entity.Attachment;
 import org.phoebus.olog.entity.Log;
 import org.phoebus.olog.entity.Log.LogBuilder;
@@ -38,6 +37,7 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
+import java.text.MessageFormat;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -78,9 +78,9 @@ public class LogRepository implements CrudRepository<Log, String> {
             LogBuilder validatedLog = LogBuilder.createLog(log).id(id).createDate(Instant.now());
             if (log.getAttachments() != null && !log.getAttachments().isEmpty()) {
                 Set<Attachment> createdAttachments = new HashSet<>();
-                log.getAttachments().stream().filter(attachment -> attachment.getAttachment() != null).forEach(attachment -> {
-                    createdAttachments.add(attachmentRepository.save(attachment));
-                });
+                log.getAttachments().stream().filter(attachment -> attachment.getAttachment() != null).forEach(attachment ->
+                    createdAttachments.add(attachmentRepository.save(attachment))
+                );
                 validatedLog = validatedLog.setAttachments(createdAttachments);
             }
 
@@ -103,8 +103,9 @@ public class LogRepository implements CrudRepository<Log, String> {
                 return (S) resp.source();
             }
         } catch (Exception e) {
-            logger.log(Level.SEVERE, "Failed to save log entry: " + log, e);
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to save log entry: " + log);
+            String message = MessageFormat.format(TextUtil.LOG_NOT_SAVED, log);
+            logger.log(Level.SEVERE, message, e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, message);
         }
         return null;
     }
@@ -112,9 +113,9 @@ public class LogRepository implements CrudRepository<Log, String> {
     @Override
     public <S extends Log> Iterable<S> saveAll(Iterable<S> logs) {
         List<S> createdLogs = new ArrayList<>();
-        logs.forEach(log -> {
-            createdLogs.add(save(log));
-        });
+        logs.forEach(log ->
+            createdLogs.add(save(log))
+        );
         return createdLogs;
     }
 
@@ -139,8 +140,9 @@ public class LogRepository implements CrudRepository<Log, String> {
                 return resp.source();
             }
         } catch (Exception e) {
-            logger.log(Level.SEVERE, "Failed to save log entry: " + log, e);
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update log entry: " + log);
+            String message = MessageFormat.format(TextUtil.LOG_NOT_UPDATED, log);
+            logger.log(Level.SEVERE, message, e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, message);
         }
         return null;
     }
@@ -151,7 +153,7 @@ public class LogRepository implements CrudRepository<Log, String> {
             GetResponse<Log> resp = client.get(GetRequest.of(g ->
                     g.index(ES_LOG_INDEX).id(String.valueOf(log.getId()))), Log.class);
             if(!resp.found()) {
-                logger.log(Level.SEVERE, "Failed to archive log with id: " + log.getId());
+                logger.log(Level.SEVERE, () -> MessageFormat.format(TextUtil.LOG_NOT_ARCHIVED, log.getId()));
             } else {
                 Log originalDocument = resp.source();
                 String updatedVersion = originalDocument.getId() + "_v" + resp.version();
@@ -168,11 +170,11 @@ public class LogRepository implements CrudRepository<Log, String> {
                                     g.index(ES_LOG_ARCHIVE_INDEX).id(response.id()));
                     return client.get(getRequest, Log.class).source();
                 } else {
-                    logger.log(Level.SEVERE, "Failed to archiver log with id: " + updatedVersion);
+                    logger.log(Level.SEVERE, () -> MessageFormat.format(TextUtil.LOG_NOT_ARCHIVED, updatedVersion));
                 }
             }
         } catch (IOException e) {
-            logger.log(Level.SEVERE, "Failed to archiver log with id: " + log.getId(), e);
+            logger.log(Level.SEVERE, MessageFormat.format(TextUtil.LOG_NOT_ARCHIVED, log.getId()), e);
         }
         return null;
     }
@@ -194,8 +196,8 @@ public class LogRepository implements CrudRepository<Log, String> {
             searchResult.setLogs(result);
             return searchResult;
         } catch (IOException | IllegalArgumentException e) {
-            logger.log(Level.SEVERE, "Failed to complete search for archived logs", e);
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to complete search archived logs");
+            logger.log(Level.SEVERE, TextUtil.LOGS_SEARCH_NOT_COMPLETED, e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, TextUtil.LOGS_SEARCH_NOT_COMPLETED);
         }
     }
 
@@ -209,13 +211,14 @@ public class LogRepository implements CrudRepository<Log, String> {
                     client.get(getRequest, Log.class);
 
             if (!resp.found()) {
-                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Log with id " + id + " not found.");
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, MessageFormat.format(TextUtil.LOG_NOT_FOUND, id));
             }
             return Optional.of(resp.source());
         } catch (Exception e) {
             // https://www.baeldung.com/exception-handling-for-rest-with-spring#controlleradvice
-            logger.log(Level.SEVERE, "Failed to retrieve log with id: " + id, e);
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to retrieve log with id: " + id);
+            String message = MessageFormat.format(TextUtil.LOG_NOT_RETRIEVED, id);
+            logger.log(Level.SEVERE, message, e);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, message);
         }
     }
 
@@ -225,14 +228,15 @@ public class LogRepository implements CrudRepository<Log, String> {
             ExistsRequest existsRequest = ExistsRequest.of(e -> e.index(ES_LOG_INDEX).id(logId));
             return client.exists(existsRequest).value();
         } catch (IOException e) {
-            logger.log(Level.SEVERE, "Failed to check existence of log with id: " + logId, e);
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to check existence of log with id: " + logId);
+            String message = MessageFormat.format(TextUtil.LOG_EXISTS_FAILED, logId);
+            logger.log(Level.SEVERE, message, e);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, message);
         }
     }
 
     @Override
     public Iterable<Log> findAll() {
-        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Retrieving all log entries is not supported. Use Search with scroll.");
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, TextUtil.LOGS_RETRIEVE_ALL_NOT_SUPPORTED);
     }
 
     @Override
@@ -251,8 +255,9 @@ public class LogRepository implements CrudRepository<Log, String> {
             }
             return foundLogs;
         } catch (Exception e) {
-            logger.log(Level.SEVERE, "Failed to find logs: " + logIds, e);
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to find logs: " + logIds);
+            String message = MessageFormat.format(TextUtil.LOGS_NOT_FOUND, logIds);
+            logger.log(Level.SEVERE, message, e);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, message);
         }
     }
 
@@ -263,22 +268,22 @@ public class LogRepository implements CrudRepository<Log, String> {
 
     @Override
     public void deleteById(String id) {
-        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Deleting log entries is not supported");
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, TextUtil.LOGS_DELETE_NOT_SUPPORTED);
     }
 
     @Override
     public void delete(Log entity) {
-        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Deleting log entries is not supported");
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, TextUtil.LOGS_DELETE_NOT_SUPPORTED);
     }
 
     @Override
     public void deleteAll(Iterable<? extends Log> entities) {
-        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Deleting log entries is not supported");
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, TextUtil.LOGS_DELETE_NOT_SUPPORTED);
     }
 
     @Override
     public void deleteAll() {
-        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Deleting log entries is not supported");
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN, TextUtil.LOGS_DELETE_NOT_SUPPORTED);
     }
 
     @Autowired
@@ -295,8 +300,8 @@ public class LogRepository implements CrudRepository<Log, String> {
             searchResult.setLogs(result);
             return searchResult;
         } catch (IOException | IllegalArgumentException e) {
-            logger.log(Level.SEVERE, "Failed to complete search", e);
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to complete search");
+            logger.log(Level.SEVERE, TextUtil.SEARCH_NOT_COMPLETED, e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, TextUtil.SEARCH_NOT_COMPLETED);
         }
     }
 

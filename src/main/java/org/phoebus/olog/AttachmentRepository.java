@@ -19,6 +19,7 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
 import java.io.IOException;
+import java.text.MessageFormat;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -63,7 +64,7 @@ public class AttachmentRepository implements CrudRepository<Attachment, String> 
             return entity;
         } catch (IOException e) {
             Logger.getLogger(AttachmentRepository.class.getName())
-                    .log(Level.WARNING, String.format("Unable to persist attachment %s", entity.getFilename()), e);
+                    .log(Level.WARNING, MessageFormat.format(TextUtil.ATTACHMENT_NOT_PERSISTED, entity.getFilename()), e);
         }
         return null;
     }

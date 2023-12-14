@@ -37,8 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @ContextConfiguration(classes = ElasticConfig.class)
 @TestPropertySource(locations = "classpath:test_application.properties")
 @SuppressWarnings("unused")
-public class TagRepositoryIT {
-
+class TagRepositoryIT {
 
     @Autowired
     private TagRepository tagRepository;
@@ -62,7 +61,7 @@ public class TagRepositoryIT {
      * @throws IOException
      */
     @Test
-    public void createTag() throws IOException {
+    void createTag() throws IOException {
         tagRepository.save(testTag1);
         Optional<Tag> result = tagRepository.findById(testTag1.getName());
         assertThat("Failed to create Tag " + testTag1, result.isPresent() && result.get().equals(testTag1));
@@ -77,7 +76,7 @@ public class TagRepositoryIT {
      * @throws IOException
      */
     @Test
-    public void deleteTag() throws IOException {
+    void deleteTag() throws IOException {
         tagRepository.save(testTag2);
         Optional<Tag> result = tagRepository.findById(testTag2.getName());
         assertThat("Failed to create Tag " + testTag2, result.isPresent() && result.get().equals(testTag2));
@@ -95,7 +94,7 @@ public class TagRepositoryIT {
      * create a set of tags
      */
     @Test
-    public void createTags() {
+    void createTags() {
         List<Tag> tags = Arrays.asList(testTag1, testTag2, testTag3, testTag4);
         try {
             List<Tag> result = new ArrayList<>();
@@ -115,7 +114,7 @@ public class TagRepositoryIT {
      * delete a set of tags
      */
     @Test
-    public void deleteTags() {
+    void deleteTags() {
         List<Tag> tags = Arrays.asList(testTag1, testTag2, testTag3, testTag4);
         try {
             List<Tag> result = new ArrayList<>();
@@ -136,7 +135,7 @@ public class TagRepositoryIT {
     }
 
     @Test
-    public void findAllTags() {
+    void findAllTags() {
         List<Tag> tags = Arrays.asList(testTag1, testTag2, testTag3, testTag4);
         try {
             tagRepository.saveAll(tags);
@@ -150,7 +149,7 @@ public class TagRepositoryIT {
     }
 
     @Test
-    public void findAllTagsByIds() throws IOException {
+    void findAllTagsByIds() throws IOException {
         List<Tag> tags = Arrays.asList(testTag1, testTag2, testTag3, testTag4);
         try {
             tagRepository.saveAll(tags);
@@ -168,12 +167,12 @@ public class TagRepositoryIT {
     }
 
     @Test
-    public void findAllInactiveTags() {
+    void findAllInactiveTags() {
 
     }
 
     @Test
-    public void findTagById() {
+    void findTagById() {
         List<Tag> tags = Arrays.asList(testTag1, testTag2);
         try {
             tagRepository.saveAll(tags);
@@ -186,7 +185,7 @@ public class TagRepositoryIT {
     }
 
     @Test
-    public void checkTagExists() {
+    void checkTagExists() {
         List<Tag> tags = Arrays.asList(testTag1, testTag2);
         try {
             tagRepository.saveAll(tags);

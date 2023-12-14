@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  *
  * @author carcassi, shroffk
  */
-public class TimeRelativeIntervalTest {
+class TimeRelativeIntervalTest {
 
     public TimeRelativeIntervalTest() {
     }
@@ -34,7 +34,7 @@ public class TimeRelativeIntervalTest {
      * Absolute start and absolute end
      */
     @Test
-    public void interval1() {
+    void interval1() {
         TimeRelativeInterval interval = TimeRelativeInterval.of(Instant.ofEpochSecond(0, 0),
                 Instant.ofEpochSecond(3600, 0));
         assertThat(interval.toAbsoluteInterval(Instant.now()),
@@ -45,7 +45,7 @@ public class TimeRelativeIntervalTest {
      * absolute start and relative end
      */
     @Test
-    public void interval2() {
+    void interval2() {
         // relative end of 10 ns after start
         TimeRelativeInterval interval = TimeRelativeInterval.of(Instant.ofEpochSecond(0, 0), Duration.ofNanos(10));
         assertThat(interval.toAbsoluteInterval(),
@@ -72,7 +72,7 @@ public class TimeRelativeIntervalTest {
      * relative start and absolute end
      */
     @Test
-    public void interval3() {
+    void interval3() {
         // relative start of 10 ns before now
         Instant now = Instant.now();
         TimeRelativeInterval interval = TimeRelativeInterval.of(Duration.ofNanos(10), now);
@@ -92,7 +92,7 @@ public class TimeRelativeIntervalTest {
     }
 
     @Test
-    public void relativeIntervalinMilliSecs() {
+    void relativeIntervalinMilliSecs() {
         TimeRelativeInterval interval = TimeRelativeInterval.of(ofMillis(15), ofMillis(5));
         Instant now = Instant.now();
         TimeInterval timeInterval = interval.toAbsoluteInterval(now);
@@ -101,7 +101,7 @@ public class TimeRelativeIntervalTest {
     }
 
     @Test
-    public void relativeIntervalinSecs() {
+    void relativeIntervalinSecs() {
         TimeRelativeInterval interval = TimeRelativeInterval.of(ofSeconds(5), ofSeconds(3));
         Instant now = Instant.now();
         TimeInterval timeInterval = interval.toAbsoluteInterval(now);
@@ -110,7 +110,7 @@ public class TimeRelativeIntervalTest {
     }
 
     @Test
-    public void relativeIntervalinMins() {
+    void relativeIntervalinMins() {
         TimeRelativeInterval interval = TimeRelativeInterval.of(ofMinutes(5), ofMinutes(3));
         Instant now = Instant.now();
         TimeInterval timeInterval = interval.toAbsoluteInterval(now);
@@ -119,7 +119,7 @@ public class TimeRelativeIntervalTest {
     }
 
     @Test
-    public void relativeIntervalinHours() {
+    void relativeIntervalinHours() {
         TimeRelativeInterval interval = TimeRelativeInterval.of(ofHours(5), ofHours(3));
         Instant now = Instant.now();
         TimeInterval timeInterval = interval.toAbsoluteInterval(now);
@@ -131,10 +131,10 @@ public class TimeRelativeIntervalTest {
      * The {@link TimeRelativeInterval} is defined with both the start and the
      * end as relative definition. The below tests create an interval which
      * represents a single month.
-     * 
+     *
      */
     @Test
-    public void relativeIntervalinDays1() {
+    void relativeIntervalinDays1() {
         // Create an interval for January
         TimeRelativeInterval interval = TimeRelativeInterval.of(ofMonths(1), ofMonths(0));
         // Check jan it is 31 days
@@ -154,7 +154,7 @@ public class TimeRelativeIntervalTest {
     }
 
     @Test
-    public void relativeIntervalinDays2() {
+    void relativeIntervalinDays2() {
         // Create an interval for January
         TimeRelativeInterval interval = TimeRelativeInterval.of(LocalDateTime
                 .parse("2011-01-01T00:00:00", DateTimeFormatter.ISO_LOCAL_DATE_TIME).toInstant(ZoneOffset.UTC),

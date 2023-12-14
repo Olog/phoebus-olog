@@ -75,7 +75,7 @@ public class LogbookResourceTest extends ResourcesTestBase {
     }
 
     @Test
-    public void testFindAll() throws Exception {
+    void testFindAll() throws Exception {
         when(logbookRepository.findAll()).thenReturn(Arrays.asList(logbook1, logbook2));
 
         MockHttpServletRequestBuilder request = get("/" + OlogResourceDescriptors.LOGBOOK_RESOURCE_URI);
@@ -90,7 +90,7 @@ public class LogbookResourceTest extends ResourcesTestBase {
     }
 
     @Test
-    public void testFindAllNoLogbooks() throws Exception {
+    void testFindAllNoLogbooks() throws Exception {
         when(logbookRepository.findAll()).thenReturn(new ArrayList<>());
 
         MockHttpServletRequestBuilder request = get("/" + OlogResourceDescriptors.LOGBOOK_RESOURCE_URI);
@@ -105,7 +105,7 @@ public class LogbookResourceTest extends ResourcesTestBase {
     }
 
     @Test
-    public void testFindLogbookByName() throws Exception {
+    void testFindLogbookByName() throws Exception {
         when(logbookRepository.findById("name1")).thenReturn(Optional.of(logbook1));
 
         MockHttpServletRequestBuilder request = get("/" +
@@ -121,7 +121,7 @@ public class LogbookResourceTest extends ResourcesTestBase {
     }
 
     @Test
-    public void testCreateLogbookUnauthorized() throws Exception {
+    void testCreateLogbookUnauthorized() throws Exception {
         MockHttpServletRequestBuilder request = put("/" +
                 OlogResourceDescriptors.LOGBOOK_RESOURCE_URI +
                 "/name1")
@@ -131,7 +131,7 @@ public class LogbookResourceTest extends ResourcesTestBase {
     }
 
     @Test
-    public void testCreateLogbook() throws Exception {
+    void testCreateLogbook() throws Exception {
         Logbook logbookWithWrongOwnerName = new Logbook("name1", "owner1");
         when(logbookRepository.save(logbook1)).thenReturn(logbook1);
         MockHttpServletRequestBuilder request = put("/" +
@@ -147,7 +147,7 @@ public class LogbookResourceTest extends ResourcesTestBase {
     }
 
     @Test
-    public void testUpdateLogbooksUnauthorized() throws Exception {
+    void testUpdateLogbooksUnauthorized() throws Exception {
         MockHttpServletRequestBuilder request = put("/" +
                 OlogResourceDescriptors.LOGBOOK_RESOURCE_URI)
                 .content(objectMapper.writeValueAsString(new ArrayList<>()))
@@ -156,7 +156,7 @@ public class LogbookResourceTest extends ResourcesTestBase {
     }
 
     @Test
-    public void testUpdateLogbooks() throws Exception {
+    void testUpdateLogbooks() throws Exception {
         List<Logbook> logbooks = Arrays.asList(logbook1, logbook2);
         when(logbookRepository.saveAll(logbooks)).thenReturn(logbooks);
         MockHttpServletRequestBuilder request = put("/" +
@@ -174,7 +174,7 @@ public class LogbookResourceTest extends ResourcesTestBase {
     }
 
     @Test
-    public void testDeleteUnauthorized() throws Exception {
+    void testDeleteUnauthorized() throws Exception {
         MockHttpServletRequestBuilder request = delete("/" +
                 OlogResourceDescriptors.LOGBOOK_RESOURCE_URI +
                 "/name1");
@@ -182,7 +182,7 @@ public class LogbookResourceTest extends ResourcesTestBase {
     }
 
     @Test
-    public void testDelete() throws Exception {
+    void testDelete() throws Exception {
         MockHttpServletRequestBuilder request = delete("/" +
                 OlogResourceDescriptors.LOGBOOK_RESOURCE_URI +
                 "/name1")

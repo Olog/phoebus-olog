@@ -27,10 +27,10 @@ import java.time.Instant;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
-public class InstanceDeserialzerTest {
+class InstanceDeserialzerTest {
 
     @Test
-    public void testDeserialize() throws Exception{
+    void testDeserialize() throws Exception {
         JsonParser jsonParser = Mockito.mock(JsonParser.class);
         when(jsonParser.getText()).thenReturn("1622550277.005000000");
         InstanceDeserializer instanceDeserializer = new InstanceDeserializer();

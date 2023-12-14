@@ -70,7 +70,7 @@ public class LogEntryValidatorTest {
     }
 
     @Test
-    public void testValidLogEntry() {
+    void testValidLogEntry() {
         when(logbookRepository.findAll()).thenReturn(Arrays.asList(logbook1, logbook2));
         when(tagRepository.findAll()).thenReturn(Arrays.asList(tag1, tag2));
 
@@ -92,7 +92,7 @@ public class LogEntryValidatorTest {
     }
 
     @Test
-    public void testInvalidLogbooks() {
+    void testInvalidLogbooks() {
         when(logbookRepository.findAll()).thenReturn(Arrays.asList(logbook1, logbook2));
         when(tagRepository.findAll()).thenReturn(Arrays.asList(tag1, tag2));
         Logbook badLogbook = new Logbook("bad", "owner");
@@ -115,7 +115,7 @@ public class LogEntryValidatorTest {
     }
 
     @Test
-    public void testNoLogbooks() {
+    void testNoLogbooks() {
         when(logbookRepository.findAll()).thenReturn(Arrays.asList(logbook1, logbook2));
         when(tagRepository.findAll()).thenReturn(Arrays.asList(tag1, tag2));
 
@@ -136,7 +136,7 @@ public class LogEntryValidatorTest {
     }
 
     @Test
-    public void testInvalidTags() {
+    void testInvalidTags() {
         when(logbookRepository.findAll()).thenReturn(Arrays.asList(logbook1, logbook2));
         when(tagRepository.findAll()).thenReturn(Arrays.asList(tag1, tag2));
 
@@ -160,7 +160,7 @@ public class LogEntryValidatorTest {
     }
 
     @Test
-    public void testInvalidTitle() {
+    void testInvalidTitle() {
         when(logbookRepository.findAll()).thenReturn(Arrays.asList(logbook1, logbook2));
         when(tagRepository.findAll()).thenReturn(Arrays.asList(tag1, tag2));
 

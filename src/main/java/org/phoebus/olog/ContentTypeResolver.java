@@ -23,6 +23,7 @@ import org.springframework.http.MediaType;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.text.MessageFormat;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -56,7 +57,7 @@ public class ContentTypeResolver {
         }
         catch(Exception e){
             Logger.getLogger(ContentTypeResolver.class.getName())
-                    .log(Level.WARNING, "Unable to determine content type from file name {0}", fileName);
+                    .log(Level.WARNING, MessageFormat.format(TextUtil.CONTENT_TYPE_NOT_DETERMINED, fileName));
             return null;
         }
     }
