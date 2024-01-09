@@ -271,8 +271,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>2.3.2</version>
                 <configuration>
-                    <source>11</source>
-                    <target>11</target>
+                    <source>17</source>
+                    <target>17</target>
                     <encoding>${project.build.sourceEncoding}</encoding>
                 </configuration>
             </plugin>
@@ -405,7 +405,7 @@
                                 <configuration>
                                     <!-- add this to disable checking -->
                                     <doclint>none</doclint>
-                                    <source>11</source>
+                                    <source>17</source>
                                 </configuration>
                             </execution>
                         </executions>

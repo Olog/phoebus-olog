@@ -1,5 +1,5 @@
 # Use Maven image to execute build.
-FROM maven:3.6.3-openjdk-11 AS maven-build
+FROM maven:3.6.3-openjdk-17 AS maven-build
 RUN mkdir phoebus-olog
 WORKDIR /phoebus-olog
 COPY . .
@@ -10,9 +10,7 @@ RUN mvn clean install \
     -Pdeployable-jar
 
 # Use smaller openjdk image for running.
-FROM openjdk:11
-# apt clean is run automatically in debian-based images.
-RUN apt update && apt install -y wait-for-it
+FROM openjdk:17
 # Run commands as user 'olog'
 RUN useradd -ms /bin/bash olog
 # Use previous maven-build image.
