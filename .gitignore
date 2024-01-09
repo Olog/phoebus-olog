@@ -1,12 +1,22 @@
 /build/
 /target/
+/.project
+/.classpath
+
 **/.idea
 **/*iml
 
 # The H2 database files
 **/*mv.db
 **/*trace.db
+
+### Docker ###
 docker-compose-local*
+
+### Eclipse ###
+.settings/org.eclipse.core.resources.prefs
+.settings/org.eclipse.jdt.core.prefs
+.settings/org.eclipse.m2e.core.prefs
 
 pom.xml.releaseBackup
 
