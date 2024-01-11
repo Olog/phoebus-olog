@@ -57,6 +57,7 @@
         <elasticsearch.version>8.2.0</elasticsearch.version>
         <lombok.version>1.18.16</lombok.version>
         <junit.version>5.8.2</junit.version>
+        <springdoc.version>1.7.0</springdoc.version>
         <skipITs>true</skipITs>
         <skipITCoverage>true</skipITCoverage>
         <jacoco.skip>true</jacoco.skip>
@@ -131,6 +132,13 @@
             <groupId>jakarta.json</groupId>
             <artifactId>jakarta.json-api</artifactId>
             <version>2.0.1</version>
+        </dependency>
+
+        <!-- OpenAPI / Swagger UI -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-ui</artifactId>
+            <version>${springdoc.version}</version>
         </dependency>
 
         <dependency>
