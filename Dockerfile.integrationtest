@@ -16,10 +16,8 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 # ------------------------------------------------------------------------------
 
-FROM openjdk:11
+FROM openjdk:17
 
-# apt clean is run automatically in debian-based images.
-RUN apt update && apt install -y wait-for-it
 # Run commands as user 'olog'
 RUN useradd -ms /bin/bash olog
 

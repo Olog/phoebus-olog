@@ -3,9 +3,16 @@
 **/.idea
 **/*iml
 
+# Eclipse stuff
+/.project
+/.classpath
+/.settings
+
 # The H2 database files
 **/*mv.db
 **/*trace.db
+
+### Docker ###
 docker-compose-local*
 
 pom.xml.releaseBackup
