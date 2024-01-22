@@ -53,7 +53,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <spring.boot-version>2.7.3</spring.boot-version>
+        <spring.boot-version>2.7.18</spring.boot-version>
         <elasticsearch.version>8.2.0</elasticsearch.version>
         <lombok.version>1.18.16</lombok.version>
         <junit.version>5.8.2</junit.version>
@@ -183,6 +183,7 @@
         <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-test</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.unboundid</groupId>
@@ -372,35 +373,6 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-source-plugin</artifactId>
-                <version>3.3.0</version>
-                <executions>
-                    <execution>
-                        <id>attach-sources</id>
-                        <goals>
-                            <goal>jar-no-fork</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <version>3.6.3</version>
-                <configuration>
-                    <doclint>-missing</doclint>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>attach-javadocs</id>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-release-plugin</artifactId>
                 <version>3.0.1</version>
                 <configuration>
@@ -463,6 +435,20 @@
                             </execution>
                         </executions>
                     </plugin>
+                    <!-- Attach sources -->
+		            <plugin>
+		                <groupId>org.apache.maven.plugins</groupId>
+		                <artifactId>maven-source-plugin</artifactId>
+		                <version>3.3.0</version>
+		                <executions>
+		                    <execution>
+		                        <id>attach-sources</id>
+		                        <goals>
+		                            <goal>jar-no-fork</goal>
+		                        </goals>
+		                    </execution>
+		                </executions>
+		            </plugin>
                 </plugins>
             </build>
         </profile>
@@ -514,6 +500,7 @@
                     <plugin>
                         <groupId>org.springframework.boot</groupId>
                         <artifactId>spring-boot-maven-plugin</artifactId>
+                        <version>${spring.boot-version}</version>
                         <configuration>
                             <executable>true</executable>
                         </configuration>
