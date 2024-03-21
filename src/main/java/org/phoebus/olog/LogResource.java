@@ -5,6 +5,7 @@
  */
 package org.phoebus.olog;
 
+import org.apache.commons.codec.binary.StringUtils;
 import org.apache.commons.collections4.CollectionUtils;
 import org.phoebus.olog.entity.*;
 import org.phoebus.olog.entity.preprocess.LogPropertyProvider;
@@ -377,6 +378,16 @@ public class LogResource {
             Log persistedLog = foundLog.get();
             logRepository.archive(persistedLog);
 
+            // log entry group property should not be editable but remain if it exists
+            Property logEntryGroupProperty = extractProperty(log.getProperties(), LogEntryGroupHelper.LOG_ENTRY_GROUP);
+            if (logEntryGroupProperty != null) {
+                log.getProperties().remove(logEntryGroupProperty);
+            }
+            logEntryGroupProperty = extractProperty(persistedLog.getProperties(), LogEntryGroupHelper.LOG_ENTRY_GROUP);
+            if (logEntryGroupProperty != null) {
+                log.getProperties().add(logEntryGroupProperty);
+            }
+
             persistedLog.setOwner(principal.getName());
             persistedLog.setLevel(log.getLevel());
             persistedLog.setProperties(log.getProperties());
@@ -392,6 +403,25 @@ public class LogResource {
         } else {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, MessageFormat.format(TextUtil.LOG_NOT_RETRIEVED, logId));
         }
+    }
+
+    /**
+     * Extract property with given name from set of properties.
+     *
+     * @param properties set of properties
+     * @param name property name
+     * @return extracted property or <tt>null</tt> if property not found
+     */
+    private Property extractProperty(Set<Property> properties, String name) {
+        if (properties == null || name == null) {
+            return null;
+        }
+        for (Property property : properties) {
+            if (StringUtils.equals(name, property.getName())) {
+                return property;
+            }
+        }
+        return null;
     }
 
     @SuppressWarnings("unused")
