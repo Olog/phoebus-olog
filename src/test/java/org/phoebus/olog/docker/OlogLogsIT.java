@@ -22,12 +22,17 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.phoebus.olog.docker.ITUtil.AuthorizationChoice;
 import org.phoebus.olog.entity.Log;
+import org.phoebus.olog.entity.Logbook;
+import org.phoebus.olog.entity.State;
+import org.phoebus.olog.entity.Log.LogBuilder;
 import org.testcontainers.containers.ComposeContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.util.Arrays;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -118,7 +123,7 @@ class OlogLogsIT {
         //         Upload attachment
         //         Upload multiple attachments
 
-    	ITUtilTags.assertRetrieveTag("/l11", HttpURLConnection.HTTP_NOT_FOUND);
+        ITUtilTags.assertRetrieveTag("/l11", HttpURLConnection.HTTP_NOT_FOUND);
     }
 
     /**
@@ -153,7 +158,7 @@ class OlogLogsIT {
         String json_incomplete8 = "}";
         String json_incomplete9 = "\"";
 
-        ITUtilLogs.assertListLogs(0);
+        int length = ITUtilLogs.assertListLogs(-1).length;
 
         ITUtilLogs.assertCreateLog(AuthorizationChoice.ADMIN, "", json_incomplete1, HttpURLConnection.HTTP_BAD_REQUEST);
         ITUtilLogs.assertCreateLog(AuthorizationChoice.ADMIN, "", json_incomplete2, HttpURLConnection.HTTP_BAD_REQUEST);
@@ -165,7 +170,7 @@ class OlogLogsIT {
         ITUtilLogs.assertCreateLog(AuthorizationChoice.ADMIN, "", json_incomplete8, HttpURLConnection.HTTP_BAD_REQUEST);
         ITUtilLogs.assertCreateLog(AuthorizationChoice.ADMIN, "", json_incomplete9, HttpURLConnection.HTTP_BAD_REQUEST);
 
-        ITUtilLogs.assertListLogs(0);
+        assertEquals(length, ITUtilLogs.assertListLogs(-1).length);
     }
 
     /**
@@ -190,14 +195,52 @@ class OlogLogsIT {
         //         Upload attachment
         //         Upload multiple attachments
 
-    	Log log_check = new Log.LogBuilder().build();
+        Log log_check = new Log.LogBuilder().build();
 
-    	ITUtilLogs.assertListLogs(0);
+        int length = ITUtilLogs.assertListLogs(-1).length;
 
-    	ITUtilLogs.assertCreateLog(AuthorizationChoice.ADMIN, "", log_check, HttpURLConnection.HTTP_BAD_REQUEST);
-    	ITUtilLogs.assertCreateLog(AuthorizationChoice.ADMIN, "", log_check, HttpURLConnection.HTTP_BAD_REQUEST);
+        ITUtilLogs.assertCreateLog(AuthorizationChoice.ADMIN, "", log_check, HttpURLConnection.HTTP_BAD_REQUEST);
+        ITUtilLogs.assertCreateLog(AuthorizationChoice.ADMIN, "", log_check, HttpURLConnection.HTTP_BAD_REQUEST);
 
-    	ITUtilLogs.assertListLogs(0);
+        assertEquals(length, ITUtilLogs.assertListLogs(-1).length);
+    }
+
+    @Test
+    void handleLogGroup() {
+    	// create logbook and prepare logs
+    	Logbook logbook1 = new Logbook("name1", "user", State.Active);
+    	ITUtilLogbooks.assertCreateLogbook("/" + logbook1.getName(), logbook1);
+
+    	Log log1 = LogBuilder.createLog()
+    			.owner("owner")
+    			.title("title1")
+    			.withLogbooks(Set.of(logbook1))
+    			.build();
+    	Log log2 = LogBuilder.createLog()
+    			.owner("user")
+    			.title("title2")
+    			.withLogbooks(Set.of(logbook1))
+    			.build();
+
+    	// create logs
+    	log1 = ITUtilLogs.assertCreateLog("", log1);
+    	log2 = ITUtilLogs.assertCreateLog("", log2);
+    	assertEquals(0, log1.getProperties().size());
+    	assertEquals(0, log2.getProperties().size());
+
+    	// group logs
+    	ITUtilLogs.assertGroupLogs(Arrays.asList(log1.getId(), log2.getId()));
+    	log1 = ITUtilLogs.assertRetrieveLog("/" + log1.getId());
+    	log2 = ITUtilLogs.assertRetrieveLog("/" + log2.getId());
+    	assertEquals(1, log1.getProperties().size());
+    	assertEquals(1, log2.getProperties().size());
+
+    	// edit and update logs but log group to remain
+    	log1.getProperties().clear();
+    	log1 = ITUtilLogs.assertUpdateLog(log1);
+    	log2 = ITUtilLogs.assertRetrieveLog("/" + log2.getId());
+    	assertEquals(1, log1.getProperties().size());
+    	assertEquals(1, log2.getProperties().size());
     }
 
 }

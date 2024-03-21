@@ -4,7 +4,7 @@
 
 * Docker - engine 18.06.0+ or later, compose 2.21.0 or later, compose file version 3.7 to be supported
 
-##### Build ChannelFinder service
+##### Build Olog service
 
 ```
 mvn clean install -Pdeployable-jar

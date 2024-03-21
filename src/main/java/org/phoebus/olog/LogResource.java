@@ -377,6 +377,16 @@ public class LogResource {
             Log persistedLog = foundLog.get();
             logRepository.archive(persistedLog);
 
+            // log entry group property should not be editable but remain if it exists
+            Property logEntryGroupProperty = LogEntryGroupHelper.getLogEntryGroupProperty(log);
+            if (logEntryGroupProperty != null) {
+                log.getProperties().remove(logEntryGroupProperty);
+            }
+            logEntryGroupProperty = LogEntryGroupHelper.getLogEntryGroupProperty(persistedLog);
+            if (logEntryGroupProperty != null) {
+                log.getProperties().add(logEntryGroupProperty);
+            }
+
             persistedLog.setOwner(principal.getName());
             persistedLog.setLevel(log.getLevel());
             persistedLog.setProperties(log.getProperties());

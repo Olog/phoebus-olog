@@ -24,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.util.List;
 
 import org.phoebus.olog.docker.ITUtil.AuthorizationChoice;
 import org.phoebus.olog.docker.ITUtil.EndpointChoice;
@@ -91,14 +92,8 @@ public class ITUtilLogs {
     /**
      * @see ITUtilLogs#assertRetrieveLog(String, int, Log)
      */
-    public static Log assertRetrieveLog(String path, int expectedResponseCode) {
-        return assertRetrieveLog(path, expectedResponseCode, LOG_NULL);
-    }
-    /**
-     * @see ITUtilLogs#assertRetrieveLog(String, int, Log)
-     */
-    public static Log assertRetrieveLog(String path, Log expected) {
-        return assertRetrieveLog(path, HttpURLConnection.HTTP_OK, expected);
+    public static Log assertRetrieveLog(String path) {
+    	return assertRetrieveLog(path, HttpURLConnection.HTTP_OK, LOG_NULL);
     }
     /**
      * Utility method to return the log with the given name.
@@ -108,27 +103,27 @@ public class ITUtilLogs {
      * @param expected expected response log
      */
     public static Log assertRetrieveLog(String path, int expectedResponseCode, Log expected) {
-        try {
-            String[] response = null;
-            Log actual = null;
+    	try {
+    		String[] response = null;
+    		Log actual = null;
 
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + path);
-            ITUtil.assertResponseLength2Code(response, expectedResponseCode);
-            if (HttpURLConnection.HTTP_OK == expectedResponseCode) {
-                actual = mapper.readValue(response[1], Log.class);
-            }
+    		response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + path);
+    		ITUtil.assertResponseLength2Code(response, expectedResponseCode);
+    		if (HttpURLConnection.HTTP_OK == expectedResponseCode) {
+    			actual = mapper.readValue(response[1], Log.class);
+    		}
 
-            if (expected != null) {
-                assertEquals(expected, actual);
-            }
+    		if (expected != null) {
+    			assertEquals(expected, actual);
+    		}
 
-            return actual;
-        } catch (IOException e) {
-            fail();
-        } catch (Exception e) {
-            fail();
-        }
-        return null;
+    		return actual;
+    	} catch (IOException e) {
+    		fail();
+    	} catch (Exception e) {
+    		fail();
+    	}
+    	return null;
     }
 
     // ----------------------------------------------------------------------------------------------------
@@ -306,6 +301,76 @@ public class ITUtilLogs {
             fail();
         }
         return null;
+    }
+
+    // ----------------------------------------------------------------------------------------------------
+
+    /**
+     * @see ITUtilLogs#assertUpdateLog(AuthorizationChoice, String, String, int, Log)
+     */
+    public static Log assertUpdateLog(Log value) {
+    	return assertUpdateLog(AuthorizationChoice.ADMIN, "/" + value.getId(), object2Json(value), HttpURLConnection.HTTP_OK, LOG_NULL);
+    }
+    /**
+     * Utility method to update an existing log with the payload data.
+     *
+     * @param authorizationChoice authorization choice (none, user, admin)
+     * @param path path
+     * @param json json
+     * @param expectedResponseCode expected response code
+     * @param expected expected response log
+     * @return
+     */
+    public static Log assertUpdateLog(AuthorizationChoice authorizationChoice, String path, String json, int expectedResponseCode, Log expected) {
+    	try {
+    		String[] response = null;
+    		Log actual = null;
+
+    		response = ITUtil.runShellCommand(ITUtil.curlMethodAuthEndpointPathJson(MethodChoice.POST, authorizationChoice, EndpointChoice.LOGS, path, json));
+    		ITUtil.assertResponseLength2Code(response, expectedResponseCode);
+    		if (HttpURLConnection.HTTP_OK == expectedResponseCode) {
+    			actual = mapper.readValue(response[1], Log.class);
+    		}
+
+    		if (expected != null) {
+    			assertEquals(expected, actual);
+    		}
+
+    		return actual;
+    	} catch (IOException e) {
+    		fail();
+    	} catch (Exception e) {
+    		fail();
+    	}
+    	return null;
+    }
+
+    // ----------------------------------------------------------------------------------------------------
+
+    /**
+     * @see ITUtilLogs#assertGroupLogs(AuthorizationChoice, List, int)
+     */
+    public static void assertGroupLogs(List<Long> logEntryIds) {
+    	assertGroupLogs(AuthorizationChoice.ADMIN, logEntryIds, HttpURLConnection.HTTP_OK);
+    }
+    /**
+     * Utility method to group log entries, with given id values, together with a joint log entry group property.
+     *
+     * @param authorizationChoice authorization choice (none, user, admin)
+     * @param logEntryIds log entry id values
+     * @param expectedResponseCode expected response code
+     */
+    public static void assertGroupLogs(AuthorizationChoice authorizationChoice, List<Long> logEntryIds, int expectedResponseCode) {
+    	try {
+    		String[] response = null;
+
+    		response = ITUtil.runShellCommand(ITUtil.curlMethodAuthEndpointPathJson(MethodChoice.POST, authorizationChoice, EndpointChoice.LOGS, "/group", mapper.writeValueAsString(logEntryIds)));
+    		ITUtil.assertResponseLength2Code(response, expectedResponseCode);
+    	} catch (IOException e) {
+    		fail();
+    	} catch (Exception e) {
+    		fail();
+    	}
     }
 
     // ----------------------------------------------------------------------------------------------------
