@@ -10,7 +10,6 @@ services:
       - mongo
       - elastic
     environment:
-      cors.allowed.origins: http://localhost:3000
       mongo.host: mongo
       elasticsearch.network.host: elastic
     # Ensure that the elastic server is up before starting olog.
