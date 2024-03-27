@@ -17,6 +17,8 @@ services:
       embedded_ldap.enabled: "false"
       demo_auth.enabled: "true"
       skipITCoverage: "true"
+      mongo.host: mongo
+      elasticsearch.network.host: elastic
     command: >
       /bin/bash -c "
           while ! curl -s -f elastic:9200/_cluster/health?wait_for_status=yellow;

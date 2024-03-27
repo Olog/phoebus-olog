@@ -9,6 +9,9 @@ services:
     depends_on:
       - mongo
       - elastic
+    environment:
+      mongo.host: mongo
+      elasticsearch.network.host: elastic
     # Ensure that the elastic server is up before starting olog.
     command: >
       /bin/bash -c "
