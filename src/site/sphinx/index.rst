@@ -192,8 +192,8 @@ Create a log entry, optionally with file attachments
          }
       ],
       "attachments":[
-         {"id": "82dd67fa-09df-11ee-be56-0242ac120002", "name":"MyScreenShot.png"},
-         {"id": "c02948ad-4bbd-432f-aa4d-a687a54f8d40", "name":"MySpreadsheet.xlsx"}
+         {"id": "82dd67fa-09df-11ee-be56-0242ac120002", "filename":"MyScreenShot.png"},
+         {"id": "c02948ad-4bbd-432f-aa4d-a687a54f8d40", "filename":"MySpreadsheet.xlsx"}
       ]
  }
 
