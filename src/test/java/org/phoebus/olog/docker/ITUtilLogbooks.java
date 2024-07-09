@@ -111,7 +111,7 @@ public class ITUtilLogbooks {
             String[] response = null;
             Logbook actual = null;
 
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGBOOKS + path);
+            response = ITUtil.sendRequest(ITUtil.HTTP_IP_PORT_OLOG_LOGBOOKS + path);
             ITUtil.assertResponseLength2Code(response, expectedResponseCode);
             if (HttpURLConnection.HTTP_OK == expectedResponseCode) {
                 actual = mapper.readValue(response[1], Logbook.class);
@@ -152,7 +152,7 @@ public class ITUtilLogbooks {
             String[] response = null;
             Logbook[] actual = null;
 
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGBOOKS);
+            response = ITUtil.sendRequest(ITUtil.HTTP_IP_PORT_OLOG_LOGBOOKS);
             ITUtil.assertResponseLength2Code(response, expectedResponseCode);
             if (HttpURLConnection.HTTP_OK == expectedResponseCode) {
                 actual = mapper.readValue(response[1], Logbook[].class);

@@ -24,7 +24,6 @@ import org.testcontainers.containers.ComposeContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import java.io.IOException;
 import java.net.HttpURLConnection;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -71,77 +70,70 @@ class OlogIT {
     @Test
     void ologUp() {
         try {
-            String address = ITUtil.HTTP_IP_PORT_OLOG;
-            int responseCode = ITUtil.doGet(address);
+            int responseCode = ITUtil.sendRequestStatusCode(ITUtil.HTTP_IP_PORT_OLOG);
 
             assertEquals(HttpURLConnection.HTTP_OK, responseCode);
-        } catch (IOException e) {
+        } catch (Exception e) {
             fail();
         }
     }
     @Test
     void ologUpTags() {
         try {
-            String address = ITUtil.HTTP_IP_PORT_OLOG + "/tags";
-            int responseCode = ITUtil.doGet(address);
+            int responseCode = ITUtil.sendRequestStatusCode(ITUtil.HTTP_IP_PORT_OLOG + "/tags");
 
             assertEquals(HttpURLConnection.HTTP_OK, responseCode);
-        } catch (IOException e) {
+        } catch (Exception e) {
             fail();
         }
     }
     @Test
     void ologUpLogbooks() {
         try {
-            String address = ITUtil.HTTP_IP_PORT_OLOG + "/logbooks";
-            int responseCode = ITUtil.doGet(address);
+            int responseCode = ITUtil.sendRequestStatusCode(ITUtil.HTTP_IP_PORT_OLOG + "/logbooks");
 
             assertEquals(HttpURLConnection.HTTP_OK, responseCode);
-        } catch (IOException e) {
+        } catch (Exception e) {
             fail();
         }
     }
     @Test
     void ologUpProperties() {
         try {
-            String address = ITUtil.HTTP_IP_PORT_OLOG + "/properties";
-            int responseCode = ITUtil.doGet(address);
+            int responseCode = ITUtil.sendRequestStatusCode(ITUtil.HTTP_IP_PORT_OLOG + "/properties");
 
             assertEquals(HttpURLConnection.HTTP_OK, responseCode);
-        } catch (IOException e) {
+        } catch (Exception e) {
             fail();
         }
     }
     @Test
     void ologUpLogs() {
         try {
-            String address = ITUtil.HTTP_IP_PORT_OLOG + "/logs";
-            int responseCode = ITUtil.doGet(address);
+            int responseCode = ITUtil.sendRequestStatusCode(ITUtil.HTTP_IP_PORT_OLOG + "/logs");
 
             assertEquals(HttpURLConnection.HTTP_OK, responseCode);
-        } catch (IOException e) {
+        } catch (Exception e) {
             fail();
         }
     }
     @Test
     void ologUpConfiguration() {
         try {
-            String address = ITUtil.HTTP_IP_PORT_OLOG + "/configuration";
-            int responseCode = ITUtil.doGet(address);
+            int responseCode = ITUtil.sendRequestStatusCode(ITUtil.HTTP_IP_PORT_OLOG + "/configuration");
 
             assertEquals(HttpURLConnection.HTTP_OK, responseCode);
-        } catch (IOException e) {
+        } catch (Exception e) {
             fail();
         }
     }
     @Test
     void ologUpAttachment() {
         try {
-            String address = ITUtil.HTTP_IP_PORT_OLOG + "/attachment";
-            int responseCode = ITUtil.doGet(address);
+            int responseCode = ITUtil.sendRequestStatusCode(ITUtil.HTTP_IP_PORT_OLOG + "/attachment");
 
             assertEquals(HttpURLConnection.HTTP_NOT_FOUND, responseCode);
-        } catch (IOException e) {
+        } catch (Exception e) {
             fail();
         }
     }

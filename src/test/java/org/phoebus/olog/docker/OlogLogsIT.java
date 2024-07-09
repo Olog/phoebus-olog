@@ -29,7 +29,6 @@ import org.testcontainers.containers.ComposeContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.util.Arrays;
 import java.util.Set;
@@ -97,11 +96,10 @@ class OlogLogsIT {
     @Test
     void ologUp() {
         try {
-            String address = ITUtil.HTTP_IP_PORT_OLOG;
-            int responseCode = ITUtil.doGet(address);
+            int responseCode = ITUtil.sendRequestStatusCode(ITUtil.HTTP_IP_PORT_OLOG);
 
             assertEquals(HttpURLConnection.HTTP_OK, responseCode);
-        } catch (IOException e) {
+        } catch (Exception e) {
             fail();
         }
     }

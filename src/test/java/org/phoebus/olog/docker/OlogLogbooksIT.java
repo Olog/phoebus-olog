@@ -150,11 +150,10 @@ class OlogLogbooksIT {
     @Test
     void ologUp() {
         try {
-            String address = ITUtil.HTTP_IP_PORT_OLOG;
-            int responseCode = ITUtil.doGet(address);
+            int responseCode = ITUtil.sendRequestStatusCode(ITUtil.HTTP_IP_PORT_OLOG);
 
             assertEquals(HttpURLConnection.HTTP_OK, responseCode);
-        } catch (IOException e) {
+        } catch (Exception e) {
             fail();
         }
     }

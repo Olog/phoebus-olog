@@ -111,7 +111,7 @@ public class ITUtilProperties {
             String[] response = null;
             Property actual = null;
 
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES + path);
+            response = ITUtil.sendRequest(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES + path);
             ITUtil.assertResponseLength2Code(response, expectedResponseCode);
             if (HttpURLConnection.HTTP_OK == expectedResponseCode) {
                 actual = mapper.readValue(response[1], Property.class);
@@ -159,7 +159,7 @@ public class ITUtilProperties {
             String[] response = null;
             Property[] actual = null;
 
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES + queryString);
+            response = ITUtil.sendRequest(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES + queryString);
             ITUtil.assertResponseLength2Code(response, expectedResponseCode);
             if (HttpURLConnection.HTTP_OK == expectedResponseCode) {
                 actual = mapper.readValue(response[1], Property[].class);

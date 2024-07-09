@@ -107,7 +107,7 @@ public class ITUtilLogs {
     		String[] response = null;
     		Log actual = null;
 
-    		response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + path);
+            response = ITUtil.sendRequest(ITUtil.HTTP_IP_PORT_OLOG_LOGS + path);
     		ITUtil.assertResponseLength2Code(response, expectedResponseCode);
     		if (HttpURLConnection.HTTP_OK == expectedResponseCode) {
     			actual = mapper.readValue(response[1], Log.class);
@@ -155,7 +155,7 @@ public class ITUtilLogs {
             String[] response = null;
             Log[] actual = null;
 
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + queryString);
+            response = ITUtil.sendRequest(ITUtil.HTTP_IP_PORT_OLOG_LOGS + queryString);
             ITUtil.assertResponseLength2Code(response, expectedResponseCode);
             if (HttpURLConnection.HTTP_OK == expectedResponseCode) {
                 actual = mapper.readValue(response[1], Log[].class);
@@ -214,7 +214,7 @@ public class ITUtilLogs {
             String[] response = null;
             SearchResult actual = null;
 
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "/search" + queryString);
+            response = ITUtil.sendRequest(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "/search" + queryString);
             ITUtil.assertResponseLength2Code(response, expectedResponseCode);
             if (HttpURLConnection.HTTP_OK == expectedResponseCode) {
                 actual = mapper.readValue(response[1], SearchResult.class);
