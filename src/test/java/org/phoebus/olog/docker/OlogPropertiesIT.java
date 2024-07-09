@@ -29,7 +29,6 @@ import org.testcontainers.containers.ComposeContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.util.HashSet;
 
@@ -461,8 +460,6 @@ class OlogPropertiesIT {
                     default_properties[0]);
 
             ITUtilProperties.assertListProperties(1, default_properties[0]);
-        } catch (IOException e) {
-            fail();
         } catch (Exception e) {
             fail();
         }
@@ -547,8 +544,6 @@ class OlogPropertiesIT {
                     default_properties[0]);
 
             ITUtilProperties.assertListProperties(1, default_properties[0]);
-        } catch (IOException e) {
-            fail();
         } catch (Exception e) {
             fail();
         }
@@ -602,8 +597,6 @@ class OlogPropertiesIT {
             ITUtilProperties.assertRetrieveProperty("/p1", property_p1_owner_a_state_i_attributes);
 
             ITUtilProperties.assertListProperties(1, default_properties[0]);
-        } catch (IOException e) {
-            fail();
         } catch (Exception e) {
             fail();
         }
@@ -815,8 +808,6 @@ class OlogPropertiesIT {
                     properties_inactive);
 
             ITUtilProperties.assertListProperties(1, default_properties[0]);
-        } catch (IOException e) {
-            fail();
         } catch (Exception e) {
             fail();
         }

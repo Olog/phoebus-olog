@@ -28,7 +28,6 @@ import org.testcontainers.containers.ComposeContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import java.io.IOException;
 import java.net.HttpURLConnection;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -258,8 +257,6 @@ class OlogLogbooksIT {
             ITUtilLogbooks.assertListLogbooks(2,
                     default_logbooks[1],
                     default_logbooks[0]);
-        } catch (IOException e) {
-            fail();
         } catch (Exception e) {
             fail();
         }
@@ -358,8 +355,6 @@ class OlogLogbooksIT {
             ITUtilLogbooks.assertListLogbooks(2,
                     default_logbooks[1],
                     default_logbooks[0]);
-        } catch (IOException e) {
-            fail();
         } catch (Exception e) {
             fail();
         }
@@ -423,8 +418,6 @@ class OlogLogbooksIT {
             ITUtilLogbooks.assertListLogbooks(2,
                     default_logbooks[1],
                     default_logbooks[0]);
-        } catch (IOException e) {
-            fail();
         } catch (Exception e) {
             fail();
         }
@@ -484,8 +477,6 @@ class OlogLogbooksIT {
             ITUtilLogbooks.assertListLogbooks(2,
                     default_logbooks[1],
                     default_logbooks[0]);
-        } catch (IOException e) {
-            fail();
         } catch (Exception e) {
             fail();
         }
@@ -634,8 +625,6 @@ class OlogLogbooksIT {
             ITUtilLogbooks.assertListLogbooks(2,
                     default_logbooks[1],
                     default_logbooks[0]);
-        } catch (IOException e) {
-            fail();
         } catch (Exception e) {
             fail();
         }

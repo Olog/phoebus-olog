@@ -22,7 +22,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
-import java.io.IOException;
 import java.net.HttpURLConnection;
 
 import org.phoebus.olog.docker.ITUtil.AuthorizationChoice;
@@ -107,27 +106,21 @@ public class ITUtilProperties {
      * @param expected expected response property
      */
     public static Property assertRetrieveProperty(String path, int expectedResponseCode, Property expected) {
+        Property actual = null;
         try {
-            String[] response = null;
-            Property actual = null;
+            String[] response = ITUtil.sendRequest(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES + path);
 
-            response = ITUtil.sendRequest(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES + path);
             ITUtil.assertResponseLength2Code(response, expectedResponseCode);
             if (HttpURLConnection.HTTP_OK == expectedResponseCode) {
                 actual = mapper.readValue(response[1], Property.class);
             }
-
             if (expected != null) {
                 assertEquals(expected, actual);
             }
-
-            return actual;
-        } catch (IOException e) {
-            fail();
         } catch (Exception e) {
             fail();
         }
-        return null;
+        return actual;
     }
 
     // ----------------------------------------------------------------------------------------------------
@@ -155,16 +148,14 @@ public class ITUtilProperties {
      * @return number of properties
      */
     public static Property[] assertListProperties(String queryString, int expectedResponseCode, int expectedGreaterThanOrEqual, int expectedLessThanOrEqual, Property... expected) {
+        Property[] actual = null;
         try {
-            String[] response = null;
-            Property[] actual = null;
+            String[] response = ITUtil.sendRequest(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES + queryString);
 
-            response = ITUtil.sendRequest(ITUtil.HTTP_IP_PORT_OLOG_PROPERTIES + queryString);
             ITUtil.assertResponseLength2Code(response, expectedResponseCode);
             if (HttpURLConnection.HTTP_OK == expectedResponseCode) {
                 actual = mapper.readValue(response[1], Property[].class);
             }
-
             // expected number of items in list
             //     (if non-negative number)
             //     expectedGreaterThanOrEqual <= nbr of items <= expectedLessThanOrEqual
@@ -174,19 +165,13 @@ public class ITUtilProperties {
             if (expectedLessThanOrEqual >= 0) {
                 assertTrue(actual.length <= expectedLessThanOrEqual);
             }
-
-            // expected content
             if (expected != null && expected.length > 0) {
                 ITUtil.assertEqualsProperties(actual, expected);
             }
-
-            return actual;
-        } catch (IOException e) {
-            fail();
         } catch (Exception e) {
             fail();
         }
-        return null;
+        return actual;
     }
 
     // ----------------------------------------------------------------------------------------------------
@@ -225,27 +210,21 @@ public class ITUtilProperties {
      * @param expected expected response property
      */
     public static Property assertCreateProperty(AuthorizationChoice authorizationChoice, String path, String json, int expectedResponseCode, Property expected) {
+        Property actual = null;
         try {
-            String[] response = null;
-            Property actual = null;
+            String[] response = ITUtil.sendRequest(ITUtil.buildRequest(MethodChoice.PUT, authorizationChoice, EndpointChoice.PROPERTIES, path, json));
 
-            response = ITUtil.runShellCommand(ITUtil.curlMethodAuthEndpointPathJson(MethodChoice.PUT, authorizationChoice, EndpointChoice.PROPERTIES, path, json));
             ITUtil.assertResponseLength2Code(response, expectedResponseCode);
             if (HttpURLConnection.HTTP_OK == expectedResponseCode) {
                 actual = mapper.readValue(response[1], Property.class);
             }
-
             if (expected != null) {
                 assertEquals(expected, actual);
             }
-
-            return actual;
-        } catch (IOException e) {
-            fail();
         } catch (Exception e) {
             fail();
         }
-        return null;
+        return actual;
     }
 
     // ----------------------------------------------------------------------------------------------------
@@ -278,27 +257,21 @@ public class ITUtilProperties {
      * @param expected expected response properties
      */
     public static Property[] assertCreateProperties(AuthorizationChoice authorizationChoice, String path, String json, int expectedResponseCode, Property[] expected) {
+        Property[] actual = null;
         try {
-            String[] response = null;
-            Property[] actual = null;
+            String[] response = ITUtil.sendRequest(ITUtil.buildRequest(MethodChoice.PUT, authorizationChoice, EndpointChoice.PROPERTIES, path, json));
 
-            response = ITUtil.runShellCommand(ITUtil.curlMethodAuthEndpointPathJson(MethodChoice.PUT, authorizationChoice, EndpointChoice.PROPERTIES, path, json));
             ITUtil.assertResponseLength2Code(response, expectedResponseCode);
             if (HttpURLConnection.HTTP_OK == expectedResponseCode) {
                 actual = mapper.readValue(response[1], Property[].class);
             }
-
             if (expected != null) {
                 ITUtil.assertEqualsProperties(expected, actual);
             }
-
-            return actual;
-        } catch (IOException e) {
-            fail();
         } catch (Exception e) {
             fail();
         }
-        return null;
+        return actual;
     }
 
     // ----------------------------------------------------------------------------------------------------
@@ -318,12 +291,9 @@ public class ITUtilProperties {
      */
     public static void assertRemoveProperty(AuthorizationChoice authorizationChoice, String path, int expectedResponseCode) {
         try {
-            String[] response = null;
+            String[] response = ITUtil.sendRequest(ITUtil.buildRequest(MethodChoice.DELETE, authorizationChoice, EndpointChoice.PROPERTIES, path, null));
 
-            response = ITUtil.runShellCommand(ITUtil.curlMethodAuthEndpointPathJson(MethodChoice.DELETE, authorizationChoice, EndpointChoice.PROPERTIES, path, null));
             ITUtil.assertResponseLength2Code(response, expectedResponseCode);
-        } catch (IOException e) {
-            fail();
         } catch (Exception e) {
             fail();
         }

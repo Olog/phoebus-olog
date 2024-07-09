@@ -28,7 +28,6 @@ import org.testcontainers.containers.ComposeContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import java.io.IOException;
 import java.net.HttpURLConnection;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -334,8 +333,6 @@ class OlogTagsIT {
             ITUtilTags.assertRetrieveTag("/t1", tag_t1_state_i);
 
             ITUtilTags.assertListTags(1, default_tags[0]);
-        } catch (IOException e) {
-            fail();
         } catch (Exception e) {
             fail();
         }
@@ -393,8 +390,6 @@ class OlogTagsIT {
             ITUtilTags.assertRetrieveTag("/t2", tag_t2_state_i);
 
             ITUtilTags.assertListTags(1, default_tags[0]);
-        } catch (IOException e) {
-            fail();
         } catch (Exception e) {
             fail();
         }
@@ -447,8 +442,6 @@ class OlogTagsIT {
             ITUtilTags.assertRetrieveTag("/t1", tag_t1_state_i);
 
             ITUtilTags.assertListTags(1, default_tags[0]);
-        } catch (IOException e) {
-            fail();
         } catch (Exception e) {
             fail();
         }
@@ -586,8 +579,6 @@ class OlogTagsIT {
             ITUtil.assertRefreshElasticIndices();
 
             ITUtilTags.assertListTags(1, default_tags[0]);
-        } catch (IOException e) {
-            fail();
         } catch (Exception e) {
             fail();
         }

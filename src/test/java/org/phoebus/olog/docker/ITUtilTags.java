@@ -22,7 +22,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
-import java.io.IOException;
 import java.net.HttpURLConnection;
 
 import org.phoebus.olog.docker.ITUtil.AuthorizationChoice;
@@ -107,27 +106,21 @@ public class ITUtilTags {
      * @param expected expected response tag
      */
     public static Tag assertRetrieveTag(String path, int expectedResponseCode, Tag expected) {
+        Tag actual = null;
         try {
-            String[] response = null;
-            Tag actual = null;
+            String[] response = ITUtil.sendRequest(ITUtil.HTTP_IP_PORT_OLOG_TAGS + path);
 
-            response = ITUtil.sendRequest(ITUtil.HTTP_IP_PORT_OLOG_TAGS + path);
             ITUtil.assertResponseLength2Code(response, expectedResponseCode);
             if (HttpURLConnection.HTTP_OK == expectedResponseCode) {
                 actual = mapper.readValue(response[1], Tag.class);
             }
-
             if (expected != null) {
                 assertEquals(expected, actual);
             }
-
-            return actual;
-        } catch (IOException e) {
-            fail();
         } catch (Exception e) {
             fail();
         }
-        return null;
+        return actual;
     }
 
     // ----------------------------------------------------------------------------------------------------
@@ -148,16 +141,14 @@ public class ITUtilTags {
      * @return number of tags
      */
     public static Tag[] assertListTags(int expectedResponseCode, int expectedGreaterThanOrEqual, int expectedLessThanOrEqual, Tag... expected) {
+        Tag[] actual = null;
         try {
-            String[] response = null;
-            Tag[] actual = null;
+            String[] response = ITUtil.sendRequest(ITUtil.HTTP_IP_PORT_OLOG_TAGS);
 
-            response = ITUtil.sendRequest(ITUtil.HTTP_IP_PORT_OLOG_TAGS);
             ITUtil.assertResponseLength2Code(response, expectedResponseCode);
             if (HttpURLConnection.HTTP_OK == expectedResponseCode) {
                 actual = mapper.readValue(response[1], Tag[].class);
             }
-
             // expected number of items in list
             //     (if non-negative number)
             //     expectedGreaterThanOrEqual <= nbr of items <= expectedLessThanOrEqual
@@ -167,19 +158,13 @@ public class ITUtilTags {
             if (expectedLessThanOrEqual >= 0) {
                 assertTrue(actual.length <= expectedLessThanOrEqual);
             }
-
-            // expected content
             if (expected != null && expected.length > 0) {
                 ITUtil.assertEqualsTags(actual, expected);
             }
-
-            return actual;
-        } catch (IOException e) {
-            fail();
         } catch (Exception e) {
             fail();
         }
-        return null;
+        return actual;
     }
 
     // ----------------------------------------------------------------------------------------------------
@@ -218,27 +203,21 @@ public class ITUtilTags {
      * @param expected expected response tag
      */
     public static Tag assertCreateTag(AuthorizationChoice authorizationChoice, String path, String json, int expectedResponseCode, Tag expected) {
+        Tag actual = null;
         try {
-            String[] response = null;
-            Tag actual = null;
+            String[] response = ITUtil.sendRequest(ITUtil.buildRequest(MethodChoice.PUT, authorizationChoice, EndpointChoice.TAGS, path, json));
 
-            response = ITUtil.runShellCommand(ITUtil.curlMethodAuthEndpointPathJson(MethodChoice.PUT, authorizationChoice, EndpointChoice.TAGS, path, json));
             ITUtil.assertResponseLength2Code(response, expectedResponseCode);
             if (HttpURLConnection.HTTP_OK == expectedResponseCode) {
                 actual = mapper.readValue(response[1], Tag.class);
             }
-
             if (expected != null) {
                 assertEquals(expected, actual);
             }
-
-            return actual;
-        } catch (IOException e) {
-            fail();
         } catch (Exception e) {
             fail();
         }
-        return null;
+        return actual;
     }
 
     // ----------------------------------------------------------------------------------------------------
@@ -271,27 +250,21 @@ public class ITUtilTags {
      * @param expected expected response tags
      */
     public static Tag[] assertCreateTags(AuthorizationChoice authorizationChoice, String path, String json, int expectedResponseCode, Tag[] expected) {
+        Tag[] actual = null;
         try {
-            String[] response = null;
-            Tag[] actual = null;
+            String[] response = ITUtil.sendRequest(ITUtil.buildRequest(MethodChoice.PUT, authorizationChoice, EndpointChoice.TAGS, path, json));
 
-            response = ITUtil.runShellCommand(ITUtil.curlMethodAuthEndpointPathJson(MethodChoice.PUT, authorizationChoice, EndpointChoice.TAGS, path, json));
             ITUtil.assertResponseLength2Code(response, expectedResponseCode);
             if (HttpURLConnection.HTTP_OK == expectedResponseCode) {
                 actual = mapper.readValue(response[1], Tag[].class);
             }
-
             if (expected != null) {
                 ITUtil.assertEqualsTags(expected, actual);
             }
-
-            return actual;
-        } catch (IOException e) {
-            fail();
         } catch (Exception e) {
             fail();
         }
-        return null;
+        return actual;
     }
 
     // ----------------------------------------------------------------------------------------------------
@@ -311,12 +284,9 @@ public class ITUtilTags {
      */
     public static void assertRemoveTag(AuthorizationChoice authorizationChoice, String path, int expectedResponseCode) {
         try {
-            String[] response = null;
+            String[] response = ITUtil.sendRequest(ITUtil.buildRequest(MethodChoice.DELETE, authorizationChoice, EndpointChoice.TAGS, path, null));
 
-            response = ITUtil.runShellCommand(ITUtil.curlMethodAuthEndpointPathJson(MethodChoice.DELETE, authorizationChoice, EndpointChoice.TAGS, path, null));
             ITUtil.assertResponseLength2Code(response, expectedResponseCode);
-        } catch (IOException e) {
-            fail();
         } catch (Exception e) {
             fail();
         }
