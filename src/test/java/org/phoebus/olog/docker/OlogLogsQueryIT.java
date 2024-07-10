@@ -67,17 +67,14 @@ class OlogLogsQueryIT {
     //     Olog - Service Documentation
     //         https://olog.readthedocs.io/en/latest/
     //     ------------------------------------------------------------------------------------------------
-    //     OLOG API                                                 LogbooksResource
-    //     --------------------                                     --------------------
-    //     Retrieve a Log                      .../logs/<id>        (GET)         getLog(String)
-    //     Retrieve attachment for Log         .../logs/attachments/{logId}/{attachmentName}
-    //                                                              (GET)         findResources(String, String)
-    //     List Logs / Query by Pattern        .../logs             (GET)         findAll()
-    //     Create a Log                        .../logs             (PUT)         createLog(String, Log, Principal)
-    //     Upload attachment                   .../logs/attachments/{logId}
-    //                                                              (POST)        uploadAttachment(String, MultipartFile, String, String, String)
-    //     Upload multiple attachments         .../logs/attachments-multi/{logId}
-    //                                                              (POST)        uploadMultipleAttachments(String, MultipartFile[])
+    //     OLOG API
+    //     --------------------
+    //     Retrieve a Log                      .../logs/<id>                                        GET
+    //     Retrieve attachment for Log         .../logs/attachments/{logId}/{attachmentName}        GET
+    //     List Logs / Query by Pattern        .../logs                                             GET
+    //     Create a Log                        .../logs                                             PUT
+    //     Upload attachment                   .../logs/attachments/{logId}                         POST
+    //     Upload multiple attachments         .../logs/attachments-multi/{logId}                   POST
     //     ------------------------------------------------------------------------------------------------
 
     @Container

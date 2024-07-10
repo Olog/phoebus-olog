@@ -69,13 +69,13 @@ class OlogPropertiesIT {
     //     Olog - Service Documentation
     //         https://olog.readthedocs.io/en/latest/
     //     ------------------------------------------------------------------------------------------------
-    //     OLOG API                                                PropertiesResource
-    //     --------------------                                    --------------------
-    //     Retrieve a Property        .../properties/<name>        (GET)           findByTitle(String)
-    //     List Properties            .../properties               (GET)           findAll(boolean)
-    //     Create a Property          .../properties/<name>        (PUT)           createProperty(String, Property, Principal)
-    //     Create Properties          .../properties               (PUT)           updateProperty(List<Property>)
-    //     Remove Property            .../properties/<name>        (DELETE)        deleteProperty(String)
+    //     OLOG API
+    //     --------------------
+    //     Retrieve a Property        .../properties/<name>        GET
+    //     List Properties            .../properties               GET
+    //     Create a Property          .../properties/<name>        PUT
+    //     Create Properties          .../properties               PUT
+    //     Remove Property            .../properties/<name>        DELETE
     //     ------------------------------------------------------------------------------------------------
 
     // test data
@@ -240,12 +240,6 @@ class OlogPropertiesIT {
         //     check(s) for retrieve property
         //         e.g.
         //             retrieve non-existing property
-        //     --------------------------------------------------------------------------------
-        //     x   Retrieve a Property
-        //         List Properties
-        //         Create a Property
-        //         Create Properties
-        //         Remove Property
 
         ITUtilProperties.assertRetrieveProperty("/p11", HttpURLConnection.HTTP_NOT_FOUND);
     }
@@ -259,12 +253,6 @@ class OlogPropertiesIT {
         //     check(s) for remove property
         //         e.g.
         //             remove non-existing property
-        //     --------------------------------------------------------------------------------
-        //         Retrieve a Property
-        //         List Properties
-        //         Create a Property
-        //         Create Properties
-        //     x   Remove Property
 
         // might be both 401, 404
         //     401 UNAUTHORIZED
@@ -293,12 +281,6 @@ class OlogPropertiesIT {
         //                 attributes - null
         //                     name       - null, empty
         //                     state      - null (empty, incorrect value (ok: Active, Inactive))
-        //     --------------------------------------------------------------------------------
-        //         Retrieve a Property
-        //     x   List Properties
-        //     x   Create a Property
-        //         Create Properties
-        //         Remove Property
 
         String json_incomplete1 = "{\"incomplete\"}";
         String json_incomplete2 = "{\"incomplete\"";
@@ -347,12 +329,6 @@ class OlogPropertiesIT {
         //                 attributes - null
         //                     name       - null, empty
         //                     state      - null (empty, incorrect value (ok: Active, Inactive))
-        //     --------------------------------------------------------------------------------
-        //         Retrieve a Property
-        //     x   List Properties
-        //     x   Create a Property
-        //         Create Properties
-        //         Remove Property
 
         Property property_check = new Property();
         Attribute attribute_check = new Attribute();
@@ -411,14 +387,7 @@ class OlogPropertiesIT {
         // what
         //     user with required role
         //     create property
-        //     --------------------------------------------------------------------------------
-        //     list, create, list/retrieve, remove (unauthorized), remove, retrieve/list
-        //     --------------------------------------------------------------------------------
-        //     x   Retrieve a Property
-        //     x   List Properties
-        //     x   Create a Property
-        //         Create Properties
-        //     x   Remove Property
+        //         list, create, list/retrieve, remove (unauthorized), remove, retrieve/list
 
         try {
             ITUtilProperties.assertListProperties(1, default_properties[0]);
@@ -472,14 +441,7 @@ class OlogPropertiesIT {
     void handleProperty2() {
         // what
         //     create properties, one by one
-        //     --------------------------------------------------------------------------------
-        //     list, create (2), list/retrieve, remove, list/retrieve, remove, retrieve/list
-        //     --------------------------------------------------------------------------------
-        //     x   Retrieve a Property
-        //     x   List Properties
-        //     x   Create a Property
-        //         Create Properties
-        //     x   Remove Property
+        //         list, create (2), list/retrieve, remove, list/retrieve, remove, retrieve/list
 
         try {
             ITUtilProperties.assertListProperties(1, default_properties[0]);
@@ -556,14 +518,7 @@ class OlogPropertiesIT {
     void handleProperty3ChangeState() {
         // what
         //     replace property, change state
-        //     --------------------------------------------------------------------------------
-        //     list, create, list/retrieve, update, list/retrieve, remove, retrieve/list
-        //     --------------------------------------------------------------------------------
-        //     x   Retrieve a Property
-        //     x   List Properties
-        //     x   Create a Property
-        //         Create Properties
-        //     x   Remove Property
+        //         list, create, list/retrieve, update, list/retrieve, remove, retrieve/list
 
         try {
             ITUtilProperties.assertListProperties(1, default_properties[0]);
@@ -619,12 +574,6 @@ class OlogPropertiesIT {
         //                 attributes - null
         //                     name       - null, empty
         //                     state      - null (empty, incorrect value (ok: Active, Inactive))
-        //     --------------------------------------------------------------------------------
-        //         Retrieve a Property
-        //     x   List Properties
-        //         Create a Property
-        //     x   Create Properties
-        //         Remove Property
 
         Property property_check = new Property();
         Property[] properties = new Property[] {
@@ -697,14 +646,7 @@ class OlogPropertiesIT {
     void handleProperties() {
         // what
         //     create properties
-        //     --------------------------------------------------------------------------------
-        //     list, create (10), list/retrieve, delete (5), list/retrieve, delete (5), retrieve/list
-        //     --------------------------------------------------------------------------------
-        //     x   Retrieve a Property
-        //     x   List Properties
-        //         Create a Property
-        //     x   Create Properties
-        //     x   Remove Property
+        //         list, create (10), list/retrieve, delete (5), list/retrieve, delete (5), retrieve/list
 
         Property[] properties_active_inactive = new Property[] {
                 property_p1_owner_a_state_a_attributes,
