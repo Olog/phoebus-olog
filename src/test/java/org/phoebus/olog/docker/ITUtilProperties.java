@@ -30,7 +30,6 @@ import org.phoebus.olog.docker.ITUtil.MethodChoice;
 import org.phoebus.olog.entity.Property;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Utility class to help (Docker) integration tests for Olog and Elasticsearch with focus on support test of behavior for property endpoints.
@@ -41,10 +40,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  */
 public class ITUtilProperties {
 
-    static final ObjectMapper mapper = new ObjectMapper();
-
-    static final Property[] PROPERTIES_NULL = null;
-    static final Property   PROPERTY_NULL   = null;
+	private static final Property[] PROPERTIES_NULL = null;
+	private static final Property   PROPERTY_NULL   = null;
 
     /**
      * This class is not to be instantiated.
@@ -63,7 +60,7 @@ public class ITUtilProperties {
      */
     static String object2Json(Property value) {
         try {
-            return mapper.writeValueAsString(value);
+            return ITUtil.MAPPER.writeValueAsString(value);
         } catch (JsonProcessingException e) {
             fail();
         }
@@ -77,7 +74,7 @@ public class ITUtilProperties {
      */
     static String object2Json(Property[] value) {
         try {
-            return mapper.writeValueAsString(value);
+            return ITUtil.MAPPER.writeValueAsString(value);
         } catch (JsonProcessingException e) {
             fail();
         }
@@ -112,7 +109,7 @@ public class ITUtilProperties {
 
             ITUtil.assertResponseLength2Code(response, expectedResponseCode);
             if (HttpURLConnection.HTTP_OK == expectedResponseCode) {
-                actual = mapper.readValue(response[1], Property.class);
+                actual = ITUtil.MAPPER.readValue(response[1], Property.class);
             }
             if (expected != null) {
                 assertEquals(expected, actual);
@@ -154,7 +151,7 @@ public class ITUtilProperties {
 
             ITUtil.assertResponseLength2Code(response, expectedResponseCode);
             if (HttpURLConnection.HTTP_OK == expectedResponseCode) {
-                actual = mapper.readValue(response[1], Property[].class);
+                actual = ITUtil.MAPPER.readValue(response[1], Property[].class);
             }
             // expected number of items in list
             //     (if non-negative number)
@@ -216,7 +213,7 @@ public class ITUtilProperties {
 
             ITUtil.assertResponseLength2Code(response, expectedResponseCode);
             if (HttpURLConnection.HTTP_OK == expectedResponseCode) {
-                actual = mapper.readValue(response[1], Property.class);
+                actual = ITUtil.MAPPER.readValue(response[1], Property.class);
             }
             if (expected != null) {
                 assertEquals(expected, actual);
@@ -263,7 +260,7 @@ public class ITUtilProperties {
 
             ITUtil.assertResponseLength2Code(response, expectedResponseCode);
             if (HttpURLConnection.HTTP_OK == expectedResponseCode) {
-                actual = mapper.readValue(response[1], Property[].class);
+                actual = ITUtil.MAPPER.readValue(response[1], Property[].class);
             }
             if (expected != null) {
                 ITUtil.assertEqualsProperties(expected, actual);

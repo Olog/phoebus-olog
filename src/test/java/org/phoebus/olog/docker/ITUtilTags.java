@@ -30,7 +30,6 @@ import org.phoebus.olog.docker.ITUtil.MethodChoice;
 import org.phoebus.olog.entity.Tag;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Utility class to help (Docker) integration tests for Olog and Elasticsearch with focus on support test of behavior for tag endpoints.
@@ -41,10 +40,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  */
 public class ITUtilTags {
 
-    static final ObjectMapper mapper = new ObjectMapper();
-
-    static final Tag[] TAGS_NULL = null;
-    static final Tag   TAG_NULL  = null;
+	private static final Tag[] TAGS_NULL = null;
+	private static final Tag   TAG_NULL  = null;
 
     /**
      * This class is not to be instantiated.
@@ -63,7 +60,7 @@ public class ITUtilTags {
      */
     static String object2Json(Tag value) {
         try {
-            return mapper.writeValueAsString(value);
+            return ITUtil.MAPPER.writeValueAsString(value);
         } catch (JsonProcessingException e) {
             fail();
         }
@@ -77,7 +74,7 @@ public class ITUtilTags {
      */
     static String object2Json(Tag[] value) {
         try {
-            return mapper.writeValueAsString(value);
+            return ITUtil.MAPPER.writeValueAsString(value);
         } catch (JsonProcessingException e) {
             fail();
         }
@@ -112,7 +109,7 @@ public class ITUtilTags {
 
             ITUtil.assertResponseLength2Code(response, expectedResponseCode);
             if (HttpURLConnection.HTTP_OK == expectedResponseCode) {
-                actual = mapper.readValue(response[1], Tag.class);
+                actual = ITUtil.MAPPER.readValue(response[1], Tag.class);
             }
             if (expected != null) {
                 assertEquals(expected, actual);
@@ -147,7 +144,7 @@ public class ITUtilTags {
 
             ITUtil.assertResponseLength2Code(response, expectedResponseCode);
             if (HttpURLConnection.HTTP_OK == expectedResponseCode) {
-                actual = mapper.readValue(response[1], Tag[].class);
+                actual = ITUtil.MAPPER.readValue(response[1], Tag[].class);
             }
             // expected number of items in list
             //     (if non-negative number)
@@ -209,7 +206,7 @@ public class ITUtilTags {
 
             ITUtil.assertResponseLength2Code(response, expectedResponseCode);
             if (HttpURLConnection.HTTP_OK == expectedResponseCode) {
-                actual = mapper.readValue(response[1], Tag.class);
+                actual = ITUtil.MAPPER.readValue(response[1], Tag.class);
             }
             if (expected != null) {
                 assertEquals(expected, actual);
@@ -256,7 +253,7 @@ public class ITUtilTags {
 
             ITUtil.assertResponseLength2Code(response, expectedResponseCode);
             if (HttpURLConnection.HTTP_OK == expectedResponseCode) {
-                actual = mapper.readValue(response[1], Tag[].class);
+                actual = ITUtil.MAPPER.readValue(response[1], Tag[].class);
             }
             if (expected != null) {
                 ITUtil.assertEqualsTags(expected, actual);

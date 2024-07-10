@@ -32,7 +32,6 @@ import org.phoebus.olog.entity.Log;
 import org.phoebus.olog.entity.SearchResult;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Utility class to help (Docker) integration tests for Olog and Elasticsearch with focus on support test of behavior for log endpoints.
@@ -43,10 +42,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  */
 public class ITUtilLogs {
 
-    static final ObjectMapper mapper = new ObjectMapper();
-
-    static final Log[] LOGS_NULL = null;
-    static final Log   LOG_NULL  = null;
+	private static final Log   LOG_NULL  = null;
 
     /**
      * This class is not to be instantiated.
@@ -65,7 +61,7 @@ public class ITUtilLogs {
      */
     static String object2Json(Log value) {
         try {
-            return mapper.writeValueAsString(value);
+            return ITUtil.MAPPER.writeValueAsString(value);
         } catch (JsonProcessingException e) {
             fail();
         }
@@ -79,7 +75,7 @@ public class ITUtilLogs {
      */
     static String object2Json(Log[] value) {
         try {
-            return mapper.writeValueAsString(value);
+            return ITUtil.MAPPER.writeValueAsString(value);
         } catch (JsonProcessingException e) {
             fail();
         }
@@ -108,7 +104,7 @@ public class ITUtilLogs {
 
     		ITUtil.assertResponseLength2Code(response, expectedResponseCode);
     		if (HttpURLConnection.HTTP_OK == expectedResponseCode) {
-    			actual = mapper.readValue(response[1], Log.class);
+    			actual = ITUtil.MAPPER.readValue(response[1], Log.class);
     		}
     		if (expected != null) {
     			assertEquals(expected, actual);
@@ -150,7 +146,7 @@ public class ITUtilLogs {
 
             ITUtil.assertResponseLength2Code(response, expectedResponseCode);
             if (HttpURLConnection.HTTP_OK == expectedResponseCode) {
-                actual = mapper.readValue(response[1], Log[].class);
+                actual = ITUtil.MAPPER.readValue(response[1], Log[].class);
             }
             // expected number of items in list
             //     (if non-negative number)
@@ -201,7 +197,7 @@ public class ITUtilLogs {
 
             ITUtil.assertResponseLength2Code(response, expectedResponseCode);
             if (HttpURLConnection.HTTP_OK == expectedResponseCode) {
-                actual = mapper.readValue(response[1], SearchResult.class);
+                actual = ITUtil.MAPPER.readValue(response[1], SearchResult.class);
             }
             // expected number of items in list
             //     (if non-negative number)
@@ -263,7 +259,7 @@ public class ITUtilLogs {
 
             ITUtil.assertResponseLength2Code(response, expectedResponseCode);
             if (HttpURLConnection.HTTP_OK == expectedResponseCode) {
-                actual = mapper.readValue(response[1], Log.class);
+                actual = ITUtil.MAPPER.readValue(response[1], Log.class);
             }
             if (expected != null) {
                 assertEquals(expected, actual);
@@ -299,7 +295,7 @@ public class ITUtilLogs {
 
     		ITUtil.assertResponseLength2Code(response, expectedResponseCode);
     		if (HttpURLConnection.HTTP_OK == expectedResponseCode) {
-    			actual = mapper.readValue(response[1], Log.class);
+    			actual = ITUtil.MAPPER.readValue(response[1], Log.class);
     		}
     		if (expected != null) {
     			assertEquals(expected, actual);
@@ -327,7 +323,7 @@ public class ITUtilLogs {
      */
     public static void assertGroupLogs(AuthorizationChoice authorizationChoice, List<Long> logEntryIds, int expectedResponseCode) {
     	try {
-            String[] response = ITUtil.sendRequest(ITUtil.buildRequest(MethodChoice.POST, authorizationChoice, EndpointChoice.LOGS, "/group", mapper.writeValueAsString(logEntryIds)));
+            String[] response = ITUtil.sendRequest(ITUtil.buildRequest(MethodChoice.POST, authorizationChoice, EndpointChoice.LOGS, "/group", ITUtil.MAPPER.writeValueAsString(logEntryIds)));
 
     		ITUtil.assertResponseLength2Code(response, expectedResponseCode);
     	} catch (Exception e) {

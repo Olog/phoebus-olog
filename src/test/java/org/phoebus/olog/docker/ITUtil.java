@@ -28,6 +28,7 @@ import org.testcontainers.containers.ContainerState;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.shaded.org.apache.commons.lang3.StringUtils;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.dockerjava.api.DockerClient;
 
 import java.io.File;
@@ -53,37 +54,36 @@ import static org.junit.jupiter.api.Assertions.assertNull;
  */
 public class ITUtil {
 
-    static final String OLOG  = "olog";
+    // note
+    //     port numbers can be exposed differently to avoid interference with any running instance
 
-    static final String UTF_8 = "UTF-8";
+	public static final String UTF_8 = "UTF-8";
 
-    static final String AUTH_USER    = "user:userPass";
-    static final String AUTH_ADMIN   = "admin:adminPass";
-    static final String EMPTY_JSON   = "[]";
-    static final String HEADER_JSON  = "application/json";
-    static final String HEADER_BASIC = "Basic ";
-    static final String HTTP         = "http://";
+    private static final String AUTH_USER    = "user:userPass";
+    private static final String AUTH_ADMIN   = "admin:adminPass";
+    private static final String HEADER_JSON  = "application/json";
+    private static final String HEADER_BASIC = "Basic ";
 
-    static final String IP_PORT_OLOG          = "127.0.0.1:8080/Olog";
-    static final String IP_PORT_ELASTICSEARCH = "127.0.0.1:9200";
+    private static final String LOGBOOKS   = "/logbooks";
+    private static final String LOGS       = "/logs";
+    private static final String PROPERTIES = "/properties";
+    private static final String TAGS       = "/tags";
 
-    static final String LOGBOOKS   = "/logbooks";
-    static final String LOGS       = "/logs";
-    static final String PROPERTIES = "/properties";
-    static final String TAGS       = "/tags";
+    public static final String HTTP_IP_PORT_OLOG            = "http://127.0.0.1:8080/Olog";
+    public static final String HTTP_IP_PORT_ELASTICSEARCH   = "http://127.0.0.1:9200";
 
-    static final String HTTP_IP_PORT_OLOG          = HTTP + IP_PORT_OLOG;
-    static final String HTTP_IP_PORT_ELASTICSEARCH = HTTP + IP_PORT_ELASTICSEARCH;
-
-    static final String HTTP_IP_PORT_OLOG_LOGBOOKS   = ITUtil.HTTP + ITUtil.IP_PORT_OLOG + LOGBOOKS;
-    static final String HTTP_IP_PORT_OLOG_LOGS       = ITUtil.HTTP + ITUtil.IP_PORT_OLOG + LOGS;
-    static final String HTTP_IP_PORT_OLOG_PROPERTIES = ITUtil.HTTP + ITUtil.IP_PORT_OLOG + PROPERTIES;
-    static final String HTTP_IP_PORT_OLOG_TAGS       = ITUtil.HTTP + ITUtil.IP_PORT_OLOG + TAGS;
+    public static final String HTTP_IP_PORT_OLOG_LOGBOOKS   = ITUtil.HTTP_IP_PORT_OLOG + LOGBOOKS;
+    public static final String HTTP_IP_PORT_OLOG_LOGS       = ITUtil.HTTP_IP_PORT_OLOG + LOGS;
+    public static final String HTTP_IP_PORT_OLOG_PROPERTIES = ITUtil.HTTP_IP_PORT_OLOG + PROPERTIES;
+    public static final String HTTP_IP_PORT_OLOG_TAGS       = ITUtil.HTTP_IP_PORT_OLOG + TAGS;
 
     // integration test - docker
 
     private static final HttpClient CLIENT = HttpClient.newHttpClient();
 
+    public static final ObjectMapper MAPPER = new ObjectMapper();
+
+    public static final String OLOG  = "olog";
     public static final String INTEGRATIONTEST_DOCKER_COMPOSE = "docker-compose-integrationtest.yml";
     public static final String INTEGRATIONTEST_LOG_MESSAGE    = ".*Started Application.*";
 
@@ -141,192 +141,6 @@ public class ITUtil {
             } catch (Exception e) {
                 // proceed if file cannot be copied
             }
-        }
-    }
-
-    /**
-     * Refresh Elastic indices and return response code and string.
-     *
-     * @return response code and string
-     * @throws InterruptedException
-     * @throws IOException
-     * @throws URISyntaxException
-     */
-    static String[] refreshElasticIndices() throws URISyntaxException, IOException, InterruptedException {
-        return sendRequest(HTTP_IP_PORT_ELASTICSEARCH + "/_refresh");
-    }
-
-    /**
-     * Refresh Elastic indices and assert response is of length 2 and has response code HttpURLConnection.HTTP_OK.
-     * @throws InterruptedException
-     * @throws IOException
-     * @throws URISyntaxException
-     *
-     */
-    static void assertRefreshElasticIndices() throws URISyntaxException, IOException, InterruptedException {
-        String[] response = sendRequest(HTTP_IP_PORT_ELASTICSEARCH + "/_refresh");
-
-        ITUtil.assertResponseLength2CodeOK(response);
-    }
-
-    /**
-     * Send GET request with given string as URI and return response status code.
-     *
-     * @param str string to parse as URI
-     * @return response status code
-     * @throws URISyntaxException If request is created with non-legal URI characters
-     * @throws InterruptedException
-     * @throws IOException
-     */
-    static int sendRequestStatusCode(String str) throws URISyntaxException, IOException, InterruptedException {
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(new URI(str))
-                .GET()
-                .build();
-
-        HttpResponse<String> response = CLIENT.send(request, BodyHandlers.ofString());
-
-        return response.statusCode();
-    }
-
-    /**
-     * Send GET request with given string as URI and return string array with response status code and response body.
-     *
-     * @param str string to parse as URI
-     * @return string array with response status code and response body
-     * @throws URISyntaxException If request is created with non-legal URI characters
-     * @throws InterruptedException
-     * @throws IOException
-     */
-    static String[] sendRequest(String str) throws URISyntaxException, IOException, InterruptedException {
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(new URI(str))
-                .GET()
-                .build();
-
-        HttpResponse<String> response = CLIENT.send(request, BodyHandlers.ofString());
-
-        return new String[] {String.valueOf(response.statusCode()), response.body()};
-    }
-
-    /**
-     * Send request and return response with string array with response code and response string.
-     *
-     * @param request request
-     * @return string array with response code and response string
-     * @throws InterruptedException
-     * @throws IOException
-     */
-    static String[] sendRequest(HttpRequest request) throws IOException, InterruptedException {
-        HttpResponse<String> response = CLIENT.send(request, BodyHandlers.ofString());
-
-        return new String[] {String.valueOf(response.statusCode()), response.body()};
-    }
-
-    // ----------------------------------------------------------------------------------------------------
-
-    // enum for http methods
-    static enum MethodChoice        {POST, GET, PUT, DELETE};
-
-    // enum for different authorizations
-    static enum AuthorizationChoice {NONE, USER, ADMIN};
-
-    // enum for different endpoints
-    static enum EndpointChoice      {LOGBOOKS, LOGS, PROPERTIES, TAGS};
-
-    /**
-     * Utility method to build http request for test to run.
-     *
-     * @param methodChoice method choice
-     * @param authorizationChoice authorization choice
-     * @param endpointChoice endpoint choice
-     * @param path particular path
-     * @param json json data
-     * @return http request to run
-     * @throws URISyntaxException If request is created with non-legal URI characters
-     */
-    static HttpRequest buildRequest(MethodChoice methodChoice, AuthorizationChoice authorizationChoice, EndpointChoice endpointChoice, String path, String json) throws URISyntaxException {
-        String pathstr = !StringUtils.isEmpty(path)
-                ? path
-                : "";
-
-        String str =
-                ITUtil.HTTP
-                + ITUtil.IP_PORT_OLOG
-                + ITUtil.buildUri(endpointChoice)
-                + pathstr;
-
-        HttpRequest.Builder builder = HttpRequest.newBuilder()
-                .uri(new URI(str))
-                .header(HttpHeaders.CONTENT_TYPE, HEADER_JSON);
-
-        builder = buildAuthorization(builder, authorizationChoice);
-
-        return buildMethodJson(builder, methodChoice, json).build();
-    }
-
-    /**
-     * Utility method to build http request for method and json data.
-     *
-     * @param builder http request builder
-     * @param methodChoice method choice, i.e. POST, GET, PUT, DELETE, PATCH
-     * @param json json data
-     * @return http request builder
-     */
-    private static HttpRequest.Builder buildMethodJson(HttpRequest.Builder builder, MethodChoice methodChoice, String json) {
-        switch (methodChoice) {
-        case POST:
-           return builder.POST(HttpRequest.BodyPublishers.ofString(json));
-        case GET:
-           return builder.GET();
-        case PUT:
-           return builder.PUT(HttpRequest.BodyPublishers.ofString(json));
-        case DELETE:
-           return builder.DELETE();
-        default:
-           return builder.GET();
-        }
-    }
-
-    /**
-     * Utility method to build http client for authentication and authorization.
-     * Http basic authorization is used.
-     *
-     * @param builder http request builder
-     * @param authorizationChoice authorization choice
-     * @return http request builder
-     */
-    private static HttpRequest.Builder buildAuthorization(HttpRequest.Builder builder, AuthorizationChoice authorizationChoice) {
-        switch (authorizationChoice) {
-        case ADMIN:
-            return builder.headers(HttpHeaders.AUTHORIZATION, HEADER_BASIC + Base64.getEncoder().encodeToString(AUTH_ADMIN.getBytes()));
-        case USER:
-            return builder.headers(HttpHeaders.AUTHORIZATION, HEADER_BASIC + Base64.getEncoder().encodeToString(AUTH_USER.getBytes()));
-        case NONE:
-            return builder;
-        default:
-            return builder;
-        }
-    }
-
-    /**
-     * Utility method to build string for endpoint. To be used when constructing uri to send query to server.
-     *
-     * @param endpointChoice endpoint choice
-     * @return string for endpoint
-     */
-    private static String buildUri(EndpointChoice endpointChoice) {
-        switch (endpointChoice) {
-        case LOGBOOKS:
-            return ITUtil.LOGBOOKS;
-        case LOGS:
-            return ITUtil.LOGS;
-        case PROPERTIES:
-            return ITUtil.PROPERTIES;
-        case TAGS:
-            return ITUtil.TAGS;
-        default:
-            return StringUtils.EMPTY;
         }
     }
 
@@ -459,5 +273,187 @@ public class ITUtil {
         }
     }
 
+    // ----------------------------------------------------------------------------------------------------
+
+    /**
+     * Refresh Elastic indices and return response code and string.
+     *
+     * @return response code and string
+     * @throws InterruptedException
+     * @throws IOException
+     * @throws URISyntaxException
+     */
+    static String[] refreshElasticIndices() throws URISyntaxException, IOException, InterruptedException {
+        return sendRequest(HTTP_IP_PORT_ELASTICSEARCH + "/_refresh");
+    }
+
+    /**
+     * Refresh Elastic indices and assert response is of length 2 and has response code HttpURLConnection.HTTP_OK.
+     * @throws InterruptedException
+     * @throws IOException
+     * @throws URISyntaxException
+     *
+     */
+    static void assertRefreshElasticIndices() throws URISyntaxException, IOException, InterruptedException {
+        String[] response = sendRequest(HTTP_IP_PORT_ELASTICSEARCH + "/_refresh");
+
+        ITUtil.assertResponseLength2CodeOK(response);
+    }
+
+    // ----------------------------------------------------------------------------------------------------
+
+    // enum for http methods
+    static enum MethodChoice        {POST, GET, PUT, DELETE};
+
+    // enum for different authorizations
+    static enum AuthorizationChoice {NONE, USER, ADMIN};
+
+    // enum for different endpoints
+    static enum EndpointChoice      {LOGBOOKS, LOGS, PROPERTIES, TAGS};
+
+    /**
+     * Utility method to build http request for test to run.
+     *
+     * @param methodChoice method choice
+     * @param authorizationChoice authorization choice
+     * @param endpointChoice endpoint choice
+     * @param path particular path
+     * @param json json data
+     * @return http request to run
+     * @throws URISyntaxException If request is created with non-legal URI characters
+     */
+    static HttpRequest buildRequest(MethodChoice methodChoice, AuthorizationChoice authorizationChoice, EndpointChoice endpointChoice, String path, String json) throws URISyntaxException {
+        String pathstr = !StringUtils.isEmpty(path)
+                ? path
+                : "";
+
+        String str =
+                ITUtil.HTTP_IP_PORT_OLOG
+                + ITUtil.buildUri(endpointChoice)
+                + pathstr;
+
+        HttpRequest.Builder builder = HttpRequest.newBuilder()
+                .uri(new URI(str))
+                .header(HttpHeaders.CONTENT_TYPE, HEADER_JSON);
+
+        builder = buildAuthorization(builder, authorizationChoice);
+
+        return buildMethodJson(builder, methodChoice, json).build();
+    }
+
+    /**
+     * Utility method to build http request for method and json data.
+     *
+     * @param builder http request builder
+     * @param methodChoice method choice, i.e. POST, GET, PUT, DELETE, PATCH
+     * @param json json data
+     * @return http request builder
+     */
+    private static HttpRequest.Builder buildMethodJson(HttpRequest.Builder builder, MethodChoice methodChoice, String json) {
+        switch (methodChoice) {
+        case POST:
+           return builder.POST(HttpRequest.BodyPublishers.ofString(json));
+        case GET:
+           return builder.GET();
+        case PUT:
+           return builder.PUT(HttpRequest.BodyPublishers.ofString(json));
+        case DELETE:
+           return builder.DELETE();
+        default:
+           return builder.GET();
+        }
+    }
+
+    /**
+     * Utility method to build http client for authentication and authorization.
+     * Http basic authorization is used.
+     *
+     * @param builder http request builder
+     * @param authorizationChoice authorization choice
+     * @return http request builder
+     */
+    private static HttpRequest.Builder buildAuthorization(HttpRequest.Builder builder, AuthorizationChoice authorizationChoice) {
+        switch (authorizationChoice) {
+        case ADMIN:
+            return builder.headers(HttpHeaders.AUTHORIZATION, HEADER_BASIC + Base64.getEncoder().encodeToString(AUTH_ADMIN.getBytes()));
+        case USER:
+            return builder.headers(HttpHeaders.AUTHORIZATION, HEADER_BASIC + Base64.getEncoder().encodeToString(AUTH_USER.getBytes()));
+        case NONE:
+            return builder;
+        default:
+            return builder;
+        }
+    }
+
+    /**
+     * Utility method to build string for endpoint. To be used when constructing uri to send query to server.
+     *
+     * @param endpointChoice endpoint choice
+     * @return string for endpoint
+     */
+    private static String buildUri(EndpointChoice endpointChoice) {
+        switch (endpointChoice) {
+        case LOGBOOKS:
+            return ITUtil.LOGBOOKS;
+        case LOGS:
+            return ITUtil.LOGS;
+        case PROPERTIES:
+            return ITUtil.PROPERTIES;
+        case TAGS:
+            return ITUtil.TAGS;
+        default:
+            return StringUtils.EMPTY;
+        }
+    }
+
+    /**
+     * Send GET request with given string as URI and return response status code.
+     *
+     * @param str string to parse as URI
+     * @return response status code
+     * @throws URISyntaxException If request is created with non-legal URI characters
+     * @throws InterruptedException
+     * @throws IOException
+     */
+    static int sendRequestStatusCode(String str) throws URISyntaxException, IOException, InterruptedException {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(new URI(str))
+                .GET()
+                .build();
+
+        return Integer.parseInt(sendRequest(request)[0]);
+    }
+
+    /**
+     * Send GET request with given string as URI and return string array with response status code and response body.
+     *
+     * @param str string to parse as URI
+     * @return string array with response status code and response body
+     * @throws URISyntaxException If request is created with non-legal URI characters
+     * @throws InterruptedException
+     * @throws IOException
+     */
+    static String[] sendRequest(String str) throws URISyntaxException, IOException, InterruptedException {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(new URI(str))
+                .GET()
+                .build();
+
+        return sendRequest(request);
+    }
+
+    /**
+     * Send request and return response with string array with response code and response string.
+     *
+     * @param request request
+     * @return string array with response code and response string
+     * @throws InterruptedException
+     * @throws IOException
+     */
+    static String[] sendRequest(HttpRequest request) throws IOException, InterruptedException {
+        HttpResponse<String> response = CLIENT.send(request, BodyHandlers.ofString());
+
+        return new String[] {String.valueOf(response.statusCode()), response.body()};
+    }
 
 }
