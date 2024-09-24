@@ -99,11 +99,10 @@ class OlogIT {
     @Test
     void ologUp() {
         try {
-            String address = ITUtil.HTTP_IP_PORT_OLOG;
-            int responseCode = ITUtil.doGet(address);
+            int responseCode = ITUtil.sendRequestStatusCode(ITUtil.HTTP_IP_PORT_OLOG);
 
             assertEquals(HttpURLConnection.HTTP_OK, responseCode);
-        } catch (IOException e) {
+        } catch (Exception e) {
             fail();
         }
     }
@@ -167,14 +166,7 @@ class OlogPropertiesIT {
         // what
         //     user with required role
         //     create property
-        //     --------------------------------------------------------------------------------
-        //     list, create, list/retrieve, remove (unauthorized), remove, retrieve/list
-        //     --------------------------------------------------------------------------------
-        //     x   Retrieve a Property
-        //     x   List Properties
-        //     x   Create a Property
-        //         Create Properties
-        //     x   Remove Property
+        //         list, create, list/retrieve, remove (unauthorized), remove, retrieve/list
 
         try {
             ITUtilProperties.assertListProperties(1, default_properties[0]);
@@ -325,16 +317,14 @@ public class ITUtilLogs {
      * @return number of logs
      */
     public static Log[] assertListLogs(String queryString, int expectedResponseCode, int expectedGreaterThanOrEqual, int expectedLessThanOrEqual, Log... expected) {
+        Log[] actual = null;
         try {
-            String[] response = null;
-            Log[] actual = null;
+            String[] response = ITUtil.sendRequest(ITUtil.HTTP_IP_PORT_OLOG_LOGS + queryString);
 
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + queryString);
             ITUtil.assertResponseLength2Code(response, expectedResponseCode);
             if (HttpURLConnection.HTTP_OK == expectedResponseCode) {
                 actual = mapper.readValue(response[1], Log[].class);
             }
-
             // expected number of items in list
             //     (if non-negative number)
             //     expectedGreaterThanOrEqual <= nbr of items <= expectedLessThanOrEqual
@@ -344,19 +334,13 @@ public class ITUtilLogs {
             if (expectedLessThanOrEqual >= 0) {
                 assertTrue(actual.length <= expectedLessThanOrEqual);
             }
-
-            // expected content
             if (expected != null && expected.length > 0) {
                 ITUtil.assertEqualsLogs(actual, expected);
             }
-
-            return actual;
-        } catch (IOException e) {
-            fail();
         } catch (Exception e) {
             fail();
         }
-        return null;
+        return actual;
     }
 ```
 

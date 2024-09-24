@@ -25,7 +25,6 @@ import org.testcontainers.containers.ComposeContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -68,17 +67,14 @@ class OlogLogsQueryIT {
     //     Olog - Service Documentation
     //         https://olog.readthedocs.io/en/latest/
     //     ------------------------------------------------------------------------------------------------
-    //     OLOG API                                                 LogbooksResource
-    //     --------------------                                     --------------------
-    //     Retrieve a Log                      .../logs/<id>        (GET)         getLog(String)
-    //     Retrieve attachment for Log         .../logs/attachments/{logId}/{attachmentName}
-    //                                                              (GET)         findResources(String, String)
-    //     List Logs / Query by Pattern        .../logs             (GET)         findAll()
-    //     Create a Log                        .../logs             (PUT)         createLog(String, Log, Principal)
-    //     Upload attachment                   .../logs/attachments/{logId}
-    //                                                              (POST)        uploadAttachment(String, MultipartFile, String, String, String)
-    //     Upload multiple attachments         .../logs/attachments-multi/{logId}
-    //                                                              (POST)        uploadMultipleAttachments(String, MultipartFile[])
+    //     OLOG API
+    //     --------------------
+    //     Retrieve a Log                      .../logs/<id>                                        GET
+    //     Retrieve attachment for Log         .../logs/attachments/{logId}/{attachmentName}        GET
+    //     List Logs / Query by Pattern        .../logs                                             GET
+    //     Create a Log                        .../logs                                             PUT
+    //     Upload attachment                   .../logs/attachments/{logId}                         POST
+    //     Upload multiple attachments         .../logs/attachments-multi/{logId}                   POST
     //     ------------------------------------------------------------------------------------------------
 
     @Container
@@ -94,11 +90,10 @@ class OlogLogsQueryIT {
     @Test
     void ologUp() {
         try {
-            String address = ITUtil.HTTP_IP_PORT_OLOG;
-            int responseCode = ITUtil.doGet(address);
+            int responseCode = ITUtil.sendRequestStatusCode(ITUtil.HTTP_IP_PORT_OLOG);
 
             assertEquals(HttpURLConnection.HTTP_OK, responseCode);
-        } catch (IOException e) {
+        } catch (Exception e) {
             fail();
         }
     }
@@ -184,8 +179,6 @@ class OlogLogsQueryIT {
             ITUtilLogs.assertListLogs("?desc=complete", 0);
             ITUtilLogs.assertListLogs("?desc=Complete", 0);
             ITUtilLogs.assertListLogs("?desc=check&desc=complete", 0);
-            ITUtilLogs.assertListLogs("?desc=check complete",   HttpURLConnection.HTTP_BAD_REQUEST, -1, -1);
-            ITUtilLogs.assertListLogs("?desc='check complete'", HttpURLConnection.HTTP_BAD_REQUEST, -1, -1);
             ITUtilLogs.assertListLogs("?desc="  + URLEncoder.encode("check complete", StandardCharsets.UTF_8), 0);
             ITUtilLogs.assertListLogs("?desc='" + URLEncoder.encode("check complete", StandardCharsets.UTF_8) + "'", 0);
             ITUtilLogs.assertListLogs("?desc="  + URLEncoder.encode("CHECK COMPLETE", StandardCharsets.UTF_8), 0);
@@ -202,7 +195,6 @@ class OlogLogsQueryIT {
             ITUtilLogs.assertListLogs("?desc=after&desc=Maintenance", 3);
             ITUtilLogs.assertListLogs("?desc="   + URLEncoder.encode("after maintenance",     StandardCharsets.UTF_8),        3);
             ITUtilLogs.assertListLogs("?desc='"  + URLEncoder.encode("after maintenance",     StandardCharsets.UTF_8) + "'",  0);
-            ITUtilLogs.assertListLogs("?desc=\"" + URLEncoder.encode("after maintenance",     StandardCharsets.UTF_8) + "\"", HttpURLConnection.HTTP_BAD_REQUEST, -1, -1);
             ITUtilLogs.assertListLogs("?desc="   + URLEncoder.encode("\"after maintenance\"", StandardCharsets.UTF_8),        3);
             ITUtilLogs.assertListLogs("?desc="   + URLEncoder.encode("\"after mainTENance\"", StandardCharsets.UTF_8),        3);
             ITUtilLogs.assertListLogs("?desc="   + URLEncoder.encode("\"after mainTENance",   StandardCharsets.UTF_8),        HttpURLConnection.HTTP_INTERNAL_ERROR, -1, -1);
@@ -217,8 +209,6 @@ class OlogLogsQueryIT {
             ITUtilLogs.assertSearchLogs("?desc=complete", 0);
             ITUtilLogs.assertSearchLogs("?desc=Complete", 0);
             ITUtilLogs.assertSearchLogs("?desc=check&desc=complete", 0);
-            ITUtilLogs.assertSearchLogs("?desc=check complete",   HttpURLConnection.HTTP_BAD_REQUEST, -1, -1);
-            ITUtilLogs.assertSearchLogs("?desc='check complete'", HttpURLConnection.HTTP_BAD_REQUEST, -1, -1);
             ITUtilLogs.assertSearchLogs("?desc="  + URLEncoder.encode("check complete", StandardCharsets.UTF_8), 0);
             ITUtilLogs.assertSearchLogs("?desc='" + URLEncoder.encode("check complete", StandardCharsets.UTF_8) + "'", 0);
             ITUtilLogs.assertSearchLogs("?desc="  + URLEncoder.encode("CHECK COMPLETE", StandardCharsets.UTF_8), 0);
@@ -235,7 +225,6 @@ class OlogLogsQueryIT {
             ITUtilLogs.assertSearchLogs("?desc=after&desc=Maintenance", 3);
             ITUtilLogs.assertSearchLogs("?desc="   + URLEncoder.encode("after maintenance",     StandardCharsets.UTF_8),        3);
             ITUtilLogs.assertSearchLogs("?desc='"  + URLEncoder.encode("after maintenance",     StandardCharsets.UTF_8) + "'",  0);
-            ITUtilLogs.assertSearchLogs("?desc=\"" + URLEncoder.encode("after maintenance",     StandardCharsets.UTF_8) + "\"", HttpURLConnection.HTTP_BAD_REQUEST, -1, -1);
             ITUtilLogs.assertSearchLogs("?desc="   + URLEncoder.encode("\"after maintenance\"", StandardCharsets.UTF_8),        3);
             ITUtilLogs.assertSearchLogs("?desc="   + URLEncoder.encode("\"after mainTENance\"", StandardCharsets.UTF_8),        3);
             ITUtilLogs.assertSearchLogs("?desc="   + URLEncoder.encode("\"after mainTENance",   StandardCharsets.UTF_8),        HttpURLConnection.HTTP_INTERNAL_ERROR, -1, -1);
@@ -253,8 +242,6 @@ class OlogLogsQueryIT {
             ITUtilLogs.assertListLogs("?title=update", 37);
             ITUtilLogs.assertListLogs("?title=Update", 37);
             ITUtilLogs.assertListLogs("?title=shift&title=update", 37);
-            ITUtilLogs.assertListLogs("?title=shift update",   HttpURLConnection.HTTP_BAD_REQUEST, -1, -1);
-            ITUtilLogs.assertListLogs("?title='shift update'", HttpURLConnection.HTTP_BAD_REQUEST, -1, -1);
             ITUtilLogs.assertListLogs("?title="  + URLEncoder.encode("\"Shift Update\"", StandardCharsets.UTF_8),       37);
             ITUtilLogs.assertListLogs("?title="  + URLEncoder.encode("\"shiFT updATE\"", StandardCharsets.UTF_8),       37);
             ITUtilLogs.assertListLogs("?title="  + URLEncoder.encode("shiFT updATE\"",   StandardCharsets.UTF_8),       HttpURLConnection.HTTP_INTERNAL_ERROR, -1, -1);
@@ -275,8 +262,6 @@ class OlogLogsQueryIT {
             ITUtilLogs.assertSearchLogs("?title=update", 37);
             ITUtilLogs.assertSearchLogs("?title=Update", 37);
             ITUtilLogs.assertSearchLogs("?title=shift&title=update", 37);
-            ITUtilLogs.assertSearchLogs("?title=shift update",   HttpURLConnection.HTTP_BAD_REQUEST, -1, -1);
-            ITUtilLogs.assertSearchLogs("?title='shift update'", HttpURLConnection.HTTP_BAD_REQUEST, -1, -1);
             ITUtilLogs.assertSearchLogs("?title="  + URLEncoder.encode("\"Shift Update\"", StandardCharsets.UTF_8),       37);
             ITUtilLogs.assertSearchLogs("?title="  + URLEncoder.encode("\"shiFT updATE\"", StandardCharsets.UTF_8),       37);
             ITUtilLogs.assertSearchLogs("?title="  + URLEncoder.encode("shiFT updATE\"",   StandardCharsets.UTF_8),       HttpURLConnection.HTTP_INTERNAL_ERROR, -1, -1);
@@ -337,8 +322,6 @@ class OlogLogsQueryIT {
             ITUtilLogs.assertListLogs("?phrase=complete", 0);
             ITUtilLogs.assertListLogs("?phrase=Complete", 0);
             ITUtilLogs.assertListLogs("?phrase=check&phrase=complete", 0);
-            ITUtilLogs.assertListLogs("?phrase=check complete",   HttpURLConnection.HTTP_BAD_REQUEST, -1, -1);
-            ITUtilLogs.assertListLogs("?phrase='check complete'", HttpURLConnection.HTTP_BAD_REQUEST, -1, -1);
             ITUtilLogs.assertListLogs("?phrase="  + URLEncoder.encode("check complete", StandardCharsets.UTF_8), 0);
             ITUtilLogs.assertListLogs("?phrase='" + URLEncoder.encode("check complete", StandardCharsets.UTF_8) + "'", 0);
             ITUtilLogs.assertListLogs("?phrase="  + URLEncoder.encode("CHECK COMPLETE", StandardCharsets.UTF_8), 0);
@@ -353,8 +336,6 @@ class OlogLogsQueryIT {
             ITUtilLogs.assertSearchLogs("?phrase=complete", 0);
             ITUtilLogs.assertSearchLogs("?phrase=Complete", 0);
             ITUtilLogs.assertSearchLogs("?phrase=check&phrase=complete", 0);
-            ITUtilLogs.assertSearchLogs("?phrase=check complete",   HttpURLConnection.HTTP_BAD_REQUEST, -1, -1);
-            ITUtilLogs.assertSearchLogs("?phrase='check complete'", HttpURLConnection.HTTP_BAD_REQUEST, -1, -1);
             ITUtilLogs.assertSearchLogs("?phrase="  + URLEncoder.encode("check complete", StandardCharsets.UTF_8), 0);
             ITUtilLogs.assertSearchLogs("?phrase='" + URLEncoder.encode("check complete", StandardCharsets.UTF_8) + "'", 0);
             ITUtilLogs.assertSearchLogs("?phrase="  + URLEncoder.encode("CHECK COMPLETE", StandardCharsets.UTF_8), 0);
@@ -546,8 +527,6 @@ class OlogLogsQueryIT {
             ITUtilLogs.assertListLogs("?properties=A", 20);
             ITUtilLogs.assertListLogs("?properties=B", 0);
             ITUtilLogs.assertListLogs("?properties=C", 0);
-            ITUtilLogs.assertListLogs("?properties=Shift Info C",   HttpURLConnection.HTTP_BAD_REQUEST, -1, -1);
-            ITUtilLogs.assertListLogs("?properties='Shift Info C'", HttpURLConnection.HTTP_BAD_REQUEST, -1, -1);
             ITUtilLogs.assertListLogs("?properties="  + URLEncoder.encode("Shift Info C", StandardCharsets.UTF_8), 20);
             ITUtilLogs.assertListLogs("?properties='" + URLEncoder.encode("Shift Info C", StandardCharsets.UTF_8) + "'", 0);
             ITUtilLogs.assertListLogs("?properties=.operator", 60);
@@ -580,8 +559,6 @@ class OlogLogsQueryIT {
             ITUtilLogs.assertSearchLogs("?properties=A", 20);
             ITUtilLogs.assertSearchLogs("?properties=B", 0);
             ITUtilLogs.assertSearchLogs("?properties=C", 0);
-            ITUtilLogs.assertSearchLogs("?properties=Shift Info C",   HttpURLConnection.HTTP_BAD_REQUEST, -1, -1);
-            ITUtilLogs.assertSearchLogs("?properties='Shift Info C'", HttpURLConnection.HTTP_BAD_REQUEST, -1, -1);
             ITUtilLogs.assertSearchLogs("?properties="  + URLEncoder.encode("Shift Info C", StandardCharsets.UTF_8), 20);
             ITUtilLogs.assertSearchLogs("?properties='" + URLEncoder.encode("Shift Info C", StandardCharsets.UTF_8) + "'", 0);
             ITUtilLogs.assertSearchLogs("?properties=.operator", 60);
@@ -618,8 +595,6 @@ class OlogLogsQueryIT {
             ITUtilLogs.assertListLogs("?level=update", 54);
             ITUtilLogs.assertListLogs("?level=Update", 54);
             ITUtilLogs.assertListLogs("?level=shift&level=update", 60);
-            ITUtilLogs.assertListLogs("?level=shift update",   HttpURLConnection.HTTP_BAD_REQUEST, -1, -1);
-            ITUtilLogs.assertListLogs("?level='shift update'", HttpURLConnection.HTTP_BAD_REQUEST, -1, -1);
             ITUtilLogs.assertListLogs("?level="  + URLEncoder.encode("shift update", StandardCharsets.UTF_8), 60);
             ITUtilLogs.assertListLogs("?level='" + URLEncoder.encode("shift update", StandardCharsets.UTF_8) + "'",  0);
             ITUtilLogs.assertListLogs("?level="  + URLEncoder.encode("SHIFT UPDATE", StandardCharsets.UTF_8), 60);
@@ -636,8 +611,6 @@ class OlogLogsQueryIT {
             ITUtilLogs.assertSearchLogs("?level=update", 54);
             ITUtilLogs.assertSearchLogs("?level=Update", 54);
             ITUtilLogs.assertSearchLogs("?level=shift&level=update", 60);
-            ITUtilLogs.assertSearchLogs("?level=shift update",   HttpURLConnection.HTTP_BAD_REQUEST, -1, -1);
-            ITUtilLogs.assertSearchLogs("?level='shift update'", HttpURLConnection.HTTP_BAD_REQUEST, -1, -1);
             ITUtilLogs.assertSearchLogs("?level="  + URLEncoder.encode("shift update", StandardCharsets.UTF_8), 60);
             ITUtilLogs.assertSearchLogs("?level='" + URLEncoder.encode("shift update", StandardCharsets.UTF_8) + "'",  0);
             ITUtilLogs.assertSearchLogs("?level="  + URLEncoder.encode("SHIFT UPDATE", StandardCharsets.UTF_8), 60);

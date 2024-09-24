@@ -66,7 +66,7 @@ mvn clean install test-compile failsafe:integration-test failsafe:verify --batch
 To build and run all unit tests and integration tests (Docker) with code coverage.
 
 ```
-mvn clean install test-compile failsafe:integration-test failsafe:verify verify --batch-mode --fail-at-end -Djacoco.skip=false -DskipITs=false -DskipITCoverage=false -Pdeployable-jar -Pintegrationtest-docker
+mvn clean install test-compile failsafe:integration-test failsafe:verify --batch-mode --fail-at-end -Djacoco.skip=false -DskipITs=false -DskipITCoverage=false -Pdeployable-jar -Pintegrationtest-docker
 ```
 
 ### Note

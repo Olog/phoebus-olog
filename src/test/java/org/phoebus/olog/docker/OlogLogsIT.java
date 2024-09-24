@@ -29,7 +29,6 @@ import org.testcontainers.containers.ComposeContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.util.Arrays;
 import java.util.Set;
@@ -71,17 +70,14 @@ class OlogLogsIT {
     //     Olog - Service Documentation
     //         https://olog.readthedocs.io/en/latest/
     //     ------------------------------------------------------------------------------------------------
-    //     OLOG API                                                 LogbooksResource
-    //     --------------------                                     --------------------
-    //     Retrieve a Log                      .../logs/<id>        (GET)         getLog(String)
-    //     Retrieve attachment for Log         .../logs/attachments/{logId}/{attachmentName}
-    //                                                              (GET)         findResources(String, String)
-    //     List Logs / Query by Pattern        .../logs             (GET)         findAll()
-    //     Create a Log                        .../logs             (PUT)         createLog(String, Log, Principal)
-    //     Upload attachment                   .../logs/attachments/{logId}
-    //                                                              (POST)        uploadAttachment(String, MultipartFile, String, String, String)
-    //     Upload multiple attachments         .../logs/attachments-multi/{logId}
-    //                                                              (POST)        uploadMultipleAttachments(String, MultipartFile[])
+    //     OLOG API
+    //     --------------------
+    //     Retrieve a Log                      .../logs/<id>                                        GET
+    //     Retrieve attachment for Log         .../logs/attachments/{logId}/{attachmentName}        GET
+    //     List Logs / Query by Pattern        .../logs                                             GET
+    //     Create a Log                        .../logs                                             PUT
+    //     Upload attachment                   .../logs/attachments/{logId}                         POST
+    //     Upload multiple attachments         .../logs/attachments-multi/{logId}                   POST
     //     ------------------------------------------------------------------------------------------------
 
     @Container
@@ -97,11 +93,10 @@ class OlogLogsIT {
     @Test
     void ologUp() {
         try {
-            String address = ITUtil.HTTP_IP_PORT_OLOG;
-            int responseCode = ITUtil.doGet(address);
+            int responseCode = ITUtil.sendRequestStatusCode(ITUtil.HTTP_IP_PORT_OLOG);
 
             assertEquals(HttpURLConnection.HTTP_OK, responseCode);
-        } catch (IOException e) {
+        } catch (Exception e) {
             fail();
         }
     }
@@ -115,13 +110,6 @@ class OlogLogsIT {
         //     check(s) for retrieve log
         //         e.g.
         //             retrieve non-existing log
-        //     --------------------------------------------------------------------------------
-        //     x   Retrieve a Log
-        //         Retrieve attachment for Log
-        //         List Logs / Query by Pattern
-        //         Create a Log
-        //         Upload attachment
-        //         Upload multiple attachments
 
         ITUtilTags.assertRetrieveTag("/l11", HttpURLConnection.HTTP_NOT_FOUND);
     }
@@ -140,13 +128,6 @@ class OlogLogsIT {
         //                 name       - null, empty
         //                 owner      - null, empty
         //                 state      - null (empty, incorrect value (ok: Active, Inactive))
-        //     --------------------------------------------------------------------------------
-        //         Retrieve a Log
-        //         Retrieve attachment for Log
-        //     x   List Logs / Query by Pattern
-        //     x   Create a Log
-        //         Upload attachment
-        //         Upload multiple attachments
 
         String json_incomplete1 = "{\"incomplete\"}";
         String json_incomplete2 = "{\"incomplete\"";
@@ -187,13 +168,6 @@ class OlogLogsIT {
         //                 name       - null, empty
         //                 owner      - null, empty
         //                 state      - null (empty, incorrect value (ok: Active, Inactive))
-        //     --------------------------------------------------------------------------------
-        //         Retrieve a Log
-        //         Retrieve attachment for Log
-        //     x   List Logs / Query by Pattern
-        //     x   Create a Log
-        //         Upload attachment
-        //         Upload multiple attachments
 
         Log log_check = new Log.LogBuilder().build();
 

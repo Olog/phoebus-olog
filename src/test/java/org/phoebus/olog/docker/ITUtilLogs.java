@@ -22,7 +22,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
-import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.util.List;
 
@@ -33,7 +32,6 @@ import org.phoebus.olog.entity.Log;
 import org.phoebus.olog.entity.SearchResult;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Utility class to help (Docker) integration tests for Olog and Elasticsearch with focus on support test of behavior for log endpoints.
@@ -44,10 +42,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  */
 public class ITUtilLogs {
 
-    static final ObjectMapper mapper = new ObjectMapper();
-
-    static final Log[] LOGS_NULL = null;
-    static final Log   LOG_NULL  = null;
+	private static final Log   LOG_NULL  = null;
 
     /**
      * This class is not to be instantiated.
@@ -66,7 +61,7 @@ public class ITUtilLogs {
      */
     static String object2Json(Log value) {
         try {
-            return mapper.writeValueAsString(value);
+            return ITUtil.MAPPER.writeValueAsString(value);
         } catch (JsonProcessingException e) {
             fail();
         }
@@ -80,7 +75,7 @@ public class ITUtilLogs {
      */
     static String object2Json(Log[] value) {
         try {
-            return mapper.writeValueAsString(value);
+            return ITUtil.MAPPER.writeValueAsString(value);
         } catch (JsonProcessingException e) {
             fail();
         }
@@ -103,27 +98,21 @@ public class ITUtilLogs {
      * @param expected expected response log
      */
     public static Log assertRetrieveLog(String path, int expectedResponseCode, Log expected) {
+		Log actual = null;
     	try {
-    		String[] response = null;
-    		Log actual = null;
+            String[] response = ITUtil.sendRequest(ITUtil.HTTP_IP_PORT_OLOG_LOGS + path);
 
-    		response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + path);
     		ITUtil.assertResponseLength2Code(response, expectedResponseCode);
     		if (HttpURLConnection.HTTP_OK == expectedResponseCode) {
-    			actual = mapper.readValue(response[1], Log.class);
+    			actual = ITUtil.MAPPER.readValue(response[1], Log.class);
     		}
-
     		if (expected != null) {
     			assertEquals(expected, actual);
     		}
-
-    		return actual;
-    	} catch (IOException e) {
-    		fail();
     	} catch (Exception e) {
     		fail();
     	}
-    	return null;
+		return actual;
     }
 
     // ----------------------------------------------------------------------------------------------------
@@ -151,16 +140,14 @@ public class ITUtilLogs {
      * @return number of logs
      */
     public static Log[] assertListLogs(String queryString, int expectedResponseCode, int expectedGreaterThanOrEqual, int expectedLessThanOrEqual, Log... expected) {
+        Log[] actual = null;
         try {
-            String[] response = null;
-            Log[] actual = null;
+            String[] response = ITUtil.sendRequest(ITUtil.HTTP_IP_PORT_OLOG_LOGS + queryString);
 
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + queryString);
             ITUtil.assertResponseLength2Code(response, expectedResponseCode);
             if (HttpURLConnection.HTTP_OK == expectedResponseCode) {
-                actual = mapper.readValue(response[1], Log[].class);
+                actual = ITUtil.MAPPER.readValue(response[1], Log[].class);
             }
-
             // expected number of items in list
             //     (if non-negative number)
             //     expectedGreaterThanOrEqual <= nbr of items <= expectedLessThanOrEqual
@@ -170,19 +157,13 @@ public class ITUtilLogs {
             if (expectedLessThanOrEqual >= 0) {
                 assertTrue(actual.length <= expectedLessThanOrEqual);
             }
-
-            // expected content
             if (expected != null && expected.length > 0) {
                 ITUtil.assertEqualsLogs(actual, expected);
             }
-
-            return actual;
-        } catch (IOException e) {
-            fail();
         } catch (Exception e) {
             fail();
         }
-        return null;
+        return actual;
     }
 
     // ----------------------------------------------------------------------------------------------------
@@ -210,16 +191,14 @@ public class ITUtilLogs {
      * @return number of logs
      */
     public static SearchResult assertSearchLogs(String queryString, int expectedResponseCode, int expectedGreaterThanOrEqual, int expectedLessThanOrEqual, Log... expected) {
+        SearchResult actual = null;
         try {
-            String[] response = null;
-            SearchResult actual = null;
+            String[] response = ITUtil.sendRequest(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "/search" + queryString);
 
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGS + "/search" + queryString);
             ITUtil.assertResponseLength2Code(response, expectedResponseCode);
             if (HttpURLConnection.HTTP_OK == expectedResponseCode) {
-                actual = mapper.readValue(response[1], SearchResult.class);
+                actual = ITUtil.MAPPER.readValue(response[1], SearchResult.class);
             }
-
             // expected number of items in list
             //     (if non-negative number)
             //     expectedGreaterThanOrEqual <= nbr of items <= expectedLessThanOrEqual
@@ -229,19 +208,13 @@ public class ITUtilLogs {
             if (expectedLessThanOrEqual >= 0) {
                 assertTrue(actual.getHitCount() <= expectedLessThanOrEqual);
             }
-
-            // expected content
             if (expected != null && expected.length > 0) {
                 ITUtil.assertEqualsLogs((Log[]) actual.getLogs().toArray(), expected);
             }
-
-            return actual;
-        } catch (IOException e) {
-            fail();
         } catch (Exception e) {
             fail();
         }
-        return null;
+        return actual;
     }
 
     // ----------------------------------------------------------------------------------------------------
@@ -280,27 +253,21 @@ public class ITUtilLogs {
      * @param expected expected response log
      */
     public static Log assertCreateLog(AuthorizationChoice authorizationChoice, String path, String json, int expectedResponseCode, Log expected) {
+        Log actual = null;
         try {
-            String[] response = null;
-            Log actual = null;
+            String[] response = ITUtil.sendRequest(ITUtil.buildRequest(MethodChoice.PUT, authorizationChoice, EndpointChoice.LOGS, path, json));
 
-            response = ITUtil.runShellCommand(ITUtil.curlMethodAuthEndpointPathJson(MethodChoice.PUT, authorizationChoice, EndpointChoice.LOGS, path, json));
             ITUtil.assertResponseLength2Code(response, expectedResponseCode);
             if (HttpURLConnection.HTTP_OK == expectedResponseCode) {
-                actual = mapper.readValue(response[1], Log.class);
+                actual = ITUtil.MAPPER.readValue(response[1], Log.class);
             }
-
             if (expected != null) {
                 assertEquals(expected, actual);
             }
-
-            return actual;
-        } catch (IOException e) {
-            fail();
         } catch (Exception e) {
             fail();
         }
-        return null;
+        return actual;
     }
 
     // ----------------------------------------------------------------------------------------------------
@@ -322,27 +289,21 @@ public class ITUtilLogs {
      * @return
      */
     public static Log assertUpdateLog(AuthorizationChoice authorizationChoice, String path, String json, int expectedResponseCode, Log expected) {
+		Log actual = null;
     	try {
-    		String[] response = null;
-    		Log actual = null;
+            String[] response = ITUtil.sendRequest(ITUtil.buildRequest(MethodChoice.POST, authorizationChoice, EndpointChoice.LOGS, path, json));
 
-    		response = ITUtil.runShellCommand(ITUtil.curlMethodAuthEndpointPathJson(MethodChoice.POST, authorizationChoice, EndpointChoice.LOGS, path, json));
     		ITUtil.assertResponseLength2Code(response, expectedResponseCode);
     		if (HttpURLConnection.HTTP_OK == expectedResponseCode) {
-    			actual = mapper.readValue(response[1], Log.class);
+    			actual = ITUtil.MAPPER.readValue(response[1], Log.class);
     		}
-
     		if (expected != null) {
     			assertEquals(expected, actual);
     		}
-
-    		return actual;
-    	} catch (IOException e) {
-    		fail();
     	} catch (Exception e) {
     		fail();
     	}
-    	return null;
+		return actual;
     }
 
     // ----------------------------------------------------------------------------------------------------
@@ -362,37 +323,12 @@ public class ITUtilLogs {
      */
     public static void assertGroupLogs(AuthorizationChoice authorizationChoice, List<Long> logEntryIds, int expectedResponseCode) {
     	try {
-    		String[] response = null;
+            String[] response = ITUtil.sendRequest(ITUtil.buildRequest(MethodChoice.POST, authorizationChoice, EndpointChoice.LOGS, "/group", ITUtil.MAPPER.writeValueAsString(logEntryIds)));
 
-    		response = ITUtil.runShellCommand(ITUtil.curlMethodAuthEndpointPathJson(MethodChoice.POST, authorizationChoice, EndpointChoice.LOGS, "/group", mapper.writeValueAsString(logEntryIds)));
     		ITUtil.assertResponseLength2Code(response, expectedResponseCode);
-    	} catch (IOException e) {
-    		fail();
     	} catch (Exception e) {
     		fail();
     	}
-    }
-
-    // ----------------------------------------------------------------------------------------------------
-
-    /**
-     * Utility method to return curl to create log for regular user.
-     *
-     * @param logJson log json
-     * @return curl to create log
-     */
-    public static String createCurlLogForUser(String logJson) {
-        return "curl -H " + ITUtil.HEADER_JSON + " -XPUT -i " + ITUtil.HTTP_AUTH_USER_IP_PORT_OLOG_LOGS + " -d '" + logJson + "'";
-    }
-
-    /**
-     * Utility method to return curl to create log for admin user.
-     *
-     * @param logJson log json
-     * @return curl to create log
-     */
-    public static String createCurlLogForAdmin(String logJson) {
-        return "curl -H " + ITUtil.HEADER_JSON + " -XPUT -i " + ITUtil.HTTP_AUTH_ADMIN_IP_PORT_OLOG_LOGS + " -d '" + logJson + "'";
     }
 
 }

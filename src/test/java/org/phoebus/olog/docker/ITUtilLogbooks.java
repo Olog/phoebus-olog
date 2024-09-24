@@ -22,7 +22,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
-import java.io.IOException;
 import java.net.HttpURLConnection;
 
 import org.phoebus.olog.docker.ITUtil.AuthorizationChoice;
@@ -31,7 +30,6 @@ import org.phoebus.olog.docker.ITUtil.MethodChoice;
 import org.phoebus.olog.entity.Logbook;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Utility class to help (Docker) integration tests for Olog and Elasticsearch with focus on support test of behavior for logbook endpoints.
@@ -42,10 +40,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  */
 public class ITUtilLogbooks {
 
-    static final ObjectMapper mapper = new ObjectMapper();
-
-    static final Logbook[] LOGBOOKS_NULL = null;
-    static final Logbook   LOGBOOK_NULL  = null;
+    private static final Logbook[] LOGBOOKS_NULL = null;
+    private static final Logbook   LOGBOOK_NULL  = null;
 
     /**
      * This class is not to be instantiated.
@@ -64,7 +60,7 @@ public class ITUtilLogbooks {
      */
     static String object2Json(Logbook value) {
         try {
-            return mapper.writeValueAsString(value);
+            return ITUtil.MAPPER.writeValueAsString(value);
         } catch (JsonProcessingException e) {
             fail();
         }
@@ -78,7 +74,7 @@ public class ITUtilLogbooks {
      */
     static String object2Json(Logbook[] value) {
         try {
-            return mapper.writeValueAsString(value);
+            return ITUtil.MAPPER.writeValueAsString(value);
         } catch (JsonProcessingException e) {
             fail();
         }
@@ -107,27 +103,21 @@ public class ITUtilLogbooks {
      * @param expected expected response logbook
      */
     public static Logbook assertRetrieveLogbook(String path, int expectedResponseCode, Logbook expected) {
+        Logbook actual = null;
         try {
-            String[] response = null;
-            Logbook actual = null;
+            String[] response = ITUtil.sendRequest(ITUtil.HTTP_IP_PORT_OLOG_LOGBOOKS + path);
 
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGBOOKS + path);
             ITUtil.assertResponseLength2Code(response, expectedResponseCode);
             if (HttpURLConnection.HTTP_OK == expectedResponseCode) {
-                actual = mapper.readValue(response[1], Logbook.class);
+                actual = ITUtil.MAPPER.readValue(response[1], Logbook.class);
             }
-
             if (expected != null) {
                 assertEquals(expected, actual);
             }
-
-            return actual;
-        } catch (IOException e) {
-            fail();
         } catch (Exception e) {
             fail();
         }
-        return null;
+        return actual;
     }
 
     // ----------------------------------------------------------------------------------------------------
@@ -148,16 +138,14 @@ public class ITUtilLogbooks {
      * @return number of logbooks
      */
     public static Logbook[] assertListLogbooks(int expectedResponseCode, int expectedGreaterThanOrEqual, int expectedLessThanOrEqual, Logbook... expected) {
+        Logbook[] actual = null;
         try {
-            String[] response = null;
-            Logbook[] actual = null;
+            String[] response = ITUtil.sendRequest(ITUtil.HTTP_IP_PORT_OLOG_LOGBOOKS);
 
-            response = ITUtil.doGetJson(ITUtil.HTTP_IP_PORT_OLOG_LOGBOOKS);
             ITUtil.assertResponseLength2Code(response, expectedResponseCode);
             if (HttpURLConnection.HTTP_OK == expectedResponseCode) {
-                actual = mapper.readValue(response[1], Logbook[].class);
+                actual = ITUtil.MAPPER.readValue(response[1], Logbook[].class);
             }
-
             // expected number of items in list
             //     (if non-negative number)
             //     expectedGreaterThanOrEqual <= nbr of items <= expectedLessThanOrEqual
@@ -167,19 +155,13 @@ public class ITUtilLogbooks {
             if (expectedLessThanOrEqual >= 0) {
                 assertTrue(actual.length <= expectedLessThanOrEqual);
             }
-
-            // expected content
             if (expected != null && expected.length > 0) {
                 ITUtil.assertEqualsLogbooks(actual, expected);
             }
-
-            return actual;
-        } catch (IOException e) {
-            fail();
         } catch (Exception e) {
             fail();
         }
-        return null;
+        return actual;
     }
 
     // ----------------------------------------------------------------------------------------------------
@@ -218,27 +200,21 @@ public class ITUtilLogbooks {
      * @param expected expected response logbook
      */
     public static Logbook assertCreateLogbook(AuthorizationChoice authorizationChoice, String path, String json, int expectedResponseCode, Logbook expected) {
+        Logbook actual = null;
         try {
-            String[] response = null;
-            Logbook actual = null;
+            String[] response = ITUtil.sendRequest(ITUtil.buildRequest(MethodChoice.PUT, authorizationChoice, EndpointChoice.LOGBOOKS, path, json));
 
-            response = ITUtil.runShellCommand(ITUtil.curlMethodAuthEndpointPathJson(MethodChoice.PUT, authorizationChoice, EndpointChoice.LOGBOOKS, path, json));
             ITUtil.assertResponseLength2Code(response, expectedResponseCode);
             if (HttpURLConnection.HTTP_OK == expectedResponseCode) {
-                actual = mapper.readValue(response[1], Logbook.class);
+                actual = ITUtil.MAPPER.readValue(response[1], Logbook.class);
             }
-
             if (expected != null) {
                 assertEquals(expected, actual);
             }
-
-            return actual;
-        } catch (IOException e) {
-            fail();
         } catch (Exception e) {
             fail();
         }
-        return null;
+        return actual;
     }
 
     // ----------------------------------------------------------------------------------------------------
@@ -271,27 +247,21 @@ public class ITUtilLogbooks {
      * @param expected expected response logbooks
      */
     public static Logbook[] assertCreateLogbooks(AuthorizationChoice authorizationChoice, String path, String json, int expectedResponseCode, Logbook[] expected) {
+        Logbook[] actual = null;
         try {
-            String[] response = null;
-            Logbook[] actual = null;
+            String[] response = ITUtil.sendRequest(ITUtil.buildRequest(MethodChoice.PUT, authorizationChoice, EndpointChoice.LOGBOOKS, path, json));
 
-            response = ITUtil.runShellCommand(ITUtil.curlMethodAuthEndpointPathJson(MethodChoice.PUT, authorizationChoice, EndpointChoice.LOGBOOKS, path, json));
             ITUtil.assertResponseLength2Code(response, expectedResponseCode);
             if (HttpURLConnection.HTTP_OK == expectedResponseCode) {
-                actual = mapper.readValue(response[1], Logbook[].class);
+                actual = ITUtil.MAPPER.readValue(response[1], Logbook[].class);
             }
-
             if (expected != null) {
                 ITUtil.assertEqualsLogbooks(expected, actual);
             }
-
-            return actual;
-        } catch (IOException e) {
-            fail();
         } catch (Exception e) {
             fail();
         }
-        return null;
+        return actual;
     }
 
     // ----------------------------------------------------------------------------------------------------
@@ -311,12 +281,9 @@ public class ITUtilLogbooks {
      */
     public static void assertRemoveLogbook(AuthorizationChoice authorizationChoice, String path, int expectedResponseCode) {
         try {
-            String[] response = null;
+            String[] response = ITUtil.sendRequest(ITUtil.buildRequest(MethodChoice.DELETE, authorizationChoice, EndpointChoice.LOGBOOKS, path, null));
 
-            response = ITUtil.runShellCommand(ITUtil.curlMethodAuthEndpointPathJson(MethodChoice.DELETE, authorizationChoice, EndpointChoice.LOGBOOKS, path, null));
             ITUtil.assertResponseLength2Code(response, expectedResponseCode);
-        } catch (IOException e) {
-            fail();
         } catch (Exception e) {
             fail();
         }

@@ -28,7 +28,6 @@ import org.testcontainers.containers.ComposeContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import java.io.IOException;
 import java.net.HttpURLConnection;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -68,13 +67,13 @@ class OlogTagsIT {
     //     Olog - Service Documentation
     //         https://olog.readthedocs.io/en/latest/
     //     ------------------------------------------------------------------------------------------------
-    //     OLOG API                                     TagResource
-    //     --------------------                         --------------------
-    //     Retrieve a Tag        .../tags/<name>        (GET)           findByTitle(String)
-    //     List Tags             .../tags               (GET)           findAll()
-    //     Create a Tag          .../tags/<name>        (PUT)           createTag(String, Tag)
-    //     Create Tags           .../tags               (PUT)           updateTag(List<Tag>)
-    //     Remove Tag            .../tags/<name>        (DELETE)        deleteTag(String)
+    //     OLOG API
+    //     --------------------
+    //     Retrieve a Tag        .../tags/<name>        GET
+    //     List Tags             .../tags               GET
+    //     Create a Tag          .../tags/<name>        PUT
+    //     Create Tags           .../tags               PUT
+    //     Remove Tag            .../tags/<name>        DELETE
     //     ------------------------------------------------------------------------------------------------
 
     // test data
@@ -148,11 +147,10 @@ class OlogTagsIT {
     @Test
     void ologUp() {
         try {
-            String address = ITUtil.HTTP_IP_PORT_OLOG;
-            int responseCode = ITUtil.doGet(address);
+            int responseCode = ITUtil.sendRequestStatusCode(ITUtil.HTTP_IP_PORT_OLOG);
 
             assertEquals(HttpURLConnection.HTTP_OK, responseCode);
-        } catch (IOException e) {
+        } catch (Exception e) {
             fail();
         }
     }
@@ -166,12 +164,6 @@ class OlogTagsIT {
         //     check(s) for retrieve tag
         //         e.g.
         //             retrieve non-existing tag
-        //     --------------------------------------------------------------------------------
-        //     x   Retrieve a Tag
-        //         List Tags
-        //         Create a Tag
-        //         Create Tags
-        //         Remove Tag
 
         ITUtilTags.assertRetrieveTag("/t11", HttpURLConnection.HTTP_NOT_FOUND);
     }
@@ -185,12 +177,6 @@ class OlogTagsIT {
         //     check(s) for remove tag
         //         e.g.
         //             remove non-existing tag
-        //     --------------------------------------------------------------------------------
-        //         Retrieve a Tag
-        //         List Tags
-        //         Create a Tag
-        //         Create Tags
-        //     x   Remove Tag
 
         // might be both 401, 404
         //     401 UNAUTHORIZED
@@ -215,12 +201,6 @@ class OlogTagsIT {
         //                 json       - incomplete
         //                 name       - null, empty
         //                 state      - null, (empty, incorrect value (ok: Active, Inactive))
-        //     --------------------------------------------------------------------------------
-        //         Retrieve a Tag
-        //     x   List Tags
-        //     x   Create a Tag
-        //         Create Tags
-        //         Remove Tag
 
         String json_incomplete1 = "{\"incomplete\"}";
         String json_incomplete2 = "{\"incomplete\"";
@@ -265,12 +245,6 @@ class OlogTagsIT {
         //                 json       - incomplete
         //                 name       - null, empty
         //                 state      - null, (empty, incorrect value (ok: Active, Inactive))
-        //     --------------------------------------------------------------------------------
-        //         Retrieve a Tag
-        //     x   List Tags
-        //     x   Create a Tag
-        //         Create Tags
-        //         Remove Tag
 
         Tag tag_check = new Tag();
 
@@ -301,14 +275,7 @@ class OlogTagsIT {
         // what
         //     user with required role TagMod
         //     create tag
-        //     --------------------------------------------------------------------------------
-        //     list, create, list/retrieve, remove (unauthorized), remove, retrieve/list
-        //     --------------------------------------------------------------------------------
-        //     x   Retrieve a Tag
-        //     x   List Tags
-        //     x   Create a Tag
-        //         Create Tags
-        //     x   Remove Tag
+        //         list, create, list/retrieve, remove (unauthorized), remove, retrieve/list
 
         try {
             ITUtilTags.assertListTags(1, default_tags[0]);
@@ -335,8 +302,6 @@ class OlogTagsIT {
             ITUtilTags.assertRetrieveTag("/t1", tag_t1_state_i);
 
             ITUtilTags.assertListTags(1, default_tags[0]);
-        } catch (IOException e) {
-            fail();
         } catch (Exception e) {
             fail();
         }
@@ -349,14 +314,7 @@ class OlogTagsIT {
     void handleTag2() {
         // what
         //     create tags, one by one
-        //     --------------------------------------------------------------------------------
-        //     list, create (2), list/retrieve, remove, list/retrieve, remove, retrieve/list
-        //     --------------------------------------------------------------------------------
-        //     x   Retrieve a Tag
-        //     x   List Tags
-        //     x   Create a Tag
-        //         Create Tags
-        //     x   Remove Tag
+        //         list, create (2), list/retrieve, remove, list/retrieve, remove, retrieve/list
 
         try {
             ITUtilTags.assertListTags(1, default_tags[0]);
@@ -394,8 +352,6 @@ class OlogTagsIT {
             ITUtilTags.assertRetrieveTag("/t2", tag_t2_state_i);
 
             ITUtilTags.assertListTags(1, default_tags[0]);
-        } catch (IOException e) {
-            fail();
         } catch (Exception e) {
             fail();
         }
@@ -408,14 +364,7 @@ class OlogTagsIT {
     void handleTag3ChangeState() {
         // what
         //     replace tag, change state
-        //     --------------------------------------------------------------------------------
-        //     list, create, list/retrieve, update, list/retrieve, remove, retrieve/list
-        //     --------------------------------------------------------------------------------
-        //     x   Retrieve a Tag
-        //     x   List Tags
-        //     x   Create a Tag
-        //         Create Tags
-        //     x   Remove Tag
+        //         list, create, list/retrieve, update, list/retrieve, remove, retrieve/list
 
         try {
             ITUtilTags.assertListTags(1, default_tags[0]);
@@ -448,8 +397,6 @@ class OlogTagsIT {
             ITUtilTags.assertRetrieveTag("/t1", tag_t1_state_i);
 
             ITUtilTags.assertListTags(1, default_tags[0]);
-        } catch (IOException e) {
-            fail();
         } catch (Exception e) {
             fail();
         }
@@ -468,12 +415,6 @@ class OlogTagsIT {
         //                 json       - incomplete
         //                 name       - null, empty
         //                 state      - null, (empty, incorrect value (ok: Active, Inactive))
-        //     --------------------------------------------------------------------------------
-        //         Retrieve a Tag
-        //     x   List Tags
-        //         Create a Tag
-        //     x   Create Tags
-        //         Remove Tag
 
         Tag tag_check = new Tag();
         Tag[] tags = new Tag[] {
@@ -514,14 +455,7 @@ class OlogTagsIT {
     void handleTags() {
         // what
         //     create tags
-        //     --------------------------------------------------------------------------------
-        //     list, create (10), list/retrieve, delete (5), list/retrieve, delete (5), retrieve/list
-        //     --------------------------------------------------------------------------------
-        //     x   Retrieve a Tag
-        //     x   List Tags
-        //         Create a Tag
-        //     x   Create Tags
-        //     x   Remove Tag
+        //         list, create (10), list/retrieve, delete (5), list/retrieve, delete (5), retrieve/list
 
         Tag[] tags_active_inactive = new Tag[] {
                 tag_t1_state_a,
@@ -587,8 +521,6 @@ class OlogTagsIT {
             ITUtil.assertRefreshElasticIndices();
 
             ITUtilTags.assertListTags(1, default_tags[0]);
-        } catch (IOException e) {
-            fail();
         } catch (Exception e) {
             fail();
         }

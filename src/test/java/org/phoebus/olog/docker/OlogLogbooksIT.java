@@ -28,7 +28,6 @@ import org.testcontainers.containers.ComposeContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import java.io.IOException;
 import java.net.HttpURLConnection;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -68,13 +67,13 @@ class OlogLogbooksIT {
     //     Olog - Service Documentation
     //         https://olog.readthedocs.io/en/latest/
     //     ------------------------------------------------------------------------------------------------
-    //     OLOG API                                             LogbooksResource
-    //     --------------------                                 --------------------
-    //     Retrieve a Logbook        .../logbooks/<name>        (GET)           findByTitle(String)
-    //     List Logbooks             .../logbooks               (GET)           findAll()
-    //     Create a Logbook          .../logbooks/<name>        (PUT)           createLogbook(String, Logbook, Principal)
-    //     Create Logbooks           .../logbooks               (PUT)           updateLogbooks(List<Logbook>)
-    //     Remove Logbook            .../logbooks/<name>        (DELETE)        deleteLogbook(String)
+    //     OLOG API
+    //     --------------------
+    //     Retrieve a Logbook        .../logbooks/<name>        GET
+    //     List Logbooks             .../logbooks               GET
+    //     Create a Logbook          .../logbooks/<name>        PUT
+    //     Create Logbooks           .../logbooks               PUT
+    //     Remove Logbook            .../logbooks/<name>        DELETE
     //     ------------------------------------------------------------------------------------------------
 
     // test data
@@ -150,11 +149,10 @@ class OlogLogbooksIT {
     @Test
     void ologUp() {
         try {
-            String address = ITUtil.HTTP_IP_PORT_OLOG;
-            int responseCode = ITUtil.doGet(address);
+            int responseCode = ITUtil.sendRequestStatusCode(ITUtil.HTTP_IP_PORT_OLOG);
 
             assertEquals(HttpURLConnection.HTTP_OK, responseCode);
-        } catch (IOException e) {
+        } catch (Exception e) {
             fail();
         }
     }
@@ -168,12 +166,6 @@ class OlogLogbooksIT {
         //     check(s) for retrieve logbook
         //         e.g.
         //             retrieve non-existing logbook
-        //     --------------------------------------------------------------------------------
-        //     x   Retrieve a Logbook
-        //         List Logbooks
-        //         Create a Logbook
-        //         Create Logbooks
-        //         Remove Logbook
 
         ITUtilLogbooks.assertRetrieveLogbook("/l11", HttpURLConnection.HTTP_NOT_FOUND);
     }
@@ -187,12 +179,6 @@ class OlogLogbooksIT {
         //     check(s) for remove logbook
         //         e.g.
         //             remove non-existing logbook
-        //     --------------------------------------------------------------------------------
-        //         Retrieve a Logbook
-        //         List Logbooks
-        //         Create a Logbook
-        //         Create Logbooks
-        //     x   Remove Logbook
 
         // might be both 401, 404
         //     401 UNAUTHORIZED
@@ -218,12 +204,6 @@ class OlogLogbooksIT {
         //                 name       - null, empty
         //                 owner      - null, empty
         //                 state      - null (empty, incorrect value (ok: Active, Inactive))
-        //     --------------------------------------------------------------------------------
-        //         Retrieve a Logbook
-        //     x   List Logbooks
-        //     x   Create a Logbook
-        //         Create Logbooks
-        //         Remove Logbook
 
         String json_incomplete1 = "{\"incomplete\"}";
         String json_incomplete2 = "{\"incomplete\"";
@@ -259,8 +239,6 @@ class OlogLogbooksIT {
             ITUtilLogbooks.assertListLogbooks(2,
                     default_logbooks[1],
                     default_logbooks[0]);
-        } catch (IOException e) {
-            fail();
         } catch (Exception e) {
             fail();
         }
@@ -280,12 +258,6 @@ class OlogLogbooksIT {
         //                 name       - null, empty
         //                 owner      - null, empty
         //                 state      - null (empty, incorrect value (ok: Active, Inactive))
-        //     --------------------------------------------------------------------------------
-        //         Retrieve a Logbook
-        //     x   List Logbooks
-        //     x   Create a Logbook
-        //         Create Logbooks
-        //         Remove Logbook
 
         Logbook logbook_check = new Logbook();
 
@@ -320,14 +292,7 @@ class OlogLogbooksIT {
         // what
         //     user with required role
         //     create tag
-        //     --------------------------------------------------------------------------------
-        //     list, create, list/retrieve, remove (unauthorized), remove, retrieve/list
-        //     --------------------------------------------------------------------------------
-        //     x   Retrieve a Logbook
-        //     x   List Logbooks
-        //     x   Create a Logbook
-        //         Create Logbooks
-        //     x   Remove Logbook
+        //         list, create, list/retrieve, remove (unauthorized), remove, retrieve/list
 
         try {
             ITUtilLogbooks.assertListLogbooks(2,
@@ -359,8 +324,6 @@ class OlogLogbooksIT {
             ITUtilLogbooks.assertListLogbooks(2,
                     default_logbooks[1],
                     default_logbooks[0]);
-        } catch (IOException e) {
-            fail();
         } catch (Exception e) {
             fail();
         }
@@ -373,14 +336,7 @@ class OlogLogbooksIT {
     void handleLogbook2() {
         // what
         //     create logbooks, one by one
-        //     --------------------------------------------------------------------------------
-        //     list, create (2), list/retrieve, remove, list/retrieve, remove, retrieve/list
-        //     --------------------------------------------------------------------------------
-        //     x   Retrieve a Logbook
-        //     x   List Logbooks
-        //     x   Create a Logbook
-        //         Create Logbooks
-        //     x   Remove Logbook
+        //         list, create (2), list/retrieve, remove, list/retrieve, remove, retrieve/list
 
         try {
             ITUtilLogbooks.assertListLogbooks(2,
@@ -424,8 +380,6 @@ class OlogLogbooksIT {
             ITUtilLogbooks.assertListLogbooks(2,
                     default_logbooks[1],
                     default_logbooks[0]);
-        } catch (IOException e) {
-            fail();
         } catch (Exception e) {
             fail();
         }
@@ -438,14 +392,7 @@ class OlogLogbooksIT {
     void handleLogbook3ChangeState() {
         // what
         //     replace logbook, change state
-        //     --------------------------------------------------------------------------------
-        //     list, create, list/retrieve, update, list/retrieve, remove, retrieve/list
-        //     --------------------------------------------------------------------------------
-        //     x   Retrieve a Logbook
-        //     x   List Logbooks
-        //     x   Create a Logbook
-        //         Create Logbooks
-        //     x   Remove Logbook
+        //         list, create, list/retrieve, update, list/retrieve, remove, retrieve/list
 
         try {
             ITUtilLogbooks.assertListLogbooks(2,
@@ -485,8 +432,6 @@ class OlogLogbooksIT {
             ITUtilLogbooks.assertListLogbooks(2,
                     default_logbooks[1],
                     default_logbooks[0]);
-        } catch (IOException e) {
-            fail();
         } catch (Exception e) {
             fail();
         }
@@ -506,12 +451,6 @@ class OlogLogbooksIT {
         //                 name       - null, empty
         //                 owner      - null, empty
         //                 state      - null, (empty, incorrect value (ok: Active, Inactive))
-        //     --------------------------------------------------------------------------------
-        //         Retrieve a Logbook
-        //     x   List Logbooks
-        //         Create a Logbook
-        //     x   Create Logbooks
-        //         Remove Logbook
 
         Logbook logbook_check = new Logbook();
         Logbook[] logbooks = new Logbook[] {
@@ -556,14 +495,7 @@ class OlogLogbooksIT {
     void handleLogbooks() {
         // what
         //     create logbooks
-        //     --------------------------------------------------------------------------------
-        //     list, create (10), list/retrieve, delete (5), list/retrieve, delete (5), retrieve/list
-        //     --------------------------------------------------------------------------------
-        //     x   Retrieve a Logbook
-        //     x   List Logbooks
-        //         Create a Logbook
-        //     x   Create Logbooks
-        //     x   Remove Logbook
+        //         list, create (10), list/retrieve, delete (5), list/retrieve, delete (5), retrieve/list
 
         Logbook[] logbooks_active_inactive = new Logbook[] {
                 logbook_l1_owner_a_state_a,
@@ -635,8 +567,6 @@ class OlogLogbooksIT {
             ITUtilLogbooks.assertListLogbooks(2,
                     default_logbooks[1],
                     default_logbooks[0]);
-        } catch (IOException e) {
-            fail();
         } catch (Exception e) {
             fail();
         }
