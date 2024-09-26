@@ -50,7 +50,7 @@ mvn org.springframework.boot:spring-boot-maven-plugin:run
 Once the service is running, the service consists of a welcome page `http://localhost:8080/Olog` 
 
 ```
-$ curl http://localhost:9090/Olog
+$ curl http://localhost:8080/Olog
 {
   "name" : "Olog Service",
   "version" : "5.0.0-SNAPSHOT",
@@ -77,7 +77,7 @@ backends.
 An example for testing the creation of a single test log entry with the demo credentials 
 
 ```
-curl --location --insecure --request PUT 'https://localhost:9191/Olog/logs' \
+curl --location --insecure --request PUT 'https://localhost:8181/Olog/logs' \
 --header 'Content-Type: application/json' \
 --header 'Authorization: Basic YWRtaW46YWRtaW5QYXNz' \
 --data '{
