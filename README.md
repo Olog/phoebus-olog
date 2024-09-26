@@ -48,9 +48,46 @@ mvn org.springframework.boot:spring-boot-maven-plugin:run
 #### Check if service is running
 
 Once the service is running, the service consists of a welcome page `http://localhost:8080/Olog` 
-which will provide information about the version of the Olog service running,
+
+```
+$ curl http://localhost:9090/Olog
+{
+  "name" : "Olog Service",
+  "version" : "5.0.0-SNAPSHOT",
+  "elastic" : {
+    "status" : "Connected",
+    "clusterName" : "elastic-nasa",
+    "clusterUuid" : "QNeYpFlWRueYPH3uXGUiGw",
+    "version" : "co.elastic.clients.elasticsearch._types.ElasticsearchVersionInfo@79c2137f",
+    "elasticHost" : "localhost",
+    "elasticPort" : "9200"
+  },
+  "mongoDB" : "{type=STANDALONE, servers=[{address=localhost:27017, type=STANDALONE, roundTripTime=1.2 ms, state=CONNECTED}]",
+  "serverConfig" : {
+    "maxFileSize" : 50.0,
+    "maxRequestSize" : 100.0
+  }
+}
+```
+
+This will provide information about the version of the Olog service running,
 along with information about the version and connection status of the elastic and mongo
 backends.
+
+An example for testing the creation of a single test log entry with the demo credentials 
+
+```
+curl --location --insecure --request PUT 'https://localhost:9191/Olog/logs' \
+--header 'Content-Type: application/json' \
+--header 'Authorization: Basic YWRtaW46YWRtaW5QYXNz' \
+--data '{
+             "owner": "test-owner",
+             "source": "This is an test entry",
+             "title": "Tes title",
+             "level": "Info",
+             "logbooks": [{"name": "operations","owner": "olog-logs"}]
+         }'
+```
 
 ### Running using Docker Compose
 
