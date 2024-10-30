@@ -18,9 +18,8 @@
 
 package org.phoebus.olog;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.phoebus.olog.entity.UserData;
+import org.phoebus.olog.security.LoginCredentials;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -29,41 +28,42 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.session.FindByIndexNameSessionRepository;
 import org.springframework.session.Session;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
-
-import static org.phoebus.olog.OlogResourceDescriptors.OLOG_SERVICE;
-
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static org.phoebus.olog.OlogResourceDescriptors.OLOG_SERVICE;
+
 
 @Controller
 @RequestMapping(OLOG_SERVICE)
 public class AuthenticationResource {
 
+    @SuppressWarnings("unused")
     @Autowired
     private AuthenticationManager authenticationManager;
 
+    @SuppressWarnings("unused")
     @Autowired
-    private FindByIndexNameSessionRepository sessionRepository;
+    private FindByIndexNameSessionRepository<Session> sessionRepository;
 
+    @SuppressWarnings("unused")
     @Value("${spring.session.timeout:30}")
     private int sessionTimeout;
-
-    private ObjectMapper objectMapper = new ObjectMapper();
 
     public static final int ONE_YEAR = 60 * 60 * 24 * 365;
 
@@ -73,18 +73,17 @@ public class AuthenticationResource {
      * This endpoint can be used by a form-based login, or a POST where username
      * and password are specified as request parameters.
      *
-     * @param userName The user principal name
-     * @param password User's password
-     * @param response {@link HttpServletResponse} to which a session cookie is
-     *                 attached upon successful authentication.
+     * @param loginCredentials User's credentials
+     * @param response         {@link HttpServletResponse} to which a session cookie is
+     *                         attached upon successful authentication.
      * @return A {@link ResponseEntity} carrying a {@link UserData} object if the login was successful,
      * otherwise the body will be <code>null</code>.
      */
+    @SuppressWarnings("unused")
     @PostMapping(value = "login")
-    public ResponseEntity<UserData> login(@RequestParam(value = "username") String userName,
-                                          @RequestParam(value = "password") String password,
+    public ResponseEntity<UserData> login(@RequestBody LoginCredentials loginCredentials,
                                           HttpServletResponse response) {
-        Authentication authentication = new UsernamePasswordAuthenticationToken(userName, password);
+        Authentication authentication = new UsernamePasswordAuthenticationToken(loginCredentials.username(), loginCredentials.password());
         try {
             authentication = authenticationManager.authenticate(authentication);
         } catch (AuthenticationException e) {
@@ -93,28 +92,29 @@ public class AuthenticationResource {
                     HttpStatus.UNAUTHORIZED);
         }
         List<String> roles = authentication.getAuthorities().stream()
-                .map(authority -> authority.getAuthority()).collect(Collectors.toList());
-        Session session = findOrCreateSession(userName, roles);
+                .map(GrantedAuthority::getAuthority).collect(Collectors.toList());
+        Session session = findOrCreateSession(loginCredentials.username(), roles);
         session.setLastAccessedTime(Instant.now());
         sessionRepository.save(session);
         Cookie cookie = new Cookie(WebSecurityConfig.SESSION_COOKIE_NAME, session.getId());
-        if(sessionTimeout < 0){
+        if (sessionTimeout < 0) {
             cookie.setMaxAge(ONE_YEAR); // Cannot set infinite on Cookie, so 1 year.
-        }
-        else{
+        } else {
             cookie.setMaxAge(60 * sessionTimeout); // sessionTimeout is in minutes.
         }
         response.addCookie(cookie);
         return new ResponseEntity<>(
-                new UserData(userName, roles),
+                new UserData(loginCredentials.username(), roles),
                 HttpStatus.OK);
     }
 
     /**
      * Deletes a session identified by the session cookie, if present in the request.
+     *
      * @param cookieValue An optional cookie value.
      * @return A {@link ResponseEntity} with empty body.
      */
+    @SuppressWarnings("unused")
     @GetMapping(value = "logout")
     public ResponseEntity<String> logout(@CookieValue(value = WebSecurityConfig.SESSION_COOKIE_NAME, required = false) String cookieValue) {
         if (cookieValue != null) {
@@ -124,12 +124,13 @@ public class AuthenticationResource {
     }
 
     /**
-     * Returns a {@link UserData} object populated with user name and roles. If the session cookie
+     * Returns a {@link UserData} object populated with username and roles. If the session cookie
      * is missing from the request, the {@link UserData} object fields are set to <code>null</code>.
      *
      * @param cookieValue An optional cookie value.
      * @return A {@link ResponseEntity} containing {@link UserData}, if any is found.
      */
+    @SuppressWarnings("unused")
     @GetMapping(value = "user")
     public ResponseEntity<UserData> getCurrentUser(@CookieValue(value = WebSecurityConfig.SESSION_COOKIE_NAME,
             required = false) String cookieValue) {
@@ -147,24 +148,24 @@ public class AuthenticationResource {
 
     /**
      * Creates a session or returns an existing one if a non-expired one is found in the session repository.
-     * This is synchronized so that a user name is always associated with one session, irrespective of the
+     * This is synchronized so that a username is always associated with one session, irrespective of the
      * number of logins from clients.
-     * @param userName A user name
-     * @param roles List of user roles
+     *
+     * @param userName A username
+     * @param roles    List of user roles
      * @return A {@link Session} object.
      */
-    protected synchronized Session findOrCreateSession(String userName, List<String> roles){
+    protected synchronized Session findOrCreateSession(String userName, List<String> roles) {
         Session session;
         Map<String, Session> sessions = sessionRepository.findByPrincipalName(userName);
-        if(!sessions.isEmpty()){
-            // Get the first object in the map. Since a given user name should always use the same session,
+        if (!sessions.isEmpty()) {
+            // Get the first object in the map. Since a given username should always use the same session,
             // the sessions maps should have only one element. However, an existing session may have
             // expired, so this must be checked as well.
             session = sessions.entrySet().iterator().next().getValue();
-            if(session.isExpired()){
+            if (session.isExpired()) {
                 sessionRepository.deleteById(session.getId());
-            }
-            else{
+            } else {
                 return session;
             }
         }
