@@ -449,10 +449,20 @@ Create multiple properties
  
 `Javadocs <apidocs/index.html>`_
 
+Authentication
+##############
 
+In general, non-GET methods are protected, i.e. client needs to send a basic authentication header for each request.
+Alternatively, client may use a session cookie returned upon successful authentication with the login endpoint:
+
+**POST** https://localhost:8181/Olog/login
+
+.. code-block:: json
+
+{"username":"johndoe", "password":"undisclosed"}
 
 Developer Documentation:
-#########################
+########################
 
 .. toctree::
    :maxdepth: 1
