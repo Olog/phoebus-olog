@@ -20,6 +20,7 @@ package org.phoebus.olog;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.phoebus.olog.security.LoginCredentials;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -64,7 +65,9 @@ class AuthenticationResourceInifiniteSessionTest extends ResourcesTestBase {
         when(mockAuthentication.getAuthorities()).thenReturn(authorities);
         Authentication authentication = new UsernamePasswordAuthenticationToken("admin", "adminPass");
         when(authenticationManager.authenticate(authentication)).thenReturn(mockAuthentication);
-        MockHttpServletRequestBuilder request = post("/" + OLOG_SERVICE + "/login?username=admin&password=adminPass");
+        MockHttpServletRequestBuilder request = post("/" + OLOG_SERVICE + "/login")
+                .contentType("application/json")
+                .content(objectMapper.writeValueAsString(new LoginCredentials("admin", "adminPass")));
         MvcResult result = mockMvc.perform(request).andExpect(status().isOk())
                 .andReturn();
         Cookie cookie = result.getResponse().getCookie("SESSION");

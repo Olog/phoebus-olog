@@ -104,7 +104,7 @@ public class AuthenticationResource {
         }
         response.addCookie(cookie);
         return new ResponseEntity<>(
-                new UserData(loginCredentials.password(), roles),
+                new UserData(loginCredentials.username(), roles),
                 HttpStatus.OK);
     }
 
