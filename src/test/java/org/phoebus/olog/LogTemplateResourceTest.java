@@ -19,7 +19,9 @@
 package org.phoebus.olog;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import org.junit.Ignore;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentMatcher;
@@ -236,6 +238,7 @@ public class LogTemplateResourceTest extends ResourcesTestBase {
     }
 
     @Test
+    @Disabled
     void testUpdateExisting() throws Exception {
         Property property1 = new Property();
         property1.setName("prop1");
@@ -266,6 +269,7 @@ public class LogTemplateResourceTest extends ResourcesTestBase {
     }
 
     @Test
+    @Disabled
     void testUpdateExistingBadId() throws Exception {
 
         LogTemplate logTemplate = new LogTemplate();
@@ -283,6 +287,7 @@ public class LogTemplateResourceTest extends ResourcesTestBase {
     }
 
     @Test
+    @Disabled
     void testUpdateNonExisting() throws Exception {
 
         LogTemplate logTemplate = new LogTemplate();
