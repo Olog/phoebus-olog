@@ -110,6 +110,7 @@ public class LogTemplateResource {
         return newLogTemplate;
     }
 
+
     /**
      * Updates existing log template. Data sent by client is saved, i.e. if client specifies a shorter list
      * of logbooks or tags, the updated log record will reflect that. However, the following data is NOT updated:
@@ -124,6 +125,7 @@ public class LogTemplateResource {
      * @return The updated log record, or HTTP status 404 if the log template does not exist. If the path
      * variable does not match the id in the log record, HTTP status 400 (bad request) is returned.
      */
+    /*
     @SuppressWarnings("unused")
     @PostMapping("/{logTemplateId}")
     public Log updateLog(@PathVariable String logTemplateId,
@@ -152,6 +154,8 @@ public class LogTemplateResource {
         return logTemplateRepository.update(persistedLogTemplate);
 
     }
+
+     */
 
     /**
      * @return A potentially empty {@link List} of all existing {@link LogTemplate}s.
