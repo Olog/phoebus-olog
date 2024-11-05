@@ -38,9 +38,9 @@ import java.util.stream.Collectors;
 import static org.phoebus.olog.OlogResourceDescriptors.LOG_TEMPLATE_RESOURCE_URI;
 
 /**
- * Resource for handling the requests to ../logs
+ * Resource for handling the requests to ../templates
  *
- * @author kunal
+ * @author georgweiss
  */
 @RestController
 @RequestMapping(LOG_TEMPLATE_RESOURCE_URI)
@@ -63,17 +63,11 @@ public class LogTemplateResource {
     }
 
     /**
-     * Creates a new log entry. If the <code>inReplyTo</code> parameters identifies an existing log entry,
-     * this method will treat the new log entry as a reply.
-     * <p>
-     * This may return a HTTP 400 if for instance <code>inReplyTo</code> does not identify an existing log entry,
-     * or if the logbooks listed in the {@link Log} object contains invalid (i.e. non-existing) logbooks.
-     * </p>
-     * <p>Client calling this endpoint <b>must</b> set Content-Type=multipart/form-data.</p>
-     *
+     * Creates a new {@link LogTemplate}.
+
      * @param logTemplate A {@link LogTemplate} object to be persisted.
      * @param principal   The authenticated {@link Principal} of the request.
-     * @return The persisted {@link Log} object.
+     * @return The persisted {@link LogTemplate} object.
      */
     @SuppressWarnings("unused")
     @PutMapping()
@@ -112,17 +106,13 @@ public class LogTemplateResource {
 
 
     /**
-     * Updates existing log template. Data sent by client is saved, i.e. if client specifies a shorter list
-     * of logbooks or tags, the updated log record will reflect that. However, the following data is NOT updated:
-     * <ul>
-     *     <li>Created date</li>
-     * </ul>
+     * Updates existing {@link LogTemplate}.
      *
      * @param logTemplateId The id of the template subject to update. It must exist, i.e. it is not created of not found.
      * @param markup        Markup strategy, if any.
-     * @param logTemplate   The log template data as sent by client.
+     * @param logTemplate   The {@link LogTemplate} as sent by client.
      * @param principal     The authenticated {@link Principal} of the request.
-     * @return The updated log record, or HTTP status 404 if the log template does not exist. If the path
+     * @return The updated {@link LogTemplate} record, or HTTP status 404 if the log template does not exist. If the path
      * variable does not match the id in the log record, HTTP status 400 (bad request) is returned.
      */
     /*

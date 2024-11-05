@@ -38,7 +38,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-
+/**
+ * {@link org.springframework.data.repository.Repository} for {@link LogTemplate}s.
+ */
 @Repository
 public class LogTemplateRepository implements CrudRepository<LogTemplate, String> {
 

@@ -63,8 +63,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Tests {@link Log} resource endpoints. The authentication scheme used is the
- * hard coded user/userPass credentials. The {@link LogRepository} is mocked.
+ * Tests {@link LogTemplate} resource endpoints. The authentication scheme used is the
+ * hard coded user/userPass credentials. The {@link LogTemplateRepository} is mocked.
  */
 @ExtendWith(SpringExtension.class)
 @ContextHierarchy({@ContextConfiguration(classes = {ResourcesTestConfig.class})})
