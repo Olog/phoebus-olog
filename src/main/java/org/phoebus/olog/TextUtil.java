@@ -87,8 +87,11 @@ public class TextUtil {
     public static final String LOG_ENTRY_NOTIFIER                       = "LogEntryNotifier {0} throws exception";
     public static final String LOG_ENTRY_ID_CREATED_FROM                = "Entry id {0} created from {1}";
     public static final String LOG_ENTRY_NOT_MATCH_PATH                 = "Log entry id does not match path variable";
+    public static final String LOG_TEMPLATE_NOT_MATCH_PATH              = "Log template id does not match path variable";
+    public static final String LOG_TEMPLATE_CREATED                     = "Log template {0} created {1}";
 
     public static final String LOG_EXISTS_FAILED                        = "Failed to check if log {0} exists";
+    public static final String LOG_TEMPLATE_EXISTS_UNSUPPORTED          = "Check if template exists not supported";
     public static final String LOG_ID_NOT_FOUND                         = "Log id {0} not found";
     public static final String LOG_INVALID_LOGBOOKS                     = "One or more invalid logbook name(s)";
     public static final String LOG_INVALID_TAGS                         = "One or more invalid tag name(s)";
@@ -96,15 +99,25 @@ public class TextUtil {
     public static final String LOG_MUST_HAVE_TITLE                      = "A log entry must specify a title";
     public static final String LOG_NOT_ARCHIVED                         = "Failed to archive log with id {0}";
     public static final String LOG_NOT_FOUND                            = "Failed to find log {0}";
+    public static final String LOG_TEMPLATE_NOT_FOUND                   = "Failed to find template {0}";
+    public static final String LOG_TEMPLATES_NOT_RETRIEVED              = "Failed to get all log templates";
     public static final String LOG_NOT_RETRIEVED                        = "Failed to retrieve log with id {0}";
+    public static final String LOG_TEMPLATE_NOT_RETRIEVED               = "Failed to retrieve template with id {0}";
     public static final String LOG_NOT_SAVED                            = "Failed to save log entry {0}";
     public static final String LOG_NOT_TITLE                            = "Log title empty";
     public static final String LOG_NOT_UPDATED                          = "Failed to update log entry {0}";
+    public static final String LOG_TEMPLATE_NOT_SAVED                   = "Failed to save log template {0}";
+    public static final String LOG_TEMPLATE_NOT_UPDATED                 = "Failed to update log template {0}";
+    public static final String LOG_TEMPLATE_DELETED                     = "Log template {0} deleted";
+    public static final String LOG_TEMPLATE_NOT_DELETED                 = "Log template {0} not deleted";
+    public static final String LOG_TEMPLATE_DELETE_ALL_NOT_SUPPORTED    = "Delete all templates not supported";
 
     public static final String LOGS_DELETE_NOT_SUPPORTED                = "Deleting log entries is not supported";
     public static final String LOGS_NOT_FOUND                           = "Failed to find logs {0}";
     public static final String LOGS_RETRIEVE_ALL_NOT_SUPPORTED          = "Retrieving all log entries is not supported. Use Search with scroll";
     public static final String LOGS_SEARCH_NOT_COMPLETED                = "Failed to complete search for archived logs";
+    public static final String LOG_TEMPLATES_FIND_ALL_BY_ID             = "Find all templates by id not supported";
+    public static final String LOG_TEMPLATES_SAVE_ALL                   = "Save all templates not supported";
 
     public static final String PROPERTY_ATTRIBUTE_DELETE                = "Deleted property attribute {0}";
     public static final String PROPERTY_ATTRIBUTE_CANNOT_DELETE         = "Cannot delete attribute {0} from property {1} as the property does not exist";

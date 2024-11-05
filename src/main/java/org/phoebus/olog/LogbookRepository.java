@@ -47,13 +47,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import static org.phoebus.olog.ElasticConfig.ES_LOGBOOK_INDEX;
+
 @Repository
 public class LogbookRepository implements CrudRepository<Logbook, String> {
 
-    // Read the elastic index and type from the application.properties
-    @SuppressWarnings("unused")
-    @Value("${elasticsearch.logbook.index:olog_logbooks}")
-    private String ES_LOGBOOK_INDEX;
     @SuppressWarnings("unused")
     @Value("${elasticsearch.result.size.logbooks:10}")
     private int logbooksResultSize;

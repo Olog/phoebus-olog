@@ -9,7 +9,6 @@ import org.phoebus.olog.entity.Logbook;
 import org.phoebus.olog.entity.State;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.Resource;
 import org.springframework.data.mongodb.core.query.Criteria;

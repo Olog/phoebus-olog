@@ -21,7 +21,6 @@ package org.phoebus.olog;
 import org.mockito.Mockito;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Profile;
 import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
@@ -36,10 +35,10 @@ import org.springframework.transaction.support.TransactionTemplate;
 import javax.sql.DataSource;
 
 @TestConfiguration
-@Profile("!ITtest")
 public class AuthenticationResourceTestConfig {
 
     @Bean
+    @SuppressWarnings("unused")
     public AuthenticationManager authenticationManager() {
         return Mockito.mock(AuthenticationManager.class);
     }
@@ -55,9 +54,11 @@ public class AuthenticationResourceTestConfig {
     /**
      * Not a mock in order to save us from configuring a mock to return sensible results. This
      * is facilitated by the fact that the underlying database is in-memory H2.
-     * @return
+     *
+     * @return A {@link FindByIndexNameSessionRepository}
      */
     @Bean
+    @SuppressWarnings("unused")
     public FindByIndexNameSessionRepository sessionRepository() {
         JdbcOperations jdbcOperations = new JdbcTemplate(dataSource());
         TransactionOperations transactionOperations =

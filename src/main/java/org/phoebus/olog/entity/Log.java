@@ -60,7 +60,7 @@ public class Log implements Serializable {
 
     private Set<Attachment> attachments = new HashSet<>();
 
-    private Log() {
+    protected Log() {
     }
 
     public String getTitle() {

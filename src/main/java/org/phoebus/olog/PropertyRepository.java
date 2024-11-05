@@ -50,13 +50,12 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import static org.phoebus.olog.ElasticConfig.ES_PROPERTY_INDEX;
+
 
 @Repository
 public class PropertyRepository implements CrudRepository<Property, String> {
 
-    @SuppressWarnings("unused")
-    @Value("${elasticsearch.property.index:olog_properties}")
-    private String ES_PROPERTY_INDEX;
     @SuppressWarnings("unused")
     @Value("${elasticsearch.result.size.properties:10}")
     private int propertiesResultSize;
