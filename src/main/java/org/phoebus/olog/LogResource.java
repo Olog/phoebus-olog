@@ -211,7 +211,6 @@ public class LogResource {
      * @return The persisted {@link Log} object.
      */
     @PutMapping()
-    @Deprecated
     public Log createLog(@RequestHeader(value = OLOG_CLIENT_INFO_HEADER, required = false, defaultValue = "n/a") String clientInfo,
                          @RequestParam(value = "markup", required = false) String markup,
                          @RequestParam(value = "inReplyTo", required = false, defaultValue = "-1") String inReplyTo,

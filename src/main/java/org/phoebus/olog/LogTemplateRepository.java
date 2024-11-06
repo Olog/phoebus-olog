@@ -19,24 +19,22 @@ import co.elastic.clients.elasticsearch.core.IndexRequest;
 import co.elastic.clients.elasticsearch.core.IndexResponse;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
-import co.elastic.clients.elasticsearch.core.search.Hit;
-import org.phoebus.olog.entity.Log;
 import org.phoebus.olog.entity.LogTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.http.HttpStatus;
-import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Repository;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.text.MessageFormat;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 /**
  * {@link org.springframework.data.repository.Repository} for {@link LogTemplate}s.
@@ -51,20 +49,14 @@ public class LogTemplateRepository implements CrudRepository<LogTemplate, String
     @Qualifier("client")
     ElasticsearchClient client;
 
-    @Autowired
-    SequenceGenerator generator;
-
     @Override
     public <S extends LogTemplate> S save(S logTemplate) {
 
         try {
-            Long id = generator.getID();
             logTemplate.setCreatedDate(Instant.now());
-            logTemplate.setId(id);
             IndexRequest<Object> indexRequest =
                     IndexRequest.of(i ->
                             i.index(ElasticConfig.ES_LOG_TEMPLATE_INDEX)
-                                    .id(String.valueOf(id))
                                     .document(logTemplate)
                                     .refresh(Refresh.True));
             IndexResponse response = client.index(indexRequest);
@@ -75,7 +67,9 @@ public class LogTemplateRepository implements CrudRepository<LogTemplate, String
                                 g.index(ElasticConfig.ES_LOG_TEMPLATE_INDEX).id(response.id()));
                 GetResponse<LogTemplate> resp =
                         client.get(getRequest, LogTemplate.class);
-                return (S) resp.source();
+                LogTemplate saved = resp.source();
+                saved.setId(response.id());
+                return (S) saved;
             }
         } catch (Exception e) {
             String message = MessageFormat.format(TextUtil.LOG_TEMPLATE_NOT_SAVED, logTemplate.getName());
@@ -93,11 +87,11 @@ public class LogTemplateRepository implements CrudRepository<LogTemplate, String
     public LogTemplate update(LogTemplate logTemplate) {
         try {
             logTemplate.setModifyDate(Instant.now());
-            IndexRequest<Log> indexRequest =
+            IndexRequest<LogTemplate> indexRequest =
                     IndexRequest.of(i ->
                             i.index(ElasticConfig.ES_LOG_TEMPLATE_INDEX)
-                                    .id(String.valueOf(logTemplate.getId()))
                                     .refresh(Refresh.True)
+                                    .id(logTemplate.getId())
                                     .document(logTemplate));
 
             IndexResponse response = client.index(indexRequest);
@@ -155,7 +149,13 @@ public class LogTemplateRepository implements CrudRepository<LogTemplate, String
 
             SearchResponse<LogTemplate> response =
                     client.search(searchRequest, LogTemplate.class);
-            return response.hits().hits().stream().map(Hit::source).collect(Collectors.toList());
+            List<LogTemplate> templates = new ArrayList<>();
+            response.hits().hits().forEach(h -> {
+                LogTemplate logTemplate = h.source();
+                logTemplate.setId(h.id());
+                templates.add(logTemplate);
+            });
+            return templates;
         } catch (Exception e) {
             logger.log(Level.SEVERE, TextUtil.LOG_TEMPLATES_NOT_RETRIEVED, e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, TextUtil.LOG_TEMPLATES_NOT_RETRIEVED);
@@ -191,7 +191,7 @@ public class LogTemplateRepository implements CrudRepository<LogTemplate, String
 
     @Override
     public void delete(LogTemplate logTemplate) {
-        deleteById(String.valueOf(logTemplate.getId()));
+        deleteById(logTemplate.getId());
     }
 
     @Override
@@ -205,7 +205,7 @@ public class LogTemplateRepository implements CrudRepository<LogTemplate, String
     }
 
     @Override
-    public void deleteAllById(Iterable ids) {
+    public void deleteAllById(Iterable<? extends String> ids) {
         throw new ResponseStatusException(HttpStatus.NOT_FOUND, TextUtil.LOG_TEMPLATE_DELETE_ALL_NOT_SUPPORTED);
     }
 }

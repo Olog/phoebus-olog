@@ -1,11 +1,11 @@
 {
-  "settings":{
+  "settings": {
     "analysis": {
       "analyzer": {
         "olog_analyzer": {
           "type": "custom",
           "tokenizer": "whitespace",
-          "filter":[
+          "filter": [
             "lowercase"
           ]
         }
@@ -14,9 +14,6 @@
   },
   "mappings": {
     "properties": {
-      "id": {
-        "type": "keyword"
-      },
       "name": {
         "type": "keyword"
       },
@@ -25,22 +22,15 @@
       },
       "source": {
         "type": "text",
-        "analyzer" : "olog_analyzer"
-      },
-      "description": {
-        "type": "text",
-        "analyzer" : "olog_analyzer"
+        "analyzer": "olog_analyzer"
       },
       "level": {
         "type": "text",
-        "analyzer" : "olog_analyzer"
+        "analyzer": "olog_analyzer"
       },
       "title": {
         "type": "text",
-        "analyzer" : "olog_analyzer"
-      },
-      "state": {
-        "type": "keyword"
+        "analyzer": "olog_analyzer"
       },
       "createdDate": {
         "type": "date",
@@ -49,18 +39,6 @@
       "modifyDate": {
         "type": "date",
         "format": "epoch_millis||yyyy-MM-dd HH:mm:ss.SSS"
-      },
-      "events": {
-        "type": "nested",
-        "properties": {
-          "name": {
-            "type": "keyword"
-          },
-          "event": {
-            "type": "date",
-            "format": "epoch_millis||yyyy-MM-dd HH:mm:ss.SSS"
-          }
-        }
       },
       "logbooks": {
         "type": "nested",

@@ -18,29 +18,150 @@
 
 package org.phoebus.olog.entity;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import org.springframework.data.annotation.Id;
+
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import java.time.Instant;
+import java.util.HashSet;
+import java.util.Set;
 
-public class LogTemplate extends Log{
+/**
+ * A class representing a template for a log entry. Structure similar to {@link Log},
+ * but stripped of fields that do not make sense in a template.
+ */
+public class LogTemplate{
 
     @NotNull
     @Size(min = 1, message = "A name must be specified.")
     private String name;
 
-    public String getName() {
+    @Id
+    private String id;
+
+    private String owner;
+    private String source;
+
+    @NotNull
+    @Size(min = 1, message = "A title must be specified.")
+    private String title;
+
+    private String level = "Info";
+
+    @JsonSerialize(using = InstanceSerializer.class)
+    @JsonDeserialize(using = InstanceDeserializer.class)
+    private Instant createdDate;
+    @JsonSerialize(using = InstanceSerializer.class)
+    @JsonDeserialize(using = InstanceDeserializer.class)
+    private Instant modifyDate;
+
+    @NotNull
+    @Size(min = 1, message = "At least one logbook must be specified.")
+    private Set<Logbook> logbooks = new HashSet<>();
+    private Set<Tag> tags = new HashSet<>();
+    private Set<Property> properties = new HashSet<>();
+
+    public @NotNull @Size(min = 1, message = "A name must be specified.") String getName() {
         return name;
     }
 
-    public void setName(String name) {
+    public void setName(@NotNull @Size(min = 1, message = "A name must be specified.") String name) {
         this.name = name;
     }
 
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getOwner() {
+        return owner;
+    }
+
+    public void setOwner(String owner) {
+        this.owner = owner;
+    }
+
+    public String getSource() {
+        return source;
+    }
+
+    public void setSource(String source) {
+        this.source = source;
+    }
+
+    public @NotNull @Size(min = 1, message = "A title must be specified.") String getTitle() {
+        return title;
+    }
+
+    public void setTitle(@NotNull @Size(min = 1, message = "A title must be specified.") String title) {
+        this.title = title;
+    }
+
+    public String getLevel() {
+        return level;
+    }
+
+    public void setLevel(String level) {
+        this.level = level;
+    }
+
+    public void setCreatedDate(Instant createdDate) {
+        this.createdDate = createdDate;
+    }
+
+    public Instant getCreatedDate(){
+        return createdDate;
+    }
+
+    public Instant getModifyDate() {
+        return modifyDate;
+    }
+
+    public void setModifyDate(Instant modifyDate) {
+        this.modifyDate = modifyDate;
+    }
+
+    public @NotNull @Size(min = 1, message = "At least one logbook must be specified.") Set<Logbook> getLogbooks() {
+        return logbooks;
+    }
+
+    public void setLogbooks(@NotNull @Size(min = 1, message = "At least one logbook must be specified.") Set<Logbook> logbooks) {
+        this.logbooks = logbooks;
+    }
+
+    public Set<Tag> getTags() {
+        return tags;
+    }
+
+    public void setTags(Set<Tag> tags) {
+        this.tags = tags;
+    }
+
+    public Set<Property> getProperties() {
+        return properties;
+    }
+
+    public void setProperties(Set<Property> properties) {
+        this.properties = properties;
+    }
+
+    /**
+     * Equality based on lower case transform of the {@link #name} field.
+     * @param other Object to compare to
+     * @return <code>true</code> only if lower case {@link #name} fields are equal
+     */
     @Override
     public boolean equals(Object other){
         if(!(other instanceof LogTemplate)){
             return false;
         }
-        return ((LogTemplate)other).getName().toLowerCase().equals(name.toLowerCase());
+        return ((LogTemplate)other).getName().equalsIgnoreCase(name);
     }
 
     @Override

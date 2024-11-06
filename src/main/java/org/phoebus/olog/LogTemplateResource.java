@@ -6,7 +6,6 @@
 package org.phoebus.olog;
 
 import org.apache.commons.collections4.CollectionUtils;
-import org.phoebus.olog.entity.Log;
 import org.phoebus.olog.entity.LogTemplate;
 import org.phoebus.olog.entity.Logbook;
 import org.phoebus.olog.entity.Tag;
@@ -15,21 +14,17 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.security.Principal;
 import java.text.MessageFormat;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -64,7 +59,7 @@ public class LogTemplateResource {
 
     /**
      * Creates a new {@link LogTemplate}.
-
+     *
      * @param logTemplate A {@link LogTemplate} object to be persisted.
      * @param principal   The authenticated {@link Principal} of the request.
      * @return The persisted {@link LogTemplate} object.
@@ -99,8 +94,9 @@ public class LogTemplateResource {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, TextUtil.LOG_INVALID_TAGS);
             }
         }
+
         LogTemplate newLogTemplate = logTemplateRepository.save(logTemplate);
-        logger.log(Level.INFO, () -> MessageFormat.format(TextUtil.LOG_TEMPLATE_CREATED, newLogTemplate.getId(), logTemplate.getName()));
+        logger.log(Level.INFO, () -> MessageFormat.format(TextUtil.LOG_TEMPLATE_CREATED, logTemplate.getName(), newLogTemplate.getId()));
         return newLogTemplate;
     }
 
@@ -118,13 +114,13 @@ public class LogTemplateResource {
     /*
     @SuppressWarnings("unused")
     @PostMapping("/{logTemplateId}")
-    public Log updateLog(@PathVariable String logTemplateId,
+    public LogTemplate updateLogTemplate(@PathVariable String logTemplateId,
                          @RequestParam(value = "markup", required = false) String markup,
                          @RequestBody LogTemplate logTemplate,
                          @AuthenticationPrincipal Principal principal) {
 
         // In case a client sends a log template record where the id does not match the path variable, return HTTP 400 (bad request)
-        if (!logTemplateId.equals(Long.toString(logTemplate.getId()))) {
+        if (!logTemplateId.equals(logTemplate.getId())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, TextUtil.LOG_TEMPLATE_NOT_MATCH_PATH);
         }
 
@@ -132,14 +128,14 @@ public class LogTemplateResource {
 
         LogTemplate persistedLogTemplate = foundLogTemplate.get();
         persistedLogTemplate.setName(logTemplate.getName());
-        persistedLogTemplate.setOwner(principal.getName());
-        persistedLogTemplate.setLevel(logTemplate.getLevel());
-        persistedLogTemplate.setProperties(logTemplate.getProperties());
-        persistedLogTemplate.setModifyDate(Instant.now());
-        persistedLogTemplate.setDescription(logTemplate.getDescription());   // to make it work with old clients where description field is sent instead of source
-        persistedLogTemplate.setTags(logTemplate.getTags());
-        persistedLogTemplate.setLogbooks(logTemplate.getLogbooks());
-        persistedLogTemplate.setTitle(logTemplate.getTitle());
+        persistedLogTemplate.getLog().setOwner(principal.getName());
+        persistedLogTemplate.getLog().setLevel(logTemplate.getLog().getLevel());
+        persistedLogTemplate.getLog().setProperties(logTemplate.getLog().getProperties());
+        persistedLogTemplate.getLog().setModifyDate(Instant.now());
+        persistedLogTemplate.getLog().setDescription(logTemplate.getLog().getDescription());   // to make it work with old clients where description field is sent instead of source
+        persistedLogTemplate.getLog().setTags(logTemplate.getLog().getTags());
+        persistedLogTemplate.getLog().setLogbooks(logTemplate.getLog().getLogbooks());
+        persistedLogTemplate.getLog().setTitle(logTemplate.getLog().getTitle());
 
         return logTemplateRepository.update(persistedLogTemplate);
 
@@ -147,13 +143,14 @@ public class LogTemplateResource {
 
      */
 
+
     /**
      * @return A potentially empty {@link List} of all existing {@link LogTemplate}s.
      */
     @SuppressWarnings("unused")
     @GetMapping
     public List<LogTemplate> getAllTemplates() {
-        List<LogTemplate> allTemplates = new ArrayList();
+        List<LogTemplate> allTemplates = new ArrayList<>();
         logTemplateRepository.findAll().forEach(allTemplates::add);
         return allTemplates;
     }

@@ -19,7 +19,6 @@
 package org.phoebus.olog;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import org.junit.Ignore;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -31,6 +30,8 @@ import org.phoebus.olog.entity.LogTemplate;
 import org.phoebus.olog.entity.Logbook;
 import org.phoebus.olog.entity.Property;
 import org.phoebus.olog.entity.Tag;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.HttpHeaders;
@@ -43,11 +44,12 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.Instant;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -70,8 +72,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ContextHierarchy({@ContextConfiguration(classes = {ResourcesTestConfig.class})})
 @WebMvcTest(LogResource.class)
 @TestPropertySource(locations = "classpath:no_ldap_test_application.properties")
+@SuppressWarnings("unused")
 public class LogTemplateResourceTest extends ResourcesTestBase {
 
+    private static final Logger log = LoggerFactory.getLogger(LogTemplateResourceTest.class);
     @Autowired
     private LogTemplateRepository logTemplateRepository;
 
@@ -151,10 +155,11 @@ public class LogTemplateResourceTest extends ResourcesTestBase {
     void testCreateLogTemplate() throws Exception {
         LogTemplate logTemplate = new LogTemplate();
         logTemplate.setName("name");
-        logTemplate.setId(1L);
+        String id = UUID.randomUUID().toString();
+        logTemplate.setId(id);
         logTemplate.setOwner("user");
         logTemplate.setTitle("title");
-        logTemplate.setDescription("description");
+        logTemplate.setSource("source");
         logTemplate.setLevel("Urgent");
         logTemplate.setLogbooks(Set.of(logbook1, logbook2));
         logTemplate.setTags(Set.of(tag1, tag2));
@@ -169,7 +174,7 @@ public class LogTemplateResourceTest extends ResourcesTestBase {
         MvcResult result = mockMvc.perform(request).andExpect(status().isOk()).andReturn();
 
         LogTemplate savedLogTemplate = objectMapper.readValue(result.getResponse().getContentAsString(), LogTemplate.class);
-        assertEquals(Long.valueOf(1L), savedLogTemplate.getId());
+        assertEquals(id, savedLogTemplate.getId());
         reset(logbookRepository);
         reset(tagRepository);
         reset(logTemplateRepository);
@@ -179,14 +184,14 @@ public class LogTemplateResourceTest extends ResourcesTestBase {
     void testCreateLogTemplateBadLogbook() throws Exception {
         LogTemplate logTemplate = new LogTemplate();
         logTemplate.setName("name");
-        logTemplate.setId(1L);
+        logTemplate.setId(UUID.randomUUID().toString());
         logTemplate.setOwner("user");
         logTemplate.setTitle("title");
-        logTemplate.setDescription("description");
+        logTemplate.setSource("description");
         logTemplate.setLevel("Urgent");
         logTemplate.setLogbooks(Set.of(logbook1));
 
-        when(logbookRepository.findAll()).thenReturn(Arrays.asList(logbook2));
+        when(logbookRepository.findAll()).thenReturn(Collections.singletonList(logbook2));
         when(logTemplateRepository.save(argThat(new LogTemplateMatcher(logTemplate)))).thenReturn(logTemplate);
         MockHttpServletRequestBuilder request = put("/" + OlogResourceDescriptors.LOG_TEMPLATE_RESOURCE_URI)
                 .content(objectMapper.writeValueAsString(logTemplate))
@@ -201,14 +206,14 @@ public class LogTemplateResourceTest extends ResourcesTestBase {
     void testCreateLogTemplateBadTags() throws Exception {
         LogTemplate logTemplate = new LogTemplate();
         logTemplate.setName("name");
-        logTemplate.setId(1L);
+        logTemplate.setId(UUID.randomUUID().toString());
         logTemplate.setOwner("user");
         logTemplate.setTitle("title");
-        logTemplate.setDescription("description");
+        logTemplate.setSource("description");
         logTemplate.setLevel("Urgent");
         logTemplate.setTags(Set.of(tag1));
 
-        when(tagRepository.findAll()).thenReturn(Arrays.asList(tag2));
+        when(tagRepository.findAll()).thenReturn(Collections.singletonList(tag2));
         when(logTemplateRepository.save(argThat(new LogTemplateMatcher(logTemplate)))).thenReturn(logTemplate);
         MockHttpServletRequestBuilder request = put("/" + OlogResourceDescriptors.LOG_TEMPLATE_RESOURCE_URI)
                 .content(objectMapper.writeValueAsString(logTemplate))
@@ -246,24 +251,25 @@ public class LogTemplateResourceTest extends ResourcesTestBase {
 
         LogTemplate logTemplate = new LogTemplate();
         logTemplate.setName("name");
-        logTemplate.setId(1L);
+        String id = UUID.randomUUID().toString();
+        logTemplate.setId(id);
         logTemplate.setOwner("user");
         logTemplate.setTitle("title");
-        logTemplate.setDescription("description");
+        logTemplate.setSource("description");
         logTemplate.setLevel("Urgent");
         logTemplate.setLogbooks(Set.of(logbook1, logbook2));
         logTemplate.setTags(Set.of(tag1, tag2));
 
-        when(logTemplateRepository.findById("1")).thenReturn(Optional.of(logTemplate));
+        when(logTemplateRepository.findById(id)).thenReturn(Optional.of(logTemplate));
         when(logTemplateRepository.update(logTemplate)).thenReturn(logTemplate);
 
-        MockHttpServletRequestBuilder request = post("/" + OlogResourceDescriptors.LOG_TEMPLATE_RESOURCE_URI + "/1")
+        MockHttpServletRequestBuilder request = post("/" + OlogResourceDescriptors.LOG_TEMPLATE_RESOURCE_URI + "/" + id)
                 .content(objectMapper.writeValueAsString(logTemplate))
                 .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
                 .contentType(JSON);
         MvcResult result = mockMvc.perform(request).andExpect(status().isOk()).andReturn();
         LogTemplate savedLogTemplate = objectMapper.readValue(result.getResponse().getContentAsString(), LogTemplate.class);
-        assertEquals(Long.valueOf(1L), savedLogTemplate.getId());
+        assertEquals(id, savedLogTemplate.getId());
 
         reset(logTemplateRepository);
     }
@@ -274,7 +280,7 @@ public class LogTemplateResourceTest extends ResourcesTestBase {
 
         LogTemplate logTemplate = new LogTemplate();
         logTemplate.setName("name");
-        logTemplate.setId(1L);
+        logTemplate.setId(UUID.randomUUID().toString());
 
         when(logTemplateRepository.findById("1")).thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND));
 
@@ -292,7 +298,7 @@ public class LogTemplateResourceTest extends ResourcesTestBase {
 
         LogTemplate logTemplate = new LogTemplate();
         logTemplate.setName("name");
-        logTemplate.setId(1L);
+        logTemplate.setId(UUID.randomUUID().toString());
 
         MockHttpServletRequestBuilder request = post("/" + OlogResourceDescriptors.LOG_TEMPLATE_RESOURCE_URI + "/2")
                 .content(objectMapper.writeValueAsString(logTemplate))
@@ -313,13 +319,12 @@ public class LogTemplateResourceTest extends ResourcesTestBase {
 
         @Override
         public boolean matches(LogTemplate obj) {
-            if (!(obj instanceof LogTemplate)) {
+            if (obj == null) {
                 return false;
             }
-            LogTemplate actual = obj;
 
-            return actual.getId().equals(expected.getId())
-                    && actual.getDescription().equals(expected.getDescription());
+            return obj.getId().equals(expected.getId())
+                    && obj.getSource().equals(expected.getSource());
         }
     }
 }

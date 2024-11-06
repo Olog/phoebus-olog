@@ -26,10 +26,10 @@ public class LogTemplateTest {
     @Test
     public void testCreate(){
         LogTemplate logTemplate = new LogTemplate();
-        logTemplate.setDescription("desc");
+        logTemplate.setSource("desc");
         logTemplate.setName("name");
 
-        assertEquals("desc", logTemplate.getDescription());
+        assertEquals("desc", logTemplate.getSource());
         assertEquals("name", logTemplate.getName());
     }
 

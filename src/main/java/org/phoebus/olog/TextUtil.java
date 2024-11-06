@@ -87,8 +87,7 @@ public class TextUtil {
     public static final String LOG_ENTRY_NOTIFIER                       = "LogEntryNotifier {0} throws exception";
     public static final String LOG_ENTRY_ID_CREATED_FROM                = "Entry id {0} created from {1}";
     public static final String LOG_ENTRY_NOT_MATCH_PATH                 = "Log entry id does not match path variable";
-    public static final String LOG_TEMPLATE_NOT_MATCH_PATH              = "Log template id does not match path variable";
-    public static final String LOG_TEMPLATE_CREATED                     = "Log template {0} created {1}";
+    public static final String LOG_TEMPLATE_CREATED                     = "Log template {0} created with id {1}";
 
     public static final String LOG_EXISTS_FAILED                        = "Failed to check if log {0} exists";
     public static final String LOG_TEMPLATE_EXISTS_UNSUPPORTED          = "Check if template exists not supported";

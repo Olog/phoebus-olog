@@ -110,7 +110,7 @@ class LogTemplateRepositoryIT {
             assertNotNull(updatedTemplate.getModifyDate());
             assertEquals("template2", updatedTemplate.getName());
 
-            client.delete(DeleteRequest.of(d -> d.index(ES_LOG_TEMPLATE_INDEX).id(savedTemplate.getId().toString()).refresh(Refresh.True)));
+            client.delete(DeleteRequest.of(d -> d.index(ES_LOG_TEMPLATE_INDEX).id(savedTemplate.getId()).refresh(Refresh.True)));
         } finally {
             client.delete(DeleteRequest.of(d -> d.index(ES_LOGBOOK_INDEX).id(TEST_LOGBOOK_1.getName()).refresh(Refresh.True)));
             client.delete(DeleteRequest.of(d -> d.index(ES_TAG_INDEX).id(TEST_TAG_1.getName()).refresh(Refresh.True)));
@@ -130,7 +130,7 @@ class LogTemplateRepositoryIT {
 
         assertNotNull(logTemplateRepository.findById(String.valueOf(savedTemplate.getId())));
 
-        client.delete(DeleteRequest.of(d -> d.index(ES_LOG_TEMPLATE_INDEX).id(savedTemplate.getId().toString()).refresh(Refresh.True)));
+        client.delete(DeleteRequest.of(d -> d.index(ES_LOG_TEMPLATE_INDEX).id(savedTemplate.getId()).refresh(Refresh.True)));
     }
 
     @Test
@@ -146,9 +146,9 @@ class LogTemplateRepositoryIT {
 
         LogTemplate savedTemplate = logTemplateRepository.save(logTemplate);
 
-        logTemplateRepository.deleteById(String.valueOf(savedTemplate.getId()));
+        logTemplateRepository.deleteById(savedTemplate.getId());
 
-        assertThrows(ResponseStatusException.class, () -> logTemplateRepository.findById(String.valueOf(savedTemplate.getId())));
+        assertThrows(ResponseStatusException.class, () -> logTemplateRepository.findById(savedTemplate.getId()));
 
         // Delete non-existing template should succeed silently
         logTemplateRepository.deleteById("666");
@@ -167,7 +167,7 @@ class LogTemplateRepositoryIT {
         Iterator<LogTemplate> iterator = iterable.iterator();
         AtomicBoolean found = new AtomicBoolean();
         iterator.forEachRemaining(t -> {
-            if (t.getName().equals("template1") && t.getOwner().equals(TEST_OWNER)) {
+            if (t.getName().equals("template1") && t.getOwner().equals(TEST_OWNER) && t.getId() != null) {
                 found.set(true);
             }
         });
