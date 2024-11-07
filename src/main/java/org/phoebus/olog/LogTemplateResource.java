@@ -24,6 +24,7 @@ import java.security.Principal;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
@@ -70,9 +71,9 @@ public class LogTemplateResource {
                                          @AuthenticationPrincipal Principal principal) {
 
         // Check if there is template with same case-insensitive name
-        Iterable<LogTemplate> iterable = logTemplateRepository.findAll();
-        while (iterable.iterator().hasNext()) {
-            if (iterable.iterator().next().getName().equals(logTemplate.getName().trim().toLowerCase())) {
+        Iterator<LogTemplate> iterator = logTemplateRepository.findAll().iterator();
+        while (iterator.hasNext()) {
+            if (iterator.next().getName().equals(logTemplate.getName().trim().toLowerCase())) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Template with name \"" + logTemplate.getName() + "\" already exists");
             }
         }
