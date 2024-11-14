@@ -179,9 +179,9 @@ public class LogTemplateRepository implements CrudRepository<LogTemplate, String
                     d.index(ElasticConfig.ES_LOG_TEMPLATE_INDEX).id(id).refresh(Refresh.True));
             DeleteResponse deleteResponse = client.delete(deleteRequest);
             if (deleteResponse.result().equals(Result.Deleted)) {
-                logger.log(Level.WARNING, MessageFormat.format(TextUtil.LOG_TEMPLATE_DELETED, id));
+                logger.log(Level.INFO, MessageFormat.format(TextUtil.LOG_TEMPLATE_DELETED, id));
             } else {
-                logger.log(Level.WARNING, MessageFormat.format(TextUtil.LOG_TEMPLATE_NOT_DELETED, id));
+                logger.log(Level.INFO, MessageFormat.format(TextUtil.LOG_TEMPLATE_NOT_DELETED, id));
             }
         } catch (IOException e) {
             logger.log(Level.SEVERE, MessageFormat.format(TextUtil.LOG_TEMPLATE_NOT_DELETED, id), e);

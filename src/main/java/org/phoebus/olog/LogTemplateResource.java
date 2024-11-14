@@ -101,7 +101,6 @@ public class LogTemplateResource {
         return newLogTemplate;
     }
 
-
     /**
      * Updates existing {@link LogTemplate}.
      *
