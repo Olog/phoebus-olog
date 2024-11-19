@@ -8,6 +8,7 @@ package org.phoebus.olog;
 import org.apache.commons.collections4.CollectionUtils;
 import org.phoebus.olog.entity.LogTemplate;
 import org.phoebus.olog.entity.Logbook;
+import org.phoebus.olog.entity.Property;
 import org.phoebus.olog.entity.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -51,6 +52,10 @@ public class LogTemplateResource {
     @SuppressWarnings("unused")
     @Autowired
     private TagRepository tagRepository;
+    @SuppressWarnings("unused")
+    @Autowired
+    private PropertyRepository propertyRepository;
+
 
     @GetMapping("{logTemplateId}")
     @SuppressWarnings("unused")
@@ -86,6 +91,7 @@ public class LogTemplateResource {
         if (!CollectionUtils.containsAll(persistedLogbookNames, logbookNames)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, TextUtil.LOG_INVALID_LOGBOOKS);
         }
+
         Set<Tag> tags = logTemplate.getTags();
         if (tags != null && !tags.isEmpty()) {
             Set<String> tagNames = tags.stream().map(Tag::getName).collect(Collectors.toSet());
@@ -93,6 +99,16 @@ public class LogTemplateResource {
             tagRepository.findAll().forEach(t -> persistedTags.add(t.getName()));
             if (!CollectionUtils.containsAll(persistedTags, tagNames)) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, TextUtil.LOG_INVALID_TAGS);
+            }
+        }
+
+        Set<Property> properties = logTemplate.getProperties();
+        if(properties != null && !properties.isEmpty()){
+            Set<String> propertyNames = properties.stream().map(Property::getName).collect(Collectors.toSet());
+            Set<String> persistedProperties = new HashSet<>();
+            propertyRepository.findAll().forEach(p -> persistedProperties.add(p.getName()));
+            if (!CollectionUtils.containsAll(persistedProperties, propertyNames)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, TextUtil.LOG_INVALID_PROPERTIES);
             }
         }
 

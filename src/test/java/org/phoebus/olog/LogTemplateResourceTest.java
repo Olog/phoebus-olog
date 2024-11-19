@@ -36,6 +36,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.parameters.P;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.ContextHierarchy;
 import org.springframework.test.context.TestPropertySource;
@@ -84,6 +85,9 @@ public class LogTemplateResourceTest extends ResourcesTestBase {
 
     @Autowired
     private TagRepository tagRepository;
+
+    @Autowired
+    private PropertyRepository propertyRepository;
 
     private static Logbook logbook1;
     private static Logbook logbook2;
@@ -221,6 +225,28 @@ public class LogTemplateResourceTest extends ResourcesTestBase {
                 .contentType(JSON);
         mockMvc.perform(request).andExpect(status().isBadRequest());
         reset(tagRepository);
+        reset(logTemplateRepository);
+    }
+
+    @Test
+    void testCreateLogTemplateBadProperties() throws Exception {
+        LogTemplate logTemplate = new LogTemplate();
+        logTemplate.setName("name");
+        logTemplate.setId(UUID.randomUUID().toString());
+        logTemplate.setOwner("user");
+        logTemplate.setTitle("title");
+        logTemplate.setSource("description");
+        logTemplate.setLevel("Urgent");
+        logTemplate.setProperties(Set.of(new Property("invalidPropName")));
+
+        when(propertyRepository.findAll()).thenReturn(Collections.singletonList(new Property("validPropName")));
+        when(logTemplateRepository.save(argThat(new LogTemplateMatcher(logTemplate)))).thenReturn(logTemplate);
+        MockHttpServletRequestBuilder request = put("/" + OlogResourceDescriptors.LOG_TEMPLATE_RESOURCE_URI)
+                .content(objectMapper.writeValueAsString(logTemplate))
+                .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
+                .contentType(JSON);
+        mockMvc.perform(request).andExpect(status().isBadRequest());
+        reset(propertyRepository);
         reset(logTemplateRepository);
     }
 
