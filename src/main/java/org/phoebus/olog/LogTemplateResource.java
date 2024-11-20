@@ -78,7 +78,7 @@ public class LogTemplateResource {
         // Check if there is template with same case-insensitive name
         Iterator<LogTemplate> iterator = logTemplateRepository.findAll().iterator();
         while (iterator.hasNext()) {
-            if (iterator.next().getName().equals(logTemplate.getName().trim().toLowerCase())) {
+            if (iterator.next().getName().toLowerCase().equals(logTemplate.getName().trim().toLowerCase())) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Template with name \"" + logTemplate.getName() + "\" already exists");
             }
         }

@@ -253,10 +253,10 @@ public class LogTemplateResourceTest extends ResourcesTestBase {
     @Test
     void testCreateLogTemplateDuplicateName() throws Exception {
         LogTemplate existing = new LogTemplate();
-        existing.setName("name");
+        existing.setName("Name");
 
         LogTemplate logTemplate = new LogTemplate();
-        logTemplate.setName("Name");
+        logTemplate.setName("name");
 
         when(logTemplateRepository.findAll()).thenReturn(List.of(existing));
 
