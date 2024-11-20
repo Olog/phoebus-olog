@@ -145,6 +145,8 @@ public class LogTemplateRepository implements CrudRepository<LogTemplate, String
                     SearchRequest.of(s ->
                             s.index(ElasticConfig.ES_LOG_TEMPLATE_INDEX)
                                     .query(new MatchAllQuery.Builder().build()._toQuery())
+                                    .size(1000) // Assume number of templates is within reason, so returning "all" should be the wanted behavior
+                                    .from(0)
                                     .sort(SortOptions.of(so -> so.field(FieldSort.of(f -> f.field("name"))))));
 
             SearchResponse<LogTemplate> response =
