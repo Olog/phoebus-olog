@@ -94,7 +94,7 @@ public class TextUtil {
     public static final String LOG_ID_NOT_FOUND                         = "Log id {0} not found";
     public static final String LOG_INVALID_LOGBOOKS                     = "One or more invalid logbook name(s)";
     public static final String LOG_INVALID_TAGS                         = "One or more invalid tag name(s)";
-    public static final String LOG_INVALID_PROPERTIES                   = "One or more invalid property name(s)";
+    public static final String LOG_INVALID_PROPERTIES                   = "One or more invalid property name(s), or invalid attribute list";
     public static final String LOG_MUST_HAVE_LOGBOOK                    = "A log entry must specify at least one logbook";
     public static final String LOG_MUST_HAVE_TITLE                      = "A log entry must specify a title";
     public static final String LOG_NOT_ARCHIVED                         = "Failed to archive log with id {0}";

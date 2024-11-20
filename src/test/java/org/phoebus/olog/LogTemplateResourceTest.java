@@ -44,6 +44,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.web.server.ResponseStatusException;
+import org.testcontainers.shaded.org.checkerframework.checker.units.qual.A;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -246,6 +247,100 @@ public class LogTemplateResourceTest extends ResourcesTestBase {
                 .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
                 .contentType(JSON);
         mockMvc.perform(request).andExpect(status().isBadRequest());
+        reset(propertyRepository);
+        reset(logTemplateRepository);
+    }
+
+    @Test
+    void testCreateLogTemplateBadPropertyAttributes() throws Exception {
+        LogTemplate logTemplate = new LogTemplate();
+        logTemplate.setName("name");
+        logTemplate.setId(UUID.randomUUID().toString());
+        logTemplate.setOwner("user");
+        logTemplate.setTitle("title");
+        logTemplate.setSource("description");
+        logTemplate.setLevel("Urgent");
+        Property property = new Property("validPropName");
+        Attribute attribute1 = new Attribute("validAttributeName");
+        Attribute attribute2 = new Attribute("invalidAttributeName");
+        property.setAttributes(Set.of(attribute1, attribute2));
+        logTemplate.setProperties(Set.of(property));
+
+        Attribute attribute3 = new Attribute("validAttribute2");
+        Property persistedProperty = new Property("validPropName");
+        persistedProperty.setAttributes(Set.of(attribute1, attribute3));
+
+
+        when(propertyRepository.findAll()).thenReturn(Collections.singletonList(persistedProperty));
+        when(logTemplateRepository.save(argThat(new LogTemplateMatcher(logTemplate)))).thenReturn(logTemplate);
+        MockHttpServletRequestBuilder request = put("/" + OlogResourceDescriptors.LOG_TEMPLATE_RESOURCE_URI)
+                .content(objectMapper.writeValueAsString(logTemplate))
+                .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
+                .contentType(JSON);
+        mockMvc.perform(request).andExpect(status().isBadRequest());
+        reset(propertyRepository);
+        reset(logTemplateRepository);
+    }
+
+    /**
+     * Test with fewer attributes than persisted property
+     * @throws Exception
+     */
+    @Test
+    void testCreateLogTemplateBadPropertyAttributes2() throws Exception {
+        LogTemplate logTemplate = new LogTemplate();
+        logTemplate.setName("name");
+        logTemplate.setId(UUID.randomUUID().toString());
+        logTemplate.setOwner("user");
+        logTemplate.setTitle("title");
+        logTemplate.setSource("description");
+        logTemplate.setLevel("Urgent");
+        Property property = new Property("validPropName");
+        Attribute attribute1 = new Attribute("validAttributeName");
+        property.setAttributes(Set.of(attribute1));
+        logTemplate.setProperties(Set.of(property));
+
+        Attribute attribute3 = new Attribute("validAttribute2");
+        Property persistedProperty = new Property("validPropName");
+        persistedProperty.setAttributes(Set.of(attribute1, attribute3));
+
+
+        when(propertyRepository.findAll()).thenReturn(Collections.singletonList(persistedProperty));
+        when(logTemplateRepository.save(argThat(new LogTemplateMatcher(logTemplate)))).thenReturn(logTemplate);
+        MockHttpServletRequestBuilder request = put("/" + OlogResourceDescriptors.LOG_TEMPLATE_RESOURCE_URI)
+                .content(objectMapper.writeValueAsString(logTemplate))
+                .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
+                .contentType(JSON);
+        mockMvc.perform(request).andExpect(status().isBadRequest());
+        reset(propertyRepository);
+        reset(logTemplateRepository);
+    }
+
+    @Test
+    void testCreateLogTemplatePropertyAttributes() throws Exception {
+        LogTemplate logTemplate = new LogTemplate();
+        logTemplate.setName("name");
+        logTemplate.setId(UUID.randomUUID().toString());
+        logTemplate.setOwner("user");
+        logTemplate.setTitle("title");
+        logTemplate.setSource("description");
+        logTemplate.setLevel("Urgent");
+        Property property = new Property("validPropName");
+        Attribute attribute1 = new Attribute("validAttributeName");
+        Attribute attribute2 = new Attribute("validAttributeName2");
+        property.setAttributes(Set.of(attribute1, attribute2));
+        logTemplate.setProperties(Set.of(property));
+
+        Property persistedProperty = new Property("validPropName");
+        persistedProperty.setAttributes(Set.of(attribute1, attribute2));
+
+        when(propertyRepository.findAll()).thenReturn(Collections.singletonList(persistedProperty));
+        when(logTemplateRepository.save(argThat(new LogTemplateMatcher(logTemplate)))).thenReturn(logTemplate);
+        MockHttpServletRequestBuilder request = put("/" + OlogResourceDescriptors.LOG_TEMPLATE_RESOURCE_URI)
+                .content(objectMapper.writeValueAsString(logTemplate))
+                .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
+                .contentType(JSON);
+        mockMvc.perform(request).andExpect(status().isOk());
         reset(propertyRepository);
         reset(logTemplateRepository);
     }

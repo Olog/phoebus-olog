@@ -102,12 +102,12 @@ public class LogTemplateResource {
             }
         }
 
+        // Check that template contains valid properties and attributes. Take advantage of Property#equals().
         Set<Property> properties = logTemplate.getProperties();
         if(properties != null && !properties.isEmpty()){
-            Set<String> propertyNames = properties.stream().map(Property::getName).collect(Collectors.toSet());
-            Set<String> persistedProperties = new HashSet<>();
-            propertyRepository.findAll().forEach(p -> persistedProperties.add(p.getName()));
-            if (!CollectionUtils.containsAll(persistedProperties, propertyNames)) {
+            Set<Property> persistedProperties = new HashSet<>();
+            propertyRepository.findAll().forEach(p -> persistedProperties.add(p));
+            if (!CollectionUtils.containsAll(persistedProperties, properties)) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, TextUtil.LOG_INVALID_PROPERTIES);
             }
         }
