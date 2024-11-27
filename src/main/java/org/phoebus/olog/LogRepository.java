@@ -29,7 +29,6 @@ import org.phoebus.olog.entity.Log.LogBuilder;
 import org.phoebus.olog.entity.SearchResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Repository;
@@ -48,17 +47,13 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import static org.phoebus.olog.ElasticConfig.ES_LOG_INDEX;
+import static org.phoebus.olog.ElasticConfig.ES_LOG_ARCHIVE_INDEX;
+
 @Repository
 public class LogRepository implements CrudRepository<Log, String> {
 
     private static final Logger logger = Logger.getLogger(LogRepository.class.getName());
-
-    @SuppressWarnings("unused")
-    @Value("${elasticsearch.log.index:olog_logs}")
-    private String ES_LOG_INDEX;
-
-    @Value("${elasticsearch.log.archive.index:olog_archived_logs}")
-    private String ES_LOG_ARCHIVE_INDEX;
 
     @SuppressWarnings("unused")
     @Autowired
@@ -79,7 +74,7 @@ public class LogRepository implements CrudRepository<Log, String> {
             if (log.getAttachments() != null && !log.getAttachments().isEmpty()) {
                 Set<Attachment> createdAttachments = new HashSet<>();
                 log.getAttachments().stream().filter(attachment -> attachment.getAttachment() != null).forEach(attachment ->
-                    createdAttachments.add(attachmentRepository.save(attachment))
+                        createdAttachments.add(attachmentRepository.save(attachment))
                 );
                 validatedLog = validatedLog.setAttachments(createdAttachments);
             }
@@ -114,7 +109,7 @@ public class LogRepository implements CrudRepository<Log, String> {
     public <S extends Log> Iterable<S> saveAll(Iterable<S> logs) {
         List<S> createdLogs = new ArrayList<>();
         logs.forEach(log ->
-            createdLogs.add(save(log))
+                createdLogs.add(save(log))
         );
         return createdLogs;
     }
@@ -124,7 +119,7 @@ public class LogRepository implements CrudRepository<Log, String> {
             Log document = LogBuilder.createLog(log).build();
             IndexRequest<Log> indexRequest =
                     IndexRequest.of(i ->
-                                    i.index(ES_LOG_INDEX)
+                            i.index(ES_LOG_INDEX)
                                     .id(String.valueOf(document.getId()))
                                     .refresh(Refresh.True)
                                     .document(document));
@@ -152,7 +147,7 @@ public class LogRepository implements CrudRepository<Log, String> {
             // retrieve the log version from elastic
             GetResponse<Log> resp = client.get(GetRequest.of(g ->
                     g.index(ES_LOG_INDEX).id(String.valueOf(log.getId()))), Log.class);
-            if(!resp.found()) {
+            if (!resp.found()) {
                 logger.log(Level.SEVERE, () -> MessageFormat.format(TextUtil.LOG_NOT_ARCHIVED, log.getId()));
             } else {
                 Log originalDocument = resp.source();
@@ -185,9 +180,9 @@ public class LogRepository implements CrudRepository<Log, String> {
         fb.order(SortOrder.Desc);
 
         SearchRequest searchRequest = SearchRequest.of(s -> s.index(ES_LOG_ARCHIVE_INDEX)
-                                                        .query(WildcardQuery.of(q -> q.field("id").caseInsensitive(true).value(id+"*"))._toQuery())
-                                                        .timeout("60s")
-                                                        .sort(SortOptions.of(so -> so.field(fb.build()))));
+                .query(WildcardQuery.of(q -> q.field("id").caseInsensitive(true).value(id + "*"))._toQuery())
+                .timeout("60s")
+                .sort(SortOptions.of(so -> so.field(fb.build()))));
         try {
             final SearchResponse<Log> searchResponse = client.search(searchRequest, Log.class);
             List<Log> result = searchResponse.hits().hits().stream().map(Hit::source).collect(Collectors.toList());

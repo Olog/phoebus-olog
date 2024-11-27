@@ -39,6 +39,7 @@ import static org.mockito.Mockito.when;
 // Must exclude explicitly for IT tests. Documentation claims that TestConfigurations should not
 // contribute beans unless explicitly included, but component scan may (?) override this.
 @Profile("!ITtest")
+@SuppressWarnings("unused")
 public class ResourcesTestConfig {
 
     @Bean
@@ -60,11 +61,6 @@ public class ResourcesTestConfig {
     public AttachmentRepository attachmentRepository() {
         return Mockito.mock(AttachmentRepository.class);
     }
-
-    //@Bean("indexClient")
-    //public RestHighLevelClient client() {
-    //    return Mockito.mock(RestHighLevelClient.class);
-    //}
 
     @Bean
     public GridFsOperations gridOperation() {
@@ -116,6 +112,11 @@ public class ResourcesTestConfig {
         LogEntryValidator logEntryValidator = Mockito.mock(LogEntryValidator.class);
         when(logEntryValidator.supports(Mockito.any(Class.class))).thenReturn(true);
         return logEntryValidator;
+    }
+
+    @Bean
+    public LogTemplateRepository logTemplateRepository(){
+        return Mockito.mock(LogTemplateRepository.class);
     }
 
 }

@@ -47,14 +47,13 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import static org.phoebus.olog.ElasticConfig.ES_TAG_INDEX;
+
 @Repository
 public class TagRepository implements CrudRepository<Tag, String> {
 
     private final Logger logger = Logger.getLogger(TagRepository.class.getName());
 
-    @SuppressWarnings("unused")
-    @Value("${elasticsearch.tag.index:olog_tags}")
-    private String ES_TAG_INDEX;
     @SuppressWarnings("unused")
     @Value("${elasticsearch.result.size.tags:10}")
     private int tagsResultSize;
