@@ -161,7 +161,7 @@ public class LogTemplateResource {
      */
 
     /**
-     * Delete a {@link LogTemplate} bases on its unique id.
+     * Delete a {@link LogTemplate} based on its unique id.
      * @param logTemplateId Unique id
      */
     @DeleteMapping("/{logTemplateId}")
