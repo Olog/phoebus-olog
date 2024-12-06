@@ -42,7 +42,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 import javax.sql.DataSource;
 import java.sql.Driver;
 
-@EnableWebSecurity
+
 @Configuration
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 

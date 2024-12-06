@@ -1,0 +1,13 @@
+[
+    {
+        "name": "resource",
+        "attributes": [
+            {
+                "name": "name"
+            },
+            {
+                "name": "file"
+            }
+        ]
+    }
+]
