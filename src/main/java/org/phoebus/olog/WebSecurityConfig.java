@@ -4,6 +4,10 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.phoebus.olog.security.SessionFilter;
+import org.phoebus.olog.security.provider.JwtAuthenticationFilter;
+import org.phoebus.olog.security.provider.JwtAuthenticationProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.h2.H2ConsoleProperties;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
@@ -48,15 +52,21 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     public static final String SESSION_COOKIE_NAME = "SESSION";
     public static final String ROLES_ATTRIBUTE_NAME = "roles";
+    private static final Logger log = LoggerFactory.getLogger(WebSecurityConfig.class);
 
     @Value("${spring.datasource.url:jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=TRUE}")
     private String h2Url;
-
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.csrf().disable();
         http.authorizeRequests().anyRequest().authenticated();
-        http.addFilterBefore(new SessionFilter(authenticationManager(), sessionRepository()), UsernamePasswordAuthenticationFilter.class);
+        // enable JWT authentication
+        if (oauth2_enabled) {
+            http.addFilterBefore(jwtAuthenticationFilter(authenticationManager()), UsernamePasswordAuthenticationFilter.class);
+
+        } else {
+            http.addFilterBefore(new SessionFilter(authenticationManager(), sessionRepository()), UsernamePasswordAuthenticationFilter.class);
+        }
         http.httpBasic();
     }
 
@@ -121,6 +131,11 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     String embedded_ldap_groups_search_base;
     @Value("${embedded_ldap.groups.search.pattern}")
     String embedded_ldap_groups_search_pattern;
+    /**
+     * OAuth2 authorization based on JWT
+     */
+    @Value("${oauth2.enabled:false}")
+    boolean oauth2_enabled;
 
     /**
      * Demo authorization based on in memory user credentials
@@ -136,6 +151,9 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     public void configure(AuthenticationManagerBuilder auth) throws Exception {
+        if (oauth2_enabled) {
+            auth.authenticationProvider(jwtAuthenticationProvider());
+        }
         if (ad_enabled) {
             ActiveDirectoryLdapAuthenticationProvider adProvider = new ActiveDirectoryLdapAuthenticationProvider(ad_domain, ad_url);
             adProvider.setConvertSubErrorCodesToExceptions(true);
@@ -253,6 +271,16 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Primary
     public H2ConsoleProperties h2ConsoleProperties() {
         return new H2ConsoleProperties();
+    }
+
+    @Bean
+    public JwtAuthenticationFilter jwtAuthenticationFilter(AuthenticationManager authenticationManager) {
+        return new JwtAuthenticationFilter(authenticationManager);
+    }
+
+    @Bean
+    public JwtAuthenticationProvider jwtAuthenticationProvider() {
+        return new JwtAuthenticationProvider();
     }
 
     /**

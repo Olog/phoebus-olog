@@ -1,0 +1,111 @@
+dn: dc=olog,dc=local
+objectClass: dcObject
+objectClass: organization
+dc: olog
+o: olog
+
+dn: cn=channelfinder,dc=olog,dc=local
+objectClass: simpleSecurityObject
+objectClass: organizationalRole
+userPassword:: e1NIQX1jUkR0cE5DZUJpcWw1S09Rc0tWeXJBMHNBaUE9
+cn: olog
+
+dn: ou=Group,dc=olog,dc=local
+objectClass: organizationalunit
+ou: Group
+description: groups branch
+
+dn: ou=People,dc=olog,dc=local
+objectClass: organizationalunit
+ou: People
+description: people branch
+
+dn: uid=tag,ou=People,dc=olog,dc=local
+uid: tag
+objectClass: account
+objectClass: posixAccount
+description: User with tag role
+cn: tag
+userPassword: 1234
+uidNumber: 23001
+gidNumber: 23001
+homeDirectory: /dev/null
+
+dn: uid=property,ou=People,dc=olog,dc=local
+uid: property
+objectClass: account
+objectClass: posixAccount
+description: User with property role
+cn: property
+userPassword: 1234
+uidNumber: 23002
+gidNumber: 23002
+homeDirectory: /dev/null
+
+dn: uid=logbook,ou=People,dc=olog,dc=local
+uid: logbook
+objectClass: account
+objectClass: posixAccount
+description: User with logbook role
+cn: logbook
+userPassword: 1234
+uidNumber: 23003
+gidNumber: 23003
+homeDirectory: /dev/null
+
+dn: uid=log,ou=People,dc=olog,dc=local
+uid: log
+objectClass: account
+objectClass: posixAccount
+description: User with log role
+cn: log
+userPassword: 1234
+uidNumber: 23004
+gidNumber: 23004
+homeDirectory: /dev/null
+
+dn: uid=admin,ou=People,dc=olog,dc=local
+uid: admin
+objectClass: account
+objectClass: posixAccount
+description: User with admin role
+cn: admin
+userPassword: 1234
+uidNumber: 23005
+gidNumber: 23005
+homeDirectory: /dev/null
+
+dn: cn=olog-tags,ou=Group,dc=olog,dc=local
+cn: olog-tags
+objectClass: posixGroup
+description: olog-tags group
+gidNumber: 24001
+memberUid: tag
+
+dn: cn=olog-properties,ou=Group,dc=olog,dc=local
+cn: olog-properties
+objectClass: posixGroup
+description: olog-properties group
+gidNumber: 24002
+memberUid: property
+
+dn: cn=olog-logbooks,ou=Group,dc=olog,dc=local
+cn: olog-logbooks
+objectClass: posixGroup
+description: olog-logbooks group
+gidNumber: 24003
+memberUid: logbook
+
+dn: cn=olog-logs,ou=Group,dc=olog,dc=local
+cn: olog-logs
+objectClass: posixGroup
+description: olog-logs group
+gidNumber: 24004
+memberUid: log
+
+dn: cn=olog-admins,ou=Group,dc=olog,dc=local
+cn: olog-admins
+objectClass: posixGroup
+description: olog-admins group
+gidNumber: 24005
+memberUid: admin
