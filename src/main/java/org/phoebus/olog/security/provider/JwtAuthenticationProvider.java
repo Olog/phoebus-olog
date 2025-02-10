@@ -29,6 +29,9 @@ public class JwtAuthenticationProvider implements AuthenticationProvider {
 
     @Value("${oauth2.issueUri}")
     String issuerUri;
+
+    @Value("${oauth2.claimsName}")
+    String claimsName;
     private final RestTemplate restTemplate = new RestTemplate();
 
 
@@ -44,7 +47,7 @@ public class JwtAuthenticationProvider implements AuthenticationProvider {
                     .parseClaimsJws(jwtToken)
                     .getBody();
 
-            String username = claims.getSubject();
+            String username = claims.get(claimsName, String.class);
             if (username == null) {
                 throw new UsernameNotFoundException("Username not found in token");
             }
