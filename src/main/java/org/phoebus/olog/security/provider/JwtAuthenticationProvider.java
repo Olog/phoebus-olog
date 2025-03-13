@@ -5,6 +5,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -60,7 +61,7 @@ public class JwtAuthenticationProvider implements AuthenticationProvider {
             return new UsernamePasswordAuthenticationToken(username, jwtToken, authorities);
 
         } catch (Exception e) {
-            throw new RuntimeException("Invalid JWT token", e);
+            throw new AuthenticationServiceException("Invalid JWT token", e);
         }
     }
 
