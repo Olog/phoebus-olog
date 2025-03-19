@@ -1,0 +1,12 @@
+{
+  "mappings": {
+    "properties": {
+      "name": {
+        "type": "keyword"
+      },
+      "state": {
+        "type": "keyword"
+      }
+    }
+  }
+}

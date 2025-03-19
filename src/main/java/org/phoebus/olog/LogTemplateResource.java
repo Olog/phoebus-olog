@@ -13,22 +13,13 @@ import org.phoebus.olog.entity.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.security.Principal;
 import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import java.time.Instant;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -128,7 +119,7 @@ public class LogTemplateResource {
      * @return The updated {@link LogTemplate} record, or HTTP status 404 if the log template does not exist. If the path
      * variable does not match the id in the log record, HTTP status 400 (bad request) is returned.
      */
-    /*
+
     @SuppressWarnings("unused")
     @PostMapping("/{logTemplateId}")
     public LogTemplate updateLogTemplate(@PathVariable String logTemplateId,
@@ -138,27 +129,28 @@ public class LogTemplateResource {
 
         // In case a client sends a log template record where the id does not match the path variable, return HTTP 400 (bad request)
         if (!logTemplateId.equals(logTemplate.getId())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, TextUtil.LOG_TEMPLATE_NOT_MATCH_PATH);
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Template not exists");
         }
 
         Optional<LogTemplate> foundLogTemplate = logTemplateRepository.findById(logTemplateId);
 
         LogTemplate persistedLogTemplate = foundLogTemplate.get();
         persistedLogTemplate.setName(logTemplate.getName());
-        persistedLogTemplate.getLog().setOwner(principal.getName());
-        persistedLogTemplate.getLog().setLevel(logTemplate.getLog().getLevel());
-        persistedLogTemplate.getLog().setProperties(logTemplate.getLog().getProperties());
-        persistedLogTemplate.getLog().setModifyDate(Instant.now());
-        persistedLogTemplate.getLog().setDescription(logTemplate.getLog().getDescription());   // to make it work with old clients where description field is sent instead of source
-        persistedLogTemplate.getLog().setTags(logTemplate.getLog().getTags());
-        persistedLogTemplate.getLog().setLogbooks(logTemplate.getLog().getLogbooks());
-        persistedLogTemplate.getLog().setTitle(logTemplate.getLog().getTitle());
+        persistedLogTemplate.setOwner(principal.getName());
+        persistedLogTemplate.setLevel(logTemplate.getLevel());
+        persistedLogTemplate.setProperties(logTemplate.getProperties());
+        persistedLogTemplate.setModifyDate(Instant.now());
+        persistedLogTemplate.setSource(logTemplate.getSource());   // to make it work with old clients where description field is sent instead of source
+        persistedLogTemplate.setTags(logTemplate.getTags());
+        persistedLogTemplate.setLogbooks(logTemplate.getLogbooks());
+        persistedLogTemplate.setTitle(logTemplate.getTitle());
+        persistedLogTemplate.setId(logTemplateId);
 
         return logTemplateRepository.update(persistedLogTemplate);
 
     }
 
-     */
+
 
     /**
      * Delete a {@link LogTemplate} based on its unique id.
