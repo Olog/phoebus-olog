@@ -1,8 +1,12 @@
 package org.phoebus.olog;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch._types.FieldSort;
 import co.elastic.clients.elasticsearch._types.Refresh;
+import co.elastic.clients.elasticsearch._types.SortOptions;
 import co.elastic.clients.elasticsearch.core.IndexRequest;
+import co.elastic.clients.elasticsearch.core.SearchRequest;
+import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.indices.CreateIndexRequest;
 import co.elastic.clients.elasticsearch.indices.CreateIndexResponse;
 import co.elastic.clients.elasticsearch.indices.ExistsRequest;
@@ -17,6 +21,7 @@ import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
 import org.phoebus.olog.entity.Logbook;
 import org.phoebus.olog.entity.Property;
+import org.phoebus.olog.entity.State;
 import org.phoebus.olog.entity.Tag;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -116,6 +121,14 @@ public class ElasticConfig {
     @SuppressWarnings("unused")
     public void setEsLogTemplateIndex(String indexName) {
         ES_LOG_TEMPLATE_INDEX = indexName;
+    }
+
+    public static String ES_LEVEL_INDEX;
+
+    @Value("${elasticsearch.level.index:olog_levels}")
+    @SuppressWarnings("unused")
+    public void setEsLevelIndex(String indexName) {
+        ES_LEVEL_INDEX = indexName;
     }
 
     @Value("${elasticsearch.cluster.name:elasticsearch}")
@@ -326,6 +339,21 @@ public class ElasticConfig {
         } catch (IOException e) {
             logger.log(Level.WARNING, MessageFormat.format(TextUtil.ELASTIC_FAILED_TO_CREATE_INDEX, ES_LOG_TEMPLATE_INDEX), e);
         }
+
+        // Olog Levels (aka Entry Types)
+        try (InputStream is = ElasticConfig.class.getResourceAsStream("/level_mapping.json")) {
+            BooleanResponse exits = client.indices().exists(ExistsRequest.of(e -> e.index(ES_LEVEL_INDEX)));
+            if (!exits.value()) {
+                CreateIndexRequest request = CreateIndexRequest.of(
+                        c -> withTimeouts(c).index(ES_LEVEL_INDEX).withJson(is)
+                );
+                logCreateIndexRequest(request);
+                CreateIndexResponse result = client.indices().create(request);
+                logger.log(Level.INFO, () -> MessageFormat.format(TextUtil.ELASTIC_CREATED_INDEX_ACKNOWLEDGED, ES_LEVEL_INDEX, result.acknowledged()));
+            }
+        } catch (IOException e) {
+            logger.log(Level.WARNING, MessageFormat.format(TextUtil.ELASTIC_FAILED_TO_CREATE_INDEX, ES_LEVEL_INDEX), e);
+        }
     }
 
     private static final ObjectMapper mapper = new ObjectMapper();
@@ -394,29 +422,50 @@ public class ElasticConfig {
             logger.log(Level.WARNING, TextUtil.ELASTIC_FAILED_TO_INITIALIZE_TAGS, ex);
         }
 
-        // Setup the default properties
+        // Setup the default levels
         String propertiesURL = defaultPropertiesURL;
         if (propertiesURL.isEmpty()) {
-            final URL resource = getClass().getResource("/default_properties.json");
+            final URL resource = getClass().getResource("/default_levels.json");
             propertiesURL = resource.toExternalForm();
         }
         try (InputStream input = new URL(propertiesURL).openStream()) {
-            List<Property> jsonTag = mapper.readValue(input, new TypeReference<>() {
+            List<org.phoebus.olog.entity.Level> jsonTag = mapper.readValue(input, new TypeReference<>() {
             });
 
-            jsonTag.forEach(property -> {
-                try {
-                    if (!indexClient.exists(e -> e.index(ES_PROPERTY_INDEX).id(property.getName())).value()) {
-                        IndexRequest<Property> indexRequest =
-                                IndexRequest.of(i ->
-                                        i.index(ES_PROPERTY_INDEX)
-                                                .id(property.getName())
-                                                .document(property)
-                                                .refresh(Refresh.True));
-                        client.index(indexRequest);
+            // Get all (if any) to be able to determine if a level marked as default already exists.
+            SearchRequest searchRequest = SearchRequest.of(s ->
+                    s.index(ES_LEVEL_INDEX)
+                            .query(q -> q.match(t -> t.field("defaultLevel").query(true)))
+                            .timeout("10s")
+                            .size(1000));
+
+            SearchResponse<org.phoebus.olog.entity.Level> response =
+                    client.search(searchRequest, org.phoebus.olog.entity.Level.class);
+
+            final AtomicBoolean defaultLevelExists =
+                    new AtomicBoolean(response.hits().hits().size() > 0);
+
+            jsonTag.forEach(level -> {
+                if(defaultLevelExists.get() && level.defaultLevel()) {
+                    logger.log(Level.WARNING, "Not inserting level \"" + level.name() + "\" as a default level already exists");
+                }
+                else{
+                    try {
+                        if (!indexClient.exists(e -> e.index(ES_LEVEL_INDEX).id(level.name())).value()) {
+                            IndexRequest<org.phoebus.olog.entity.Level> indexRequest =
+                                    IndexRequest.of(i ->
+                                            i.index(ES_LEVEL_INDEX)
+                                                    .id(level.name())
+                                                    .document(level)
+                                                    .refresh(Refresh.True));
+                            client.index(indexRequest);
+                        }
+                        if(level.defaultLevel()){
+                            defaultLevelExists.set(true);
+                        }
+                    } catch (IOException e) {
+                        logger.log(Level.WARNING, MessageFormat.format(TextUtil.ELASTIC_FAILED_TO_INITIALIZE_PROPERTY, level.name()), e);
                     }
-                } catch (IOException e) {
-                    logger.log(Level.WARNING, MessageFormat.format(TextUtil.ELASTIC_FAILED_TO_INITIALIZE_PROPERTY, property.getName()), e);
                 }
             });
         } catch (IOException ex) {
