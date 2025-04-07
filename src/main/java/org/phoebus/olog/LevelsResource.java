@@ -5,7 +5,6 @@
  */
 package org.phoebus.olog;
 
-import org.phoebus.olog.entity.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -23,154 +22,144 @@ import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static org.phoebus.olog.OlogResourceDescriptors.TAG_RESOURCE_URI;
+import static org.phoebus.olog.OlogResourceDescriptors.LEVEL_RESOURCE_RUI;
 
 /**
- * Resource for handling the requests to ../tags
- * @author Kunal Shroff
+ * Resource for handling the requests to ../levels
  *
+ * @author Georg Weiss
  */
 @RestController
-@RequestMapping(TAG_RESOURCE_URI)
+@RequestMapping(LEVEL_RESOURCE_RUI)
 public class LevelsResource {
 
-    private Logger log = Logger.getLogger(LevelsResource.class.getName());
+    private final Logger log = Logger.getLogger(LevelsResource.class.getName());
 
     @Autowired
-    private TagRepository tagRepository;
-
-    /** Creates a new instance of TagsResource */
-    public LevelsResource() {
-    }
+    private LevelRepository levelRepository;
 
     /**
-     * GET method for retrieving the list of tags in the database.
+     * GET method for retrieving the list of levels in the database.
      *
-     * @return list of tags
+     * @return list of {@link org.phoebus.olog.entity.Level}s
      */
     @GetMapping
-    public Iterable<Tag> findAll() {
-        return tagRepository.findAll();
+    public Iterable<org.phoebus.olog.entity.Level> findAll() {
+        return levelRepository.findAll();
     }
 
     /**
-     * Get method for retrieving the tag with name matching tagName
+     * Get method for retrieving the level with name matching levelName
      *
-     * @param tagName - the name of the tag to be retrieved
-     * @return the matching tag, or null
+     * @param levelName - the name of the level to be retrieved
+     * @return the matching {@link org.phoebus.olog.entity.Level}. If not
+     * found, HTTP 404 reponse is triggered.
      */
-    @GetMapping("/{tagName}")
-    public Tag findByTitle(@PathVariable String tagName) {
-        Optional<Tag> foundTag = tagRepository.findById(tagName);
+    @GetMapping("/{levelName}")
+    public org.phoebus.olog.entity.Level findByTitle(@PathVariable String levelName) {
+        Optional<org.phoebus.olog.entity.Level> foundTag = levelRepository.findById(levelName);
         if (foundTag.isPresent()) {
             return foundTag.get();
         } else {
-            String message = MessageFormat.format(TextUtil.TAG_NOT_FOUND, tagName);
+            String message = MessageFormat.format(TextUtil.LEVEL_NOT_FOUND, levelName);
             log.log(Level.SEVERE, message, new ResponseStatusException(HttpStatus.NOT_FOUND));
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, message);
         }
     }
 
     /**
-     * PUT method for creating a tag.
+     * PUT method for creating a {@link org.phoebus.olog.entity.Level}.
      *
-     * @param tagName - the name of the tag to be created
-     * @param tag - the tag object with owner and state information
+     * @param levelName - the name of the tag to be created
+     * @param level     - the {@link org.phoebus.olog.entity.Level} object with owner and state information
      * @return the created tag
      */
-    @PutMapping("/{tagName}")
-    public Tag createTag(@PathVariable String tagName, @RequestBody final Tag tag) {
-        // TODO Check permissions
-        // Validate
+    @PutMapping("/{levelName}")
+    public org.phoebus.olog.entity.Level createLevel(@PathVariable String levelName, @RequestBody final org.phoebus.olog.entity.Level level) {
 
         // Validate request parameters
-        validateTagRequest(tag);
+        validateLevelRequest(level);
 
         // check if present
-        Optional<Tag> existingTag = tagRepository.findById(tagName);
+        Optional<org.phoebus.olog.entity.Level> existingTag =
+                levelRepository.findById(levelName);
         if (existingTag.isPresent()) {
             // delete existing tag
-            tagRepository.deleteById(tagName);
+            levelRepository.deleteById(levelName);
         }
 
-        // create new tag
-        return tagRepository.save(tag);
+        // create new level
+        return levelRepository.save(level);
     }
 
     /**
-     * PUT method for the tags resource to support the creation of a list of tags
+     * PUT method for the level resource to support the creation of a list of levels
      *
-     * @param tags - the list of tags to be created
-     * @return the list of tags created
+     * @param levels - the list of levels to be created
+     * @return the list of levels created
      */
     @PutMapping
-    public Iterable<Tag> updateTag(@RequestBody final List<Tag> tags) {
-        // TODO Check permissions
-        // Validate
+    public Iterable<org.phoebus.olog.entity.Level> updateTag(@RequestBody final List<org.phoebus.olog.entity.Level> levels) {
 
         // Validate request parameters
-        validateTagRequest(tags);
+        validateLevelsRequest(levels);
 
-        // delete existing tags
-        for(Tag tag: tags) {
-            if(tagRepository.existsById(tag.getName())) {
+        // delete existing levels
+        for (org.phoebus.olog.entity.Level level : levels) {
+            if (levelRepository.existsById(level.name())) {
                 // delete existing tag
-                tagRepository.deleteById(tag.getName());
+                levelRepository.deleteById(level.name());
             }
         }
 
         // create new tags
-        return tagRepository.saveAll(tags);
+        return levelRepository.saveAll(levels);
     }
 
-    @DeleteMapping("/{tagName}")
-    public void deleteTag(@PathVariable String tagName) {
+    @DeleteMapping("/{levelName}")
+    public void deleteTag(@PathVariable String levelName) {
         // TODO Check permissions
 
         // check if present
-        Optional<Tag> existingTag = tagRepository.findById(tagName);
-        if (existingTag.isPresent()) {
-            // delete existing tag
-            tagRepository.deleteById(tagName);
+        Optional<org.phoebus.olog.entity.Level> existingLevel = levelRepository.findById(levelName);
+        if (existingLevel.isPresent()) {
+            // delete existing level
+            levelRepository.deleteById(levelName);
         } else {
-            String message = MessageFormat.format(TextUtil.TAG_NOT_EXISTS, tagName);
+            String message = MessageFormat.format(TextUtil.LEVEL_EXISTS_FAILED, levelName);
             log.log(Level.SEVERE, message, new ResponseStatusException(HttpStatus.NOT_FOUND));
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, message);
         }
     }
 
     /**
-     * Checks if all the tags included satisfy the following conditions:
-     *
-     * <ol>
-     * <li> the tag names are not null or empty
-     * <li> no validation for tag states
-     * </ol>
-     *
-     * @param tags the tags to be validated
+     * @param levels List of {@link org.phoebus.olog.entity.Level}s
      */
-    public void validateTagRequest(Iterable<Tag> tags) {
-        for (Tag tag : tags) {
-            validateTagRequest(tag);
-        }
+    public void validateLevelsRequest(List<org.phoebus.olog.entity.Level> levels) {
+        levels.forEach(this::validateLevelRequest);
     }
 
     /**
-     * Checks if the tag satisfies the following conditions:
+     * Validates a {@link org.phoebus.olog.entity.Level}: name must be non-empty. If
+     * {@link org.phoebus.olog.entity.Level#defaultLevel()} is true, then no other
+     * exsting {@link org.phoebus.olog.entity.Level} must be flagged as default.
      *
-     * <ol>
-     * <li> the tag name is not null or empty
-     * <li> no validation for tag state
-     * </ol>
-     *
-     * @param tag the tag to be validated
+     * @param level {@link org.phoebus.olog.entity.Level} to add.
      */
-    public void validateTagRequest(Tag tag) {
-        if (tag.getName() == null || tag.getName().isEmpty()) {
-            String message = MessageFormat.format(TextUtil.TAG_NAME_CANNOT_BE_NULL_OR_EMPTY, tag.toString());
+    public void validateLevelRequest(org.phoebus.olog.entity.Level level) {
+        if (level.name() == null || level.name().isEmpty()) {
+            String message = TextUtil.LEVEL_NAME_CANNOT_BE_NULL_OR_EMPTY;
             log.log(Level.SEVERE, message, new ResponseStatusException(HttpStatus.BAD_REQUEST));
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, message, null);
         }
+        Iterable<org.phoebus.olog.entity.Level> existing =
+                levelRepository.findAll();
+        while (existing.iterator().hasNext()) {
+            org.phoebus.olog.entity.Level l = existing.iterator().next();
+            if (l.defaultLevel() && level.defaultLevel()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        MessageFormat.format(TextUtil.DEFAULT_LEVEL_ALREADY_EXISTS, l.name()));
+            }
+        }
     }
-
 }
