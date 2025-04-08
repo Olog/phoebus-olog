@@ -58,7 +58,7 @@ public class LevelsResource {
      */
     @SuppressWarnings("unused")
     @GetMapping("/{levelName}")
-    public org.phoebus.olog.entity.Level findByName(@PathVariable String levelName) {
+    public org.phoebus.olog.entity.Level findById(@PathVariable String levelName) {
         Optional<org.phoebus.olog.entity.Level> foundLevel = levelRepository.findById(levelName);
         if (foundLevel.isPresent()) {
             return foundLevel.get();
