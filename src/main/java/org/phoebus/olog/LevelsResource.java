@@ -35,11 +35,12 @@ public class LevelsResource {
 
     private final Logger log = Logger.getLogger(LevelsResource.class.getName());
 
+    @SuppressWarnings("unused")
     @Autowired
     private LevelRepository levelRepository;
 
     /**
-     * GET method for retrieving the list of levels in the database.
+     * GET method for retrieving the list of {@link org.phoebus.olog.entity.Level}s in the database.
      *
      * @return list of {@link org.phoebus.olog.entity.Level}s
      */
@@ -49,17 +50,18 @@ public class LevelsResource {
     }
 
     /**
-     * Get method for retrieving the level with name matching levelName
+     * Get method for retrieving the {@link org.phoebus.olog.entity.Level} with name matching levelName
      *
-     * @param levelName - the name of the level to be retrieved
+     * @param levelName - the name of the {@link org.phoebus.olog.entity.Level} to be retrieved
      * @return the matching {@link org.phoebus.olog.entity.Level}. If not
-     * found, HTTP 404 reponse is triggered.
+     * found, HTTP 404 response is triggered.
      */
+    @SuppressWarnings("unused")
     @GetMapping("/{levelName}")
-    public org.phoebus.olog.entity.Level findByTitle(@PathVariable String levelName) {
-        Optional<org.phoebus.olog.entity.Level> foundTag = levelRepository.findById(levelName);
-        if (foundTag.isPresent()) {
-            return foundTag.get();
+    public org.phoebus.olog.entity.Level findByName(@PathVariable String levelName) {
+        Optional<org.phoebus.olog.entity.Level> foundLevel = levelRepository.findById(levelName);
+        if (foundLevel.isPresent()) {
+            return foundLevel.get();
         } else {
             String message = MessageFormat.format(TextUtil.LEVEL_NOT_FOUND, levelName);
             log.log(Level.SEVERE, message, new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -70,10 +72,18 @@ public class LevelsResource {
     /**
      * PUT method for creating a {@link org.phoebus.olog.entity.Level}.
      *
-     * @param levelName - the name of the tag to be created
-     * @param level     - the {@link org.phoebus.olog.entity.Level} object with owner and state information
-     * @return the created tag
+     * <p>
+     *     If the specified {@link org.phoebus.olog.entity.Level} is marked as default,
+     *     checks are made to make sure no existing {@link org.phoebus.olog.entity.Level}
+     *     in the database is marked as default. This is needed to ensure that only one
+     *     {@link org.phoebus.olog.entity.Level} is defined to be the default.
+     * </p>
+     *
+     * @param levelName - the name of the {@link org.phoebus.olog.entity.Level} to be created
+     * @param level     - the {@link org.phoebus.olog.entity.Level} object, optionally specifying it
+     *                  is the default {@link org.phoebus.olog.entity.Level}.
      */
+    @SuppressWarnings("unused")
     @PutMapping("/{levelName}")
     public org.phoebus.olog.entity.Level createLevel(@PathVariable String levelName, @RequestBody final org.phoebus.olog.entity.Level level) {
 
@@ -81,10 +91,10 @@ public class LevelsResource {
         validateLevelRequest(level);
 
         // check if present
-        Optional<org.phoebus.olog.entity.Level> existingTag =
+        Optional<org.phoebus.olog.entity.Level> existingLevel =
                 levelRepository.findById(levelName);
-        if (existingTag.isPresent()) {
-            // delete existing tag
+        if (existingLevel.isPresent()) {
+            // delete existing level
             levelRepository.deleteById(levelName);
         }
 
@@ -93,13 +103,15 @@ public class LevelsResource {
     }
 
     /**
-     * PUT method for the level resource to support the creation of a list of levels
+     * PUT method for the {@link org.phoebus.olog.entity.Level} resource to support the creation
+     * of a list of {@link org.phoebus.olog.entity.Level}s
      *
-     * @param levels - the list of levels to be created
-     * @return the list of levels created
+     * @param levels - the list of {@link org.phoebus.olog.entity.Level}s to be created
+     * @return the list of {@link org.phoebus.olog.entity.Level}s created
      */
+    @SuppressWarnings("unused")
     @PutMapping
-    public Iterable<org.phoebus.olog.entity.Level> updateTag(@RequestBody final List<org.phoebus.olog.entity.Level> levels) {
+    public Iterable<org.phoebus.olog.entity.Level> createLevels(@RequestBody final List<org.phoebus.olog.entity.Level> levels) {
 
         // Validate request parameters
         validateLevelsRequest(levels);
@@ -112,13 +124,13 @@ public class LevelsResource {
             }
         }
 
-        // create new tags
+        // create new levels
         return levelRepository.saveAll(levels);
     }
 
+    @SuppressWarnings("unused")
     @DeleteMapping("/{levelName}")
-    public void deleteTag(@PathVariable String levelName) {
-        // TODO Check permissions
+    public void deleteLevel(@PathVariable String levelName) {
 
         // check if present
         Optional<org.phoebus.olog.entity.Level> existingLevel = levelRepository.findById(levelName);
