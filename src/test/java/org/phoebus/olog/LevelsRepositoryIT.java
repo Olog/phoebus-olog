@@ -110,7 +110,6 @@ class LevelsRepositoryIT {
         result =
                 levelRepository.findById(level2.name());
         assertThat("Failed to delete level2 ", result.isEmpty());
-
     }
 
     /**

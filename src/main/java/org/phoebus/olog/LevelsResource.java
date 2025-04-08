@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.text.MessageFormat;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.logging.Level;
@@ -165,8 +166,9 @@ public class LevelsResource {
         }
         Iterable<org.phoebus.olog.entity.Level> existing =
                 levelRepository.findAll();
-        while (existing.iterator().hasNext()) {
-            org.phoebus.olog.entity.Level l = existing.iterator().next();
+        Iterator<org.phoebus.olog.entity.Level> iterator = existing.iterator();
+        while (iterator.hasNext()) {
+            org.phoebus.olog.entity.Level l = iterator.next();
             if (l.defaultLevel() && level.defaultLevel()) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                         MessageFormat.format(TextUtil.DEFAULT_LEVEL_ALREADY_EXISTS, l.name()));

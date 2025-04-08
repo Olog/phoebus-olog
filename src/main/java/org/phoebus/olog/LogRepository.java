@@ -40,6 +40,7 @@ import java.text.MessageFormat;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -302,8 +303,9 @@ public class LogRepository implements CrudRepository<Log, String> {
 
     @Override
     public void deleteAllById(Iterable ids) {
-        while (ids.iterator().hasNext()) {
-            deleteById((String) ids.iterator().next());
+        Iterator<String> iterator = ids.iterator();
+        while (iterator.hasNext()) {
+            deleteById(iterator.next());
         }
     }
 }
