@@ -29,6 +29,7 @@ import co.elastic.clients.elasticsearch.core.mget.MultiGetResponseItem;
 import co.elastic.clients.elasticsearch.core.search.Hit;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Repository;
@@ -50,6 +51,10 @@ import static org.phoebus.olog.ElasticConfig.ES_LEVEL_INDEX;
 public class LevelRepository implements CrudRepository<org.phoebus.olog.entity.Level, String> {
 
     private final Logger logger = Logger.getLogger(LevelRepository.class.getName());
+
+    @SuppressWarnings("unused")
+    @Value("${elasticsearch.result.size.levels:100}")
+    private int levelsResultSize;
 
     @Autowired
     @Qualifier("client")
@@ -158,7 +163,7 @@ public class LevelRepository implements CrudRepository<org.phoebus.olog.entity.L
                     s.index(ES_LEVEL_INDEX)
                             .query(new MatchAllQuery.Builder().build()._toQuery())
                             .timeout("10s")
-                            .size(1000));
+                            .size(levelsResultSize));
 
             SearchResponse<org.phoebus.olog.entity.Level> response =
                     client.search(searchRequest, org.phoebus.olog.entity.Level.class);
