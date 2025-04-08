@@ -36,6 +36,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -57,7 +58,6 @@ public class LevelRepository implements CrudRepository<org.phoebus.olog.entity.L
     @Autowired
     @Qualifier("client")
     ElasticsearchClient client;
-
     /**
      *
      */
@@ -236,8 +236,9 @@ public class LevelRepository implements CrudRepository<org.phoebus.olog.entity.L
 
     @Override
     public void deleteAllById(Iterable ids) {
-        while (ids.iterator().hasNext()) {
-            deleteById((String) ids.iterator().next());
+        Iterator<String> iterator = ids.iterator();
+        while (iterator.hasNext()) {
+            deleteById(iterator.next());
         }
     }
 }

@@ -85,6 +85,34 @@ class LevelsRepositoryIT {
         cleanUp(List.of(level1));
     }
 
+    @Test
+    void deleteAll() throws IOException {
+        levelRepository.saveAll(List.of(level1, level2));
+        levelRepository.deleteAll();
+
+        Optional<Level> result =
+                levelRepository.findById(level1.name());
+        assertThat("Failed to delete level1 ", result.isEmpty());
+        result =
+                levelRepository.findById(level2.name());
+        assertThat("Failed to delete level2 ", result.isEmpty());
+
+    }
+
+    @Test
+    void deleteAllById() throws IOException {
+        levelRepository.saveAll(List.of(level1, level2));
+        levelRepository.deleteAllById(List.of("level1", "level2"));
+
+        Optional<Level> result =
+                levelRepository.findById(level1.name());
+        assertThat("Failed to delete level1 ", result.isEmpty());
+        result =
+                levelRepository.findById(level2.name());
+        assertThat("Failed to delete level2 ", result.isEmpty());
+
+    }
+
     /**
      * create a set of tags
      */
