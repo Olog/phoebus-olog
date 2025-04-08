@@ -1,7 +1,5 @@
-/*
- * Copyright (c) 2010-2020 Brookhaven National Laboratory
- * Copyright (c) 2010-2020 Helmholtz-Zentrum Berlin für Materialien und Energie GmbH
- * All rights reserved. Use is subject to license terms and conditions.
+/**
+ * Copyright (C) 2025 European Spallation Source ERIC.
  */
 package org.phoebus.olog;
 
@@ -29,6 +27,7 @@ import static org.phoebus.olog.OlogResourceDescriptors.LEVEL_RESOURCE_RUI;
  *
  * @author Georg Weiss
  */
+@SuppressWarnings("unused")
 @RestController
 @RequestMapping(LEVEL_RESOURCE_RUI)
 public class LevelsResource {
