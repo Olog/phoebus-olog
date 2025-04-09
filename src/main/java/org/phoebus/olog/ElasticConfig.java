@@ -1,9 +1,7 @@
 package org.phoebus.olog;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
-import co.elastic.clients.elasticsearch._types.FieldSort;
 import co.elastic.clients.elasticsearch._types.Refresh;
-import co.elastic.clients.elasticsearch._types.SortOptions;
 import co.elastic.clients.elasticsearch.core.IndexRequest;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
@@ -20,8 +18,6 @@ import org.apache.http.HttpHost;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
 import org.phoebus.olog.entity.Logbook;
-import org.phoebus.olog.entity.Property;
-import org.phoebus.olog.entity.State;
 import org.phoebus.olog.entity.Tag;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -443,13 +439,12 @@ public class ElasticConfig {
                     client.search(searchRequest, org.phoebus.olog.entity.Level.class);
 
             final AtomicBoolean defaultLevelExists =
-                    new AtomicBoolean(response.hits().hits().size() > 0);
+                    new AtomicBoolean(!response.hits().hits().isEmpty());
 
             jsonTag.forEach(level -> {
-                if(defaultLevelExists.get() && level.defaultLevel()) {
+                if (defaultLevelExists.get() && level.defaultLevel()) {
                     logger.log(Level.WARNING, "Not inserting level \"" + level.name() + "\" as a default level already exists");
-                }
-                else{
+                } else {
                     try {
                         if (!indexClient.exists(e -> e.index(ES_LEVEL_INDEX).id(level.name())).value()) {
                             IndexRequest<org.phoebus.olog.entity.Level> indexRequest =
@@ -460,11 +455,12 @@ public class ElasticConfig {
                                                     .refresh(Refresh.True));
                             client.index(indexRequest);
                         }
-                        if(level.defaultLevel()){
+                        if (level.defaultLevel()) {
                             defaultLevelExists.set(true);
                         }
                     } catch (IOException e) {
-                        logger.log(Level.WARNING, MessageFormat.format(TextUtil.ELASTIC_FAILED_TO_INITIALIZE_PROPERTY, level.name()), e);
+                        logger.log(Level.WARNING, MessageFormat.format(TextUtil.ELASTIC_FAILED_TO_INITIALIZE_PROPERTY,
+                                level.name()), e);
                     }
                 }
             });

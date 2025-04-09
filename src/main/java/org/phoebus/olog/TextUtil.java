@@ -155,7 +155,7 @@ public class TextUtil {
     public static final String LEVEL_NOT_DELETED                        = "Failed to delete level {0}";
     public static final String LEVELS_DELETE_ALL_NOT_ALLOWED            = "Deleting all levels not allowed";
     public static final String LEVEL_NAME_CANNOT_BE_NULL_OR_EMPTY       = "The level name cannot be null or empty";
-    public static final String DEFAULT_LEVEL_ALREADY_EXISTS             = "Level {0} alrready defined as default";
+    public static final String DEFAULT_LEVEL_ALREADY_EXISTS             = "Level {0} already defined as default";
     /**
      * This class is not to be instantiated.
      */

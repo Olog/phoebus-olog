@@ -153,7 +153,7 @@ public class LevelsResource {
 
     /**
      * Validates a {@link org.phoebus.olog.entity.Level}: name must be non-empty. If
-     * {@link org.phoebus.olog.entity.Level#defaultLevel()} is true, then no other
+     * {@link org.phoebus.olog.entity.Level#defaultLevel()} ()} is true, then no other
      * exsting {@link org.phoebus.olog.entity.Level} must be flagged as default.
      *
      * @param level {@link org.phoebus.olog.entity.Level} to add.

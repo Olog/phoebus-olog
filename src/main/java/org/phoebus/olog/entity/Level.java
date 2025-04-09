@@ -18,10 +18,12 @@
 
 package org.phoebus.olog.entity;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 /**
  * Represents a "Level" value. Sites may choose another name for this entity, e.g. "Entry Type".
  * In the underlying repository only one object is allowed to be the default level.
- * @param name Unique name
+ * @param name Unique, case-sensitive name
  * @param defaultLevel Specifies if this is the default level. Clients can use this to
  *                     avoid active selection.
  */

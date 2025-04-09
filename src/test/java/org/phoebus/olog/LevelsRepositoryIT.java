@@ -53,27 +53,17 @@ class LevelsRepositoryIT {
     @Qualifier("client")
     ElasticsearchClient client;
 
-    /**
-     * Test the creation of a test tag
-     *
-     * @throws IOException
-     */
     @Test
-    void createLevel() throws IOException {
-        levelRepository.save(level1);
+    void createLevel() {
+        Level l = levelRepository.save(level1);
         Optional<Level> result = levelRepository.findById(level1.name());
         assertThat("Failed to create Level " + level1.name(), result.isPresent() && result.get().equals(level1));
 
         cleanUp(List.of(level1));
     }
 
-    /**
-     * Test the deletion of a test tag
-     *
-     * @throws IOException
-     */
     @Test
-    void deleteLevel() throws IOException {
+    void deleteLevel()  {
         levelRepository.save(level2);
         Optional<Level> result = levelRepository.findById(level2.name());
         assertThat("Failed to create level " + level2.name(), result.isPresent() && result.get().equals(level2));
@@ -86,7 +76,7 @@ class LevelsRepositoryIT {
     }
 
     @Test
-    void deleteAll() throws IOException {
+    void deleteAll() {
         levelRepository.saveAll(List.of(level1, level2));
         levelRepository.deleteAll();
 
@@ -100,7 +90,7 @@ class LevelsRepositoryIT {
     }
 
     @Test
-    void deleteAllById() throws IOException {
+    void deleteAllById() {
         levelRepository.saveAll(List.of(level1, level2));
         levelRepository.deleteAllById(List.of("level1", "level2"));
 
@@ -173,7 +163,7 @@ class LevelsRepositoryIT {
     }
 
     @Test
-    void findAllLevelsByIds() throws IOException {
+    void findAllLevelsByIds() {
         List<Level> levels = Arrays.asList(level1, level2);
         try {
             levelRepository.saveAll(levels);
