@@ -142,12 +142,20 @@ public class TextUtil {
     public static final String TAG_NOT_CREATED                          = "Failed to create tag {0}";
     public static final String TAG_NOT_DELETED                          = "Failed to delete tag {0}";
     public static final String TAG_NOT_FOUND                            = "Failed to find tag {0}";
+    public static final String LEVEL_NOT_FOUND                          = "Failed to find level {0}";
+    public static final String LEVEL_EXISTS_FAILED                      = "Failed to check if level {0} exists";
 
     public static final String TAGS_DELETE_ALL_NOT_ALLOWED              = "Deleting all tags is not allowed";
     public static final String TAGS_NOT_CREATED                         = "Failed to create tags {0}";
     public static final String TAGS_NOT_FOUND                           = "Failed to find tags";
     public static final String TAGS_NOT_FOUND_1                         = "Failed to find tags {0}";
-
+    public static final String LEVELS_NOT_CREATED                       = "Failed to create levels";
+    public static final String LEVELS_NOT_FOUND                         = "Failed to find levels";
+    public static final String LEVEL_DELETED                            = "Level {0} deleted";
+    public static final String LEVEL_NOT_DELETED                        = "Failed to delete level {0}";
+    public static final String LEVELS_DELETE_ALL_NOT_ALLOWED            = "Deleting all levels not allowed";
+    public static final String LEVEL_NAME_CANNOT_BE_NULL_OR_EMPTY       = "The level name cannot be null or empty";
+    public static final String DEFAULT_LEVEL_ALREADY_EXISTS             = "Level {0} already defined as default";
     /**
      * This class is not to be instantiated.
      */

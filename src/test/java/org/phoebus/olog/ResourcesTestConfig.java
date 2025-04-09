@@ -119,4 +119,8 @@ public class ResourcesTestConfig {
         return Mockito.mock(LogTemplateRepository.class);
     }
 
+    @Bean
+    public LevelRepository levelRepository(){
+        return Mockito.mock(LevelRepository.class);
+    }
 }

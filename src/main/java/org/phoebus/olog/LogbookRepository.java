@@ -53,7 +53,7 @@ import static org.phoebus.olog.ElasticConfig.ES_LOGBOOK_INDEX;
 public class LogbookRepository implements CrudRepository<Logbook, String> {
 
     @SuppressWarnings("unused")
-    @Value("${elasticsearch.result.size.logbooks:10}")
+    @Value("${elasticsearch.result.size.logbooks:100}")
     private int logbooksResultSize;
 
     @SuppressWarnings("unused")

@@ -20,6 +20,7 @@ import org.springframework.stereotype.Repository;
 
 import java.io.IOException;
 import java.text.MessageFormat;
+import java.util.Iterator;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -144,8 +145,9 @@ public class AttachmentRepository implements CrudRepository<Attachment, String> 
 
     @Override
     public void deleteAllById(Iterable ids) {
-        while (ids.iterator().hasNext()) {
-            deleteById((String) ids.iterator().next());
+        Iterator<String> iterator = ids.iterator();
+        while (iterator.hasNext()) {
+            deleteById(iterator.next());
         }
     }
 }
