@@ -8,6 +8,8 @@ The service was developed to address the needs of operators, engineers, and user
 Key features:
  - Integration with CS-Studio, Phoebus, Bluesky, and other controls and data acquisition tools.
  - Tags & Logbooks provide an effective way to organize and sort log entries
+ - Categorization of a log entry supported through the "level" meta-data field.
+ - Additional (searchable) meta-data offered through "properties".
  - Support for fuzzy searching
  - Markup support for creating rich text log entries. Markup is based on the Commonmark specification, extended
    with support for image size and tables. Clients may request a HTML formatted quick reference (maintained
@@ -328,8 +330,8 @@ Note: the create date, attachments, and events cannot be modified.
       ]
  }
 
-Managing Logbooks & Tags
-************************
+Managing Logbooks, Tags and Levels
+**********************************
 
 Retrieve the list of existing tags
  
@@ -338,6 +340,11 @@ Retrieve the list of existing tags
 Retrieve the list of existing logbooks
 
 **GET** https://localhost:8181/Olog/logbooks
+
+Retrieve the list of existing levels
+
+**GET** https://localhost:8181/Olog/levels
+
 
 Create a new tag
 
@@ -391,6 +398,21 @@ Create multiple logbooks
    {"name":"Operations", "owner":"olog-logs", "state":"Active"},
    {"name":"DAMA",       "owner":"olog-logs", "state":"Active"}
  ]
+
+ Create a new level
+
+ **PUT** https://localhost:8181/Olog/level/{levelName}
+
+ .. code-block:: json
+
+  https://localhost:8181/Olog/level/Info
+
+  {
+       "name":"Info",
+       "defaultLevel":[true|false]
+  }
+
+**NOTE**: only one single level may be defined as default level.
 
 Managing Properties
 *******************
