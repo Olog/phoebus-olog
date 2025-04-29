@@ -81,6 +81,5 @@ public class ServiceConfigurationResourceTest extends ResourcesTestBase {
         assertTrue(serviceConfiguration.getLogbooks().iterator().hasNext());
         assertTrue(serviceConfiguration.getTags().iterator().hasNext());
         assertTrue(serviceConfiguration.getLevels().size() > 0);
-        assertEquals("A", serviceConfiguration.getLevels().get(0));
     }
 }

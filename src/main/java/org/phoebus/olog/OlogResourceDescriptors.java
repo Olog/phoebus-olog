@@ -15,4 +15,5 @@ public class OlogResourceDescriptors
     static final String ATTACHMENT_URI = OLOG_SERVICE + "/attachment";
     static final String HELP_URI = OLOG_SERVICE + "/help";
     public static final String LOG_TEMPLATE_RESOURCE_URI = OLOG_SERVICE + "/templates";
+    public static final String LEVEL_RESOURCE_RUI = OLOG_SERVICE + "/levels";
 }

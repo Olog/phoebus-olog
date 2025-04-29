@@ -55,7 +55,7 @@ public class TagRepository implements CrudRepository<Tag, String> {
     private final Logger logger = Logger.getLogger(TagRepository.class.getName());
 
     @SuppressWarnings("unused")
-    @Value("${elasticsearch.result.size.tags:10}")
+    @Value("${elasticsearch.result.size.tags:100}")
     private int tagsResultSize;
 
     @Autowired

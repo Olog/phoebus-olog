@@ -1,0 +1,26 @@
+[
+    {
+    "name": "Urgent",
+        "defaultLevel": false
+    },
+    {
+        "name": "Suggestion",
+        "defaultLevel": false
+    },
+    {
+        "name": "Info",
+        "defaultLevel": true
+    },
+    {
+        "name": "Request",
+        "defaultLevel": false
+    },
+    {
+        "name": "Problem",
+        "defaultLevel": false
+    },
+    {
+        "name": "Bad",
+        "defaultLevel": true
+    }
+]

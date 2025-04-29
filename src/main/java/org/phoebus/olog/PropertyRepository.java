@@ -57,7 +57,7 @@ import static org.phoebus.olog.ElasticConfig.ES_PROPERTY_INDEX;
 public class PropertyRepository implements CrudRepository<Property, String> {
 
     @SuppressWarnings("unused")
-    @Value("${elasticsearch.result.size.properties:10}")
+    @Value("${elasticsearch.result.size.properties:100}")
     private int propertiesResultSize;
 
     @Autowired
