@@ -52,6 +52,8 @@ public class TextUtil {
     public static final String ELASTIC_FAILED_TO_INITIALIZE_PROPERTIES  = "Failed to initialize properties";
     public static final String ELASTIC_FAILED_TO_INITIALIZE_TAG         = "Failed to initialize tag {0}";
     public static final String ELASTIC_FAILED_TO_INITIALIZE_TAGS        = "Failed to initialize tags";
+    public static final String ELASTIC_FAILED_TO_INITIALIZE_LEVEL       = "Failed to initialize level {0}";
+    public static final String ELASTIC_FAILED_TO_INITIALIZE_LEVELS      = "Failed to initialize levels";
 
     // ----------------------------------------------------------------------------------------------------
 

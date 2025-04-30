@@ -152,6 +152,9 @@ public class ElasticConfig {
     @Value("${default.properties.url}")
     @SuppressWarnings("unused")
     private String defaultPropertiesURL;
+    @Value("${default.levels.url}")
+    @SuppressWarnings("unused")
+    private String defaultLevelsURL;
 
     private ElasticsearchClient client;
     private static final AtomicBoolean esInitialized = new AtomicBoolean();
@@ -419,12 +422,12 @@ public class ElasticConfig {
         }
 
         // Setup the default levels
-        String propertiesURL = defaultPropertiesURL;
-        if (propertiesURL.isEmpty()) {
+        String levelsURL = defaultLevelsURL;
+        if (levelsURL.isEmpty()) {
             final URL resource = getClass().getResource("/default_levels.json");
-            propertiesURL = resource.toExternalForm();
+            levelsURL = resource.toExternalForm();
         }
-        try (InputStream input = new URL(propertiesURL).openStream()) {
+        try (InputStream input = new URL(levelsURL).openStream()) {
             List<org.phoebus.olog.entity.Level> jsonTag = mapper.readValue(input, new TypeReference<>() {
             });
 
@@ -459,13 +462,13 @@ public class ElasticConfig {
                             defaultLevelExists.set(true);
                         }
                     } catch (IOException e) {
-                        logger.log(Level.WARNING, MessageFormat.format(TextUtil.ELASTIC_FAILED_TO_INITIALIZE_PROPERTY,
+                        logger.log(Level.WARNING, MessageFormat.format(TextUtil.ELASTIC_FAILED_TO_INITIALIZE_LEVEL,
                                 level.name()), e);
                     }
                 }
             });
         } catch (IOException ex) {
-            logger.log(Level.WARNING, TextUtil.ELASTIC_FAILED_TO_INITIALIZE_PROPERTIES, ex);
+            logger.log(Level.WARNING, TextUtil.ELASTIC_FAILED_TO_INITIALIZE_LEVELS, ex);
         }
     }
 }
