@@ -55,6 +55,7 @@ public class LogSearchUtil {
     @Value("${elasticsearch.log.type:olog_log}")
     @SuppressWarnings("unused")
     private String ES_LOG_TYPE;
+    @SuppressWarnings("unused")
     @Value("${elasticsearch.result.size.search.default:100}")
     private int defaultSearchSize;
     @SuppressWarnings("unused")
@@ -79,6 +80,7 @@ public class LogSearchUtil {
         ZonedDateTime start = ZonedDateTime.ofInstant(Instant.EPOCH, ZoneId.systemDefault());
         ZonedDateTime end = ZonedDateTime.now();
         List<String> levelSearchTerms = new ArrayList<>();
+        List<String> levelPhraseSearchTerms = new ArrayList<>();
         int searchResultSize = defaultSearchSize;
         int from = 0;
 
@@ -110,7 +112,7 @@ public class LogSearchUtil {
                             if (term.startsWith("\"") && term.endsWith("\"")) {
                                 titlePhraseSearchTerms.add(term.substring(1, term.length() - 1));
                             } else {
-                                titleSearchTerms.add(pattern.trim().toLowerCase());
+                                titleSearchTerms.add(term);
                             }
                         }
                     }
@@ -223,8 +225,14 @@ public class LogSearchUtil {
                     break;
                 case "level":
                     for (String value : parameter.getValue()) {
-                        for (String pattern : value.split("[\\|,;\\s+]")) {
-                            levelSearchTerms.add(pattern.trim().toLowerCase());
+                        for (String pattern : value.split("[\\|,;]")) {
+                            String term = pattern.trim().toLowerCase();
+                            // Quoted strings will be mapped to a phrase query
+                            if (term.startsWith("\"") && term.endsWith("\"")) {
+                                levelPhraseSearchTerms.add(term.substring(1, term.length() - 1));
+                            } else {
+                                levelSearchTerms.add(term);
+                            }
                         }
                     }
                     break;
@@ -360,10 +368,10 @@ public class LogSearchUtil {
             );
         }
 
+        List<Query> levelQueries = new ArrayList<>();
+        DisMaxQuery.Builder levelQuery = new DisMaxQuery.Builder();
         // Add the level query
         if (!levelSearchTerms.isEmpty()) {
-            DisMaxQuery.Builder levelQuery = new DisMaxQuery.Builder();
-            List<Query> levelQueries = new ArrayList<>();
             if (fuzzySearch) {
                 levelSearchTerms.stream().forEach(searchTerm ->
                     levelQueries.add(FuzzyQuery.of(f -> f.field("level").value(searchTerm))._toQuery())
@@ -373,6 +381,18 @@ public class LogSearchUtil {
                     levelQueries.add(WildcardQuery.of(w -> w.field("level").value(searchTerm))._toQuery())
                 );
             }
+
+        }
+
+        // Add phrase queries for level key. Multiple search terms will be AND:ed.
+        if (!levelPhraseSearchTerms.isEmpty()) {
+            levelPhraseSearchTerms.stream().forEach(phraseSearchTerm ->
+                    levelQueries.add(MatchPhraseQuery.of(m -> m.field("level").query(phraseSearchTerm))._toQuery())
+            );
+        }
+
+        // Level query may be a mix of quoted and unquoted terms, combine them here
+        if(!levelQueries.isEmpty()){
             levelQuery.queries(levelQueries);
             boolQueryBuilder.must(levelQuery.build()._toQuery());
         }
