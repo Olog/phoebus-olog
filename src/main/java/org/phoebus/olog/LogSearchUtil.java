@@ -227,10 +227,14 @@ public class LogSearchUtil {
                     for (String value : parameter.getValue()) {
                         for (String pattern : value.split("[\\|,;]")) {
                             String term = pattern.trim().toLowerCase();
-                            // Quoted strings will be mapped to a phrase query
-                            if (term.startsWith("\"") && term.endsWith("\"")) {
+                            // Quoted strings, or string containing space chars, will be mapped to a phrase query
+                            if ((term.startsWith("\"") && term.endsWith("\""))) {
                                 levelPhraseSearchTerms.add(term.substring(1, term.length() - 1));
-                            } else {
+                            }
+                            else if(term.contains(" ")){
+                                levelPhraseSearchTerms.add(term);
+                            }
+                            else {
                                 levelSearchTerms.add(term);
                             }
                         }
