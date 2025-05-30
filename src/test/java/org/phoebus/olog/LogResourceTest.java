@@ -275,10 +275,16 @@ public class LogResourceTest extends ResourcesTestBase {
         when(logRepository.findById("1")).thenReturn(Optional.of(log));
         when(logRepository.update(log)).thenReturn(log);
 
-        MockHttpServletRequestBuilder request = post("/" + OlogResourceDescriptors.LOG_RESOURCE_URI + "/1")
-                .content(objectMapper.writeValueAsString(log))
-                .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
-                .contentType(JSON);
+        MockMultipartFile log1 = new MockMultipartFile("logEntry", "","application/json", objectMapper.writeValueAsString(log).getBytes());
+
+        MockHttpServletRequestBuilder request =
+                MockMvcRequestBuilders.multipart(HttpMethod.POST,
+                                "/" + OlogResourceDescriptors.LOG_RESOURCE_URI + "/1")
+                        .file(log1)
+                        .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
+                        .header(HttpHeaders.CONTENT_TYPE, "multipart/form-data")
+                        .contentType(JSON);
+
         MvcResult result = mockMvc.perform(request).andExpect(status().isOk()).andReturn();
         Log savedLog = objectMapper.readValue(result.getResponse().getContentAsString(), Log.class);
         assertEquals(Long.valueOf(1L), savedLog.getId());
