@@ -16,7 +16,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.data.repository.CrudRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Repository;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.text.MessageFormat;
@@ -85,7 +87,8 @@ public class AttachmentRepository implements CrudRepository<Attachment, String> 
     public Optional<Attachment> findById(String id) {
         GridFSFile gridFsFile = gridFsTemplate.find(new Query(where("_id").is(id))).first();
         if (gridFsFile == null) {
-            return Optional.empty();
+            // Should happen only if attachment file was removed from storage "manually".
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Attachment " + id + " not found");
         }
         Attachment attachment = new Attachment();
         attachment.setId(id);
