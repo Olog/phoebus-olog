@@ -22,6 +22,7 @@ import org.springframework.jdbc.datasource.embedded.DataSourceFactory;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabase;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
+import org.springframework.ldap.core.support.DefaultTlsDirContextAuthenticationStrategy;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.authentication.configurers.ldap.LdapAuthenticationProviderConfigurer;
@@ -87,6 +88,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
      */
     @Value("${ldap.enabled:false}")
     boolean ldap_enabled;
+    @Value("${ldap.starttls:false}")
+    boolean ldap_starttls;
     @Value("${ldap.urls:ldaps://localhost:389/}")
     String ldap_url;
     @Value("${ldap.base.dn}")
@@ -147,6 +150,9 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
             if(ldap_manager_dn != null && !ldap_manager_dn.isEmpty() && ldap_manager_password != null && !ldap_manager_password.isEmpty()){
                 contextSource.setUserDn(ldap_manager_dn);
                 contextSource.setPassword(ldap_manager_password);
+            }
+            if(ldap_starttls) {
+                contextSource.setAuthenticationStrategy(new DefaultTlsDirContextAuthenticationStrategy());
             }
             contextSource.afterPropertiesSet();
 
