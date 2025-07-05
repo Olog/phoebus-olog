@@ -6,7 +6,13 @@
 package org.phoebus.olog;
 
 import org.apache.commons.collections4.CollectionUtils;
-import org.phoebus.olog.entity.*;
+import org.phoebus.olog.entity.Attachment;
+import org.phoebus.olog.entity.Log;
+import org.phoebus.olog.entity.LogEntryGroupHelper;
+import org.phoebus.olog.entity.Logbook;
+import org.phoebus.olog.entity.Property;
+import org.phoebus.olog.entity.SearchResult;
+import org.phoebus.olog.entity.Tag;
 import org.phoebus.olog.entity.preprocess.LogPropertyProvider;
 import org.phoebus.olog.entity.preprocess.MarkupCleaner;
 import org.phoebus.olog.notification.LogEntryNotifier;
@@ -15,10 +21,23 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.task.TaskExecutor;
-import org.springframework.http.*;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -28,7 +47,12 @@ import java.text.MessageFormat;
 import java.time.Instant;
 import java.time.temporal.TemporalAmount;
 import java.time.temporal.UnsupportedTemporalTypeException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -105,8 +129,7 @@ public class LogResource {
     @GetMapping("archived/{logId}")
     @SuppressWarnings("unused")
     public SearchResult getArchivedLog(@PathVariable String logId) {
-        SearchResult searchResult = logRepository.findArchivedById(logId);
-        return searchResult;
+        return logRepository.findArchivedById(logId);
     }
 
     @GetMapping("/attachments/{logId}/{attachmentName}")
@@ -157,7 +180,7 @@ public class LogResource {
     public List<Log> findLogs(@RequestHeader(value = OLOG_CLIENT_INFO_HEADER, required = false, defaultValue = "n/a") String clientInfo, @RequestParam MultiValueMap<String, String> allRequestParams) {
         logSearchRequest(clientInfo, allRequestParams);
         for (String key : allRequestParams.keySet()) {
-            if ("start".equalsIgnoreCase(key.toLowerCase()) || "end".equalsIgnoreCase(key.toLowerCase())) {
+            if ("start".equalsIgnoreCase(key) || "end".equalsIgnoreCase(key)) {
                 String value = allRequestParams.get(key).get(0);
                 Object time = TimeParser.parseInstantOrTemporalAmount(value);
                 if (time instanceof Instant) {
@@ -281,6 +304,10 @@ public class LogResource {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, TextUtil.ATTACHMENT_DATA_INVALID);
         }
 
+        if (hasHeicFiles(files)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, TextUtil.ATTACHMENT_HEIC_NOT_SUPPORTED);
+        }
+
         Log newLogEntry = createLog(clientInfo, markup, inReplyTo, logEntry, principal);
 
         if (files != null) {
@@ -309,12 +336,13 @@ public class LogResource {
 
     /**
      * Add an attachment to log entry identified by logId
-     * @param logId log entry ID
-     * @param file the file to be attached
-     * @param filename name of file
-     * @param id UUID for file in mongo
+     *
+     * @param logId                   log entry ID
+     * @param file                    the file to be attached
+     * @param filename                name of file
+     * @param id                      UUID for file in mongo
      * @param fileMetadataDescription file metadata
-     * @return
+     * @return The updated {@link Log}.
      */
     @PostMapping("/attachments/{logId}")
     public Log uploadAttachment(@PathVariable String logId,
@@ -352,10 +380,10 @@ public class LogResource {
      * </ul>
      * Notifiers - if such have been registered - are not called.
      *
-     * @param logId  The log id of the entry subject to update. It must exist, i.e. it is not created of not found.
-     * @param markup Markup strategy, if any.
-     * @param log    The log record data as sent by client.
-     * @param principal  The authenticated {@link Principal} of the request.
+     * @param logId     The log id of the entry subject to update. It must exist, i.e. it is not created of not found.
+     * @param markup    Markup strategy, if any.
+     * @param log       The log record data as sent by client.
+     * @param principal The authenticated {@link Principal} of the request.
      * @return The updated log record, or HTTP status 404 if the log record does not exist. If the path
      * variable does not match the id in the log record, HTTP status 400 (bad request) is returned.
      */
@@ -586,5 +614,23 @@ public class LogResource {
             // Log entry not found, return HTTP 400
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, MessageFormat.format(TextUtil.LOG_ENTRY_CANNOT_REPLY_NOT_EXISTS, originalLogEntryId));
         }
+    }
+
+    /**
+     * Checks for heic(s) file extension on the original file name.
+     * If a {@link MultipartFile} file does not specify an original file name,
+     * it cannot be evaluated and is then not considered to be a heic file.
+     *
+     * <p>
+     * Ideally Apache Tika should be used to detect heic content.
+     * </p>
+     *
+     * @param files Array of {@link MultipartFile}s to check.
+     * @return <code>true</code> if heic(s) file is detected, otherwise <code>false</code>.
+     */
+    private boolean hasHeicFiles(MultipartFile[] files) {
+        return Arrays.stream(files).filter(f ->
+                (f.getOriginalFilename() != null &&
+                        (f.getOriginalFilename().toLowerCase().endsWith(".heic") || f.getOriginalFilename().toLowerCase().endsWith(".heics")))).findFirst().isPresent();
     }
 }
