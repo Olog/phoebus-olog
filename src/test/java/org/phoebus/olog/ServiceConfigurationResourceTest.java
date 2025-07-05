@@ -82,4 +82,10 @@ public class ServiceConfigurationResourceTest extends ResourcesTestBase {
         assertTrue(serviceConfiguration.getTags().iterator().hasNext());
         assertTrue(serviceConfiguration.getLevels().size() > 0);
     }
+
+    @Test
+    void testHeic(){
+        System.out.println(ContentTypeResolver.determineMediaType("/Users/georgweiss/Downloads/IMG_0279.HEIC"));
+
+    }
 }

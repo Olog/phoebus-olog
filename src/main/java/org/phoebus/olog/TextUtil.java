@@ -65,6 +65,7 @@ public class TextUtil {
     public static final String ATTACHMENT_REQUEST                       = "Requesting attachment {0}";
     public static final String ATTACHMENT_REQUEST_DETAILS               = "Requesting attachment {0} : {1}";
     public static final String ATTACHMENT_UNABLE_TO_RETRIEVE_FOR_ID     = "Unable to retrieve attachment {0} for log id {1}";
+    public static final String ATTACHMENT_HEIC_NOT_SUPPORTED            = "HEIC file type attachments not supported";
 
     public static final String ATTACHMENTS_NAMED_FOUND_FOR_ID           = "Found {0} attachments named {1} for log id {2}";
 
