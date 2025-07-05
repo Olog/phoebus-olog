@@ -629,6 +629,9 @@ public class LogResource {
      * @return <code>true</code> if heic(s) file is detected, otherwise <code>false</code>.
      */
     private boolean hasHeicFiles(MultipartFile[] files) {
+        if(files == null || files.length == 0){
+            return false;
+        }
         return Arrays.stream(files).filter(f ->
                 (f.getOriginalFilename() != null &&
                         (f.getOriginalFilename().toLowerCase().endsWith(".heic") || f.getOriginalFilename().toLowerCase().endsWith(".heics")))).findFirst().isPresent();
