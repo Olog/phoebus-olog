@@ -20,3 +20,6 @@ pom.xml.releaseBackup
 # Locally-generated CI/CD debugging files
 PROJECT_INFO.txt
 THE_GITHUB_ENV_FILE.txt
+
+# Tutorial files (local documentation, not for repository)
+TUTORIAL*.md
