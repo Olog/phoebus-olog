@@ -34,6 +34,9 @@ import org.phoebus.olog.entity.Logbook;
 import org.phoebus.olog.entity.Property;
 import org.phoebus.olog.entity.SearchResult;
 import org.phoebus.olog.entity.Tag;
+import org.phoebus.olog.entity.websocket.MessageType;
+import org.phoebus.olog.entity.websocket.WebSocketMessage;
+import org.phoebus.olog.websocket.WebSocketService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.HttpHeaders;
@@ -74,7 +77,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * hard coded user/userPass credentials. The {@link LogRepository} is mocked.
  */
 @ExtendWith(SpringExtension.class)
-@ContextHierarchy({@ContextConfiguration(classes = {ResourcesTestConfig.class})})
+@ContextHierarchy({@ContextConfiguration(classes = {ResourcesTestConfig.class, LogResourceTestConfig.class})})
 @WebMvcTest(LogResource.class)
 @TestPropertySource(locations = "classpath:no_ldap_test_application.properties")
 public class LogResourceTest extends ResourcesTestBase {
@@ -90,6 +93,9 @@ public class LogResourceTest extends ResourcesTestBase {
 
     @Autowired
     private LogEntryValidator logEntryValidator;
+
+    @Autowired
+    private WebSocketService webSocketService;
 
     private static Log log1;
     private static Log log2;
@@ -193,6 +199,8 @@ public class LogResourceTest extends ResourcesTestBase {
         SearchResult searchResult = objectMapper.readValue(result.getResponse().getContentAsString(), SearchResult.class);
         assertEquals(2, searchResult.getHitCount());
         assertEquals(2, searchResult.getLogs().size());
+
+        reset(logRepository);
     }
 
     @Test
@@ -246,7 +254,9 @@ public class LogResourceTest extends ResourcesTestBase {
 
         Log savedLog = objectMapper.readValue(result.getResponse().getContentAsString(), Log.class);
         assertEquals(Long.valueOf(1L), savedLog.getId());
-        reset(logRepository);
+
+        verify(webSocketService, times(1)).sendMessageToClients(new WebSocketMessage(MessageType.NEW_LOG_ENTRY, null));
+        reset(logbookRepository, tagRepository, logRepository, webSocketService);
     }
 
     /**
@@ -282,6 +292,9 @@ public class LogResourceTest extends ResourcesTestBase {
         MvcResult result = mockMvc.perform(request).andExpect(status().isOk()).andReturn();
         Log savedLog = objectMapper.readValue(result.getResponse().getContentAsString(), Log.class);
         assertEquals(Long.valueOf(1L), savedLog.getId());
+
+        verify(webSocketService, times(1)).sendMessageToClients(new WebSocketMessage(MessageType.LOG_ENTRY_UPDATED, "1"));
+        reset(logRepository, webSocketService);
     }
 
     @Test
@@ -310,6 +323,8 @@ public class LogResourceTest extends ResourcesTestBase {
                 .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
                 .contentType(JSON);
         mockMvc.perform(request).andExpect(status().isBadRequest());
+
+        reset(logRepository);
     }
 
     /**
@@ -394,7 +409,8 @@ public class LogResourceTest extends ResourcesTestBase {
 
         Log savedLog = objectMapper.readValue(result.getResponse().getContentAsString(), Log.class);
         assertEquals(Long.valueOf(1L), savedLog.getId());
-        reset(logRepository);
+        verify(webSocketService, times(1)).sendMessageToClients(new WebSocketMessage(MessageType.NEW_LOG_ENTRY, null));
+        reset(logbookRepository, tagRepository, logRepository, webSocketService);
     }
 
     @Test
@@ -428,7 +444,9 @@ public class LogResourceTest extends ResourcesTestBase {
 
         Log savedLog = objectMapper.readValue(result.getResponse().getContentAsString(), Log.class);
         assertEquals(Long.valueOf(1L), savedLog.getId());
-        reset(logRepository);
+        verify(webSocketService, times(1)).sendMessageToClients(Mockito.any(WebSocketMessage.class));
+        reset(logbookRepository, tagRepository, logRepository, webSocketService);
+
     }
 
     @Test
@@ -472,8 +490,9 @@ public class LogResourceTest extends ResourcesTestBase {
                         .header(HttpHeaders.CONTENT_TYPE, "multipart/form-data")
                         .contentType(JSON);
         mockMvc.perform(request).andExpect(status().isBadRequest());
+        verify(webSocketService, Mockito.never()).sendMessageToClients(Mockito.any(WebSocketMessage.class));
 
-        reset(logRepository);
+        reset(logbookRepository, tagRepository, logRepository, webSocketService);
     }
 
     /**
@@ -527,7 +546,8 @@ public class LogResourceTest extends ResourcesTestBase {
                 .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
                 .contentType(JSON);
         mockMvc.perform(request).andExpect(status().isOk());
-        reset(logRepository);
+        verify(webSocketService, times(1)).sendMessageToClients(new WebSocketMessage(MessageType.NEW_LOG_ENTRY, null));
+        reset(logRepository, webSocketService);
     }
 
     @Test
@@ -542,8 +562,8 @@ public class LogResourceTest extends ResourcesTestBase {
                 .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
                 .contentType(JSON);
         mockMvc.perform(request).andExpect(status().isBadRequest());
-
-        reset(logRepository);
+        verify(webSocketService, Mockito.never()).sendMessageToClients(Mockito.any(WebSocketMessage.class));
+        reset(logRepository, webSocketService);
     }
 
     @Test
@@ -562,8 +582,8 @@ public class LogResourceTest extends ResourcesTestBase {
                 .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
                 .contentType(JSON);
         mockMvc.perform(request).andExpect(status().isBadRequest());
-
-        reset(logRepository);
+        verify(webSocketService, Mockito.never()).sendMessageToClients(Mockito.any(WebSocketMessage.class));
+        reset(logRepository, webSocketService);
     }
 
     @Test

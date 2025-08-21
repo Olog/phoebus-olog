@@ -16,30 +16,22 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
-package org.phoebus.olog.websocket;
+package org.phoebus.olog;
 
-
-import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.handler.annotation.SendTo;
-import org.springframework.stereotype.Controller;
-
-import static org.phoebus.olog.OlogResourceDescriptors.WEB_SOCKET_MESSAGES_TOPIC;
+import org.mockito.Mockito;
+import org.phoebus.olog.websocket.WebSocketService;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
 
 /**
- * This {@link Controller} defines an echo endpoint, i.e. for testing or health check purposes...
+ * Sets up suitable mocks for {@link LogResourceTest}
  */
-@Controller
 @SuppressWarnings("unused")
-public class WebSocketController {
+@TestConfiguration
+public class LogResourceTestConfig {
 
-    /**
-     *
-     * @param message Will be echoed back to subscribers to the {@link org.phoebus.olog.OlogResourceDescriptors#WEB_SOCKET_MESSAGES_TOPIC} topic
-     * @return The message received in the call.
-     */
-    @MessageMapping("/echo")
-    @SendTo(WEB_SOCKET_MESSAGES_TOPIC)
-    public String echo(String message) {
-        return message;
+    @Bean
+    public WebSocketService webSocketService(){
+        return Mockito.mock(WebSocketService.class);
     }
 }
