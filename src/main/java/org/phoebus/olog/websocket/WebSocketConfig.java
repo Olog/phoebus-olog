@@ -27,7 +27,8 @@ import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBr
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
-import static org.phoebus.olog.OlogResourceDescriptors.WEB_SOCKET_CONNECT_ENDPOINT;
+import static org.phoebus.olog.OlogResourceDescriptors.WEB_SOCKET_APPLICATION_PREFIX;
+import static org.phoebus.olog.OlogResourceDescriptors.WEB_SOCKET_BASE;
 import static org.phoebus.olog.OlogResourceDescriptors.WEB_SOCKET_MESSAGES_TOPIC;
 
 /**
@@ -50,11 +51,11 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         config.enableSimpleBroker(WEB_SOCKET_MESSAGES_TOPIC)
                 .setHeartbeatValue(new long[]{30000, 30000})
                 .setTaskScheduler(this.messageBrokerTaskScheduler);
-        config.setApplicationDestinationPrefixes(WEB_SOCKET_CONNECT_ENDPOINT);
+        config.setApplicationDestinationPrefixes(WEB_SOCKET_APPLICATION_PREFIX);
     }
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint(WEB_SOCKET_CONNECT_ENDPOINT);
+        registry.addEndpoint(WEB_SOCKET_BASE);
     }
 }
