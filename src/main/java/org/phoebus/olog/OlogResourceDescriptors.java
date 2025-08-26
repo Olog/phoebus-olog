@@ -27,7 +27,7 @@ public class OlogResourceDescriptors
      *     </ul>
      * </p>
      */
-    public static final String WEB_SOCKET_BASE = "/web-socket";
+    public static final String WEB_SOCKET_BASE = "/" + OLOG_SERVICE + "/web-socket";
 
     /**
      * Topic for the messages pushed from the service to subscriber clients, which need to specify it in the same manner.
