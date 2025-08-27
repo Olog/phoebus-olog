@@ -33,6 +33,14 @@ import static org.phoebus.olog.OlogResourceDescriptors.WEB_SOCKET_MESSAGES_TOPIC
 
 /**
  * Sets up bare minimum web socket for STOMP clients.
+ * <p>
+ *     <b>NOTE:</b> Client side URL/paths are:
+ *     <ul>
+ *         <li>Connection established on ws(s)://host:port/Olog/web-socket</li>
+ *         <li>Subscription to messages (i.e. topic name) on: /Olog/web-socket/messages</li>
+ *         <li>Echo endpoint (for testing purposes): /Olog/web-socket/echo. Message is echoed to topic /Olog/web-socket/messages.</li>
+ *     </ul>
+ * </p>
  */
 @Configuration
 @EnableWebSocketMessageBroker
