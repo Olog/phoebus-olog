@@ -19,17 +19,13 @@
 package org.phoebus.olog;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
-import org.springframework.web.multipart.MultipartException;
 
 /**
  * Handles request exceeding configured sizes (spring.servlet.multipart.max-file-size and
@@ -44,15 +40,14 @@ public class FileUploadSizeExceededHandler {
      * Specifies the allowed origins for CORS requests. Defaults to http://localhost:3000,
      * which is useful during development of the web front-end in NodeJS.
      */
-    @Value("${cors.allowed.origins:http://localhost:3000}")
-    private String corsAllowedOrigins;
-
+    @Value("#{'${cors.allowed.origins:http://localhost:3000}'.split(',')}")
+    private String[] corsAllowedOrigins;
 
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     public ResponseEntity<String> handleMaxSizeExceededException(RuntimeException ex, WebRequest request) {
         // These HTTP headers are needed by browsers in order to handle the 413 response properly.
         HttpHeaders headers = new HttpHeaders();
-        headers.add("Access-Control-Allow-Origin", corsAllowedOrigins);
+        headers.add("Access-Control-Allow-Origin", String.join(",", corsAllowedOrigins));
         headers.add("Access-Control-Allow-Credentials", "true");
         return new ResponseEntity<>("Log entry exceeds size limits",
                 headers,
