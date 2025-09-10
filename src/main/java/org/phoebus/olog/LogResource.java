@@ -603,7 +603,7 @@ public class LogResource {
      */
     @GetMapping(path = "/rss", produces = "application/rss+xml")
     public com.rometools.rome.feed.rss.Channel getRssFeed(HttpServletRequest request) {
-        String baseUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath() + "/";
+        String baseUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + "/" + request.getContextPath();
         MultiValueMap<String, String> baseParams = new LinkedMultiValueMap<>();
         Instant now = Instant.now();
         baseParams.set("end", MILLI_FORMAT.format(now));
