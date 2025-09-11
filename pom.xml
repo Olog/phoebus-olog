@@ -256,6 +256,11 @@
             <artifactId>jakarta.validation-api</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>com.rometools</groupId>
+            <artifactId>rome</artifactId>
+            <version>1.15.0</version>
+        </dependency>
 
     </dependencies>
     <build>

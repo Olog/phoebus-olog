@@ -5,6 +5,10 @@
  */
 package org.phoebus.olog;
 
+import com.rometools.rome.feed.rss.Category;
+import com.rometools.rome.feed.rss.Channel;
+import com.rometools.rome.feed.rss.Description;
+import com.rometools.rome.feed.rss.Item;
 import org.apache.commons.collections4.CollectionUtils;
 import org.phoebus.olog.entity.*;
 import org.phoebus.olog.entity.preprocess.LogPropertyProvider;
@@ -17,14 +21,18 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.http.*;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.ui.Model;
+import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.security.Principal;
 import java.text.MessageFormat;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.TemporalAmount;
 import java.time.temporal.UnsupportedTemporalTypeException;
@@ -585,6 +593,29 @@ public class LogResource {
         } catch (ResponseStatusException exception) {
             // Log entry not found, return HTTP 400
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, MessageFormat.format(TextUtil.LOG_ENTRY_CANNOT_REPLY_NOT_EXISTS, originalLogEntryId));
+        }
+    }
+
+    /**
+     * GET method for retrieving an RSS feed of channels.
+     *
+     * @return the name of the RSS feed view, which will be resolved to render the feed
+     */
+    @GetMapping(path = "/rss", produces = "application/rss+xml")
+    public com.rometools.rome.feed.rss.Channel getRssFeed(HttpServletRequest request) {
+        String baseUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + "/" + request.getContextPath();
+        MultiValueMap<String, String> baseParams = new LinkedMultiValueMap<>();
+        Instant now = Instant.now();
+        baseParams.set("end", MILLI_FORMAT.format(now));
+        baseParams.set("start",  MILLI_FORMAT.format(now.minus(Duration.ofDays(7))));
+        baseParams.set("from", "0");
+        baseParams.set("size", "100");
+
+        SearchResult searchResult = logRepository.search(baseParams);
+        if (searchResult != null ) {
+            return RssFeedUtil.fromLogEntries(searchResult.getLogs(), baseUrl);
+        } else {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to find entries");
         }
     }
 }
