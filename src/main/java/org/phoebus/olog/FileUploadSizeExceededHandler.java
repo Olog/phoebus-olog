@@ -44,15 +44,15 @@ public class FileUploadSizeExceededHandler {
      * Specifies the allowed origins for CORS requests. Defaults to http://localhost:3000,
      * which is useful during development of the web front-end in NodeJS.
      */
-    @Value("${cors.allowed.origins:http://localhost:3000}")
-    private String corsAllowedOrigins;
+    @Value("#{'${cors.allowed.origins:http://localhost:3000}'.split(',')}")
+    private String[] corsAllowedOrigins;
 
 
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     public ResponseEntity<String> handleMaxSizeExceededException(RuntimeException ex, WebRequest request) {
         // These HTTP headers are needed by browsers in order to handle the 413 response properly.
         HttpHeaders headers = new HttpHeaders();
-        headers.add("Access-Control-Allow-Origin", corsAllowedOrigins);
+        headers.add("Access-Control-Allow-Origin", String.join(",", corsAllowedOrigins));
         headers.add("Access-Control-Allow-Credentials", "true");
         return new ResponseEntity<>("Log entry exceeds size limits",
                 headers,
