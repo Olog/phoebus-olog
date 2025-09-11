@@ -39,6 +39,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.ContextHierarchy;
@@ -58,7 +59,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.argThat;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
@@ -67,6 +72,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -702,5 +708,31 @@ public class LogResourceTest extends ResourcesTestBase {
         mockMvc.perform(request).andExpect(status().isOk());
 
         reset(logRepository);
+    }
+
+    @Test
+    void testRssFeed() {
+        Log log1Rss = Log.LogBuilder.createLog().id(1L).description("log1description").title("log1title").build();
+        Log log2Rss = Log.LogBuilder.createLog().id(2L).description("log2description").title("log2title").build();
+        when(logRepository.search(any())).thenReturn(new SearchResult(2, List.of(log1Rss, log2Rss)));
+
+        MockHttpServletRequestBuilder request = get("/" + OlogResourceDescriptors.LOG_RESOURCE_URI + "/rss")
+            .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION);
+        try {
+            mockMvc.perform(request)
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_RSS_XML_VALUE + ";charset=UTF-8"))
+                .andExpect(content().string(allOf(
+                    containsString("<channel>"),
+                    containsString(log1Rss.getDescription()),
+                    containsString(log2Rss.getDescription()),
+                    containsString(log1Rss.getTitle()),
+                    containsString(log2Rss.getTitle())
+                )));
+        } catch (Exception ex) {
+            fail("Failed to make request", ex);
+        }
+        reset(logRepository);
+
     }
 }

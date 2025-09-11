@@ -27,6 +27,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -41,9 +42,11 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.security.Principal;
 import java.text.MessageFormat;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.TemporalAmount;
 import java.time.temporal.UnsupportedTemporalTypeException;
@@ -617,6 +620,7 @@ public class LogResource {
     }
 
     /**
+<<<<<<< HEAD
      * Checks for heic(s) file extension on the original file name.
      * If a {@link MultipartFile} file does not specify an original file name,
      * it cannot be evaluated and is then not considered to be a heic file.
@@ -629,11 +633,34 @@ public class LogResource {
      * @return <code>true</code> if heic(s) file is detected, otherwise <code>false</code>.
      */
     private boolean hasHeicFiles(MultipartFile[] files) {
-        if(files == null || files.length == 0){
+        if (files == null || files.length == 0) {
             return false;
         }
         return Arrays.stream(files).filter(f ->
                 (f.getOriginalFilename() != null &&
                         (f.getOriginalFilename().toLowerCase().endsWith(".heic") || f.getOriginalFilename().toLowerCase().endsWith(".heics")))).findFirst().isPresent();
+    }
+
+    /**
+     * GET method for retrieving an RSS feed of channels.
+     *
+     * @return the name of the RSS feed view, which will be resolved to render the feed
+     */
+    @GetMapping(path = "/rss", produces = "application/rss+xml")
+    public com.rometools.rome.feed.rss.Channel getRssFeed(HttpServletRequest request) {
+        String baseUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + "/" + request.getContextPath();
+        MultiValueMap<String, String> baseParams = new LinkedMultiValueMap<>();
+        Instant now = Instant.now();
+        baseParams.set("end", MILLI_FORMAT.format(now));
+        baseParams.set("start",  MILLI_FORMAT.format(now.minus(Duration.ofDays(7))));
+        baseParams.set("from", "0");
+        baseParams.set("size", "100");
+
+        SearchResult searchResult = logRepository.search(baseParams);
+        if (searchResult != null ) {
+            return RssFeedUtil.fromLogEntries(searchResult.getLogs(), baseUrl);
+        } else {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to find entries");
+        }
     }
 }
