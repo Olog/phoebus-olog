@@ -620,7 +620,6 @@ public class LogResource {
     }
 
     /**
-<<<<<<< HEAD
      * Checks for heic(s) file extension on the original file name.
      * If a {@link MultipartFile} file does not specify an original file name,
      * it cannot be evaluated and is then not considered to be a heic file.
