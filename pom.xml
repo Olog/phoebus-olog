@@ -186,6 +186,14 @@
             <artifactId>spring-security-test</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-messaging</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-websocket</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.unboundid</groupId>
             <artifactId>unboundid-ldapsdk</artifactId>
         </dependency>
@@ -597,7 +605,7 @@
                         <configuration>
                             <publishingServerId>phoebus-releases</publishingServerId>
                             <checksums>required</checksums>
-                            <centralBaseUsrl>https://central.sonatype.com</centralBaseUsrl>
+                            <centralBaseUrl>https://central.sonatype.com</centralBaseUrl>
                         </configuration>
                     </plugin>
                     <plugin>

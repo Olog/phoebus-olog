@@ -15,7 +15,10 @@ import org.phoebus.olog.entity.SearchResult;
 import org.phoebus.olog.entity.Tag;
 import org.phoebus.olog.entity.preprocess.LogPropertyProvider;
 import org.phoebus.olog.entity.preprocess.MarkupCleaner;
+import org.phoebus.olog.entity.websocket.MessageType;
+import org.phoebus.olog.entity.websocket.WebSocketMessage;
 import org.phoebus.olog.notification.LogEntryNotifier;
+import org.phoebus.olog.websocket.WebSocketService;
 import org.phoebus.util.time.TimeParser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
@@ -107,6 +110,10 @@ public class LogResource {
     @SuppressWarnings("unused")
     @Autowired
     private Long propertyProvidersTimeout;
+
+    @SuppressWarnings("unused")
+    @Autowired
+    private WebSocketService webSocketService;
 
     /**
      * Custom HTTP header that client may send in order to identify itself. This is logged for some of the
@@ -272,6 +279,8 @@ public class LogResource {
         Log newLogEntry = logRepository.save(log);
         sendToNotifiers(newLogEntry);
 
+        webSocketService.sendMessageToClients(new WebSocketMessage(MessageType.NEW_LOG_ENTRY, null));
+
         logger.log(Level.INFO, () -> "Entry id " + newLogEntry.getId() + " created from " + clientInfo);
 
         return newLogEntry;
@@ -428,6 +437,8 @@ public class LogResource {
             persistedLog.setTitle(log.getTitle());
             persistedLog = cleanMarkup(markup, persistedLog);
 
+            webSocketService.sendMessageToClients(new WebSocketMessage(MessageType.LOG_ENTRY_UPDATED, persistedLog.getId().toString()));
+
             return logRepository.update(persistedLog);
         } else {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, MessageFormat.format(TextUtil.LOG_NOT_RETRIEVED, logId));
@@ -482,13 +493,14 @@ public class LogResource {
 
     /**
      * {@link LogEntryNotifier} providers are called for the specified log entry. Since a provider
-     * implementation may need some time to do it's job, calling them is done asynchronously. Any
+     * implementation may need some time to do its job, calling them is done asynchronously. Any
      * error handling or logging has to be done in the {@link LogEntryNotifier}, but exceptions are
      * handled here in order to not abort if any of the providers fails.
      *
      * @param log The log entry
      */
     private void sendToNotifiers(Log log) {
+
         if (logEntryNotifiers.isEmpty()) {
             return;
         }
