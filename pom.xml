@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.phoebus</groupId>
     <artifactId>service-olog</artifactId>
-    <version>5.1.0-SNAPSHOT</version>
+    <version>5.1.0</version>
     <name>Phoebus Olog</name>
     <description>An online logbook service that allows for the creation and retrieval of log entries.</description>
     <url>https://github.com/Olog/phoebus-olog</url>
@@ -47,7 +47,7 @@
         <connection>scm:git:git://github.com/Olog/phoebus-olog.git</connection>
         <developerConnection>scm:git:https://github.com/Olog/phoebus-olog.git</developerConnection>
         <url>https://github.com/Olog/phoebus-olog/tree/master</url>
-        <tag>HEAD</tag>
+        <tag>v5.1.0</tag>
     </scm>
 
     <properties>
@@ -62,7 +62,7 @@
         <jacoco.skip>true</jacoco.skip>
         <jackson.version>2.14.3</jackson.version>
         <!--suppress UnresolvedMavenProperty -->
-        <project.build.outputTimestamp>2025-06-16T14:21:09Z</project.build.outputTimestamp>
+        <project.build.outputTimestamp>2025-10-02T09:16:28Z</project.build.outputTimestamp>
     </properties>
 
     <dependencyManagement>
