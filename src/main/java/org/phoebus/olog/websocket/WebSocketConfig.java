@@ -19,6 +19,7 @@
 package org.phoebus.olog.websocket;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
@@ -49,6 +50,13 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     private TaskScheduler messageBrokerTaskScheduler;
 
+    /**
+     * Specifies the allowed origins for CORS requests. Defaults to http://localhost:3000,
+     * which is useful during development of the web front-end in NodeJS.
+     */
+    @Value("#{'${cors.allowed.origins:http://localhost:3000}'.split(',')}")
+    private String[] corsAllowedOrigins;
+
     @Autowired
     public void setMessageBrokerTaskScheduler(@Lazy TaskScheduler taskScheduler) {
         this.messageBrokerTaskScheduler = taskScheduler;
@@ -64,6 +72,6 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint(WEB_SOCKET_BASE);
+        registry.addEndpoint(WEB_SOCKET_BASE).setAllowedOriginPatterns(corsAllowedOrigins);
     }
 }
