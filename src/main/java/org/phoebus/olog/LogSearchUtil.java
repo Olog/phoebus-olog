@@ -453,4 +453,32 @@ public class LogSearchUtil {
         terms.addAll(remaining.stream().filter(t -> t.length() > 0).collect(Collectors.toList()));
         return terms;
     }
+
+    private Query getTagsQuery(List<String> terms){
+        DisMaxQuery.Builder tagQuery = new DisMaxQuery.Builder();
+        List<Query> tagsQueries = new ArrayList<>();
+        for (String term : terms) {
+            tagsQueries.add(WildcardQuery.of(w -> w.field("tags.name")
+                    .caseInsensitive(true)
+                    .value(term.trim()))._toQuery());
+        }
+
+        Query tagsQuery = tagQuery.queries(tagsQueries).build()._toQuery();
+        NestedQuery nestedTagsQuery = NestedQuery.of(n -> n.path("tags").query(tagsQuery));
+        return nestedTagsQuery._toQuery();
+    }
+
+    private Query getLogbooksQuery(List<String> terms){
+        DisMaxQuery.Builder logbookQuery = new DisMaxQuery.Builder();
+        List<Query> logbooksQueries = new ArrayList<>();
+        for (String term : terms) {
+            logbooksQueries.add(WildcardQuery.of(w -> w.field("logbooks.name")
+                    .caseInsensitive(true)
+                    .value(term.trim()))._toQuery());
+        }
+
+        Query tagsQuery = logbookQuery.queries(logbooksQueries).build()._toQuery();
+        NestedQuery nestedTagsQuery = NestedQuery.of(n -> n.path("tags").query(tagsQuery));
+        return nestedTagsQuery._toQuery();
+    }
 }

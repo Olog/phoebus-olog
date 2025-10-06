@@ -15,9 +15,13 @@ import co.elastic.clients.elasticsearch._types.Result;
 import co.elastic.clients.elasticsearch._types.SortOptions;
 import co.elastic.clients.elasticsearch._types.SortOrder;
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.CombinedFieldsOperator;
+import co.elastic.clients.elasticsearch._types.query_dsl.CombinedFieldsQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.DisMaxQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.MultiMatchQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.NestedQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.Operator;
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.elasticsearch._types.query_dsl.QueryStringQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.TextQueryType;
 import co.elastic.clients.elasticsearch._types.query_dsl.WildcardQuery;
@@ -408,18 +412,18 @@ public class LogRepository implements CrudRepository<Log, String> {
       BoolQuery hybridQuery =
           BoolQuery.of(
               b ->
-                  b.should(
+                  b/*.should(
                           MultiMatchQuery.of(
                                   m ->
                                       m.query(query)
-                                          .fields("title^5", "description^4", "owner^3")
-                                          .type(TextQueryType.BestFields)
-                                          .fuzziness("AUTO")
-                                          .operator(Operator.And) // Fixed: changed from And
+                                          .fields("title^5", "description^4","owner^2")
+                                          //.type(TextQueryType.CrossFields)
+                                          //.fuzziness("AUTO")
+                                          .operator(Operator.Or) // Fixed: changed from And
                                           .boost(3.0f))
-                              ._toQuery())
-                      .should(
-                          NestedQuery.of(
+                              ._toQuery())*/
+                      .should(getTagsQuery(query))
+                          /*NestedQuery.of(
                                   n ->
                                       n.path("tags")
                                           .query(
@@ -429,17 +433,17 @@ public class LogRepository implements CrudRepository<Log, String> {
                                                           w.field("name") // CHANGE: Just "name"
                                                               .caseInsensitive(true)
                                                               .value("*" + query + "*"))))
-                              ._toQuery())
-                      .should(
-                          QueryStringQuery.of(
-                                  q ->
-                                      q.query("*" + query + "*")
-                                          .fields("title^5", "description^4", "owner^3")
-                                          .defaultOperator(Operator.And)
-                                          .analyzeWildcard(true)
-                                          .allowLeadingWildcard(true)
-                                          .boost(2.0f))
-                              ._toQuery())
+                              ._toQuery())*/
+                          .should(QueryStringQuery.of(
+                                          q ->
+                                                  q.query("*" + query + "*")
+                                                          .fields("title^5", "description^4", "owner^3", "level^1")
+                                                          .defaultOperator(Operator.And)
+                                                          .analyzeWildcard(true)
+                                                          .allowLeadingWildcard(true)
+                                                          .boost(2.0f))
+                                  ._toQuery())
+
                       .minimumShouldMatch("1"));
 
       SearchRequest request =
@@ -491,5 +495,20 @@ public class LogRepository implements CrudRepository<Log, String> {
     while (iterator.hasNext()) {
       deleteById(iterator.next());
     }
+  }
+
+  private Query getTagsQuery(String query){
+      String[] items = query.split(" ");
+      DisMaxQuery.Builder tagQuery = new DisMaxQuery.Builder();
+      List<Query> tagsQueries = new ArrayList<>();
+      for (String pattern : items) {
+          tagsQueries.add(WildcardQuery.of(w -> w.field("tags.name")
+                  .caseInsensitive(true)
+                  .value(pattern.trim()))._toQuery());
+      }
+
+      Query tagsQuery = tagQuery.queries(tagsQueries).build()._toQuery();
+      NestedQuery nestedTagsQuery = NestedQuery.of(n -> n.path("tags").query(tagsQuery));
+      return nestedTagsQuery._toQuery();
   }
 }
