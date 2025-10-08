@@ -290,9 +290,6 @@ Search Parameters
 |*sort*         | `up|down` order the search results based on create time          |
 +---------------+------------------------------------------------------------------+
 
-**NOTE**: if specified, the start end end parameters **must** be specified on a format that includes time zone information.
-For a client in a GMT+1 time zone it would be (for instance): 2025-10-04T10:11:12.123+0100.
-
 Example:
 
 **GET** https://localhost:8181/Olog/logs/search?desc=dump&logbooks=Operations

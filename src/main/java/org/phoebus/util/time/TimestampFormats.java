@@ -37,7 +37,6 @@ public class TimestampFormats {
     /**
      * Time stamp format for time stamp down to milliseconds
      */
-    @Deprecated
     public static final DateTimeFormatter MILLI_FORMAT = DateTimeFormatter.ofPattern(MILLI_PATTERN).withZone(zone);
 
     /**
