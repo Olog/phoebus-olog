@@ -394,7 +394,7 @@ class LogRepositorySearchIT  implements TestExecutionListener {
     }
 
     @Test
-    void searchByTime() {
+    void searchByTimeNoTimeZone() {
         // simple search based on the start and end time
         MultiValueMap<String, String> searchParameters = new LinkedMultiValueMap<>();
 
@@ -420,7 +420,7 @@ class LogRepositorySearchIT  implements TestExecutionListener {
     }
 
     @Test
-    void searchByEventTime() {
+    void searchByEventTimeNoTimeZone() {
         // simple search based on events that occured between the start and end time
         MultiValueMap<String, String> searchParameters = new LinkedMultiValueMap<>();
 
