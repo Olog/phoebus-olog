@@ -15,7 +15,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
  * @author Kunal Shroff
  *
  */
-public class Attachment
+public class Attachment implements Comparable<Attachment>
 {
     private String id;
     private String filename;
@@ -33,6 +33,21 @@ public class Attachment
     public Attachment()
     {
 
+    }
+
+     @Override
+    public int compareTo(Attachment other) {
+        if (this.filename == null && other.filename == null) {
+            return 0;
+        }
+        if (this.filename == null) {
+            return -1;
+        }
+        if (other.filename == null) {
+            return 1;
+        }
+
+        return this.filename.compareToIgnoreCase(other.filename);
     }
 
     /**

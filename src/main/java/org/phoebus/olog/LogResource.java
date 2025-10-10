@@ -59,6 +59,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -373,7 +374,7 @@ public class LogResource {
             Attachment createdAttachement = attachmentRepository.save(attachment);
             // Update the log entry with the id of the stored attachment
             Log log = foundLog.get();
-            Set<Attachment> existingAttachments = log.getAttachments();
+            SortedSet<Attachment> existingAttachments = log.getAttachments();
             existingAttachments.add(createdAttachement);
             log.setAttachments(existingAttachments);
             return logRepository.update(log);
