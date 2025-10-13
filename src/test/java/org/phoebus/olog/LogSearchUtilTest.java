@@ -21,7 +21,6 @@ package org.phoebus.olog;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
@@ -30,91 +29,12 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.phoebus.olog.LogSearchUtil.MILLI_FORMAT;
+import static org.phoebus.util.time.TimestampFormats.MILLI_FORMAT;
+import static org.phoebus.util.time.TimestampFormats.MILLI_FORMAT_WITH_TZ;
+
 
 @TestPropertySource(locations = "classpath:no_ldap_test_application.properties")
 class LogSearchUtilTest {
-
-    @Test
-    void testSortOrder() {
-        LogSearchUtil logSearchUtil = new LogSearchUtil();
-
-        // Test DESC and ASC
-        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-        params.put("sort", List.of("asc"));
-
-        // Explicit ascending
-        /*
-        SearchRequest searchRequest = logSearchUtil.buildSearchRequest(params);
-        FieldSortBuilder fieldSortBuilder = (FieldSortBuilder) searchRequest.source().sorts().get(0);
-        assertEquals(SortOrder.ASC, fieldSortBuilder.order());
-        assertEquals("createdDate", fieldSortBuilder.getFieldName());
-
-        params = new LinkedMultiValueMap<>();
-        params.put("sort", Arrays.asList("AsCenDinG"));
-        searchRequest = logSearchUtil.buildSearchRequest(params);
-        fieldSortBuilder = (FieldSortBuilder) searchRequest.source().sorts().get(0);
-        assertEquals(SortOrder.ASC, fieldSortBuilder.order());
-        assertEquals("createdDate", fieldSortBuilder.getFieldName());
-
-        // No sort order => expect descending
-        params = new LinkedMultiValueMap<>();
-        searchRequest = logSearchUtil.buildSearchRequest(params);
-        fieldSortBuilder = (FieldSortBuilder) searchRequest.source().sorts().get(0);
-        assertEquals(SortOrder.DESC, fieldSortBuilder.order());
-        assertEquals("createdDate", fieldSortBuilder.getFieldName());
-
-        //Explicit descending
-        params = new LinkedMultiValueMap<>();
-        params.put("sort", Arrays.asList("desc"));
-        searchRequest = logSearchUtil.buildSearchRequest(params);
-        fieldSortBuilder = (FieldSortBuilder) searchRequest.source().sorts().get(0);
-        assertEquals(SortOrder.DESC, fieldSortBuilder.order());
-        assertEquals("createdDate", fieldSortBuilder.getFieldName());
-
-        params = new LinkedMultiValueMap<>();
-        params.put("sort", Arrays.asList("DEsCendiNG"));
-        searchRequest = logSearchUtil.buildSearchRequest(params);
-        fieldSortBuilder = (FieldSortBuilder) searchRequest.source().sorts().get(0);
-        assertEquals(SortOrder.DESC, fieldSortBuilder.order());
-        assertEquals("createdDate", fieldSortBuilder.getFieldName());
-
-        // test UP and DOWN
-
-        params = new LinkedMultiValueMap<>();
-        params.put("sort", Arrays.asList("up"));
-
-        // Explicit ascending
-        searchRequest = logSearchUtil.buildSearchRequest(params);
-        fieldSortBuilder = (FieldSortBuilder) searchRequest.source().sorts().get(0);
-        assertEquals(SortOrder.ASC, fieldSortBuilder.order());
-        assertEquals("createdDate", fieldSortBuilder.getFieldName());
-
-        params = new LinkedMultiValueMap<>();
-        params.put("sort", Arrays.asList("UPp"));
-        searchRequest = logSearchUtil.buildSearchRequest(params);
-        fieldSortBuilder = (FieldSortBuilder) searchRequest.source().sorts().get(0);
-        assertEquals(SortOrder.ASC, fieldSortBuilder.order());
-        assertEquals("createdDate", fieldSortBuilder.getFieldName());
-
-        //Explicit descending
-        params = new LinkedMultiValueMap<>();
-        params.put("sort", Arrays.asList("down"));
-        searchRequest = logSearchUtil.buildSearchRequest(params);
-        fieldSortBuilder = (FieldSortBuilder) searchRequest.source().sorts().get(0);
-        assertEquals(SortOrder.DESC, fieldSortBuilder.order());
-        assertEquals("createdDate", fieldSortBuilder.getFieldName());
-
-        params = new LinkedMultiValueMap<>();
-        params.put("sort", Arrays.asList("doWNunder"));
-        searchRequest = logSearchUtil.buildSearchRequest(params);
-        fieldSortBuilder = (FieldSortBuilder) searchRequest.source().sorts().get(0);
-        assertEquals(SortOrder.DESC, fieldSortBuilder.order());
-        assertEquals("createdDate", fieldSortBuilder.getFieldName());
-
-         */
-
-    }
 
     @Test
     void checkForInvalidTimeRanges() {
@@ -128,6 +48,11 @@ class LogSearchUtilTest {
         params.put("end",   List.of(MILLI_FORMAT.format(now.minusMillis(1000))));
 
         Exception exception = assertThrows(ResponseStatusException.class, () -> logSearchUtil.buildSearchRequest(params));
+
+        params.put("start", List.of(MILLI_FORMAT_WITH_TZ.format(now.plusMillis(1000))));
+        params.put("end",   List.of(MILLI_FORMAT_WITH_TZ.format(now.minusMillis(1000))));
+
+        exception = assertThrows(ResponseStatusException.class, () -> logSearchUtil.buildSearchRequest(params));
 
         String actualMessage = exception.getMessage();
         assertTrue(actualMessage.contains(expectedMessage));

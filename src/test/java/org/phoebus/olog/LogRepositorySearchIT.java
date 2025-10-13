@@ -12,6 +12,7 @@ import org.phoebus.olog.entity.Logbook;
 import org.phoebus.olog.entity.Property;
 import org.phoebus.olog.entity.State;
 import org.phoebus.olog.entity.Tag;
+import org.phoebus.util.time.TimestampFormats;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestContext;
@@ -28,7 +29,6 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.phoebus.olog.LogSearchUtil.MILLI_FORMAT;
 
 /**
  * @author kunal
@@ -398,11 +398,24 @@ class LogRepositorySearchIT  implements TestExecutionListener {
         // simple search based on the start and end time
         MultiValueMap<String, String> searchParameters = new LinkedMultiValueMap<>();
 
-        searchParameters.put("start", List.of(MILLI_FORMAT.format(createdLog1.getCreatedDate().minusMillis(1000))));
-        searchParameters.put("end",   List.of(MILLI_FORMAT.format(createdLog1.getCreatedDate().plusMillis(1000))));
+        searchParameters.put("start", List.of(TimestampFormats.MILLI_FORMAT.format(createdLog1.getCreatedDate().minusMillis(1000))));
+        searchParameters.put("end",   List.of(TimestampFormats.MILLI_FORMAT.format(createdLog1.getCreatedDate().plusMillis(1000))));
         List<Log> foundLogs = logRepository.search(searchParameters).getLogs();
         assertTrue(
                    foundLogs.size() == 1 && foundLogs.contains(createdLog1),
+                "Failed to search for log entries based on log entry create time");
+    }
+
+    @Test
+    void searchByTimeWithTimeZone() {
+        // simple search based on the start and end time
+        MultiValueMap<String, String> searchParameters = new LinkedMultiValueMap<>();
+
+        searchParameters.put("start", List.of(TimestampFormats.MILLI_FORMAT_WITH_TZ.format(createdLog1.getCreatedDate().minusMillis(1000))));
+        searchParameters.put("end",   List.of(TimestampFormats.MILLI_FORMAT_WITH_TZ.format(createdLog1.getCreatedDate().plusMillis(1000))));
+        List<Log> foundLogs = logRepository.search(searchParameters).getLogs();
+        assertTrue(
+                foundLogs.size() == 1 && foundLogs.contains(createdLog1),
                 "Failed to search for log entries based on log entry create time");
     }
 
@@ -411,8 +424,25 @@ class LogRepositorySearchIT  implements TestExecutionListener {
         // simple search based on events that occured between the start and end time
         MultiValueMap<String, String> searchParameters = new LinkedMultiValueMap<>();
 
-        searchParameters.put("start", List.of(MILLI_FORMAT.format(event1.getInstant().minusMillis(1000))));
-        searchParameters.put("end",   List.of(MILLI_FORMAT.format(event1.getInstant().plusMillis(1000))));
+        searchParameters.put("start", List.of(TimestampFormats.MILLI_FORMAT.format(event1.getInstant().minusMillis(1000))));
+        searchParameters.put("end",   List.of(TimestampFormats.MILLI_FORMAT.format(event1.getInstant().plusMillis(1000))));
+        List<Log> foundLogs = logRepository.search(searchParameters).getLogs();
+        assertEquals(0, foundLogs.size(), "Failed to search for log entries based on log event times");
+
+        searchParameters.put("includeEvents", null);
+        foundLogs = logRepository.search(searchParameters).getLogs();
+        assertTrue(
+                foundLogs.size() == 1 && foundLogs.contains(createdLog1),
+                "Failed to search for log entries based on log event times. Expected 1 log entry but found " + foundLogs.size());
+    }
+
+    @Test
+    void searchByEventTimeWithTimeZone() {
+        // simple search based on events that occured between the start and end time
+        MultiValueMap<String, String> searchParameters = new LinkedMultiValueMap<>();
+
+        searchParameters.put("start", List.of(TimestampFormats.MILLI_FORMAT_WITH_TZ.format(event1.getInstant().minusMillis(1000))));
+        searchParameters.put("end",   List.of(TimestampFormats.MILLI_FORMAT_WITH_TZ.format(event1.getInstant().plusMillis(1000))));
         List<Log> foundLogs = logRepository.search(searchParameters).getLogs();
         assertEquals(0, foundLogs.size(), "Failed to search for log entries based on log event times");
 
@@ -453,8 +483,8 @@ class LogRepositorySearchIT  implements TestExecutionListener {
         // expected result: only one log entry should match
         searchParameters = new LinkedMultiValueMap<>();
 
-        searchParameters.put("start", List.of(MILLI_FORMAT.format(createdLog1.getCreatedDate().minusMillis(1000))));
-        searchParameters.put("end",   List.of(MILLI_FORMAT.format(createdLog1.getCreatedDate().plusMillis(1000))));
+        searchParameters.put("start", List.of(TimestampFormats.MILLI_FORMAT_WITH_TZ.format(createdLog1.getCreatedDate().minusMillis(1000))));
+        searchParameters.put("end",   List.of(TimestampFormats.MILLI_FORMAT_WITH_TZ.format(createdLog1.getCreatedDate().plusMillis(1000))));
         searchParameters.put("tags", List.of(testTag1.getName()));
         searchParameters.put("logbooks", List.of(testLogbook1.getName()));
         searchParameters.put("desc", List.of("quick"));
@@ -505,7 +535,7 @@ class LogRepositorySearchIT  implements TestExecutionListener {
         createdLog1 = logRepository.save(log1);
 
         // ensure that the log entries are created 5s apart to test time based searches
-        Thread.sleep(5000);
+        Thread.sleep(1000);
         testProperty2 = new Property("testProperty2",
                 testOwner1,
                 State.Active,
@@ -527,11 +557,11 @@ class LogRepositorySearchIT  implements TestExecutionListener {
                                  .build();
         createdLog2 = logRepository.save(log2);
 
-        Thread.sleep(5000);
+        Thread.sleep(1000);
         String description3 = "some random test text for log entry 3";
         String source3 = "some random test text for log entry 3";
         logRepository.save(Log.LogBuilder.createLog().description(description3).source(source3).build());
-        Thread.sleep(5000);
+        Thread.sleep(1000);
         String description4 = "some random test text for log entry 4";
         String source4 = "some random test text for log entry 4";
         logRepository.save(Log.LogBuilder.createLog().description(description4).source(source4).build());
