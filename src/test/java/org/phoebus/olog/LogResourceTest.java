@@ -58,10 +58,11 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsString;
@@ -97,6 +98,9 @@ public class LogResourceTest extends ResourcesTestBase {
 
     @Autowired
     private TagRepository tagRepository;
+
+    @Autowired
+    private AttachmentRepository attachmentRepository;
 
     @Autowired
     private LogEntryValidator logEntryValidator;
@@ -359,12 +363,16 @@ public class LogResourceTest extends ResourcesTestBase {
     @Test
     void testCreateAttachment() throws Exception {
         when(logRepository.findById("1")).thenReturn(Optional.of(log1));
+
         MockMultipartFile file =
                 new MockMultipartFile("file", "filename.txt", "text/plain", "some xml".getBytes());
         MockMultipartFile filename =
                 new MockMultipartFile("filename", "filename.txt", "text/plain", "some xml".getBytes());
         MockMultipartFile fileMetadataDescription =
                 new MockMultipartFile("fileMetadataDescription", "filename.txt", "text/plain", "some xml".getBytes());
+
+        when(attachmentRepository.save(argThat(attachment -> true)))
+                .thenReturn(new Attachment(null, file, "filename.txt", "fileMetadataDescription"));
         mockMvc.perform(MockMvcRequestBuilders.multipart("/" + OlogResourceDescriptors.LOG_RESOURCE_URI + "/attachments/1")
                         .file(file)
                         .file(filename)
@@ -390,7 +398,7 @@ public class LogResourceTest extends ResourcesTestBase {
                 .modifyDate(now)
                 .level("Urgent")
                 .build();
-        Set<Attachment> attachments = new HashSet<>();
+        SortedSet<Attachment> attachments = new TreeSet<>();
         attachments.add(attachment);
         log.setAttachments(attachments);
         MockMultipartFile file1 =
@@ -401,6 +409,7 @@ public class LogResourceTest extends ResourcesTestBase {
         when(tagRepository.findAll()).thenReturn(Arrays.asList(tag1, tag2));
         when(logRepository.save(argThat(new LogMatcher(log)))).thenReturn(log);
         when(logRepository.findById("1")).thenReturn(Optional.of(log));
+        when(attachmentRepository.save(argThat(attachment1 -> true))).thenReturn(attachment);
         MockHttpServletRequestBuilder request =
                 MockMvcRequestBuilders.multipart(HttpMethod.PUT,
                                 "/" + OlogResourceDescriptors.LOG_RESOURCE_URI + "/multipart")
@@ -470,7 +479,7 @@ public class LogResourceTest extends ResourcesTestBase {
                 .modifyDate(now)
                 .level("Urgent")
                 .build();
-        Set<Attachment> attachments = new HashSet<>();
+        SortedSet<Attachment> attachments = new TreeSet<>();
         attachments.add(attachment);
         attachments.add(attachment2);
         log.setAttachments(attachments);
@@ -511,7 +520,7 @@ public class LogResourceTest extends ResourcesTestBase {
                 .modifyDate(now)
                 .level("Urgent")
                 .build();
-        Set<Attachment> attachments = new HashSet<>();
+        SortedSet<Attachment> attachments = new TreeSet<>();
         attachments.add(attachment);
         log.setAttachments(attachments);
         MockMultipartFile file1 =
@@ -551,7 +560,7 @@ public class LogResourceTest extends ResourcesTestBase {
                 .modifyDate(now)
                 .level("Urgent")
                 .build();
-        Set<Attachment> attachments = new HashSet<>();
+        SortedSet<Attachment> attachments = new TreeSet<>();
         attachments.add(attachment);
         log.setAttachments(attachments);
         MockMultipartFile file1 =

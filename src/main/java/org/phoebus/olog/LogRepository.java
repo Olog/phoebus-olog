@@ -39,11 +39,11 @@ import java.io.IOException;
 import java.text.MessageFormat;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -73,7 +73,7 @@ public class LogRepository implements CrudRepository<Log, String> {
             Long id = generator.getID();
             LogBuilder validatedLog = LogBuilder.createLog(log).id(id).createDate(Instant.now());
             if (log.getAttachments() != null && !log.getAttachments().isEmpty()) {
-                Set<Attachment> createdAttachments = new HashSet<>();
+                SortedSet<Attachment> createdAttachments = new TreeSet<>();
                 log.getAttachments().stream().filter(attachment -> attachment.getAttachment() != null).forEach(attachment ->
                         createdAttachments.add(attachmentRepository.save(attachment))
                 );
