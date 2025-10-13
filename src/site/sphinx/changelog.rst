@@ -3,7 +3,14 @@ Change Log
 
 A list of API changes, major features, and bug fixes included in each release.
 
-service-olog-2.0.3 (current development version)
+service-olog-5.1.1
+------------------
+Date: Oct 2025
+
+* Support for web sockets. Clients shall connect over web sockets as information on changes (new or edited log entries) are pushed
+from the service to all connected clients.
+
+service-olog-2.0.3
 ------------------------------------------------
 Date: TBD
 

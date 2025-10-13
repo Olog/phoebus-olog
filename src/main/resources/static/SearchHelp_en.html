@@ -16,7 +16,7 @@
         <p>
             The query as edited in the logbook clients consists of a list of key/value pairs separated by an ampersand (&amp;amp;)
             character. Keys identify the various elements - i.e. text and meta-data - of a log entry. Key names
-            are <b>case insensitive</b>.
+            are <b>case-insensitive</b>.
         </p>
 
         <h2>How to use search parameter keys</h2>
@@ -34,7 +34,7 @@
                     <li><code>HH:mm:ss</code> - the date portion will be set to current date</li>
                 </ul>
             </li>
-            <li>A relative time specifier using any of the following <b>case insensitive</b> formats:
+            <li>A relative time specifier using any of the following <b>case-insensitive</b> formats:
                 <ul>
                     <li><code>X w</code> - i.e. X weeks</li>
                     <li><code>X d</code> - i.e. X days</li>
@@ -60,7 +60,7 @@
         a date/time picker tool.
 
         <h3>owner</h3>
-        This is the author element of the log entry. The value for this key is <b>case insensitive</b>,
+        This is the author element of the log entry. The value for this key is <b>case-insensitive</b>,
         and wildcards can be used, e.g. <code>owner=John*</code>.<br>
 
         <h3>title</h3>
@@ -68,7 +68,7 @@
 
         <h3>desc</h3>
         This is the body of the log entry. A body text is not mandatory for a log entry, i.e. it may
-        be empty. The value for this key is <b>case insensitive</b>.<br>
+        be empty. The value for this key is <b>case-insensitive</b>.<br>
 
         Wildcards need not be used for a substring match, e.g. <code>desc=increased</code> will match a log entry with
         the body text <code>Temperature increased in tank X</code>.<br>
@@ -84,17 +84,17 @@
 
         <p>
             Limitations when using quoted search terms:
-        <ul>
-            <li>Performance may be affected, i.e. the search process may take longer time to complete.</li>
-            <li>Search will fail if quote characters are not balanced, i.e. search terms string must contain even number
-                of quote characters.
-            </li>
-            <li>No leading or trailing characters other than a comma separator may appear together with a quoted term.
-                For instance,
-                <code>foo,&quot;bar&quot;,other</code> is valid, but <code>foo,&quot;bar&quot;*,other</code> is not.
-            </li>
-            <li>Searching for occurrence of quote characters is not possible.</li>
-        </ul>
+            <ul>
+                <li>Performance may be affected, i.e. the search process may take longer time to complete.</li>
+                <li>Search will fail if quote characters are not balanced, i.e. search terms string must contain even number
+                    of quote characters.
+                </li>
+                <li>No leading or trailing characters other than a comma separator may appear together with a quoted term.
+                    For instance,
+                    <code>foo,&quot;bar&quot;,other</code> is valid, but <code>foo,&quot;bar&quot;*,other</code> is not.
+                </li>
+                <li>Searching for occurrence of quote characters is not possible.</li>
+            </ul>
         </p>
 
         <p>
@@ -106,12 +106,12 @@
 
         <h3>logbooks</h3>
         This is the logbooks meta-data of a log entry. A log entry is contained in
-        one or multiple logbooks. The value for this key is <b>case insensitive</b>,
+        one or multiple logbooks. The value for this key is <b>case-insensitive</b>,
         and wildcards can be used, e.g. <code>logbooks=operation*</code>.<br>
 
         <h3>tags</h3>
         This is the tags meta-data of a log entry. A log entry may contain zero or multiple
-        tags. The value for this key is <b>case insensitive</b>,
+        tags. The value for this key is <b>case-insensitive</b>,
         and wildcards can be used, e.g. <code>tags=cavity*</code>.<br>
 
         <h3>properties</h3>
@@ -129,7 +129,7 @@
         Doe</code>
         would then use: <code>properties=Shift Info.Shift Lead.John Doe</code>. All three, dot-separated, elements of
         the value
-        string for the properties key are <i>case insensitive</i>, and wildcards can be used.<br>
+        string for the properties key are <i>case-insensitive</i>, and wildcards can be used.<br>
 
         Not all elements need to be specified. A query like <code>properties=Shift Info</code> will match all log
         entries
@@ -170,20 +170,20 @@
         <h3>Multiple values</h3>
         One may specify multiple values for a key using a comma (,) separator. This will then find entries
         matching <i>any</i> of the values. However, for the <code>desc</code> and <code>title</code> keys the search will instead apply an
-        &quot;and&quot; strategy, i.e. only entries containing <i>all</i> of the values will match the search query.
+        &quot;and&quot; strategy, i.e. only entries containing <i>all</i> the values will match the search query.
         <p>
             Examples:
-        <ul>
-            <li><code>user=John*,Jane*</code> will match entries created by users named &quot;John&quot; <i>or</i>
-                &quot;Jane&quot;.
-            </li>
-            <li><code>desc=magnet,current</code> will match entries containing &quot;magnet&quot; <i>and</i> &quot;current&quot;.
-            </li>
-            <li><code>user=John*,Jane*&amp;desc=magnet,current</code> will find entries created by users named &quot;John&quot;
-                <i>or</i> &quot;Jane&quot;,
-                <i>and</i> that contain both &quot;magnet&quot; <i>and</i> &quot;current&quot;.
-            </li>
-        </ul>
+            <ul>
+                <li><code>user=John*,Jane*</code> will match entries created by users named &quot;John&quot; <i>or</i>
+                    &quot;Jane&quot;.
+                </li>
+                <li><code>desc=magnet,current</code> will match entries containing &quot;magnet&quot; <i>and</i> &quot;current&quot;.
+                </li>
+                <li><code>user=John*,Jane*&amp;desc=magnet,current</code> will find entries created by users named &quot;John&quot;
+                    <i>or</i> &quot;Jane&quot;,
+                    <i>and</i> that contain both &quot;magnet&quot; <i>and</i> &quot;current&quot;.
+                </li>
+            </ul>
         </p>
         <br>
 

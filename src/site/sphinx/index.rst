@@ -290,7 +290,6 @@ Search Parameters
 |*sort*         | `up|down` order the search results based on create time          |
 +---------------+------------------------------------------------------------------+
 
-
 Example:
 
 **GET** https://localhost:8181/Olog/logs/search?desc=dump&logbooks=Operations
