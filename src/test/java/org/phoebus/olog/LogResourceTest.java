@@ -100,6 +100,9 @@ public class LogResourceTest extends ResourcesTestBase {
     private TagRepository tagRepository;
 
     @Autowired
+    private AttachmentRepository attachmentRepository;
+
+    @Autowired
     private LogEntryValidator logEntryValidator;
 
     @Autowired
@@ -360,12 +363,16 @@ public class LogResourceTest extends ResourcesTestBase {
     @Test
     void testCreateAttachment() throws Exception {
         when(logRepository.findById("1")).thenReturn(Optional.of(log1));
+
         MockMultipartFile file =
                 new MockMultipartFile("file", "filename.txt", "text/plain", "some xml".getBytes());
         MockMultipartFile filename =
                 new MockMultipartFile("filename", "filename.txt", "text/plain", "some xml".getBytes());
         MockMultipartFile fileMetadataDescription =
                 new MockMultipartFile("fileMetadataDescription", "filename.txt", "text/plain", "some xml".getBytes());
+
+        when(attachmentRepository.save(argThat(attachment -> true)))
+                .thenReturn(new Attachment(null, file, "filename.txt", "fileMetadataDescription"));
         mockMvc.perform(MockMvcRequestBuilders.multipart("/" + OlogResourceDescriptors.LOG_RESOURCE_URI + "/attachments/1")
                         .file(file)
                         .file(filename)
@@ -402,6 +409,7 @@ public class LogResourceTest extends ResourcesTestBase {
         when(tagRepository.findAll()).thenReturn(Arrays.asList(tag1, tag2));
         when(logRepository.save(argThat(new LogMatcher(log)))).thenReturn(log);
         when(logRepository.findById("1")).thenReturn(Optional.of(log));
+        when(attachmentRepository.save(argThat(attachment1 -> true))).thenReturn(attachment);
         MockHttpServletRequestBuilder request =
                 MockMvcRequestBuilders.multipart(HttpMethod.PUT,
                                 "/" + OlogResourceDescriptors.LOG_RESOURCE_URI + "/multipart")
