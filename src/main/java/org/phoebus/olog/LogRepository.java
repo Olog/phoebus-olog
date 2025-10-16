@@ -23,6 +23,7 @@ import co.elastic.clients.elasticsearch._types.query_dsl.NestedQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.Operator;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.elasticsearch._types.query_dsl.QueryStringQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.SimpleQueryStringQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.TextQueryType;
 import co.elastic.clients.elasticsearch._types.query_dsl.WildcardQuery;
 import co.elastic.clients.elasticsearch.core.ExistsRequest;
@@ -412,17 +413,17 @@ public class LogRepository implements CrudRepository<Log, String> {
       BoolQuery hybridQuery =
           BoolQuery.of(
               b ->
-                  b/*.should(
+                  b.should(
                           MultiMatchQuery.of(
                                   m ->
                                       m.query(query)
-                                          .fields("title^5", "description^4","owner^2")
+                                          .fields("title", "description", "owner", "level")
                                           //.type(TextQueryType.CrossFields)
-                                          //.fuzziness("AUTO")
-                                          .operator(Operator.Or) // Fixed: changed from And
-                                          .boost(3.0f))
-                              ._toQuery())*/
-                      .should(getTagsQuery(query))
+                                          .fuzziness("AUTO")
+                                          .operator(Operator.And) // Fixed: changed from And
+                                          /*.boost(3.0f)*/)
+                              ._toQuery())
+                      .should(getTagsQuery("test-tag-1"))
                           /*NestedQuery.of(
                                   n ->
                                       n.path("tags")
@@ -433,18 +434,18 @@ public class LogRepository implements CrudRepository<Log, String> {
                                                           w.field("name") // CHANGE: Just "name"
                                                               .caseInsensitive(true)
                                                               .value("*" + query + "*"))))
-                              ._toQuery())*/
-                          .should(QueryStringQuery.of(
+                              ._toQuery())
+                          .must(SimpleQueryStringQuery.of(
                                           q ->
-                                                  q.query("*" + query + "*")
+                                                  q.query(query)
                                                           .fields("title^5", "description^4", "owner^3", "level^1")
                                                           .defaultOperator(Operator.And)
                                                           .analyzeWildcard(true)
-                                                          .allowLeadingWildcard(true)
-                                                          .boost(2.0f))
-                                  ._toQuery())
 
-                      .minimumShouldMatch("1"));
+                                                          .boost(2.0f))
+                                  ._toQuery())*/
+
+                      /*.minimumShouldMatch("1")*/);
 
       SearchRequest request =
           SearchRequest.of(
