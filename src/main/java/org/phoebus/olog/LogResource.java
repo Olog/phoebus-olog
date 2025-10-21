@@ -209,23 +209,6 @@ public class LogResource {
     @GetMapping("/search")
     public SearchResult search(@RequestHeader(value = OLOG_CLIENT_INFO_HEADER, required = false, defaultValue = "n/a") String clientInfo, @RequestParam MultiValueMap<String, String> allRequestParams) {
         logSearchRequest(clientInfo, allRequestParams);
-        for (String key : allRequestParams.keySet()) {
-            if ("start".equalsIgnoreCase(key) || "end".equalsIgnoreCase(key)) {
-                String value = allRequestParams.get(key).get(0);
-                Object time = TimeParser.parseInstantOrTemporalAmount(value);
-                if (time instanceof Instant) {
-                    allRequestParams.get(key).clear();
-                    allRequestParams.get(key).add(MILLI_FORMAT.format((Instant) time));
-                } else if (time instanceof TemporalAmount) {
-                    allRequestParams.get(key).clear();
-                    try {
-                        allRequestParams.get(key).add(MILLI_FORMAT.format(Instant.now().minus((TemporalAmount) time)));
-                    } catch (UnsupportedTemporalTypeException e) { // E.g. if client sends "months" or "years"
-                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, MessageFormat.format(TextUtil.UNSUPPORTED_DATE_TIME, value));
-                    }
-                }
-            }
-        }
         return logRepository.search(allRequestParams);
     }
 

@@ -15,6 +15,7 @@ import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.elasticsearch._types.query_dsl.RangeQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.WildcardQuery;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
+import org.phoebus.util.time.TimeParser;
 import org.phoebus.util.time.TimestampFormats;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -26,6 +27,8 @@ import java.text.MessageFormat;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.time.temporal.TemporalAmount;
+import java.time.temporal.UnsupportedTemporalTypeException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -36,6 +39,8 @@ import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+
+import static org.phoebus.util.time.TimestampFormats.MILLI_FORMAT;
 
 /**
  * A utility class for creating a search query for log entries based on time,
@@ -67,6 +72,7 @@ public class LogSearchUtil {
      * @return A {@link SearchRequest} based on the provided search parameters
      */
     public SearchRequest buildSearchRequest(MultiValueMap<String, String> searchParameters) {
+        processTimeSpecifiers(searchParameters);
         BoolQuery.Builder boolQueryBuilder = new Builder();
         boolean fuzzySearch = false;
         List<String> searchTerms = new ArrayList<>();
@@ -452,5 +458,25 @@ public class LogSearchUtil {
         //...but remove empty strings, which are "leftovers" when quoted terms are removed
         terms.addAll(remaining.stream().filter(t -> t.length() > 0).collect(Collectors.toList()));
         return terms;
+    }
+
+    protected void processTimeSpecifiers(MultiValueMap<String, String> allRequestParams){
+        for (String key : allRequestParams.keySet()) {
+            if ("start".equalsIgnoreCase(key) || "end".equalsIgnoreCase(key)) {
+                String value = allRequestParams.get(key).get(0);
+                Object time = TimeParser.parseInstantOrTemporalAmount(value);
+                if (time instanceof Instant) {
+                    allRequestParams.get(key).clear();
+                    allRequestParams.get(key).add(MILLI_FORMAT.format((Instant) time));
+                } else if (time instanceof TemporalAmount) {
+                    allRequestParams.get(key).clear();
+                    try {
+                        allRequestParams.get(key).add(MILLI_FORMAT.format(Instant.now().minus((TemporalAmount) time)));
+                    } catch (UnsupportedTemporalTypeException e) { // E.g. if client sends "months" or "years"
+                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, MessageFormat.format(TextUtil.UNSUPPORTED_DATE_TIME, value));
+                    }
+                }
+            }
+        }
     }
 }
