@@ -16,7 +16,6 @@ import co.elastic.clients.elasticsearch._types.query_dsl.RangeQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.WildcardQuery;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
 import org.phoebus.util.time.TimeParser;
-import org.phoebus.util.time.TimestampFormats;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -36,11 +35,10 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.TimeZone;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-
-import static org.phoebus.util.time.TimestampFormats.MILLI_FORMAT;
 
 /**
  * A utility class for creating a search query for log entries based on time,
@@ -72,7 +70,8 @@ public class LogSearchUtil {
      * @return A {@link SearchRequest} based on the provided search parameters
      */
     public SearchRequest buildSearchRequest(MultiValueMap<String, String> searchParameters) {
-        processTimeSpecifiers(searchParameters);
+        //processTimeSpecifiers(searchParameters);
+        TimeZone timeZone = getTimezone(searchParameters);
         BoolQuery.Builder boolQueryBuilder = new Builder();
         boolean fuzzySearch = false;
         List<String> searchTerms = new ArrayList<>();
@@ -175,28 +174,14 @@ public class LogSearchUtil {
                     boolQueryBuilder.must(nestedLogbooksQuery._toQuery());
                     break;
                 case "start":
-                    // If there are multiple start times submitted select the earliest
-                    ZonedDateTime earliestStartTime = ZonedDateTime.now();
-                    for (String value : parameter.getValue()) {
-                        ZonedDateTime time = value.contains("T") ? // Client may not (yet) use time zone format
-                                ZonedDateTime.from(TimestampFormats.MILLI_FORMAT_WITH_TZ.parse(value)) :
-                                ZonedDateTime.from(TimestampFormats.MILLI_FORMAT.parse(value));
-                        earliestStartTime = earliestStartTime.isBefore(time) ? earliestStartTime : time;
-                    }
+                    ZonedDateTime startTime = determineDateAndTime(parameter, timeZone);
+                    start = startTime != null ? startTime : ZonedDateTime.now();
                     temporalSearch = true;
-                    start = earliestStartTime;
                     break;
                 case "end":
-                    // If there are multiple end times submitted select the latest
-                    ZonedDateTime latestEndTime = Instant.ofEpochMilli(Long.MIN_VALUE).atZone(ZoneId.systemDefault());
-                    for (String value : parameter.getValue()) {
-                        ZonedDateTime time = value.contains("T") ? // Client may not (yet) use time zone format
-                                ZonedDateTime.from(TimestampFormats.MILLI_FORMAT_WITH_TZ.parse(value)) :
-                                ZonedDateTime.from(TimestampFormats.MILLI_FORMAT.parse(value));
-                        latestEndTime = latestEndTime.isBefore(time) ? time : latestEndTime;
-                    }
+                    ZonedDateTime endTime = determineDateAndTime(parameter, timeZone);
+                    end = endTime != null ? endTime : Instant.ofEpochMilli(Long.MIN_VALUE).atZone(ZoneId.systemDefault());
                     temporalSearch = true;
-                    end = latestEndTime;
                     break;
                 case "includeevents":
                 case "includeevent":
@@ -460,23 +445,56 @@ public class LogSearchUtil {
         return terms;
     }
 
-    protected void processTimeSpecifiers(MultiValueMap<String, String> allRequestParams){
-        for (String key : allRequestParams.keySet()) {
-            if ("start".equalsIgnoreCase(key) || "end".equalsIgnoreCase(key)) {
-                String value = allRequestParams.get(key).get(0);
-                Object time = TimeParser.parseInstantOrTemporalAmount(value);
-                if (time instanceof Instant) {
-                    allRequestParams.get(key).clear();
-                    allRequestParams.get(key).add(MILLI_FORMAT.format((Instant) time));
+    /**
+     * Computes a {@link ZonedDateTime} based on client provided start/end search parameter. Time zone is considered.
+     *
+     * @param parameter The start or end search parameter
+     * @param timeZone  Client provided tz, or system default.
+     * @return A {@link ZonedDateTime} if search parameter can be parsed, otherwise <code>null</code>.
+     * @throws ResponseStatusException if client provided {@link TemporalAmount} specifier is invalid.
+     */
+    protected ZonedDateTime determineDateAndTime(Entry<String, List<String>> parameter, TimeZone timeZone) {
+        String value = parameter.getValue().get(0); // Even if client specifies start=, there is still one element in the parameter object
+        if (!value.isEmpty()) {
+            // If multiple time specifiers are provided by client, consider only first...
+            String timeSpecifier = value.split("[\\|,;]")[0];
+            if (!timeSpecifier.isEmpty()) {
+                Object time = TimeParser.parseInstantOrTemporalAmount(timeSpecifier);
+                if (time instanceof Instant instant) {
+                    return ZonedDateTime.ofInstant(instant, timeZone.toZoneId());
                 } else if (time instanceof TemporalAmount) {
-                    allRequestParams.get(key).clear();
                     try {
-                        allRequestParams.get(key).add(MILLI_FORMAT.format(Instant.now().minus((TemporalAmount) time)));
+                        return ZonedDateTime.ofInstant(Instant.now().minus((TemporalAmount) time), timeZone.toZoneId());
                     } catch (UnsupportedTemporalTypeException e) { // E.g. if client sends "months" or "years"
-                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, MessageFormat.format(TextUtil.UNSUPPORTED_DATE_TIME, value));
+                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, MessageFormat.format(TextUtil.UNSUPPORTED_DATE_TIME, timeSpecifier));
                     }
                 }
             }
         }
+
+        return null;
+    }
+
+    /**
+     * Determines time zone based on client provided tz, if present.
+     *
+     * @param searchParameters Search parameters provided by client, may or may not include tz
+     * @return Client provided {@link TimeZone}, or system default.
+     */
+    protected TimeZone getTimezone(MultiValueMap<String, String> searchParameters) {
+        for (Entry<String, List<String>> parameter : searchParameters.entrySet()) {
+            switch (parameter.getKey().strip().toLowerCase()) {
+                case "tz":
+                    String timezoneString = parameter.getValue().get(0);
+                    if (timezoneString != null && !timezoneString.isEmpty()) {
+                        return TimeZone.getTimeZone(timezoneString);
+                    } else {
+                        return TimeZone.getDefault();
+                    }
+                default:
+                    return TimeZone.getDefault();
+            }
+        }
+        return TimeZone.getDefault();
     }
 }
