@@ -19,7 +19,6 @@ import org.phoebus.olog.entity.websocket.MessageType;
 import org.phoebus.olog.entity.websocket.WebSocketMessage;
 import org.phoebus.olog.notification.LogEntryNotifier;
 import org.phoebus.olog.websocket.WebSocketService;
-import org.phoebus.util.time.TimeParser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
@@ -51,8 +50,6 @@ import java.security.Principal;
 import java.text.MessageFormat;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.temporal.TemporalAmount;
-import java.time.temporal.UnsupportedTemporalTypeException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -189,23 +186,17 @@ public class LogResource {
     @GetMapping()
     @Deprecated
     public List<Log> findLogs(@RequestHeader(value = OLOG_CLIENT_INFO_HEADER, required = false, defaultValue = "n/a") String clientInfo, @RequestParam MultiValueMap<String, String> allRequestParams) {
-        logSearchRequest(clientInfo, allRequestParams);
-        for (String key : allRequestParams.keySet()) {
-            if ("start".equalsIgnoreCase(key) || "end".equalsIgnoreCase(key)) {
-                String value = allRequestParams.get(key).get(0);
-                Object time = TimeParser.parseInstantOrTemporalAmount(value);
-                if (time instanceof Instant) {
-                    allRequestParams.get(key).clear();
-                    allRequestParams.get(key).add(MILLI_FORMAT.format((Instant) time));
-                } else if (time instanceof TemporalAmount) {
-                    allRequestParams.get(key).clear();
-                    allRequestParams.get(key).add(MILLI_FORMAT.format(Instant.now().minus((TemporalAmount) time)));
-                }
-            }
-        }
-        return logRepository.search(allRequestParams).getLogs();
+        return search(clientInfo, allRequestParams).getLogs();
     }
 
+    /**
+     * Finds matching log entries based on the specified search parameters.
+     *
+     * @param clientInfo       A string sent by client identifying it with respect to version and platform.
+     * @param allRequestParams A map of search query parameters. Note that this method supports date/time expressions
+     *                         like "12 hours" or "2 days" as well as formatted strings like "2021-01-20 12:00:00.123".
+     * @return A {@link SearchResult} holding matching objects, if any.
+     */
     @GetMapping("/search")
     public SearchResult search(@RequestHeader(value = OLOG_CLIENT_INFO_HEADER, required = false, defaultValue = "n/a") String clientInfo, @RequestParam MultiValueMap<String, String> allRequestParams) {
         logSearchRequest(clientInfo, allRequestParams);
@@ -647,12 +638,12 @@ public class LogResource {
         MultiValueMap<String, String> baseParams = new LinkedMultiValueMap<>();
         Instant now = Instant.now();
         baseParams.set("end", MILLI_FORMAT.format(now));
-        baseParams.set("start",  MILLI_FORMAT.format(now.minus(Duration.ofDays(7))));
+        baseParams.set("start", MILLI_FORMAT.format(now.minus(Duration.ofDays(7))));
         baseParams.set("from", "0");
         baseParams.set("size", "100");
 
         SearchResult searchResult = logRepository.search(baseParams);
-        if (searchResult != null ) {
+        if (searchResult != null) {
             return RssFeedUtil.fromLogEntries(searchResult.getLogs(), baseUrl);
         } else {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to find entries");
