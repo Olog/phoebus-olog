@@ -139,27 +139,27 @@ class LogSearchUtilTest {
     @Test
     public void testDetermineDateAndTime(){
 
-        System.setProperty("user.timezone", "CET");
+        System.setProperty("user.timezone", "UTC");
 
         Map.Entry<String, List<String>> startParameter = new AbstractMap.SimpleEntry<>("start", List.of("2025-10-01 12:00:00.000"));
 
         ZonedDateTime zonedDateTime = logSearchUtil.determineDateAndTime(startParameter,
                 TimeZone.getTimeZone("CET"));
         System.out.println("Local time in CET " + zonedDateTime.toLocalDateTime().toString());
-        assertTrue("2025-10-01T12:00".equals(zonedDateTime.toLocalDateTime().toString()) || "2025-10-01T11:00".equals(zonedDateTime.toLocalDateTime().toString()));
+        assertTrue("2025-10-01T14:00".equals(zonedDateTime.toLocalDateTime().toString()) || "2025-10-01T13:00".equals(zonedDateTime.toLocalDateTime().toString()));
         assertTrue("+02:00".equals(zonedDateTime.getOffset().toString()) || "+01:00".equals(zonedDateTime.getOffset().toString()));
 
         zonedDateTime = logSearchUtil.determineDateAndTime(startParameter,
                 TimeZone.getTimeZone("GMT"));
         System.out.println("Local time in GMT " + zonedDateTime.toLocalDateTime().toString());
-        assertTrue("2025-10-01T10:00".equals(zonedDateTime.toLocalDateTime().toString()));
+        assertTrue("2025-10-01T12:00".equals(zonedDateTime.toLocalDateTime().toString()));
         assertTrue("Z".equals(zonedDateTime.getOffset().toString()));
 
         zonedDateTime = logSearchUtil.determineDateAndTime(startParameter,
                 TimeZone.getTimeZone("EST"));
 
         System.out.println("Local time in EST " + zonedDateTime.toLocalDateTime().toString());
-        assertTrue("2025-10-01T05:00".equals(zonedDateTime.toLocalDateTime().toString()) || "2025-10-01T04:00".equals(zonedDateTime.toLocalDateTime().toString()));
+        assertTrue("2025-10-01T07:00".equals(zonedDateTime.toLocalDateTime().toString()) || "2025-10-01T06:00".equals(zonedDateTime.toLocalDateTime().toString()));
         assertTrue("-05:00".equals(zonedDateTime.getOffset().toString()) || "-04:00".equals(zonedDateTime.getOffset().toString()));
 
     }
