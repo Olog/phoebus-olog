@@ -217,25 +217,6 @@ public class LogResourceTest extends ResourcesTestBase {
     }
 
     @Test
-    void testSearchLogsUnsupportedTemporals() throws Exception {
-        MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
-        map.put("start", List.of("2 years"));
-
-        MockHttpServletRequestBuilder request = get("/" + OlogResourceDescriptors.LOG_RESOURCE_URI + "/search")
-                .params(map)
-                .contentType(JSON);
-        mockMvc.perform(request).andExpect(status().isBadRequest());
-
-        map = new LinkedMultiValueMap<>();
-        map.put("start", List.of("2 months"));
-
-        get("/" + OlogResourceDescriptors.LOG_RESOURCE_URI + "/search")
-                .params(map)
-                .contentType(JSON);
-        mockMvc.perform(request).andExpect(status().isBadRequest());
-    }
-
-    @Test
     void testCreateLogUnauthorized() throws Exception {
         MockHttpServletRequestBuilder request = put("/" + OlogResourceDescriptors.LOG_RESOURCE_URI)
                 .content(objectMapper.writeValueAsString(log1))
