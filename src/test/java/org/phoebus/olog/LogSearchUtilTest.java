@@ -139,6 +139,8 @@ class LogSearchUtilTest {
     @Test
     public void testDetermineDateAndTime(){
 
+        System.setProperty("user.timezone", "CET");
+
         Map.Entry<String, List<String>> startParameter = new AbstractMap.SimpleEntry<>("start", List.of("2025-10-01 12:00:00.000"));
 
         ZonedDateTime zonedDateTime = logSearchUtil.determineDateAndTime(startParameter,
