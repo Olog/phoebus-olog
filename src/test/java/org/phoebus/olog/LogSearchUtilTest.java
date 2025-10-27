@@ -122,6 +122,7 @@ class LogSearchUtilTest {
         assertEquals(3600000, timeZone.getRawOffset());
 
         searchParams = new LinkedMultiValueMap<>();
+        searchParams.put("start", List.of("1970-01-01 00:00:00.000"));
         searchParams.put("tz", List.of("CET"));
 
         timeZone = logSearchUtil.getTimezone(searchParams);

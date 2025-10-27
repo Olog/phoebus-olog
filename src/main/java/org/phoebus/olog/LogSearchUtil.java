@@ -483,16 +483,13 @@ public class LogSearchUtil {
      */
     protected TimeZone getTimezone(MultiValueMap<String, String> searchParameters) {
         for (Entry<String, List<String>> parameter : searchParameters.entrySet()) {
-            switch (parameter.getKey().strip().toLowerCase()) {
-                case "tz":
-                    String timezoneString = parameter.getValue().get(0);
-                    if (timezoneString != null && !timezoneString.isEmpty()) {
-                        return TimeZone.getTimeZone(timezoneString);
-                    } else {
-                        return TimeZone.getDefault();
-                    }
-                default:
+            if ("tz".equals(parameter.getKey().strip().toLowerCase())) {
+                String timezoneString = parameter.getValue().get(0);
+                if (timezoneString != null && !timezoneString.isEmpty()) {
+                    return TimeZone.getTimeZone(timezoneString);
+                } else {
                     return TimeZone.getDefault();
+                }
             }
         }
         return TimeZone.getDefault();
