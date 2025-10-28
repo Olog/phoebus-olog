@@ -50,6 +50,7 @@ import java.security.Principal;
 import java.text.MessageFormat;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -65,7 +66,7 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import static org.phoebus.olog.OlogResourceDescriptors.LOG_RESOURCE_URI;
-import static org.phoebus.util.time.TimestampFormats.MILLI_FORMAT;
+import static org.phoebus.util.time.TimestampFormats.MILLI_PATTERN;
 
 /**
  * Resource for handling the requests to ../logs
@@ -636,9 +637,10 @@ public class LogResource {
     public com.rometools.rome.feed.rss.Channel getRssFeed(HttpServletRequest request) {
         String baseUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + "/" + request.getContextPath();
         MultiValueMap<String, String> baseParams = new LinkedMultiValueMap<>();
+
         Instant now = Instant.now();
-        baseParams.set("end", MILLI_FORMAT.format(now));
-        baseParams.set("start", MILLI_FORMAT.format(now.minus(Duration.ofDays(7))));
+        baseParams.set("end", DateTimeFormatter.ofPattern(MILLI_PATTERN).format(now));
+        baseParams.set("start", DateTimeFormatter.ofPattern(MILLI_PATTERN).format(now.minus(Duration.ofDays(7))));
         baseParams.set("from", "0");
         baseParams.set("size", "100");
 

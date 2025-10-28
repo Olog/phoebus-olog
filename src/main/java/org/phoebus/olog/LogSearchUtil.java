@@ -64,13 +64,13 @@ public class LogSearchUtil {
     private int maxSearchSize;
 
     private static final Logger LOGGER = Logger.getLogger(LogSearchUtil.class.getName());
+    private static final ZoneId UTC_ZONE_ID = ZoneId.of("UTC");
 
     /**
      * @param searchParameters - the various search parameters
      * @return A {@link SearchRequest} based on the provided search parameters
      */
     public SearchRequest buildSearchRequest(MultiValueMap<String, String> searchParameters) {
-        //processTimeSpecifiers(searchParameters);
         TimeZone timeZone = getTimezone(searchParameters);
         BoolQuery.Builder boolQueryBuilder = new Builder();
         boolean fuzzySearch = false;
@@ -446,7 +446,8 @@ public class LogSearchUtil {
     }
 
     /**
-     * Computes a {@link ZonedDateTime} based on client provided start/end search parameter. Time zone is considered.
+     * Computes a UTC {@link ZonedDateTime} based on client provided start/end search parameter, and time zone,
+     * if specified.
      *
      * @param parameter The start or end search parameter
      * @param timeZone  Client provided tz, or system default.
@@ -459,9 +460,9 @@ public class LogSearchUtil {
             // If multiple time specifiers are provided by client, consider only first...
             String timeSpecifier = value.split("[\\|,;]")[0];
             if (!timeSpecifier.isEmpty()) {
-                Object time = TimeParser.parseInstantOrTemporalAmount(timeSpecifier);
+                Object time = TimeParser.parseInstantOrTemporalAmount(timeSpecifier, timeZone.toZoneId());
                 if (time instanceof Instant instant) {
-                    return ZonedDateTime.ofInstant(instant, timeZone.toZoneId());
+                    return ZonedDateTime.ofInstant(instant, UTC_ZONE_ID);
                 } else if (time instanceof TemporalAmount) {
                     try {
                         return ZonedDateTime.ofInstant(Instant.now().minus((TemporalAmount) time), timeZone.toZoneId());
