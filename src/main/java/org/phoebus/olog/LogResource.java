@@ -50,6 +50,7 @@ import java.security.Principal;
 import java.text.MessageFormat;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -639,8 +640,8 @@ public class LogResource {
         MultiValueMap<String, String> baseParams = new LinkedMultiValueMap<>();
 
         Instant now = Instant.now();
-        baseParams.set("end", DateTimeFormatter.ofPattern(MILLI_PATTERN).format(now));
-        baseParams.set("start", DateTimeFormatter.ofPattern(MILLI_PATTERN).format(now.minus(Duration.ofDays(7))));
+        baseParams.set("end", DateTimeFormatter.ofPattern(MILLI_PATTERN).withZone(ZoneId.systemDefault()).format(now));
+        baseParams.set("start", DateTimeFormatter.ofPattern(MILLI_PATTERN).withZone(ZoneId.systemDefault()).format(now.minus(Duration.ofDays(7))));
         baseParams.set("from", "0");
         baseParams.set("size", "100");
 
