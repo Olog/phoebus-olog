@@ -640,8 +640,11 @@ public class LogResource {
         MultiValueMap<String, String> baseParams = new LinkedMultiValueMap<>();
 
         Instant now = Instant.now();
-        baseParams.set("end", DateTimeFormatter.ofPattern(MILLI_PATTERN).withZone(ZoneId.systemDefault()).format(now));
-        baseParams.set("start", DateTimeFormatter.ofPattern(MILLI_PATTERN).withZone(ZoneId.systemDefault()).format(now.minus(Duration.ofDays(7))));
+        String endTime = DateTimeFormatter.ofPattern(MILLI_PATTERN).withZone(ZoneId.systemDefault()).format(now);
+        String startTime = DateTimeFormatter.ofPattern(MILLI_PATTERN).withZone(ZoneId.systemDefault()).format(now.minus(Duration.ofDays(7)));
+        logger.log(Level.INFO, "Using start and end time " + startTime + " " + endTime);
+        baseParams.set("end", endTime);
+        baseParams.set("start", startTime);
         baseParams.set("from", "0");
         baseParams.set("size", "100");
 
