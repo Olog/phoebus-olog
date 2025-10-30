@@ -143,32 +143,10 @@ public class LogSearchUtil {
                     boolQueryBuilder.must(ownerQuery.build()._toQuery());
                     break;
                 case "tags":
-                    DisMaxQuery.Builder tagQuery = new DisMaxQuery.Builder();
-                    List<Query> tagsQueries = new ArrayList<>();
-                    for (String value : parameter.getValue()) {
-                        for (String pattern : value.split("[\\|,;]")) {
-                            tagsQueries.add(WildcardQuery.of(w -> w.field("tags.name")
-                                    .caseInsensitive(true)
-                                    .value(pattern.trim()))._toQuery());
-                        }
-                    }
-                    Query tagsQuery = tagQuery.queries(tagsQueries).build()._toQuery();
-                    NestedQuery nestedTagsQuery = NestedQuery.of(n -> n.path("tags").query(tagsQuery));
-                    boolQueryBuilder.must(nestedTagsQuery._toQuery());
+                    boolQueryBuilder.must(getTagsQuery(parameter));
                     break;
                 case "logbooks":
-                    DisMaxQuery.Builder logbookQuery = new DisMaxQuery.Builder();
-                    List<Query> logbooksQueries = new ArrayList<>();
-                    for (String value : parameter.getValue()) {
-                        for (String pattern : value.split("[\\|,;]")) {
-                            logbooksQueries.add(WildcardQuery.of(w -> w.field("logbooks.name")
-                                    .caseInsensitive(true)
-                                    .value(pattern.trim()))._toQuery());
-                        }
-                    }
-                    Query logbooksQuery = logbookQuery.queries(logbooksQueries).build()._toQuery();
-                    NestedQuery nestedLogbooksQuery = NestedQuery.of(n -> n.path("logbooks").query(logbooksQuery).scoreMode(ChildScoreMode.None));
-                    boolQueryBuilder.must(nestedLogbooksQuery._toQuery());
+                    boolQueryBuilder.must(getLogbooksQuery(parameter));
                     break;
                 case "start":
                     // If there are multiple start times submitted select the earliest
@@ -454,31 +432,33 @@ public class LogSearchUtil {
         return terms;
     }
 
-    private Query getTagsQuery(List<String> terms){
+    protected Query getTagsQuery(Entry<String, List<String>> parameter){
         DisMaxQuery.Builder tagQuery = new DisMaxQuery.Builder();
         List<Query> tagsQueries = new ArrayList<>();
-        for (String term : terms) {
-            tagsQueries.add(WildcardQuery.of(w -> w.field("tags.name")
-                    .caseInsensitive(true)
-                    .value(term.trim()))._toQuery());
+        for (String value : parameter.getValue()) {
+            for (String pattern : value.split("[\\|,;]")) {
+                tagsQueries.add(WildcardQuery.of(w -> w.field("tags.name")
+                        .caseInsensitive(true)
+                        .value(pattern.trim()))._toQuery());
+            }
         }
-
         Query tagsQuery = tagQuery.queries(tagsQueries).build()._toQuery();
         NestedQuery nestedTagsQuery = NestedQuery.of(n -> n.path("tags").query(tagsQuery));
         return nestedTagsQuery._toQuery();
     }
 
-    private Query getLogbooksQuery(List<String> terms){
+    protected Query getLogbooksQuery(Entry<String, List<String>> parameter){
         DisMaxQuery.Builder logbookQuery = new DisMaxQuery.Builder();
         List<Query> logbooksQueries = new ArrayList<>();
-        for (String term : terms) {
-            logbooksQueries.add(WildcardQuery.of(w -> w.field("logbooks.name")
-                    .caseInsensitive(true)
-                    .value(term.trim()))._toQuery());
+        for (String value : parameter.getValue()) {
+            for (String pattern : value.split("[\\|,;]")) {
+                logbooksQueries.add(WildcardQuery.of(w -> w.field("logbooks.name")
+                        .caseInsensitive(true)
+                        .value(pattern.trim()))._toQuery());
+            }
         }
-
-        Query tagsQuery = logbookQuery.queries(logbooksQueries).build()._toQuery();
-        NestedQuery nestedTagsQuery = NestedQuery.of(n -> n.path("tags").query(tagsQuery));
-        return nestedTagsQuery._toQuery();
+        Query logbooksQuery = logbookQuery.queries(logbooksQueries).build()._toQuery();
+        NestedQuery nestedLogbooksQuery = NestedQuery.of(n -> n.path("logbooks").query(logbooksQuery).scoreMode(ChildScoreMode.None));
+        return nestedLogbooksQuery._toQuery();
     }
 }

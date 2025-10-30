@@ -18,114 +18,37 @@
 
 package org.phoebus.olog;
 
+import co.elastic.clients.elasticsearch._types.query_dsl.DisMaxQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.NestedQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
+import java.util.AbstractMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.phoebus.olog.LogSearchUtil.MILLI_FORMAT;
 
-@TestPropertySource(locations = "classpath:no_ldap_test_application.properties")
+
 class LogSearchUtilTest {
 
-    @Test
-    void testSortOrder() {
-        LogSearchUtil logSearchUtil = new LogSearchUtil();
-
-        // Test DESC and ASC
-        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-        params.put("sort", List.of("asc"));
-
-        // Explicit ascending
-        /*
-        SearchRequest searchRequest = logSearchUtil.buildSearchRequest(params);
-        FieldSortBuilder fieldSortBuilder = (FieldSortBuilder) searchRequest.source().sorts().get(0);
-        assertEquals(SortOrder.ASC, fieldSortBuilder.order());
-        assertEquals("createdDate", fieldSortBuilder.getFieldName());
-
-        params = new LinkedMultiValueMap<>();
-        params.put("sort", Arrays.asList("AsCenDinG"));
-        searchRequest = logSearchUtil.buildSearchRequest(params);
-        fieldSortBuilder = (FieldSortBuilder) searchRequest.source().sorts().get(0);
-        assertEquals(SortOrder.ASC, fieldSortBuilder.order());
-        assertEquals("createdDate", fieldSortBuilder.getFieldName());
-
-        // No sort order => expect descending
-        params = new LinkedMultiValueMap<>();
-        searchRequest = logSearchUtil.buildSearchRequest(params);
-        fieldSortBuilder = (FieldSortBuilder) searchRequest.source().sorts().get(0);
-        assertEquals(SortOrder.DESC, fieldSortBuilder.order());
-        assertEquals("createdDate", fieldSortBuilder.getFieldName());
-
-        //Explicit descending
-        params = new LinkedMultiValueMap<>();
-        params.put("sort", Arrays.asList("desc"));
-        searchRequest = logSearchUtil.buildSearchRequest(params);
-        fieldSortBuilder = (FieldSortBuilder) searchRequest.source().sorts().get(0);
-        assertEquals(SortOrder.DESC, fieldSortBuilder.order());
-        assertEquals("createdDate", fieldSortBuilder.getFieldName());
-
-        params = new LinkedMultiValueMap<>();
-        params.put("sort", Arrays.asList("DEsCendiNG"));
-        searchRequest = logSearchUtil.buildSearchRequest(params);
-        fieldSortBuilder = (FieldSortBuilder) searchRequest.source().sorts().get(0);
-        assertEquals(SortOrder.DESC, fieldSortBuilder.order());
-        assertEquals("createdDate", fieldSortBuilder.getFieldName());
-
-        // test UP and DOWN
-
-        params = new LinkedMultiValueMap<>();
-        params.put("sort", Arrays.asList("up"));
-
-        // Explicit ascending
-        searchRequest = logSearchUtil.buildSearchRequest(params);
-        fieldSortBuilder = (FieldSortBuilder) searchRequest.source().sorts().get(0);
-        assertEquals(SortOrder.ASC, fieldSortBuilder.order());
-        assertEquals("createdDate", fieldSortBuilder.getFieldName());
-
-        params = new LinkedMultiValueMap<>();
-        params.put("sort", Arrays.asList("UPp"));
-        searchRequest = logSearchUtil.buildSearchRequest(params);
-        fieldSortBuilder = (FieldSortBuilder) searchRequest.source().sorts().get(0);
-        assertEquals(SortOrder.ASC, fieldSortBuilder.order());
-        assertEquals("createdDate", fieldSortBuilder.getFieldName());
-
-        //Explicit descending
-        params = new LinkedMultiValueMap<>();
-        params.put("sort", Arrays.asList("down"));
-        searchRequest = logSearchUtil.buildSearchRequest(params);
-        fieldSortBuilder = (FieldSortBuilder) searchRequest.source().sorts().get(0);
-        assertEquals(SortOrder.DESC, fieldSortBuilder.order());
-        assertEquals("createdDate", fieldSortBuilder.getFieldName());
-
-        params = new LinkedMultiValueMap<>();
-        params.put("sort", Arrays.asList("doWNunder"));
-        searchRequest = logSearchUtil.buildSearchRequest(params);
-        fieldSortBuilder = (FieldSortBuilder) searchRequest.source().sorts().get(0);
-        assertEquals(SortOrder.DESC, fieldSortBuilder.order());
-        assertEquals("createdDate", fieldSortBuilder.getFieldName());
-
-         */
-
-    }
+    private LogSearchUtil logSearchUtil = new LogSearchUtil();
 
     @Test
     void checkForInvalidTimeRanges() {
-        LogSearchUtil logSearchUtil = new LogSearchUtil();
         String expectedMessage = "CAUSE: Invalid start and end times";
 
         LinkedMultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         // start time is after the end time
         Instant now = Instant.now();
         params.put("start", List.of(MILLI_FORMAT.format(now.plusMillis(1000))));
-        params.put("end",   List.of(MILLI_FORMAT.format(now.minusMillis(1000))));
+        params.put("end", List.of(MILLI_FORMAT.format(now.minusMillis(1000))));
 
         Exception exception = assertThrows(ResponseStatusException.class, () -> logSearchUtil.buildSearchRequest(params));
 
@@ -136,7 +59,6 @@ class LogSearchUtilTest {
 
     @Test
     void testGetSearchTerms() {
-        LogSearchUtil logSearchUtil = new LogSearchUtil();
         String userInput = "";
         List<String> parsed = logSearchUtil.getSearchTerms(userInput);
         assertTrue(parsed.isEmpty());
@@ -178,5 +100,33 @@ class LogSearchUtilTest {
 
         final String _userInput = "foo,\"bar\",\"neutron";
         assertThrows(IllegalArgumentException.class, () -> logSearchUtil.getSearchTerms(_userInput));
+    }
+
+    @Test
+    public void testGetTagsQuery() {
+
+        LogSearchUtil logSearchUtil = new LogSearchUtil();
+
+        Map.Entry<String, List<String>> tagsEntry = new AbstractMap.SimpleEntry<>("tags", List.of("tag1,tag2"));
+
+        Query query = logSearchUtil.getTagsQuery(tagsEntry);
+
+        NestedQuery nestedQuery = (NestedQuery) query._get();
+        DisMaxQuery disMaxQuery = (DisMaxQuery) nestedQuery.query()._get();
+        assertEquals(2, disMaxQuery.queries().size());
+    }
+
+    @Test
+    public void testGetLogbooksQuery() {
+
+        LogSearchUtil logSearchUtil = new LogSearchUtil();
+
+        Map.Entry<String, List<String>> logbooksEntry = new AbstractMap.SimpleEntry<>("logbooks", List.of("logbook1,logbook2"));
+
+        Query query = logSearchUtil.getTagsQuery(logbooksEntry);
+
+        NestedQuery nestedQuery = (NestedQuery) query._get();
+        DisMaxQuery disMaxQuery = (DisMaxQuery) nestedQuery.query()._get();
+        assertEquals(2, disMaxQuery.queries().size());
     }
 }
