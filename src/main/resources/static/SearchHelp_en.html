@@ -66,7 +66,9 @@
             <li>User specifies start time 02:30</li>
             <li>Search is performed <i>after</i> switch away from DST</li>
         </ul>
-        then the search result will contain entries created after 01:30 in the non-DST time.
+        then the search result will contain entries created after 01:30 in the non-DST time. If on the other hand
+        the 02:30 timestamp is specified as end time, the search result will <i>not</i> contain entries after 01:30 in the
+        non-DST time.
 
         <h3>owner</h3>
         This is the author element of the log entry. The value for this key is <b>case-insensitive</b>,
