@@ -28,6 +28,7 @@
         <ul>
             <li>Date/time on any of the following formats:
                 <ul>
+                    <li><code>yyyy-MM-dd HH:mm:ss.SSS</code></li>
                     <li><code>yyyy-MM-dd HH:mm:ss</code></li>
                     <li><code>yyyy-MM-dd HH:mm</code></li>
                     <li><code>yyyy-MM-dd</code> - the time portion will be set to 00:00:00</li>
@@ -56,8 +57,18 @@
         is performed, i.e. the service will not fall back to a default time range.<br>
 
         To help user compose a valid date/time string for a time range search, the advanced search view of the clients
-        offers
-        a date/time picker tool.
+        offers a date/time picker tool.
+
+        <b>NOTE:</b> An absolute time specifier is ambiguous if within the hour when a time zone switches from daylight
+        saving time (DST). For instance, if:
+        <ul>
+            <li>The switch takes place at 03:00, setting back the time to 02:00</li>
+            <li>User specifies start time 02:30</li>
+            <li>Search is performed <i>after</i> switch away from DST</li>
+        </ul>
+        then the search result will contain entries created after 01:30 in the non-DST time. If on the other hand
+        the 02:30 timestamp is specified as end time, the search result will <i>not</i> contain entries after 01:30 in the
+        non-DST time.
 
         <h3>owner</h3>
         This is the author element of the log entry. The value for this key is <b>case-insensitive</b>,
