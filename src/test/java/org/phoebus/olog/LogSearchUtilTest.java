@@ -160,6 +160,34 @@ class LogSearchUtilTest {
         zonedDateTime = logSearchUtil.determineDateAndTime(startParameter, TimeZone.getTimeZone("PST"));
         assertTrue("2025-12-01T20:00".equals(zonedDateTime.toLocalDateTime().toString()));
 
+        // Edge case: switch from DST and "ambiguous" time stamp
+        startParameter = new AbstractMap.SimpleEntry<>("start", List.of("2025-10-26 02:30:00.000"));
+
+        // CET switches 2025-10-26
+        zonedDateTime = logSearchUtil.determineDateAndTime(startParameter, TimeZone.getTimeZone("CET"));
+        assertTrue("2025-10-26T00:30".equals(zonedDateTime.toLocalDateTime().toString())); // As if still on DST
+
+        zonedDateTime = logSearchUtil.determineDateAndTime(startParameter, TimeZone.getTimeZone("GMT"));
+        assertTrue("2025-10-26T02:30".equals(zonedDateTime.toLocalDateTime().toString()));
+
+        // US switches 2025-11-02
+        zonedDateTime = logSearchUtil.determineDateAndTime(startParameter, TimeZone.getTimeZone("PST"));
+        assertTrue("2025-10-26T09:30".equals(zonedDateTime.toLocalDateTime().toString()));
+
+        // Edge case: switch to DST and "missing" time stamp
+        startParameter = new AbstractMap.SimpleEntry<>("start", List.of("2025-03-30 02:30:00.000"));
+
+        // CET switches 2025-03-30
+        zonedDateTime = logSearchUtil.determineDateAndTime(startParameter, TimeZone.getTimeZone("CET"));
+        assertTrue("2025-03-30T01:30".equals(zonedDateTime.toLocalDateTime().toString())); // 02:30 as if on DST, i.e. 03:30EST = 01:30GMT
+
+        zonedDateTime = logSearchUtil.determineDateAndTime(startParameter, TimeZone.getTimeZone("GMT"));
+        assertTrue("2025-03-30T02:30".equals(zonedDateTime.toLocalDateTime().toString()));
+
+        // US switches 2025-03-09
+        zonedDateTime = logSearchUtil.determineDateAndTime(startParameter, TimeZone.getTimeZone("PST"));
+        assertTrue("2025-03-30T09:30".equals(zonedDateTime.toLocalDateTime().toString())); // Already on DST
+
     }
 
     @Test
