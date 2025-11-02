@@ -228,10 +228,14 @@ public class ElasticConfig {
                 clientBuilder.setDefaultHeaders(new Header[] {new BasicHeader("Authorization", authorizationHeader)});
                 if (!username.isEmpty() || !password.isEmpty()) {
                     logger.log(Level.WARNING, "elasticsearch.authorization.header is set, ignoring elasticsearch.authorization.username and elasticsearch.authorization.password.");
+                } else {
+                    logger.log(Level.INFO, "Using authorization header for elasticsearch client authentication");
                 }
             } else if (!username.isEmpty() || !password.isEmpty()) {
                 final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
                 credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(username, password));
+                logger.log(Level.INFO, "Using basic authentication for elasticsearch client logging with username: " + username);
+
                 clientBuilder.setHttpClientConfigCallback(httpClientBuilder ->
                         httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider)
                                 // Avoid timeout problems
