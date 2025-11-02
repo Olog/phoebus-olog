@@ -14,7 +14,13 @@ import co.elastic.clients.transport.endpoints.BooleanResponse;
 import co.elastic.clients.transport.rest_client.RestClientTransport;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.http.Header;
 import org.apache.http.HttpHost;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CredentialsProvider;
+import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.apache.http.message.BasicHeader;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
 import org.phoebus.olog.entity.Logbook;
@@ -144,6 +150,18 @@ public class ElasticConfig {
     @SuppressWarnings("unused")
     private String createIndices;
 
+    @Value("${elasticsearch.authorization.header:}")
+    @SuppressWarnings("unused")
+    private String authorizationHeader;
+
+    @Value("${elasticsearch.authorization.username:}")
+    @SuppressWarnings("unused")
+    private String username;
+
+    @Value("${elasticsearch.authorization.password:}")
+    @SuppressWarnings("unused")
+    private String password;
+
     @Value("${default.logbook.url}")
     @SuppressWarnings("unused")
     private String defaultLogbooksURL;
@@ -199,17 +217,36 @@ public class ElasticConfig {
                     ES_HTTP_CONNECT_TIMEOUT_MS,
                     ES_HTTP_SOCKET_TIMEOUT_MS
             ));
-            RestClient httpClient = RestClient.builder(new HttpHost(host, port, protocol))
+            RestClientBuilder clientBuilder = RestClient.builder(new HttpHost(host, port, protocol))
                     .setRequestConfigCallback(builder ->
                             builder.setConnectTimeout(ES_HTTP_CONNECT_TIMEOUT_MS)
                                     .setSocketTimeout(ES_HTTP_SOCKET_TIMEOUT_MS)
-                    )
-                    .setHttpClientConfigCallback(builder ->
-                            // Avoid timeout problems
-                            // https://github.com/elastic/elasticsearch/issues/65213
-                            builder.setKeepAliveStrategy((response, context) -> ES_HTTP_CLIENT_KEEP_ALIVE_TIMEOUT_MS)
-                    )
-                    .build();
+                    );
+
+            // Configure authentication
+            if (!authorizationHeader.isEmpty()) {
+                clientBuilder.setDefaultHeaders(new Header[] {new BasicHeader("Authorization", authorizationHeader)});
+                if (!username.isEmpty() || !password.isEmpty()) {
+                    logger.log(Level.WARNING, "elasticsearch.authorization.header is set, ignoring elasticsearch.authorization.username and elasticsearch.authorization.password.");
+                }
+            } else if (!username.isEmpty() || !password.isEmpty()) {
+                final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+                credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(username, password));
+                clientBuilder.setHttpClientConfigCallback(httpClientBuilder ->
+                        httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider)
+                                // Avoid timeout problems
+                                // https://github.com/elastic/elasticsearch/issues/65213
+                                .setKeepAliveStrategy((response, context) -> ES_HTTP_CLIENT_KEEP_ALIVE_TIMEOUT_MS)
+                );
+            } else {
+                clientBuilder.setHttpClientConfigCallback(builder ->
+                        // Avoid timeout problems
+                        // https://github.com/elastic/elasticsearch/issues/65213
+                        builder.setKeepAliveStrategy((response, context) -> ES_HTTP_CLIENT_KEEP_ALIVE_TIMEOUT_MS)
+                );
+            }
+
+            RestClient httpClient = clientBuilder.build();
 
             // Create the Java API Client with the same low level client
             ElasticsearchTransport transport = new RestClientTransport(
