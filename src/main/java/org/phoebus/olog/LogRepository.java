@@ -387,7 +387,22 @@ public class LogRepository implements CrudRepository<Log, String> {
 
   @Autowired LogSearchUtil logSearchUtil;
 
-  public SearchResult search(MultiValueMap<String, String> searchParameters) {
+  public SearchResult search(MultiValueMap<String, String> searchParameters){
+      SearchRequest searchRequest = logSearchUtil.buildSearchRequest(searchParameters);
+      try {
+          final SearchResponse<Log> searchResponse = client.search(searchRequest, Log.class);
+          List<Log> result = searchResponse.hits().hits().stream().map(Hit::source).collect(Collectors.toList());
+          SearchResult searchResult = new SearchResult();
+          searchResult.setHitCount(searchResponse.hits().total().value());
+          searchResult.setLogs(result);
+          return searchResult;
+      } catch (IOException | IllegalArgumentException e) {
+          logger.log(Level.SEVERE, TextUtil.SEARCH_NOT_COMPLETED, e);
+          throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, TextUtil.SEARCH_NOT_COMPLETED);
+      }
+  }
+
+  public SearchResult search2(MultiValueMap<String, String> searchParameters) {
 
     SearchRequest searchRequest = logSearchUtil.buildSearchRequest(searchParameters);
     try {
@@ -418,12 +433,12 @@ public class LogRepository implements CrudRepository<Log, String> {
                                   m ->
                                       m.query(query)
                                           .fields("title", "description", "owner", "level")
-                                          //.type(TextQueryType.CrossFields)
-                                          .fuzziness("AUTO")
+                                          .type(TextQueryType.CrossFields)
+                                          //.fuzziness("AUTO")
                                           .operator(Operator.And) // Fixed: changed from And
                                           /*.boost(3.0f)*/)
                               ._toQuery())
-                      .should(getTagsQuery("test-tag-1"))
+                      //.should(getTagsQuery("test-tag-1"))
                           /*NestedQuery.of(
                                   n ->
                                       n.path("tags")

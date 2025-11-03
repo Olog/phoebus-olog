@@ -10,9 +10,12 @@ import co.elastic.clients.elasticsearch._types.query_dsl.DisMaxQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.ExistsQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.FuzzyQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.MatchPhraseQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.MultiMatchQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.NestedQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.Operator;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.elasticsearch._types.query_dsl.RangeQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.TextQueryType;
 import co.elastic.clients.elasticsearch._types.query_dsl.WildcardQuery;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
 import org.springframework.beans.factory.annotation.Value;
@@ -89,6 +92,8 @@ public class LogSearchUtil {
 
         for (Entry<String, List<String>> parameter : searchParameters.entrySet()) {
             switch (parameter.getKey().strip().toLowerCase()) {
+                case "query":
+                    return getFreeTextSearchRequest(searchParameters);
                 case "desc":
                 case "description":
                 case "text":
@@ -208,11 +213,9 @@ public class LogSearchUtil {
                             // Quoted strings, or string containing space chars, will be mapped to a phrase query
                             if ((term.startsWith("\"") && term.endsWith("\""))) {
                                 levelPhraseSearchTerms.add(term.substring(1, term.length() - 1));
-                            }
-                            else if(term.contains(" ")){
+                            } else if (term.contains(" ")) {
                                 levelPhraseSearchTerms.add(term);
-                            }
-                            else {
+                            } else {
                                 levelSearchTerms.add(term);
                             }
                         }
@@ -314,11 +317,11 @@ public class LogSearchUtil {
         if (!searchTerms.isEmpty()) {
             if (fuzzySearch) {
                 searchTerms.stream().forEach(searchTerm ->
-                    boolQueryBuilder.must(FuzzyQuery.of(f -> f.field("description").value(searchTerm))._toQuery())
+                        boolQueryBuilder.must(FuzzyQuery.of(f -> f.field("description").value(searchTerm))._toQuery())
                 );
             } else {
                 searchTerms.stream().forEach(searchTerm ->
-                    boolQueryBuilder.must(WildcardQuery.of(w -> w.field("description").value(searchTerm))._toQuery())
+                        boolQueryBuilder.must(WildcardQuery.of(w -> w.field("description").value(searchTerm))._toQuery())
                 );
             }
         }
@@ -326,7 +329,7 @@ public class LogSearchUtil {
         // Add phrase queries for description key. Multiple search terms will be AND:ed.
         if (!descriptionPhraseSearchTerms.isEmpty()) {
             descriptionPhraseSearchTerms.stream().forEach(phraseSearchTerm ->
-                boolQueryBuilder.must(MatchPhraseQuery.of(m -> m.field("description").query(phraseSearchTerm))._toQuery())
+                    boolQueryBuilder.must(MatchPhraseQuery.of(m -> m.field("description").query(phraseSearchTerm))._toQuery())
             );
         }
 
@@ -334,11 +337,11 @@ public class LogSearchUtil {
         if (!titleSearchTerms.isEmpty()) {
             if (fuzzySearch) {
                 titleSearchTerms.stream().forEach(searchTerm ->
-                    boolQueryBuilder.must(FuzzyQuery.of(f -> f.field("title").value(searchTerm))._toQuery())
+                        boolQueryBuilder.must(FuzzyQuery.of(f -> f.field("title").value(searchTerm))._toQuery())
                 );
             } else {
                 titleSearchTerms.stream().forEach(searchTerm ->
-                    boolQueryBuilder.must(WildcardQuery.of(w -> w.field("title").value(searchTerm))._toQuery())
+                        boolQueryBuilder.must(WildcardQuery.of(w -> w.field("title").value(searchTerm))._toQuery())
                 );
             }
         }
@@ -346,7 +349,7 @@ public class LogSearchUtil {
         // Add phrase queries for title key. Multiple search terms will be AND:ed.
         if (!titlePhraseSearchTerms.isEmpty()) {
             titlePhraseSearchTerms.stream().forEach(phraseSearchTerm ->
-                boolQueryBuilder.must(MatchPhraseQuery.of(m -> m.field("title").query(phraseSearchTerm))._toQuery())
+                    boolQueryBuilder.must(MatchPhraseQuery.of(m -> m.field("title").query(phraseSearchTerm))._toQuery())
             );
         }
 
@@ -356,11 +359,11 @@ public class LogSearchUtil {
         if (!levelSearchTerms.isEmpty()) {
             if (fuzzySearch) {
                 levelSearchTerms.stream().forEach(searchTerm ->
-                    levelQueries.add(FuzzyQuery.of(f -> f.field("level").value(searchTerm))._toQuery())
+                        levelQueries.add(FuzzyQuery.of(f -> f.field("level").value(searchTerm))._toQuery())
                 );
             } else {
                 levelSearchTerms.stream().forEach(searchTerm ->
-                    levelQueries.add(WildcardQuery.of(w -> w.field("level").value(searchTerm))._toQuery())
+                        levelQueries.add(WildcardQuery.of(w -> w.field("level").value(searchTerm))._toQuery())
                 );
             }
 
@@ -374,7 +377,7 @@ public class LogSearchUtil {
         }
 
         // Level query may be a mix of quoted and unquoted terms, combine them here
-        if(!levelQueries.isEmpty()){
+        if (!levelQueries.isEmpty()) {
             levelQuery.queries(levelQueries);
             boolQueryBuilder.must(levelQuery.build()._toQuery());
         }
@@ -432,7 +435,7 @@ public class LogSearchUtil {
         return terms;
     }
 
-    protected Query getTagsQuery(Entry<String, List<String>> parameter){
+    protected Query getTagsQuery(Entry<String, List<String>> parameter) {
         DisMaxQuery.Builder tagQuery = new DisMaxQuery.Builder();
         List<Query> tagsQueries = new ArrayList<>();
         for (String value : parameter.getValue()) {
@@ -447,7 +450,7 @@ public class LogSearchUtil {
         return nestedTagsQuery._toQuery();
     }
 
-    protected Query getLogbooksQuery(Entry<String, List<String>> parameter){
+    protected Query getLogbooksQuery(Entry<String, List<String>> parameter) {
         DisMaxQuery.Builder logbookQuery = new DisMaxQuery.Builder();
         List<Query> logbooksQueries = new ArrayList<>();
         for (String value : parameter.getValue()) {
@@ -460,5 +463,39 @@ public class LogSearchUtil {
         Query logbooksQuery = logbookQuery.queries(logbooksQueries).build()._toQuery();
         NestedQuery nestedLogbooksQuery = NestedQuery.of(n -> n.path("logbooks").query(logbooksQuery).scoreMode(ChildScoreMode.None));
         return nestedLogbooksQuery._toQuery();
+    }
+
+    private SearchRequest getFreeTextSearchRequest(MultiValueMap<String, String> searchParameters) {
+        BoolQuery.Builder builder = new Builder();
+        for (Entry<String, List<String>> parameter : searchParameters.entrySet()) {
+            switch (parameter.getKey().strip().toLowerCase()) {
+                case "query":
+                    String query = parameter.getValue().get(0);
+                    MultiMatchQuery multiMatchQuery = MultiMatchQuery.of(m ->
+                            m.query(query)
+                                    .fields("title", "description", "owner", "level")
+                                    .type(TextQueryType.CrossFields)
+                                    .operator(Operator.And));
+                    builder.must(multiMatchQuery._toQuery());
+                    break;
+                case "tags":
+                    builder.must(getTagsQuery(parameter));
+                    break;
+                case "logbooks":
+                    builder.must(getLogbooksQuery(parameter));
+                    break;
+            }
+        }
+
+        BoolQuery _hybridQuery = builder.build();
+        SearchRequest request =
+                SearchRequest.of(
+                        s ->
+                                s.index(ES_LOG_INDEX)
+                                        .query(_hybridQuery._toQuery())
+                                        .timeout("60s")
+                                        .size(10000)
+                                        .from(0));
+        return request;
     }
 }
