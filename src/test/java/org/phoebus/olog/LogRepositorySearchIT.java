@@ -24,6 +24,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
 import java.time.Instant;
+import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
 import java.util.List;
 
@@ -70,6 +71,8 @@ class LogRepositorySearchIT  implements TestExecutionListener {
                                                          testOwner1,
                                                          State.Active,
             new HashSet<>(List.of(testAttribute1)));
+
+    private DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern(TimestampFormats.MILLI_PATTERN);
 
     /**
      * Search by title
@@ -398,24 +401,11 @@ class LogRepositorySearchIT  implements TestExecutionListener {
         // simple search based on the start and end time
         MultiValueMap<String, String> searchParameters = new LinkedMultiValueMap<>();
 
-        searchParameters.put("start", List.of(TimestampFormats.MILLI_FORMAT.format(createdLog1.getCreatedDate().minusMillis(1000))));
-        searchParameters.put("end",   List.of(TimestampFormats.MILLI_FORMAT.format(createdLog1.getCreatedDate().plusMillis(1000))));
+        searchParameters.put("start", List.of(dateTimeFormatter.format(createdLog1.getCreatedDate().minusMillis(1000))));
+        searchParameters.put("end",   List.of(dateTimeFormatter.format(createdLog1.getCreatedDate().plusMillis(1000))));
         List<Log> foundLogs = logRepository.search(searchParameters).getLogs();
         assertTrue(
                    foundLogs.size() == 1 && foundLogs.contains(createdLog1),
-                "Failed to search for log entries based on log entry create time");
-    }
-
-    @Test
-    void searchByTimeWithTimeZone() {
-        // simple search based on the start and end time
-        MultiValueMap<String, String> searchParameters = new LinkedMultiValueMap<>();
-
-        searchParameters.put("start", List.of(TimestampFormats.MILLI_FORMAT_WITH_TZ.format(createdLog1.getCreatedDate().minusMillis(1000))));
-        searchParameters.put("end",   List.of(TimestampFormats.MILLI_FORMAT_WITH_TZ.format(createdLog1.getCreatedDate().plusMillis(1000))));
-        List<Log> foundLogs = logRepository.search(searchParameters).getLogs();
-        assertTrue(
-                foundLogs.size() == 1 && foundLogs.contains(createdLog1),
                 "Failed to search for log entries based on log entry create time");
     }
 
@@ -424,25 +414,8 @@ class LogRepositorySearchIT  implements TestExecutionListener {
         // simple search based on events that occured between the start and end time
         MultiValueMap<String, String> searchParameters = new LinkedMultiValueMap<>();
 
-        searchParameters.put("start", List.of(TimestampFormats.MILLI_FORMAT.format(event1.getInstant().minusMillis(1000))));
-        searchParameters.put("end",   List.of(TimestampFormats.MILLI_FORMAT.format(event1.getInstant().plusMillis(1000))));
-        List<Log> foundLogs = logRepository.search(searchParameters).getLogs();
-        assertEquals(0, foundLogs.size(), "Failed to search for log entries based on log event times");
-
-        searchParameters.put("includeEvents", null);
-        foundLogs = logRepository.search(searchParameters).getLogs();
-        assertTrue(
-                foundLogs.size() == 1 && foundLogs.contains(createdLog1),
-                "Failed to search for log entries based on log event times. Expected 1 log entry but found " + foundLogs.size());
-    }
-
-    @Test
-    void searchByEventTimeWithTimeZone() {
-        // simple search based on events that occured between the start and end time
-        MultiValueMap<String, String> searchParameters = new LinkedMultiValueMap<>();
-
-        searchParameters.put("start", List.of(TimestampFormats.MILLI_FORMAT_WITH_TZ.format(event1.getInstant().minusMillis(1000))));
-        searchParameters.put("end",   List.of(TimestampFormats.MILLI_FORMAT_WITH_TZ.format(event1.getInstant().plusMillis(1000))));
+        searchParameters.put("start", List.of(dateTimeFormatter.format(event1.getInstant().minusMillis(1000))));
+        searchParameters.put("end",   List.of(dateTimeFormatter.format(event1.getInstant().plusMillis(1000))));
         List<Log> foundLogs = logRepository.search(searchParameters).getLogs();
         assertEquals(0, foundLogs.size(), "Failed to search for log entries based on log event times");
 
@@ -483,8 +456,8 @@ class LogRepositorySearchIT  implements TestExecutionListener {
         // expected result: only one log entry should match
         searchParameters = new LinkedMultiValueMap<>();
 
-        searchParameters.put("start", List.of(TimestampFormats.MILLI_FORMAT_WITH_TZ.format(createdLog1.getCreatedDate().minusMillis(1000))));
-        searchParameters.put("end",   List.of(TimestampFormats.MILLI_FORMAT_WITH_TZ.format(createdLog1.getCreatedDate().plusMillis(1000))));
+        searchParameters.put("start", List.of(dateTimeFormatter.format(createdLog1.getCreatedDate().minusMillis(1000))));
+        searchParameters.put("end",   List.of(dateTimeFormatter.format(createdLog1.getCreatedDate().plusMillis(1000))));
         searchParameters.put("tags", List.of(testTag1.getName()));
         searchParameters.put("logbooks", List.of(testLogbook1.getName()));
         searchParameters.put("desc", List.of("quick"));

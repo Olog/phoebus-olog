@@ -15,7 +15,7 @@ import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.elasticsearch._types.query_dsl.RangeQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.WildcardQuery;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
-import org.phoebus.util.time.TimestampFormats;
+import org.phoebus.util.time.TimeParser;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -26,6 +26,8 @@ import java.text.MessageFormat;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.time.temporal.TemporalAmount;
+import java.time.temporal.UnsupportedTemporalTypeException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -33,6 +35,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.TimeZone;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -61,12 +64,14 @@ public class LogSearchUtil {
     private int maxSearchSize;
 
     private static final Logger LOGGER = Logger.getLogger(LogSearchUtil.class.getName());
+    private static final ZoneId UTC_ZONE_ID = ZoneId.of("UTC");
 
     /**
      * @param searchParameters - the various search parameters
      * @return A {@link SearchRequest} based on the provided search parameters
      */
     public SearchRequest buildSearchRequest(MultiValueMap<String, String> searchParameters) {
+        TimeZone timeZone = getTimezone(searchParameters);
         BoolQuery.Builder boolQueryBuilder = new Builder();
         boolean fuzzySearch = false;
         List<String> searchTerms = new ArrayList<>();
@@ -169,28 +174,14 @@ public class LogSearchUtil {
                     boolQueryBuilder.must(nestedLogbooksQuery._toQuery());
                     break;
                 case "start":
-                    // If there are multiple start times submitted select the earliest
-                    ZonedDateTime earliestStartTime = ZonedDateTime.now();
-                    for (String value : parameter.getValue()) {
-                        ZonedDateTime time = value.contains("T") ? // Client may not (yet) use time zone format
-                                ZonedDateTime.from(TimestampFormats.MILLI_FORMAT_WITH_TZ.parse(value)) :
-                                ZonedDateTime.from(TimestampFormats.MILLI_FORMAT.parse(value));
-                        earliestStartTime = earliestStartTime.isBefore(time) ? earliestStartTime : time;
-                    }
+                    ZonedDateTime startTime = determineDateAndTime(parameter, timeZone);
+                    start = startTime != null ? startTime : ZonedDateTime.now();
                     temporalSearch = true;
-                    start = earliestStartTime;
                     break;
                 case "end":
-                    // If there are multiple end times submitted select the latest
-                    ZonedDateTime latestEndTime = Instant.ofEpochMilli(Long.MIN_VALUE).atZone(ZoneId.systemDefault());
-                    for (String value : parameter.getValue()) {
-                        ZonedDateTime time = value.contains("T") ? // Client may not (yet) use time zone format
-                                ZonedDateTime.from(TimestampFormats.MILLI_FORMAT_WITH_TZ.parse(value)) :
-                                ZonedDateTime.from(TimestampFormats.MILLI_FORMAT.parse(value));
-                        latestEndTime = latestEndTime.isBefore(time) ? time : latestEndTime;
-                    }
+                    ZonedDateTime endTime = determineDateAndTime(parameter, timeZone);
+                    end = endTime != null ? endTime : Instant.ofEpochMilli(Long.MIN_VALUE).atZone(ZoneId.systemDefault());
                     temporalSearch = true;
-                    end = latestEndTime;
                     break;
                 case "includeevents":
                 case "includeevent":
@@ -452,5 +443,63 @@ public class LogSearchUtil {
         //...but remove empty strings, which are "leftovers" when quoted terms are removed
         terms.addAll(remaining.stream().filter(t -> t.length() > 0).collect(Collectors.toList()));
         return terms;
+    }
+
+    /**
+     * Computes a UTC {@link ZonedDateTime} based on client provided start/end search parameter, and time zone,
+     * if specified.
+     *
+     * @param parameter The start or end search parameter
+     * @param timeZone  Client provided tz, or system default.
+     * @return A {@link ZonedDateTime} if search parameter can be parsed, otherwise <code>null</code>.
+     * @throws ResponseStatusException if client provided {@link TemporalAmount} specifier is invalid.
+     */
+    protected ZonedDateTime determineDateAndTime(Entry<String, List<String>> parameter, TimeZone timeZone) {
+        String value = parameter.getValue().get(0); // Even if client specifies start=, there is still one element in the parameter object
+        if (!value.isEmpty()) {
+            // If multiple time specifiers are provided by client, consider only first...
+            String timeSpecifier = value.split("[\\|,;]")[0];
+            if (!timeSpecifier.isEmpty()) {
+                Object time = TimeParser.parseInstantOrTemporalAmount(timeSpecifier, timeZone.toZoneId());
+                if (time instanceof Instant instant) {
+                    return ZonedDateTime.ofInstant(instant, UTC_ZONE_ID);
+                } else if (time instanceof TemporalAmount) {
+                    try {
+                        return ZonedDateTime.ofInstant(Instant.now().minus((TemporalAmount) time), timeZone.toZoneId());
+                    } catch (UnsupportedTemporalTypeException e) { // E.g. if client sends "months" or "years"
+                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, MessageFormat.format(TextUtil.UNSUPPORTED_DATE_TIME, timeSpecifier));
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Determines time zone based on client provided tz, if present.
+     *
+     * @param searchParameters Search parameters provided by client, may or may not include tz
+     * @return Client provided {@link TimeZone}, or system default.
+     * @throws IllegalArgumentException if client specified time zone identifier is invalid
+     */
+    protected TimeZone getTimezone(MultiValueMap<String, String> searchParameters) {
+        for (Entry<String, List<String>> parameter : searchParameters.entrySet()) {
+            if ("tz".equals(parameter.getKey().strip().toLowerCase())) {
+                String timezoneString = parameter.getValue().get(0);
+                if(timezoneString == null || timezoneString.isEmpty()){
+                    return TimeZone.getDefault();
+                }
+                ZoneId zoneId;
+                try {
+                    zoneId = ZoneId.of(timezoneString);
+                } catch (Exception e) {
+                    LOGGER.log(Level.WARNING, "Invalid time zone identifier \"" + timezoneString + "\"");
+                    throw new IllegalArgumentException("Invalid time zone identifier \"" + timezoneString + "\"");
+                }
+                return TimeZone.getTimeZone(zoneId);
+            }
+        }
+        return TimeZone.getDefault();
     }
 }
