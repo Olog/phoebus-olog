@@ -481,16 +481,23 @@ public class LogSearchUtil {
      *
      * @param searchParameters Search parameters provided by client, may or may not include tz
      * @return Client provided {@link TimeZone}, or system default.
+     * @throws IllegalArgumentException if client specified time zone identifier is invalid
      */
     protected TimeZone getTimezone(MultiValueMap<String, String> searchParameters) {
         for (Entry<String, List<String>> parameter : searchParameters.entrySet()) {
             if ("tz".equals(parameter.getKey().strip().toLowerCase())) {
                 String timezoneString = parameter.getValue().get(0);
-                if (timezoneString != null && !timezoneString.isEmpty()) {
-                    return TimeZone.getTimeZone(timezoneString);
-                } else {
+                if(timezoneString == null || timezoneString.isEmpty()){
                     return TimeZone.getDefault();
                 }
+                ZoneId zoneId;
+                try {
+                    zoneId = ZoneId.of(timezoneString);
+                } catch (Exception e) {
+                    LOGGER.log(Level.WARNING, "Invalid time zone identifier \"" + timezoneString + "\"");
+                    throw new IllegalArgumentException("Invalid time zone identifier \"" + timezoneString + "\"");
+                }
+                return TimeZone.getTimeZone(zoneId);
             }
         }
         return TimeZone.getDefault();

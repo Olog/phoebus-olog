@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.TimeZone;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -126,11 +127,25 @@ class LogSearchUtilTest {
         assertEquals(3600000, timeZone.getRawOffset());
 
         searchParams = new LinkedMultiValueMap<>();
-        searchParams.put("tz", List.of("invalid"));
+        searchParams.put("tz", List.of("UTC+2"));
+        logSearchUtil.getTimezone(searchParams);
+        assertNotEquals("GMT", timeZone.toZoneId().toString());
 
-        timeZone = logSearchUtil.getTimezone(searchParams);
-        assertEquals("GMT", timeZone.toZoneId().toString());
-        assertEquals(0, timeZone.getRawOffset());
+        searchParams = new LinkedMultiValueMap<>();
+        searchParams.put("tz", List.of(""));
+        logSearchUtil.getTimezone(searchParams);
+        assertEquals(TimeZone.getDefault().getRawOffset(), timeZone.getRawOffset());
+    }
+
+    @Test
+    public void testGetTimeZoneInvalidTimeZone() {
+        MultiValueMap<String, String> searchParams = new LinkedMultiValueMap<>();
+        searchParams.put("tz", List.of("foo/bar"));
+        assertThrows(IllegalArgumentException.class, () -> logSearchUtil.getTimezone(searchParams));
+
+        searchParams.put("tz", List.of("UTC+300"));
+        assertThrows(IllegalArgumentException.class, () -> logSearchUtil.getTimezone(searchParams));
+
     }
 
     @Test

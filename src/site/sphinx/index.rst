@@ -293,6 +293,7 @@ Search Parameters
 For time based search requests the client may specify a **tz** parameter indicating the client's time zone.
 The format must be recognized as a valid zone identifier, see for instance https://docs.oracle.com/javase/8/docs/api/java/time/ZoneId.html.
 If the client does not specify the time zone, the time zone of the service is used to compute start end end timestamps.
+An invalid time zone specifier will result in a HTTP 400 (bad request) response.
 
 Example:
 

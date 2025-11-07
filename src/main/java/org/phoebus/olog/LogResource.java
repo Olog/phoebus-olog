@@ -187,8 +187,12 @@ public class LogResource {
      */
     @GetMapping()
     @Deprecated
-    public List<Log> findLogs(@RequestHeader(value = OLOG_CLIENT_INFO_HEADER, required = false, defaultValue = "n/a") String clientInfo, @RequestParam MultiValueMap<String, String> allRequestParams) {
-        return search(clientInfo, allRequestParams).getLogs();
+    public ResponseEntity<?> findLogs(@RequestHeader(value = OLOG_CLIENT_INFO_HEADER, required = false, defaultValue = "n/a") String clientInfo, @RequestParam MultiValueMap<String, String> allRequestParams) {
+        ResponseEntity responseEntity = search(clientInfo, allRequestParams);
+        if(responseEntity.getStatusCode().equals(HttpStatus.OK)){
+            return new ResponseEntity<>(((SearchResult)responseEntity.getBody()).getLogs(), HttpStatus.OK);
+        }
+        return responseEntity;
     }
 
     /**
@@ -197,12 +201,17 @@ public class LogResource {
      * @param clientInfo       A string sent by client identifying it with respect to version and platform.
      * @param allRequestParams A map of search query parameters. Note that this method supports date/time expressions
      *                         like "12 hours" or "2 days" as well as formatted strings like "2021-01-20 12:00:00.123".
+     *                         Search parameters considered invalid may result in an HTTP 400 (bad request) response.
      * @return A {@link SearchResult} holding matching objects, if any.
      */
     @GetMapping("/search")
-    public SearchResult search(@RequestHeader(value = OLOG_CLIENT_INFO_HEADER, required = false, defaultValue = "n/a") String clientInfo, @RequestParam MultiValueMap<String, String> allRequestParams) {
+    public ResponseEntity<?> search(@RequestHeader(value = OLOG_CLIENT_INFO_HEADER, required = false, defaultValue = "n/a") String clientInfo, @RequestParam MultiValueMap<String, String> allRequestParams) {
         logSearchRequest(clientInfo, allRequestParams);
-        return logRepository.search(allRequestParams);
+        try {
+            return new ResponseEntity<>(logRepository.search(allRequestParams), HttpStatus.OK);
+        } catch (IllegalArgumentException exception) {
+            return new ResponseEntity<>(exception.getMessage(), HttpStatus.BAD_REQUEST);
+        }
     }
 
     /**
