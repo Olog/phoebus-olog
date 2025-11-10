@@ -52,15 +52,14 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <spring.boot-version>2.7.3</spring.boot-version>
+        <spring.boot-version>3.5.7</spring.boot-version>
         <elasticsearch.version>8.2.0</elasticsearch.version>
-        <lombok.version>1.18.16</lombok.version>
         <junit.version>5.8.2</junit.version>
         <springdoc.version>1.7.0</springdoc.version>
         <skipITs>true</skipITs>
         <skipITCoverage>true</skipITCoverage>
         <jacoco.skip>true</jacoco.skip>
-        <jackson.version>2.14.3</jackson.version>
+        <jackson.version>3.0.1</jackson.version>
         <!--suppress UnresolvedMavenProperty -->
         <project.build.outputTimestamp>2025-10-02T10:31:30Z</project.build.outputTimestamp>
     </properties>
@@ -93,17 +92,27 @@
         </dependency>
 
         <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>co.elastic.clients</groupId>
             <artifactId>elasticsearch-java</artifactId>
-            <version>8.2.0</version>
+            <version>8.11.2</version>
         </dependency>
         <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
+            <groupId>tools.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
             <version>${jackson.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
+            <groupId>tools.jackson.core</groupId>
             <artifactId>jackson-core</artifactId>
             <version>${jackson.version}</version>
         </dependency>

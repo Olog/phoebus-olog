@@ -18,9 +18,10 @@
 
 package org.phoebus.olog;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.servlet.i18n.AcceptHeaderLocaleResolver;
 
-import javax.servlet.http.HttpServletRequest;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;

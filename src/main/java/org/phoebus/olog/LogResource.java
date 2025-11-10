@@ -5,6 +5,7 @@
  */
 package org.phoebus.olog;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.collections4.CollectionUtils;
 import org.phoebus.olog.entity.Attachment;
 import org.phoebus.olog.entity.Log;
@@ -45,7 +46,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
-import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.security.Principal;
 import java.text.MessageFormat;

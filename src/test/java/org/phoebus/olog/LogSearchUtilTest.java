@@ -25,6 +25,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -103,5 +104,12 @@ class LogSearchUtilTest {
 
         final String _userInput = "foo,\"bar\",\"neutron";
         assertThrows(IllegalArgumentException.class, () -> logSearchUtil.getSearchTerms(_userInput));
+    }
+
+    @Test
+    public void testBCrypt() throws Exception{
+       Pattern  BCRYPT_PATTERN = Pattern.compile("\\A\\$2(a|y|b)?\\$(\\d\\d)\\$[./0-9A-Za-z]{53}");
+
+
     }
 }
