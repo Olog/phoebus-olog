@@ -15,6 +15,7 @@ import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.elasticsearch._types.query_dsl.RangeQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.WildcardQuery;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
+import co.elastic.clients.json.JsonData;
 import org.phoebus.util.time.TimeParser;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -302,13 +303,15 @@ public class LogSearchUtil {
                 DisMaxQuery.Builder temporalQuery = new DisMaxQuery.Builder();
                 RangeQuery.Builder rangeQuery = new RangeQuery.Builder();
                 // Add a query based on the create time
-                rangeQuery.field("createdDate").from(Long.toString(1000 * start.toEpochSecond()))
-                        .to(Long.toString(1000 * end.toEpochSecond()));
+                rangeQuery.field("createdDate").gte(JsonData.of(start.toEpochSecond()))
+                        .lte(JsonData.of(end.toEpochSecond()))
+                        .format("epoch_second");
                 if (includeEvents) {
                     RangeQuery.Builder eventsRangeQuery = new RangeQuery.Builder();
                     // Add a query based on the time of the associated events
-                    eventsRangeQuery.field("events.instant").from(Long.toString(1000 * start.toEpochSecond()))
-                            .to(Long.toString(1000 * end.toEpochSecond()));
+                    eventsRangeQuery.field("events.instant").gte(JsonData.of(start.toEpochSecond()))
+                            .lte(JsonData.of(end.toEpochSecond()))
+                            .format("epoch_second");
                     NestedQuery.Builder nestedQuery = new NestedQuery.Builder();
                     nestedQuery.path("events").query(eventsRangeQuery.build()._toQuery());
 
