@@ -21,7 +21,8 @@ package org.phoebus.olog;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.util.Base64Utils;
+
+import java.util.Base64;
 
 public abstract class ResourcesTestBase {
 
@@ -34,5 +35,5 @@ public abstract class ResourcesTestBase {
     protected static final String JSON = "application/json;charset=UTF8";
 
     protected static final String AUTHORIZATION =
-            "Basic " + Base64Utils.encodeToString("user:userPass".getBytes());
+            "Basic " + Base64.getEncoder().encodeToString("user:userPass".getBytes());
 }
