@@ -7,6 +7,7 @@ package org.phoebus.olog.security;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.phoebus.olog.OlogResourceDescriptors;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.h2.H2ConsoleProperties;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
@@ -62,14 +63,15 @@ public class WebSecurityConfig {
 
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
+        PathRequest.H2ConsoleRequestMatcher s = PathRequest.toH2Console();
         return (web) -> web
                 .ignoring()
-                .requestMatchers(HttpMethod.GET, "/Olog/**")
-                .requestMatchers(HttpMethod.POST, "/Olog/login")
-                .requestMatchers(HttpMethod.POST, "/Olog/logout")
-                .requestMatchers(HttpMethod.GET, "/Olog/user")
-                .requestMatchers(HttpMethod.OPTIONS, "/Olog/**")
-                .requestMatchers(PathRequest.toH2Console());
+                .requestMatchers(HttpMethod.GET, "/" + OlogResourceDescriptors.OLOG_SERVICE + "/**")
+                .requestMatchers(HttpMethod.OPTIONS, "/" + OlogResourceDescriptors.OLOG_SERVICE + "/**")
+                .requestMatchers(HttpMethod.POST, "/" + OlogResourceDescriptors.OLOG_SERVICE + "/login")
+                .requestMatchers(HttpMethod.GET, "/" + OlogResourceDescriptors.OLOG_SERVICE + "/logout")
+                .requestMatchers(HttpMethod.GET, "/" + OlogResourceDescriptors.OLOG_SERVICE + "/user")
+                .requestMatchers(HttpMethod.GET, "/" + OlogResourceDescriptors.OLOG_SERVICE + "/h2-console/**");
     }
 
 

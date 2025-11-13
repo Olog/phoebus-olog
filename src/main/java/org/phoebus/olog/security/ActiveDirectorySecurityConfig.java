@@ -10,7 +10,10 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.ldap.authentication.ad.ActiveDirectoryLdapAuthenticationProvider;
 
 /**
@@ -29,16 +32,18 @@ public class ActiveDirectorySecurityConfig extends WebSecurityConfig {
     @Value("${ad.domain}")
     String ad_domain;
 
-    public ActiveDirectorySecurityConfig(){
-        System.out.println();
-    }
-
     @Bean
-    public ActiveDirectoryLdapAuthenticationProvider activeDirectoryLdapAuthenticationProvider() {
+    public AuthenticationManager activeDirectoryLdapAuthenticationProvider() {
         ActiveDirectoryLdapAuthenticationProvider adProvider = new ActiveDirectoryLdapAuthenticationProvider(ad_domain, ad_url);
         adProvider.setConvertSubErrorCodesToExceptions(true);
         adProvider.setUseAuthenticationRequestCredentials(true);
 
-        return adProvider;
+        AuthenticationManager authenticationManager = new AuthenticationManager() {
+            @Override
+            public Authentication authenticate(Authentication authentication) throws AuthenticationException {
+                return adProvider.authenticate(authentication);
+            }
+        };
+        return authenticationManager;
     }
 }

@@ -126,7 +126,7 @@ public class LogResource {
 
     @GetMapping("{logId}")
     @SuppressWarnings("unused")
-    public Log getLog(@PathVariable String logId) {
+    public Log getLog(@PathVariable(name = "logId") String logId) {
         Optional<Log> foundLog = logRepository.findById(logId);
         if (foundLog.isPresent()) {
             return foundLog.get();
@@ -139,12 +139,12 @@ public class LogResource {
 
     @GetMapping("archived/{logId}")
     @SuppressWarnings("unused")
-    public SearchResult getArchivedLog(@PathVariable String logId) {
+    public SearchResult getArchivedLog(@PathVariable(name = "logId") String logId) {
         return logRepository.findArchivedById(logId);
     }
 
     @GetMapping("/attachments/{logId}/{attachmentName}")
-    public ResponseEntity<Resource> findResources(@PathVariable String logId, @PathVariable String attachmentName) {
+    public ResponseEntity<Resource> findResources(@PathVariable(name = "logId") String logId, @PathVariable(name = "attachmentName") String attachmentName) {
         Optional<Log> log = logRepository.findById(logId);
         if (log.isPresent()) {
             Set<Attachment> attachments = log.get().getAttachments().stream().filter(attachment -> attachment.getFilename().equals(attachmentName)).collect(Collectors.toSet());
@@ -188,7 +188,8 @@ public class LogResource {
      */
     @GetMapping()
     @Deprecated
-    public List<Log> findLogs(@RequestHeader(value = OLOG_CLIENT_INFO_HEADER, required = false, defaultValue = "n/a") String clientInfo, @RequestParam MultiValueMap<String, String> allRequestParams) {
+    public List<Log> findLogs(@RequestHeader(value = OLOG_CLIENT_INFO_HEADER, required = false, defaultValue = "n/a") String clientInfo,
+                              @RequestParam MultiValueMap<String, String> allRequestParams) {
         logSearchRequest(clientInfo, allRequestParams);
         for (String key : allRequestParams.keySet()) {
             if ("start".equalsIgnoreCase(key) || "end".equalsIgnoreCase(key)) {
@@ -207,7 +208,8 @@ public class LogResource {
     }
 
     @GetMapping("/search")
-    public SearchResult search(@RequestHeader(value = OLOG_CLIENT_INFO_HEADER, required = false, defaultValue = "n/a") String clientInfo, @RequestParam MultiValueMap<String, String> allRequestParams) {
+    public SearchResult search(@RequestHeader(value = OLOG_CLIENT_INFO_HEADER, required = false, defaultValue = "n/a") String clientInfo,
+                               @RequestParam MultiValueMap<String, String> allRequestParams) {
         logSearchRequest(clientInfo, allRequestParams);
         for (String key : allRequestParams.keySet()) {
             if ("start".equalsIgnoreCase(key) || "end".equalsIgnoreCase(key)) {
@@ -246,8 +248,8 @@ public class LogResource {
      */
     @PutMapping()
     public Log createLog(@RequestHeader(value = OLOG_CLIENT_INFO_HEADER, required = false, defaultValue = "n/a") String clientInfo,
-                         @RequestParam(value = "markup", required = false) String markup,
-                         @RequestParam(value = "inReplyTo", required = false, defaultValue = "-1") String inReplyTo,
+                         @RequestParam(name = "markup", required = false) String markup,
+                         @RequestParam(name = "inReplyTo", required = false, defaultValue = "-1") String inReplyTo,
                          @RequestBody Log log,
                          @AuthenticationPrincipal Principal principal) {
         if (log.getLogbooks().isEmpty()) {
@@ -307,8 +309,8 @@ public class LogResource {
      */
     @PutMapping("/multipart")
     public Log createLog(@RequestHeader(value = OLOG_CLIENT_INFO_HEADER, required = false, defaultValue = "n/a") String clientInfo,
-                         @RequestParam(value = "markup", required = false) String markup,
-                         @RequestParam(value = "inReplyTo", required = false, defaultValue = "-1") String inReplyTo,
+                         @RequestParam(name = "markup", required = false) String markup,
+                         @RequestParam(name = "inReplyTo", required = false, defaultValue = "-1") String inReplyTo,
                          @RequestPart("logEntry") Log logEntry,
                          @RequestPart(value = "files", required = false) MultipartFile[] files,
                          @AuthenticationPrincipal Principal principal) {
@@ -358,11 +360,11 @@ public class LogResource {
      * @return The updated {@link Log}.
      */
     @PostMapping("/attachments/{logId}")
-    public Log uploadAttachment(@PathVariable String logId,
+    public Log uploadAttachment(@PathVariable(name = "logId") String logId,
                                 @RequestPart("file") MultipartFile file,
                                 @RequestPart("filename") String filename,
-                                @RequestPart(value = "id", required = false) String id,
-                                @RequestPart(value = "fileMetadataDescription", required = false) String fileMetadataDescription) {
+                                @RequestPart(name = "id", required = false) String id,
+                                @RequestPart(name = "fileMetadataDescription", required = false) String fileMetadataDescription) {
         Optional<Log> foundLog = logRepository.findById(logId);
         if (logRepository.findById(logId).isPresent()) {
             filename = filename == null || filename.isEmpty() ? file.getName() : filename;
@@ -402,8 +404,8 @@ public class LogResource {
      */
     @SuppressWarnings("unused")
     @PostMapping("/{logId}")
-    public Log updateLog(@PathVariable String logId,
-                         @RequestParam(value = "markup", required = false) String markup,
+    public Log updateLog(@PathVariable(name = "logId") String logId,
+                         @RequestParam(name = "markup", required = false) String markup,
                          @RequestBody Log log,
                          @AuthenticationPrincipal Principal principal) {
 

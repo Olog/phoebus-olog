@@ -119,7 +119,7 @@ class AuthenticationResourceTest extends ResourcesTestBase {
 
     @Test
     void testGetUserWithNoCookie() throws Exception {
-        MockHttpServletRequestBuilder request = get("/user");
+        MockHttpServletRequestBuilder request = get("/" + OLOG_SERVICE + "/user");
         mockMvc.perform(request).andExpect(status().isNotFound());
     }
 
@@ -134,11 +134,10 @@ class AuthenticationResourceTest extends ResourcesTestBase {
         when(authenticationManager.authenticate(authentication)).thenReturn(mockAuthentication);
         MockHttpServletRequestBuilder request = post("/" + OLOG_SERVICE + "/login")
                 .contentType("application/json").content(objectMapper.writeValueAsString(new LoginCredentials("admin", "adminPass")));
-        MvcResult result = mockMvc.perform(request).andExpect(status().isOk())
-                .andReturn();
+        mockMvc.perform(request).andExpect(status().isOk());
 
         Cookie cookie = new Cookie("SESSION", "cookieValue");
-        request = get("/user").cookie(cookie);
+        request = get("/" + OLOG_SERVICE + "/user").cookie(cookie);
         mockMvc.perform(request).andExpect(status().isNotFound());
 
         reset(authenticationManager);

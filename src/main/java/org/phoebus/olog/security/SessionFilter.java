@@ -19,7 +19,6 @@
 package org.phoebus.olog.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
@@ -29,7 +28,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.phoebus.olog.TextUtil;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
@@ -56,7 +54,7 @@ import java.util.stream.Collectors;
  * This class should not be instantiated as a bean in the application configuration. If it is, the
  * <code>doFilter()</code> method will be called for each endpoint URI, effectively defeating the purpose of the
  * configuration of ignored URI patterns set up in the Spring Security context, see
- * {@link WebSecurityConfig#configure(WebSecurity)}.
+ * {@link WebSecurityConfig)}.
  */
 public class SessionFilter extends GenericFilterBean {
 
@@ -84,10 +82,10 @@ public class SessionFilter extends GenericFilterBean {
      *     to the security context, i.e. request is not authenticated.</li>
      * </ol>
      *
-     * @param request A {@link ServletRequest}
-     * @param response A {@link ServletResponse}
+     * @param request     A {@link ServletRequest}
+     * @param response    A {@link ServletResponse}
      * @param filterChain The {@link FilterChain} to which this implementation contributes.
-     * @throws IOException May be thrown by upstream filters.
+     * @throws IOException      May be thrown by upstream filters.
      * @throws ServletException May be thrown by upstream filters.
      */
     @Override
