@@ -472,8 +472,32 @@ Create multiple properties
       ]
    }
  ]
- 
-`Javadocs <apidocs/index.html>`_
+
+Templates
+#########
+
+Log entry templates can be added to the storage to support use cases when the same type of log entries need to be
+created on a regular basis. Templates have the same structure a regular log entries, except for attachments.
+
+To add a new template, use:
+
+**PUT** https://localhost:8181/Olog/templates
+
+.. code-block:: json
+
+{
+   "description":"Template text",
+   "level":"Info",
+   "title":"Some title",
+   "logbooks":[
+      {
+         "name":"Operations"
+      }
+   ]
+}
+
+In the client UI (currently only CS Studio/Phoebus) users may select from a list of templates, if available. Upon
+selection of a template, the client will populate the editor's input controls based on the template content.
 
 Authentication
 ##############
