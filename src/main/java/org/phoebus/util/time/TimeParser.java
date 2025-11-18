@@ -7,6 +7,7 @@ package org.phoebus.util.time;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.Period;
+import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAmount;
 import java.util.HashMap;
@@ -36,8 +37,6 @@ public class TimeParser {
     /** Text for the relative {@link TemporalAmount} of size 0 */
     public static final String NOW = "now";
 
-    static final Pattern durationTimeQunatityUnitsPattern = Pattern
-            .compile("\\s*(\\d*)\\s*(ms|milli|sec|secs|min|mins|hour|hours|day|days)\\s*", Pattern.CASE_INSENSITIVE);
 
     // SPACE*  (NUMBER?) SPACE*  (UNIT),
     // with NUMBER being positive floating point
@@ -267,11 +266,12 @@ public class TimeParser {
 
     /** Try to parse text as absolute or relative time
      *  @param text The text to parse
+     *  @param zoneId The {@link ZoneId} for which the date/time string shall be evaluated.
      *  @return {@link Instant}, {@link TemporalAmount} or <code>null</code>
      */
-    public static Object parseInstantOrTemporalAmount(final String text)
+    public static Object parseInstantOrTemporalAmount(final String text, ZoneId zoneId)
     {
-        Object result = TimestampFormats.parse(text);
+        Object result = TimestampFormats.parse(text, zoneId);
         if (result != null)
             return result;
         return parseTemporalAmount(text);
