@@ -63,6 +63,8 @@
         <!--suppress UnresolvedMavenProperty -->
         <project.build.outputTimestamp>2025-10-02T10:31:30Z</project.build.outputTimestamp>
         <java.version>25</java.version>
+        <maven.compiler.source>25</maven.compiler.source>
+        <maven.compiler.target>25</maven.compiler.target>
     </properties>
 
     <dependencyManagement>
