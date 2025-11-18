@@ -1,4 +1,4 @@
-dn: cn=channelfinder,dc=olog,dc=local
+dn: dc=olog,dc=local
 objectClass: simpleSecurityObject
 objectClass: organizationalRole
 userPassword:: e1NIQX1jUkR0cE5DZUJpcWw1S09Rc0tWeXJBMHNBaUE9
