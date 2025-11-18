@@ -290,6 +290,11 @@ Search Parameters
 |*sort*         | `up|down` order the search results based on create time          |
 +---------------+------------------------------------------------------------------+
 
+For time based search requests the client may specify a **tz** parameter indicating the client's time zone.
+The format must be recognized as a valid zone identifier, see for instance https://docs.oracle.com/javase/8/docs/api/java/time/ZoneId.html.
+If the client does not specify the time zone, the time zone of the service is used to compute start end end timestamps.
+An invalid time zone specifier will result in a HTTP 400 (bad request) response.
+
 Example:
 
 **GET** https://localhost:8181/Olog/logs/search?desc=dump&logbooks=Operations
@@ -467,8 +472,32 @@ Create multiple properties
       ]
    }
  ]
- 
-`Javadocs <apidocs/index.html>`_
+
+Templates
+#########
+
+Log entry templates can be added to the storage to support use cases when the same type of log entries need to be
+created on a regular basis. Templates have the same structure a regular log entries, except for attachments.
+
+To add a new template, use:
+
+**PUT** https://localhost:8181/Olog/templates
+
+.. code-block:: json
+
+{
+   "description":"Template text",
+   "level":"Info",
+   "title":"Some title",
+   "logbooks":[
+      {
+         "name":"Operations"
+      }
+   ]
+}
+
+In the client UI (currently only CS Studio/Phoebus) users may select from a list of templates, if available. Upon
+selection of a template, the client will populate the editor's input controls based on the template content.
 
 Authentication
 ##############

@@ -10,7 +10,7 @@ RUN mvn clean install \
     -Pdeployable-jar
 
 # Use smaller openjdk image for running.
-FROM openjdk:17
+FROM eclipse-temurin:17-jdk
 # Run commands as user 'olog'
 RUN useradd -ms /bin/bash olog
 # Use previous maven-build image.

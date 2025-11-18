@@ -21,48 +21,51 @@ package org.phoebus.olog;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.Instant;
+import java.time.ZonedDateTime;
+import java.util.AbstractMap;
 import java.util.List;
 import java.util.regex.Pattern;
+import java.util.Map;
+import java.util.TimeZone;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.phoebus.util.time.TimestampFormats.MILLI_FORMAT;
-import static org.phoebus.util.time.TimestampFormats.MILLI_FORMAT_WITH_TZ;
 
 
 @TestPropertySource(locations = "classpath:no_ldap_test_application.properties")
 class LogSearchUtilTest {
 
+    private LogSearchUtil logSearchUtil = new LogSearchUtil();
+
     @Test
     void checkForInvalidTimeRanges() {
-        LogSearchUtil logSearchUtil = new LogSearchUtil();
         String expectedMessage = "CAUSE: Invalid start and end times";
 
         LinkedMultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-        // start time is after the end time
-        Instant now = Instant.now();
-        params.put("start", List.of(MILLI_FORMAT.format(now.plusMillis(1000))));
-        params.put("end",   List.of(MILLI_FORMAT.format(now.minusMillis(1000))));
+
+        params.put("start", List.of("2025-10-01 12:00:00"));
+        params.put("end", List.of("2025-10-01 11:59:59"));
 
         Exception exception = assertThrows(ResponseStatusException.class, () -> logSearchUtil.buildSearchRequest(params));
 
-        params.put("start", List.of(MILLI_FORMAT_WITH_TZ.format(now.plusMillis(1000))));
-        params.put("end",   List.of(MILLI_FORMAT_WITH_TZ.format(now.minusMillis(1000))));
-
-        exception = assertThrows(ResponseStatusException.class, () -> logSearchUtil.buildSearchRequest(params));
-
         String actualMessage = exception.getMessage();
         assertTrue(actualMessage.contains(expectedMessage));
+
+        params.put("end", List.of("2025-10-01 12:00:00"));
+        params.put("start", List.of("2025-10-01 11:59:59"));
+
+        // No exception expected
+        logSearchUtil.buildSearchRequest(params);
 
     }
 
     @Test
     void testGetSearchTerms() {
-        LogSearchUtil logSearchUtil = new LogSearchUtil();
         String userInput = "";
         List<String> parsed = logSearchUtil.getSearchTerms(userInput);
         assertTrue(parsed.isEmpty());
@@ -112,4 +115,115 @@ class LogSearchUtilTest {
 
 
     }
+    public void testGetTimeZone() {
+
+        MultiValueMap<String, String> searchParams = new LinkedMultiValueMap<>();
+        searchParams.put("TZ", List.of("Europe/Stockholm"));
+
+        TimeZone timeZone = logSearchUtil.getTimezone(searchParams);
+        assertEquals("Europe/Stockholm", timeZone.toZoneId().toString());
+        assertEquals(3600000, timeZone.getRawOffset());
+
+        searchParams = new LinkedMultiValueMap<>();
+        searchParams.put("start", List.of("1970-01-01 00:00:00.000"));
+        searchParams.put("tz", List.of("CET"));
+
+        timeZone = logSearchUtil.getTimezone(searchParams);
+        assertEquals("CET", timeZone.toZoneId().toString());
+        assertEquals(3600000, timeZone.getRawOffset());
+
+        searchParams = new LinkedMultiValueMap<>();
+        searchParams.put("tz", List.of("UTC+2"));
+        logSearchUtil.getTimezone(searchParams);
+        assertNotEquals("GMT", timeZone.toZoneId().toString());
+
+        searchParams = new LinkedMultiValueMap<>();
+        searchParams.put("tz", List.of(""));
+        // No exception expected
+        logSearchUtil.getTimezone(searchParams);
+    }
+
+    @Test
+    public void testGetTimeZoneInvalidTimeZone() {
+        MultiValueMap<String, String> searchParams = new LinkedMultiValueMap<>();
+        searchParams.put("tz", List.of("foo/bar"));
+        assertThrows(IllegalArgumentException.class, () -> logSearchUtil.getTimezone(searchParams));
+
+        searchParams.put("tz", List.of("UTC+300"));
+        assertThrows(IllegalArgumentException.class, () -> logSearchUtil.getTimezone(searchParams));
+
+    }
+
+    @Test
+    public void testDetermineDateAndTime() {
+
+        // Date/time in DST
+        Map.Entry<String, List<String>> startParameter = new AbstractMap.SimpleEntry<>("start", List.of("2025-10-01 12:00:00.000"));
+
+        ZonedDateTime zonedDateTime = logSearchUtil.determineDateAndTime(startParameter, TimeZone.getTimeZone("CET"));
+        assertTrue("2025-10-01T10:00".equals(zonedDateTime.toLocalDateTime().toString()));
+
+        zonedDateTime = logSearchUtil.determineDateAndTime(startParameter, TimeZone.getTimeZone("GMT"));
+        assertTrue("2025-10-01T12:00".equals(zonedDateTime.toLocalDateTime().toString()));
+
+        zonedDateTime = logSearchUtil.determineDateAndTime(startParameter, TimeZone.getTimeZone("PST"));
+        assertTrue("2025-10-01T19:00".equals(zonedDateTime.toLocalDateTime().toString()));
+
+        // Date/time outside DST
+        startParameter = new AbstractMap.SimpleEntry<>("start", List.of("2025-12-01 12:00:00.000"));
+
+        zonedDateTime = logSearchUtil.determineDateAndTime(startParameter, TimeZone.getTimeZone("CET"));
+        assertTrue("2025-12-01T11:00".equals(zonedDateTime.toLocalDateTime().toString()));
+
+        zonedDateTime = logSearchUtil.determineDateAndTime(startParameter, TimeZone.getTimeZone("GMT"));
+        assertTrue("2025-12-01T12:00".equals(zonedDateTime.toLocalDateTime().toString()));
+
+        zonedDateTime = logSearchUtil.determineDateAndTime(startParameter, TimeZone.getTimeZone("PST"));
+        assertTrue("2025-12-01T20:00".equals(zonedDateTime.toLocalDateTime().toString()));
+
+        // Edge case: switch from DST and "ambiguous" time stamp
+        startParameter = new AbstractMap.SimpleEntry<>("start", List.of("2025-10-26 02:30:00.000"));
+
+        // CET switches 2025-10-26
+        zonedDateTime = logSearchUtil.determineDateAndTime(startParameter, TimeZone.getTimeZone("CET"));
+        assertTrue("2025-10-26T00:30".equals(zonedDateTime.toLocalDateTime().toString())); // As if still on DST
+
+        zonedDateTime = logSearchUtil.determineDateAndTime(startParameter, TimeZone.getTimeZone("GMT"));
+        assertTrue("2025-10-26T02:30".equals(zonedDateTime.toLocalDateTime().toString()));
+
+        // US switches 2025-11-02
+        zonedDateTime = logSearchUtil.determineDateAndTime(startParameter, TimeZone.getTimeZone("PST"));
+        assertTrue("2025-10-26T09:30".equals(zonedDateTime.toLocalDateTime().toString()));
+
+        // Edge case: switch to DST and "missing" time stamp
+        startParameter = new AbstractMap.SimpleEntry<>("start", List.of("2025-03-30 02:30:00.000"));
+
+        // CET switches 2025-03-30
+        zonedDateTime = logSearchUtil.determineDateAndTime(startParameter, TimeZone.getTimeZone("CET"));
+        assertTrue("2025-03-30T01:30".equals(zonedDateTime.toLocalDateTime().toString())); // 02:30 as if on DST, i.e. 03:30EST = 01:30GMT
+
+        zonedDateTime = logSearchUtil.determineDateAndTime(startParameter, TimeZone.getTimeZone("GMT"));
+        assertTrue("2025-03-30T02:30".equals(zonedDateTime.toLocalDateTime().toString()));
+
+        // US switches 2025-03-09
+        zonedDateTime = logSearchUtil.determineDateAndTime(startParameter, TimeZone.getTimeZone("PST"));
+        assertTrue("2025-03-30T09:30".equals(zonedDateTime.toLocalDateTime().toString())); // Already on DST
+
+    }
+
+    @Test
+    public void testDetermineDateAndTimeTemporalAmounts() {
+
+        Map.Entry<String, List<String>> startParameter = new AbstractMap.SimpleEntry<>("start", List.of("2 days"));
+        // This should not throw exception
+        logSearchUtil.determineDateAndTime(startParameter, TimeZone.getTimeZone("CET"));
+
+        startParameter = new AbstractMap.SimpleEntry<>("start", List.of("2 weeks"));
+        // This should not throw exception
+        logSearchUtil.determineDateAndTime(startParameter, TimeZone.getTimeZone("CET"));
+
+        Map.Entry<String, List<String>> _startParameter = new AbstractMap.SimpleEntry<>("start", List.of("2 months"));
+        assertThrows(ResponseStatusException.class, () -> logSearchUtil.determineDateAndTime(_startParameter, TimeZone.getTimeZone("CET")));
+    }
+
 }
