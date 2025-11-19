@@ -1,4 +1,9 @@
-package org.phoebus.olog;
+/*
+ * Copyright 2025 European Spallation Source ERIC.
+ *
+ */
+
+package org.phoebus.olog.security;
 
 import com.unboundid.ldap.listener.InMemoryDirectoryServer;
 import com.unboundid.ldap.listener.InMemoryDirectoryServerConfig;
@@ -21,6 +26,10 @@ import org.springframework.util.StringUtils;
 
 import java.io.InputStream;
 
+/**
+ * This is a modification of {@link org.springframework.security.ldap.server.UnboundIdContainer} for the purpose
+ * of disabling ldif file validation against default schema.
+ */
 public class OlogUnboundIdContainer implements EmbeddedLdapServerContainer, InitializingBean, DisposableBean, Lifecycle, ApplicationContextAware {
 
     private InMemoryDirectoryServer directoryServer;
@@ -65,6 +74,7 @@ public class OlogUnboundIdContainer implements EmbeddedLdapServerContainer, Init
                 config.setListenerConfigs(new InMemoryListenerConfig[]{InMemoryListenerConfig.createLDAPConfig("LDAP", this.port)});
                 config.setEnforceSingleStructuralObjectClass(false);
                 config.setEnforceAttributeSyntaxCompliance(true);
+                // Setting null schema disables ldif validation
                 config.setSchema(null);
 
                 DN dn = new DN(this.defaultPartitionSuffix);

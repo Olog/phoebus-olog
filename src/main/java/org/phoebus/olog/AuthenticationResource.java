@@ -18,7 +18,6 @@
 
 package org.phoebus.olog;
 
-import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import org.phoebus.olog.entity.UserData;
@@ -68,15 +67,6 @@ public class AuthenticationResource {
     private int sessionTimeout;
 
     public static final int ONE_YEAR = 60 * 60 * 24 * 365;
-
-    public AuthenticationResource(){
-        System.out.println();
-    }
-
-    @PostConstruct
-    public void post(){
-        System.out.println();
-    }
 
     /**
      * Authenticates user and creates a session if authentication is successful.

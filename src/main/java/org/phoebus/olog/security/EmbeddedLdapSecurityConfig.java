@@ -5,7 +5,6 @@
 
 package org.phoebus.olog.security;
 
-import org.phoebus.olog.OlogUnboundIdContainer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
