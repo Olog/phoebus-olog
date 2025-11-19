@@ -49,7 +49,7 @@ public class AttachmentResource
      * a HTTP 500 response is returned.
      */
     @GetMapping("{attachmentId}")
-    public ResponseEntity<Resource> getAttachment(@PathVariable String attachmentId) {
+    public ResponseEntity<Resource> getAttachment(@PathVariable(name = "attachmentId") String attachmentId) {
         log.log(Level.INFO, () -> MessageFormat.format(TextUtil.ATTACHMENT_REQUEST, attachmentId));
         Optional<Attachment> attachment = attachmentRepository.findById(attachmentId);
         if (attachment.isPresent()) {

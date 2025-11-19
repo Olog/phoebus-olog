@@ -58,7 +58,7 @@ public class LogTemplateResource {
 
     @GetMapping("{logTemplateId}")
     @SuppressWarnings("unused")
-    public LogTemplate getLogTemplate(@PathVariable String logTemplateId) {
+    public LogTemplate getLogTemplate(@PathVariable(name = "logTemplateId") String logTemplateId) {
         return logTemplateRepository.findById(logTemplateId).get();
     }
 

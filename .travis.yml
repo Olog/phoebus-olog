@@ -1,10 +1,9 @@
-
 sudo: required
 
 language: java
 
 jdk:
-  - openjdk11
+  - openjdk25
 
 services:
   - elasticsearch
@@ -15,3 +14,4 @@ before_install:
 
 install:
   - mvn clean verify
+
