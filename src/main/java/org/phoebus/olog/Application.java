@@ -25,15 +25,9 @@ import java.util.logging.Logger;
 
 @SpringBootApplication
 @ComponentScan(basePackages = {"org.phoebus.olog"})
+@SuppressWarnings("unused")
 public class Application {
     static final Logger logger = Logger.getLogger("Olog");
-
-    /**
-     * Specifies the allowed origins for CORS requests. Defaults to http://localhost:3000,
-     * which is useful during development of the web front-end in NodeJS.
-     */
-    @Value("#{'${cors.allowed.origins:http://localhost:3000}'.split(',')}")
-    private String[] corsAllowedOrigins;
 
     @Value("${defaultMarkup:commonmark}")
     private String defaultMarkup;
@@ -113,17 +107,17 @@ public class Application {
     }
 
     @Bean
-    public Long propertyProvidersTimeout(){
+    public Long propertyProvidersTimeout() {
         return propertyProvidersTimeout;
     }
 
     @Bean
-    public AcceptHeaderResolver acceptHeaderResolver(){
+    public AcceptHeaderResolver acceptHeaderResolver() {
         return new AcceptHeaderResolver();
     }
 
     @Bean
-    public LogEntryValidator logEntryValidator(){
+    public LogEntryValidator logEntryValidator() {
         return new LogEntryValidator();
     }
 }

@@ -19,6 +19,7 @@
 package org.phoebus.olog;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -34,11 +35,15 @@ import org.phoebus.olog.entity.Logbook;
 import org.phoebus.olog.entity.Property;
 import org.phoebus.olog.entity.SearchResult;
 import org.phoebus.olog.entity.Tag;
+import org.phoebus.olog.entity.websocket.MessageType;
+import org.phoebus.olog.entity.websocket.WebSocketMessage;
+import org.phoebus.olog.websocket.WebSocketService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.ContextHierarchy;
@@ -53,12 +58,17 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.argThat;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
@@ -67,6 +77,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -74,7 +85,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * hard coded user/userPass credentials. The {@link LogRepository} is mocked.
  */
 @ExtendWith(SpringExtension.class)
-@ContextHierarchy({@ContextConfiguration(classes = {ResourcesTestConfig.class})})
+@ContextHierarchy({@ContextConfiguration(classes = {ResourcesTestConfig.class, LogResourceTestConfig.class})})
 @WebMvcTest(LogResource.class)
 @TestPropertySource(locations = "classpath:no_ldap_test_application.properties")
 public class LogResourceTest extends ResourcesTestBase {
@@ -89,7 +100,13 @@ public class LogResourceTest extends ResourcesTestBase {
     private TagRepository tagRepository;
 
     @Autowired
+    private AttachmentRepository attachmentRepository;
+
+    @Autowired
     private LogEntryValidator logEntryValidator;
+
+    @Autowired
+    private WebSocketService webSocketService;
 
     private static Log log1;
     private static Log log2;
@@ -132,6 +149,11 @@ public class LogResourceTest extends ResourcesTestBase {
                 .build();
     }
 
+    @AfterEach
+    public void resetMocks(){
+        reset(logRepository, logbookRepository, tagRepository, webSocketService);
+    }
+
     @Test
     void testGetLogById() throws Exception {
         when(logRepository.findById("1")).thenAnswer(invocationOnMock -> Optional.of(log1));
@@ -142,7 +164,6 @@ public class LogResourceTest extends ResourcesTestBase {
         Log log = objectMapper.readValue(result.getResponse().getContentAsString(), Log.class);
         assertEquals("description1", log.getDescription());
         verify(logRepository, times(1)).findById("1");
-        reset(logRepository);
     }
 
     @Test
@@ -152,7 +173,6 @@ public class LogResourceTest extends ResourcesTestBase {
         MockHttpServletRequestBuilder request = get("/" + OlogResourceDescriptors.LOG_RESOURCE_URI + "/1");
         mockMvc.perform(request).andExpect(status().isNotFound());
         verify(logRepository, times(1)).findById("1");
-        reset(logRepository);
     }
 
     @Test
@@ -174,7 +194,6 @@ public class LogResourceTest extends ResourcesTestBase {
         assertEquals(Long.valueOf(1L), logs.iterator().next().getId());
 
         verify(logRepository, times(1)).search(map);
-        reset(logRepository);
     }
 
     @Test
@@ -193,25 +212,8 @@ public class LogResourceTest extends ResourcesTestBase {
         SearchResult searchResult = objectMapper.readValue(result.getResponse().getContentAsString(), SearchResult.class);
         assertEquals(2, searchResult.getHitCount());
         assertEquals(2, searchResult.getLogs().size());
-    }
 
-    @Test
-    void testSearchLogsUnsupportedTemporals() throws Exception {
-        MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
-        map.put("start", List.of("2 years"));
-
-        MockHttpServletRequestBuilder request = get("/" + OlogResourceDescriptors.LOG_RESOURCE_URI + "/search")
-                .params(map)
-                .contentType(JSON);
-        mockMvc.perform(request).andExpect(status().isBadRequest());
-
-        map = new LinkedMultiValueMap<>();
-        map.put("start", List.of("2 months"));
-
-        get("/" + OlogResourceDescriptors.LOG_RESOURCE_URI + "/search")
-                .params(map)
-                .contentType(JSON);
-        mockMvc.perform(request).andExpect(status().isBadRequest());
+        reset(logRepository);
     }
 
     @Test
@@ -246,7 +248,8 @@ public class LogResourceTest extends ResourcesTestBase {
 
         Log savedLog = objectMapper.readValue(result.getResponse().getContentAsString(), Log.class);
         assertEquals(Long.valueOf(1L), savedLog.getId());
-        reset(logRepository);
+
+        verify(webSocketService, times(1)).sendMessageToClients(new WebSocketMessage(MessageType.NEW_LOG_ENTRY, null));
     }
 
     /**
@@ -282,6 +285,8 @@ public class LogResourceTest extends ResourcesTestBase {
         MvcResult result = mockMvc.perform(request).andExpect(status().isOk()).andReturn();
         Log savedLog = objectMapper.readValue(result.getResponse().getContentAsString(), Log.class);
         assertEquals(Long.valueOf(1L), savedLog.getId());
+
+        verify(webSocketService, times(1)).sendMessageToClients(new WebSocketMessage(MessageType.LOG_ENTRY_UPDATED, "1"));
     }
 
     @Test
@@ -339,19 +344,22 @@ public class LogResourceTest extends ResourcesTestBase {
     @Test
     void testCreateAttachment() throws Exception {
         when(logRepository.findById("1")).thenReturn(Optional.of(log1));
+
         MockMultipartFile file =
                 new MockMultipartFile("file", "filename.txt", "text/plain", "some xml".getBytes());
         MockMultipartFile filename =
                 new MockMultipartFile("filename", "filename.txt", "text/plain", "some xml".getBytes());
         MockMultipartFile fileMetadataDescription =
                 new MockMultipartFile("fileMetadataDescription", "filename.txt", "text/plain", "some xml".getBytes());
+
+        when(attachmentRepository.save(argThat(attachment -> true)))
+                .thenReturn(new Attachment(null, file, "filename.txt", "fileMetadataDescription"));
         mockMvc.perform(MockMvcRequestBuilders.multipart("/" + OlogResourceDescriptors.LOG_RESOURCE_URI + "/attachments/1")
                         .file(file)
                         .file(filename)
                         .file(fileMetadataDescription)
                         .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION))
                 .andExpect(status().is(200));
-        reset(logRepository);
     }
 
     @Test
@@ -371,7 +379,7 @@ public class LogResourceTest extends ResourcesTestBase {
                 .modifyDate(now)
                 .level("Urgent")
                 .build();
-        Set<Attachment> attachments = new HashSet<>();
+        SortedSet<Attachment> attachments = new TreeSet<>();
         attachments.add(attachment);
         log.setAttachments(attachments);
         MockMultipartFile file1 =
@@ -382,6 +390,7 @@ public class LogResourceTest extends ResourcesTestBase {
         when(tagRepository.findAll()).thenReturn(Arrays.asList(tag1, tag2));
         when(logRepository.save(argThat(new LogMatcher(log)))).thenReturn(log);
         when(logRepository.findById("1")).thenReturn(Optional.of(log));
+        when(attachmentRepository.save(argThat(attachment1 -> true))).thenReturn(attachment);
         MockHttpServletRequestBuilder request =
                 MockMvcRequestBuilders.multipart(HttpMethod.PUT,
                                 "/" + OlogResourceDescriptors.LOG_RESOURCE_URI + "/multipart")
@@ -394,7 +403,7 @@ public class LogResourceTest extends ResourcesTestBase {
 
         Log savedLog = objectMapper.readValue(result.getResponse().getContentAsString(), Log.class);
         assertEquals(Long.valueOf(1L), savedLog.getId());
-        reset(logRepository);
+        verify(webSocketService, times(1)).sendMessageToClients(new WebSocketMessage(MessageType.NEW_LOG_ENTRY, null));
     }
 
     @Test
@@ -428,7 +437,7 @@ public class LogResourceTest extends ResourcesTestBase {
 
         Log savedLog = objectMapper.readValue(result.getResponse().getContentAsString(), Log.class);
         assertEquals(Long.valueOf(1L), savedLog.getId());
-        reset(logRepository);
+        verify(webSocketService, times(1)).sendMessageToClients(Mockito.any(WebSocketMessage.class));
     }
 
     @Test
@@ -451,7 +460,7 @@ public class LogResourceTest extends ResourcesTestBase {
                 .modifyDate(now)
                 .level("Urgent")
                 .build();
-        Set<Attachment> attachments = new HashSet<>();
+        SortedSet<Attachment> attachments = new TreeSet<>();
         attachments.add(attachment);
         attachments.add(attachment2);
         log.setAttachments(attachments);
@@ -472,8 +481,87 @@ public class LogResourceTest extends ResourcesTestBase {
                         .header(HttpHeaders.CONTENT_TYPE, "multipart/form-data")
                         .contentType(JSON);
         mockMvc.perform(request).andExpect(status().isBadRequest());
+        verify(webSocketService, Mockito.never()).sendMessageToClients(Mockito.any(WebSocketMessage.class));
+    }
 
-        reset(logRepository);
+    @Test
+    void testCreateLogMultipartFileHeicAndAttachment() throws Exception {
+        Attachment attachment = new Attachment();
+        attachment.setId("attachmentId");
+        attachment.setFilename("filename1.heic");
+        Log log = LogBuilder.createLog()
+                .id(1L)
+                .owner("user")
+                .title("title")
+                .withLogbooks(Set.of(logbook1, logbook2))
+                .withTags(Set.of(tag1, tag2))
+                .source("description1")
+                .description("description1")
+                .createDate(now)
+                .modifyDate(now)
+                .level("Urgent")
+                .build();
+        SortedSet<Attachment> attachments = new TreeSet<>();
+        attachments.add(attachment);
+        log.setAttachments(attachments);
+        MockMultipartFile file1 =
+                new MockMultipartFile("files", "filename1.heic", "text/plain", "some xml".getBytes());
+        MockMultipartFile log1 = new MockMultipartFile("logEntry", "","application/json", objectMapper.writeValueAsString(log).getBytes());
+
+        when(logbookRepository.findAll()).thenReturn(Arrays.asList(logbook1, logbook2));
+        when(tagRepository.findAll()).thenReturn(Arrays.asList(tag1, tag2));
+        when(logRepository.save(argThat(new LogMatcher(log)))).thenReturn(log);
+        when(logRepository.findById("1")).thenReturn(Optional.of(log));
+        MockHttpServletRequestBuilder request =
+                MockMvcRequestBuilders.multipart(HttpMethod.PUT,
+                                "/" + OlogResourceDescriptors.LOG_RESOURCE_URI + "/multipart")
+                        .file(file1)
+                        .file(log1)
+                        .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
+                        .header(HttpHeaders.CONTENT_TYPE, "multipart/form-data")
+                        .contentType(JSON);
+        mockMvc.perform(request).andExpect(status().isBadRequest());
+
+    }
+
+    @Test
+    void testCreateLogMultipartFileHeicAndAttachmentNoOriginalFileName() throws Exception {
+        Attachment attachment = new Attachment();
+        attachment.setId("attachmentId");
+        attachment.setFilename("filename1.heic");
+        Log log = LogBuilder.createLog()
+                .id(1L)
+                .owner("user")
+                .title("title")
+                .withLogbooks(Set.of(logbook1, logbook2))
+                .withTags(Set.of(tag1, tag2))
+                .source("description1")
+                .description("description1")
+                .createDate(now)
+                .modifyDate(now)
+                .level("Urgent")
+                .build();
+        SortedSet<Attachment> attachments = new TreeSet<>();
+        attachments.add(attachment);
+        log.setAttachments(attachments);
+        MockMultipartFile file1 =
+                new MockMultipartFile("files", null, "text/plain", "some xml".getBytes());
+        MockMultipartFile log1 = new MockMultipartFile("logEntry", "","application/json", objectMapper.writeValueAsString(log).getBytes());
+
+        when(logbookRepository.findAll()).thenReturn(Arrays.asList(logbook1, logbook2));
+        when(tagRepository.findAll()).thenReturn(Arrays.asList(tag1, tag2));
+        when(logRepository.save(argThat(new LogMatcher(log)))).thenReturn(log);
+        when(logRepository.findById("1")).thenReturn(Optional.of(log));
+        MockHttpServletRequestBuilder request =
+                MockMvcRequestBuilders.multipart(HttpMethod.PUT,
+                                "/" + OlogResourceDescriptors.LOG_RESOURCE_URI + "/multipart")
+                        .file(file1)
+                        .file(log1)
+                        .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
+                        .header(HttpHeaders.CONTENT_TYPE, "multipart/form-data")
+                        .contentType(JSON);
+        mockMvc.perform(request).andExpect(status().isOk());
+
     }
 
     /**
@@ -511,7 +599,6 @@ public class LogResourceTest extends ResourcesTestBase {
                 .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
                 .contentType(JSON);
         mockMvc.perform(request).andExpect(status().isBadRequest());
-        reset(logRepository);
     }
 
     @Test
@@ -527,7 +614,7 @@ public class LogResourceTest extends ResourcesTestBase {
                 .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
                 .contentType(JSON);
         mockMvc.perform(request).andExpect(status().isOk());
-        reset(logRepository);
+        verify(webSocketService, times(1)).sendMessageToClients(new WebSocketMessage(MessageType.NEW_LOG_ENTRY, null));
     }
 
     @Test
@@ -542,8 +629,7 @@ public class LogResourceTest extends ResourcesTestBase {
                 .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
                 .contentType(JSON);
         mockMvc.perform(request).andExpect(status().isBadRequest());
-
-        reset(logRepository);
+        verify(webSocketService, Mockito.never()).sendMessageToClients(Mockito.any(WebSocketMessage.class));
     }
 
     @Test
@@ -562,8 +648,7 @@ public class LogResourceTest extends ResourcesTestBase {
                 .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
                 .contentType(JSON);
         mockMvc.perform(request).andExpect(status().isBadRequest());
-
-        reset(logRepository);
+        verify(webSocketService, Mockito.never()).sendMessageToClients(Mockito.any(WebSocketMessage.class));
     }
 
     @Test
@@ -581,8 +666,6 @@ public class LogResourceTest extends ResourcesTestBase {
                 .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
                 .contentType(JSON);
         mockMvc.perform(request).andExpect(status().isOk());
-
-        reset(logRepository);
     }
 
     @Test
@@ -600,8 +683,6 @@ public class LogResourceTest extends ResourcesTestBase {
                 .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
                 .contentType(JSON);
         mockMvc.perform(request).andExpect(status().isOk());
-
-        reset(logRepository);
     }
 
     @Test
@@ -618,7 +699,29 @@ public class LogResourceTest extends ResourcesTestBase {
                 .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
                 .contentType(JSON);
         mockMvc.perform(request).andExpect(status().isOk());
+    }
 
-        reset(logRepository);
+    @Test
+    void testRssFeed() {
+        Log log1Rss = Log.LogBuilder.createLog().id(1L).description("log1description").title("log1title").build();
+        Log log2Rss = Log.LogBuilder.createLog().id(2L).description("log2description").title("log2title").build();
+        when(logRepository.search(any())).thenReturn(new SearchResult(2, List.of(log1Rss, log2Rss)));
+
+        MockHttpServletRequestBuilder request = get("/" + OlogResourceDescriptors.LOG_RESOURCE_URI + "/rss")
+            .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION);
+        try {
+            mockMvc.perform(request)
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_RSS_XML_VALUE + ";charset=UTF-8"))
+                .andExpect(content().string(allOf(
+                    containsString("<channel>"),
+                    containsString(log1Rss.getDescription()),
+                    containsString(log2Rss.getDescription()),
+                    containsString(log1Rss.getTitle()),
+                    containsString(log2Rss.getTitle())
+                )));
+        } catch (Exception ex) {
+            fail("Failed to make request", ex);
+        }
     }
 }

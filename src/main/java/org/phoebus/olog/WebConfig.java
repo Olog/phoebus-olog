@@ -30,6 +30,7 @@ import java.util.List;
 
 @Configuration
 @PropertySource("classpath:application.properties")
+@SuppressWarnings("unused")
 public class WebConfig implements WebMvcConfigurer {
 
     /**
@@ -44,7 +45,7 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addMapping("/**")
                 .allowCredentials(true)
                 .allowedMethods("HEAD", "GET", "POST", "PUT", "DELETE", "PATCH")
-                .allowedOrigins(corsAllowedOrigins);
+                .allowedOriginPatterns(corsAllowedOrigins);
     }
 
     @Override
