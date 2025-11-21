@@ -286,14 +286,14 @@ public class LogSearchUtil {
                 DisMaxQuery.Builder temporalQuery = new DisMaxQuery.Builder();
                 RangeQuery.Builder rangeQuery = new RangeQuery.Builder();
                 // Add a query based on the create time
-                rangeQuery.field("createdDate").gte(JsonData.of(start.toEpochSecond()))
-                        .lte(JsonData.of(end.toEpochSecond()))
+                rangeQuery.field("createdDate").gte(JsonData.of(1000 * start.toEpochSecond()))
+                        .lte(JsonData.of(1000 * end.toEpochSecond()))
                         .format("epoch_second");
                 if (includeEvents) {
                     RangeQuery.Builder eventsRangeQuery = new RangeQuery.Builder();
                     // Add a query based on the time of the associated events
-                    eventsRangeQuery.field("events.instant").gte(JsonData.of(start.toEpochSecond()))
-                            .lte(JsonData.of(end.toEpochSecond()))
+                    eventsRangeQuery.field("events.instant").gte(JsonData.of(1000 * start.toEpochSecond()))
+                            .lte(JsonData.of(1000 * end.toEpochSecond()))
                             .format("epoch_second");
                     NestedQuery.Builder nestedQuery = new NestedQuery.Builder();
                     nestedQuery.path("events").query(eventsRangeQuery.build()._toQuery());

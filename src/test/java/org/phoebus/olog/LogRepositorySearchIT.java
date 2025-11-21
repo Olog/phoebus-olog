@@ -24,6 +24,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
 import java.time.Instant;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
 import java.util.List;
@@ -72,7 +73,9 @@ class LogRepositorySearchIT  implements TestExecutionListener {
                                                          State.Active,
             new HashSet<>(List.of(testAttribute1)));
 
-    private DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern(TimestampFormats.MILLI_PATTERN);
+    private DateTimeFormatter dateTimeFormatter =
+            DateTimeFormatter.ofPattern(TimestampFormats.MILLI_PATTERN)
+                    .withZone(ZoneId.systemDefault());
 
     /**
      * Search by title
