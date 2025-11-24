@@ -52,7 +52,7 @@ public class PropertiesResource {
      * @return a list of all {@link Property}s
      */
     @GetMapping
-    public Iterable<Property> findAll(@RequestParam(required=false) boolean inactive) {
+    public Iterable<Property> findAll(@RequestParam(required=false, name = "inactive") boolean inactive) {
         if(inactive) {
             return propertyRepository.findAll(true);
         }
@@ -60,7 +60,7 @@ public class PropertiesResource {
     }
 
     @GetMapping("/{propertyName}")
-    public Property findByTitle(@PathVariable String propertyName) {
+    public Property findByTitle(@PathVariable(name = "propertyName") String propertyName) {
         Optional<Property> foundProperty = propertyRepository.findById(propertyName);
         if (foundProperty.isPresent()) {
             return foundProperty.get();
@@ -72,7 +72,7 @@ public class PropertiesResource {
     }
 
     @PutMapping("/{propertyName}")
-    public Property createProperty(@PathVariable String propertyName,
+    public Property createProperty(@PathVariable(name = "propertyName") String propertyName,
                                    @RequestBody final Property property,
                                    @AuthenticationPrincipal Principal principal) {
         // TODO Check permissions
@@ -121,7 +121,7 @@ public class PropertiesResource {
     }
 
     @DeleteMapping("/{propertyName}")
-    public void deleteProperty (@PathVariable String propertyName) {
+    public void deleteProperty (@PathVariable(name = "propertyName") String propertyName) {
         // TODO Check permissions
 
         // check if present

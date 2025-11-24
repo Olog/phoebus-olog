@@ -9,7 +9,7 @@ Olog
 
 * Prerequisites
 
-  * JDK 17 or newer
+  * JDK 25 or newer
   * Elastic version 8.2.x
   * mongo gridfs
 

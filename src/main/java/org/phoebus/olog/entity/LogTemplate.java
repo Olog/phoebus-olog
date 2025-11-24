@@ -20,10 +20,11 @@ package org.phoebus.olog.entity;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import org.springframework.data.annotation.Id;
 
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
+
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;

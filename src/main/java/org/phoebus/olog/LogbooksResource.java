@@ -5,15 +5,6 @@
  */
 package org.phoebus.olog;
 
-import static org.phoebus.olog.OlogResourceDescriptors.LOGBOOK_RESOURCE_URI;
-
-import java.security.Principal;
-import java.text.MessageFormat;
-import java.util.List;
-import java.util.Optional;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import org.phoebus.olog.entity.Logbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -27,8 +18,18 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.security.Principal;
+import java.text.MessageFormat;
+import java.util.List;
+import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import static org.phoebus.olog.OlogResourceDescriptors.LOGBOOK_RESOURCE_URI;
+
 /**
  * Resource for handling the requests to ../logbooks
+ *
  * @author kunal
  *
  */
@@ -36,13 +37,14 @@ import org.springframework.web.server.ResponseStatusException;
 @RequestMapping(LOGBOOK_RESOURCE_URI)
 public class LogbooksResource {
 
-    private Logger audit = Logger.getLogger(LogbooksResource.class.getName() + ".audit");
     private Logger log = Logger.getLogger(LogbooksResource.class.getName());
 
     @Autowired
     private LogbookRepository logbookRepository;
 
-    /** Creates a new instance of LogbooksResource */
+    /**
+     * Creates a new instance of LogbooksResource
+     */
     public LogbooksResource() {
     }
 
@@ -51,8 +53,9 @@ public class LogbooksResource {
         return logbookRepository.findAll();
     }
 
+    @SuppressWarnings("unused")
     @GetMapping("/{logbookName}")
-    public Logbook findByTitle(@PathVariable String logbookName) {
+    public Logbook findByTitle(@PathVariable(name = "logbookName") String logbookName) {
         Optional<Logbook> foundLogbook = logbookRepository.findById(logbookName);
         if (foundLogbook.isPresent()) {
             return foundLogbook.get();
@@ -63,8 +66,9 @@ public class LogbooksResource {
         }
     }
 
+    @SuppressWarnings("unused")
     @PutMapping("/{logbookName}")
-    public Logbook createLogbook(@PathVariable String logbookName,
+    public Logbook createLogbook(@PathVariable(name = "logbookName") String logbookName,
                                  @RequestBody final Logbook logbook,
                                  @AuthenticationPrincipal Principal principal) {
         // TODO Check permissions
@@ -84,6 +88,7 @@ public class LogbooksResource {
         return logbookRepository.save(logbook);
     }
 
+    @SuppressWarnings("unused")
     @PutMapping
     public Iterable<Logbook> updateLogbooks(@RequestBody final List<Logbook> logbooks) {
         // TODO Check permissions
@@ -93,8 +98,8 @@ public class LogbooksResource {
         validateLogbookRequest(logbooks);
 
         // delete existing logbooks
-        for(Logbook logbook: logbooks) {
-            if(logbookRepository.existsById(logbook.getName())) {
+        for (Logbook logbook : logbooks) {
+            if (logbookRepository.existsById(logbook.getName())) {
                 // delete existing tag
                 logbookRepository.deleteById(logbook.getName());
             }
@@ -104,8 +109,9 @@ public class LogbooksResource {
         return logbookRepository.saveAll(logbooks);
     }
 
+    @SuppressWarnings("unused")
     @DeleteMapping("/{logbookName}")
-    public void deleteLogbook (@PathVariable String logbookName) {
+    public void deleteLogbook(@PathVariable(name = "logbookName") String logbookName) {
         // TODO Check permissions
 
         // check if present

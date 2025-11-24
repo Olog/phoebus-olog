@@ -16,7 +16,7 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 # ------------------------------------------------------------------------------
 
-FROM openjdk:17
+FROM eclipse-temurin:25-jdk
 
 # Run commands as user 'olog'
 RUN useradd -ms /bin/bash olog
