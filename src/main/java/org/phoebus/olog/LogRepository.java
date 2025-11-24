@@ -11,13 +11,6 @@ import co.elastic.clients.elasticsearch._types.Refresh;
 import co.elastic.clients.elasticsearch._types.Result;
 import co.elastic.clients.elasticsearch._types.SortOptions;
 import co.elastic.clients.elasticsearch._types.SortOrder;
-import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
-import co.elastic.clients.elasticsearch._types.query_dsl.DisMaxQuery;
-import co.elastic.clients.elasticsearch._types.query_dsl.MultiMatchQuery;
-import co.elastic.clients.elasticsearch._types.query_dsl.NestedQuery;
-import co.elastic.clients.elasticsearch._types.query_dsl.Operator;
-import co.elastic.clients.elasticsearch._types.query_dsl.Query;
-import co.elastic.clients.elasticsearch._types.query_dsl.TextQueryType;
 import co.elastic.clients.elasticsearch._types.query_dsl.WildcardQuery;
 import co.elastic.clients.elasticsearch.core.ExistsRequest;
 import co.elastic.clients.elasticsearch.core.GetRequest;
@@ -46,7 +39,6 @@ import java.io.IOException;
 import java.text.MessageFormat;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.SortedSet;
@@ -291,97 +283,9 @@ public class LogRepository implements CrudRepository<Log, String> {
         throw new ResponseStatusException(HttpStatus.FORBIDDEN, TextUtil.LOGS_DELETE_NOT_SUPPORTED);
     }
 
-    public void debugFieldMappingJson() {
-        try {
-            // Get a few sample documents to see the actual data structure
-            SearchRequest sampleRequest =
-                    SearchRequest.of(
-                            s ->
-                                    s.index(ES_LOG_INDEX)
-                                            .query(q -> q.matchAll(m -> m))
-                                            .size(3) // Get 3 sample documents
-                    );
-
-            SearchResponse<Log> response = client.search(sampleRequest, Log.class);
-
-            logger.log(Level.INFO, "=== ACTUAL DOCUMENT CONTENT ===");
-            logger.log(Level.INFO, "Total documents in index: " + response.hits().total().value());
-
-            if (response.hits().total().value() > 0) {
-                List<Hit<Log>> hitsList = response.hits().hits();
-                for (int index = 0; index < hitsList.size(); index++) {
-                    Hit<Log> hit = hitsList.get(index);
-                    Log log = hit.source();
-                    logger.log(Level.INFO, "\n--- Document " + (index + 1) + " ---");
-                    logger.log(Level.INFO, "ID: " + hit.id());
-                    logger.log(Level.INFO, "Title: '" + log.getTitle() + "'");
-                    logger.log(
-                            Level.INFO,
-                            "Description: '"
-                                    + (log.getDescription() != null
-                                    ? log.getDescription()
-                                    .substring(0, Math.min(100, log.getDescription().length()))
-                                    + "..."
-                                    : "null")
-                                    + "'");
-                    logger.log(Level.INFO, "Owner: '" + log.getOwner() + "'");
-
-                    // Inspect Tags structure
-                    if (log.getTags() != null && !log.getTags().isEmpty()) {
-                        logger.log(Level.INFO, "Tags found: " + log.getTags().size());
-                        log.getTags()
-                                .forEach(
-                                        tag -> {
-                                            logger.log(
-                                                    Level.INFO,
-                                                    "  Tag: name='" + tag.getName() + "', state='" + tag.getState() + "'");
-
-                                            // Check if there are any other properties we might have missed
-                                            logger.log(Level.INFO, "  Tag class: " + tag.getClass().getName());
-
-                                            // Try to see all fields of the tag object
-                                            try {
-                                                java.lang.reflect.Field[] fields = tag.getClass().getDeclaredFields();
-                                                for (java.lang.reflect.Field field : fields) {
-                                                    field.setAccessible(true);
-                                                    Object value = field.get(tag);
-                                                    logger.log(Level.INFO, "  Tag field '" + field.getName() + "': " + value);
-                                                }
-                                            } catch (Exception e) {
-                                                logger.log(Level.INFO, "  Could not inspect tag fields: " + e.getMessage());
-                                            }
-                                        });
-                    } else {
-                        logger.log(Level.INFO, "No tags found in this document");
-                    }
-
-                    // Inspect Logbooks structure
-                    if (log.getLogbooks() != null && !log.getLogbooks().isEmpty()) {
-                        logger.log(Level.INFO, "Logbooks found: " + log.getLogbooks().size());
-                        log.getLogbooks()
-                                .forEach(
-                                        logbook -> {
-                                            logger.log(
-                                                    Level.INFO,
-                                                    "  Logbook: name='"
-                                                            + logbook.getName()
-                                                            + "', owner='"
-                                                            + logbook.getOwner()
-                                                            + "', state='"
-                                                            + logbook.getState()
-                                                            + "'");
-                                        });
-                    } else {
-                        logger.log(Level.INFO, "No logbooks found in this document");
-                    }
-                }
-            } else {
-                logger.log(Level.INFO, "No documents found in index!");
-            }
-
-        } catch (Exception e) {
-            logger.log(Level.SEVERE, "Error debugging document content: " + e.getMessage(), e);
-        }
+    @Override
+    public void deleteAllById(Iterable ids) {
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN, TextUtil.LOGS_DELETE_NOT_SUPPORTED);
     }
 
     @Autowired
@@ -400,131 +304,5 @@ public class LogRepository implements CrudRepository<Log, String> {
             logger.log(Level.SEVERE, TextUtil.SEARCH_NOT_COMPLETED, e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, TextUtil.SEARCH_NOT_COMPLETED);
         }
-    }
-
-    public SearchResult search2(MultiValueMap<String, String> searchParameters) {
-
-        SearchRequest searchRequest = logSearchUtil.buildSearchRequest(searchParameters);
-        try {
-            debugFieldMappingJson();
-            String query = searchParameters.getFirst("query");
-
-            if (query == null || query.isBlank()) {
-                try {
-                    final SearchResponse<Log> searchResponse = client.search(searchRequest, Log.class);
-                    List<Log> result =
-                            searchResponse.hits().hits().stream().map(Hit::source).collect(Collectors.toList());
-                    SearchResult searchResult = new SearchResult();
-                    searchResult.setHitCount(searchResponse.hits().total().value());
-                    searchResult.setLogs(result);
-                    return searchResult;
-                } catch (IOException | IllegalArgumentException e) {
-                    logger.log(Level.SEVERE, TextUtil.SEARCH_NOT_COMPLETED, e);
-                    throw new ResponseStatusException(
-                            HttpStatus.INTERNAL_SERVER_ERROR, TextUtil.SEARCH_NOT_COMPLETED);
-                }
-            }
-
-            BoolQuery hybridQuery =
-                    BoolQuery.of(
-                            b ->
-                                    b.should(
-                                            MultiMatchQuery.of(
-                                                            m ->
-                                                                    m.query(query)
-                                                                            .fields("title", "description", "owner", "level")
-                                                                            .type(TextQueryType.CrossFields)
-                                                                            //.fuzziness("AUTO")
-                                                                            .operator(Operator.And) // Fixed: changed from And
-                                                            /*.boost(3.0f)*/)
-                                                    ._toQuery())
-                            //.should(getTagsQuery("test-tag-1"))
-                          /*NestedQuery.of(
-                                  n ->
-                                      n.path("tags")
-                                          .query(
-                                              q ->
-                                                  q.wildcard( // Use wildcard for keyword fields
-                                                      w ->
-                                                          w.field("name") // CHANGE: Just "name"
-                                                              .caseInsensitive(true)
-                                                              .value("*" + query + "*"))))
-                              ._toQuery())
-                          .must(SimpleQueryStringQuery.of(
-                                          q ->
-                                                  q.query(query)
-                                                          .fields("title^5", "description^4", "owner^3", "level^1")
-                                                          .defaultOperator(Operator.And)
-                                                          .analyzeWildcard(true)
-
-                                                          .boost(2.0f))
-                                  ._toQuery())*/
-
-                            /*.minimumShouldMatch("1")*/);
-
-            SearchRequest request =
-                    SearchRequest.of(
-                            s ->
-                                    s.index(ES_LOG_INDEX)
-                                            .query(hybridQuery._toQuery())
-                                            .timeout("60s")
-                                            .size(10000)
-                                            .from(0)
-                                            .sort(SortOptions.of(so -> so.score(score -> score.order(SortOrder.Desc)))));
-
-            SearchResponse<Log> searchResponse = client.search(request, Log.class);
-
-            // Log the scores and explanations
-            searchResponse
-                    .hits()
-                    .hits()
-                    .forEach(
-                            hit -> {
-                                logger.log(
-                                        Level.INFO,
-                                        () ->
-                                                String.format(
-                                                        "Doc ID: %s, Score: %f, Title: %s, Description: %s, Explanation: %s",
-                                                        hit.id(),
-                                                        hit.score(),
-                                                        hit.source().getTitle(),
-                                                        hit.source().getDescription(),
-                                                        hit.explanation() != null ? hit.explanation().description() : "N/A"));
-                            });
-
-            List<Log> result =
-                    searchResponse.hits().hits().stream().map(Hit::source).collect(Collectors.toList());
-            SearchResult searchResult = new SearchResult();
-            searchResult.setHitCount(searchResponse.hits().total().value());
-            searchResult.setLogs(result);
-            return searchResult;
-        } catch (IOException | IllegalArgumentException e) {
-            logger.log(Level.SEVERE, TextUtil.SEARCH_NOT_COMPLETED, e);
-            throw new ResponseStatusException(
-                    HttpStatus.INTERNAL_SERVER_ERROR, TextUtil.SEARCH_NOT_COMPLETED);
-        }
-    }
-
-    @Override
-    public void deleteAllById(Iterable ids) {
-        Iterator<String> iterator = ids.iterator();
-        while (iterator.hasNext()) {
-            deleteById(iterator.next());
-        }
-    }
-
-    private Query getTagsQuery(String query) {
-        String[] items = query.split(" ");
-        DisMaxQuery.Builder tagQuery = new DisMaxQuery.Builder();
-        List<Query> tagsQueries = new ArrayList<>();
-        for (String pattern : items) {
-            tagsQueries.add(WildcardQuery.of(w -> w.field("tags.name")
-                    .caseInsensitive(true)
-                    .value(pattern.trim()))._toQuery());
-        }
-
-        Query tagsQuery = tagQuery.queries(tagsQueries).build()._toQuery();
-        NestedQuery nestedTagsQuery = NestedQuery.of(n -> n.path("tags").query(tagsQuery));
-        return nestedTagsQuery._toQuery();
     }
 }
