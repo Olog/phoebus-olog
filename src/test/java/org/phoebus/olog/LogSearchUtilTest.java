@@ -18,8 +18,10 @@
 
 package org.phoebus.olog;
 
+import co.elastic.clients.elasticsearch._types.query_dsl.DisMaxQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.NestedQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.server.ResponseStatusException;
@@ -36,7 +38,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
-@TestPropertySource(locations = "classpath:no_ldap_test_application.properties")
 class LogSearchUtilTest {
 
     private LogSearchUtil logSearchUtil = new LogSearchUtil();
@@ -109,6 +110,33 @@ class LogSearchUtilTest {
     }
 
     @Test
+    public void testGetTagsQuery() {
+
+        LogSearchUtil logSearchUtil = new LogSearchUtil();
+
+        Map.Entry<String, List<String>> tagsEntry = new AbstractMap.SimpleEntry<>("tags", List.of("tag1,tag2"));
+
+        Query query = logSearchUtil.getTagsQuery(tagsEntry);
+
+        NestedQuery nestedQuery = (NestedQuery) query._get();
+        DisMaxQuery disMaxQuery = (DisMaxQuery) nestedQuery.query()._get();
+        assertEquals(2, disMaxQuery.queries().size());
+    }
+
+    @Test
+    public void testGetLogbooksQuery() {
+
+        LogSearchUtil logSearchUtil = new LogSearchUtil();
+
+        Map.Entry<String, List<String>> logbooksEntry = new AbstractMap.SimpleEntry<>("logbooks", List.of("logbook1,logbook2"));
+
+        Query query = logSearchUtil.getTagsQuery(logbooksEntry);
+
+        NestedQuery nestedQuery = (NestedQuery) query._get();
+        DisMaxQuery disMaxQuery = (DisMaxQuery) nestedQuery.query()._get();
+        assertEquals(2, disMaxQuery.queries().size());
+    }
+
     public void testGetTimeZone() {
 
         MultiValueMap<String, String> searchParams = new LinkedMultiValueMap<>();
@@ -219,5 +247,4 @@ class LogSearchUtilTest {
         Map.Entry<String, List<String>> _startParameter = new AbstractMap.SimpleEntry<>("start", List.of("2 months"));
         assertThrows(ResponseStatusException.class, () -> logSearchUtil.determineDateAndTime(_startParameter, TimeZone.getTimeZone("CET")));
     }
-
 }

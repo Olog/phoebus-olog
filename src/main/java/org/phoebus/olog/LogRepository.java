@@ -39,7 +39,6 @@ import java.io.IOException;
 import java.text.MessageFormat;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.SortedSet;
@@ -48,8 +47,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import static org.phoebus.olog.ElasticConfig.ES_LOG_INDEX;
 import static org.phoebus.olog.ElasticConfig.ES_LOG_ARCHIVE_INDEX;
+import static org.phoebus.olog.ElasticConfig.ES_LOG_INDEX;
 
 @Repository
 public class LogRepository implements CrudRepository<Log, String> {
@@ -83,19 +82,17 @@ public class LogRepository implements CrudRepository<Log, String> {
             Log document = validatedLog.build();
 
             IndexRequest<Object> indexRequest =
-                    IndexRequest.of(i ->
-                            i.index(ES_LOG_INDEX)
-                                    .id(String.valueOf(id))
-                                    .document(document)
-                                    .refresh(Refresh.True));
+                    IndexRequest.of(
+                            i ->
+                                    i.index(ES_LOG_INDEX)
+                                            .id(String.valueOf(id))
+                                            .document(document)
+                                            .refresh(Refresh.True));
             IndexResponse response = client.index(indexRequest);
 
             if (response.result().equals(Result.Created)) {
-                GetRequest getRequest =
-                        GetRequest.of(g ->
-                                g.index(ES_LOG_INDEX).id(response.id()));
-                GetResponse<Log> resp =
-                        client.get(getRequest, Log.class);
+                GetRequest getRequest = GetRequest.of(g -> g.index(ES_LOG_INDEX).id(response.id()));
+                GetResponse<Log> resp = client.get(getRequest, Log.class);
                 return (S) resp.source();
             }
         } catch (Exception e) {
@@ -109,9 +106,7 @@ public class LogRepository implements CrudRepository<Log, String> {
     @Override
     public <S extends Log> Iterable<S> saveAll(Iterable<S> logs) {
         List<S> createdLogs = new ArrayList<>();
-        logs.forEach(log ->
-                createdLogs.add(save(log))
-        );
+        logs.forEach(log -> createdLogs.add(save(log)));
         return createdLogs;
     }
 
@@ -119,20 +114,18 @@ public class LogRepository implements CrudRepository<Log, String> {
         try {
             Log document = LogBuilder.createLog(log).build();
             IndexRequest<Log> indexRequest =
-                    IndexRequest.of(i ->
-                            i.index(ES_LOG_INDEX)
-                                    .id(String.valueOf(document.getId()))
-                                    .refresh(Refresh.True)
-                                    .document(document));
+                    IndexRequest.of(
+                            i ->
+                                    i.index(ES_LOG_INDEX)
+                                            .id(String.valueOf(document.getId()))
+                                            .refresh(Refresh.True)
+                                            .document(document));
 
             IndexResponse response = client.index(indexRequest);
 
             if (response.result().equals(Result.Updated)) {
-                GetRequest getRequest =
-                        GetRequest.of(g ->
-                                g.index(ES_LOG_INDEX).id(response.id()));
-                GetResponse<Log> resp =
-                        client.get(getRequest, Log.class);
+                GetRequest getRequest = GetRequest.of(g -> g.index(ES_LOG_INDEX).id(response.id()));
+                GetResponse<Log> resp = client.get(getRequest, Log.class);
                 return resp.source();
             }
         } catch (Exception e) {
@@ -146,27 +139,30 @@ public class LogRepository implements CrudRepository<Log, String> {
     public Log archive(Log log) {
         try {
             // retrieve the log version from elastic
-            GetResponse<Log> resp = client.get(GetRequest.of(g ->
-                    g.index(ES_LOG_INDEX).id(String.valueOf(log.getId()))), Log.class);
+            GetResponse<Log> resp =
+                    client.get(
+                            GetRequest.of(g -> g.index(ES_LOG_INDEX).id(String.valueOf(log.getId()))), Log.class);
             if (!resp.found()) {
-                logger.log(Level.SEVERE, () -> MessageFormat.format(TextUtil.LOG_NOT_ARCHIVED, log.getId()));
+                logger.log(
+                        Level.SEVERE, () -> MessageFormat.format(TextUtil.LOG_NOT_ARCHIVED, log.getId()));
             } else {
                 Log originalDocument = resp.source();
                 String updatedVersion = originalDocument.getId() + "_v" + resp.version();
                 IndexRequest<Log> indexRequest =
-                        IndexRequest.of(i ->
-                                i.index(ES_LOG_ARCHIVE_INDEX)
-                                        .id(updatedVersion)
-                                        .document(originalDocument)
-                                        .refresh(Refresh.True));
+                        IndexRequest.of(
+                                i ->
+                                        i.index(ES_LOG_ARCHIVE_INDEX)
+                                                .id(updatedVersion)
+                                                .document(originalDocument)
+                                                .refresh(Refresh.True));
                 IndexResponse response = client.index(indexRequest);
                 if (response.result().equals(Result.Created)) {
                     GetRequest getRequest =
-                            GetRequest.of(g ->
-                                    g.index(ES_LOG_ARCHIVE_INDEX).id(response.id()));
+                            GetRequest.of(g -> g.index(ES_LOG_ARCHIVE_INDEX).id(response.id()));
                     return client.get(getRequest, Log.class).source();
                 } else {
-                    logger.log(Level.SEVERE, () -> MessageFormat.format(TextUtil.LOG_NOT_ARCHIVED, updatedVersion));
+                    logger.log(
+                            Level.SEVERE, () -> MessageFormat.format(TextUtil.LOG_NOT_ARCHIVED, updatedVersion));
                 }
             }
         } catch (IOException e) {
@@ -180,34 +176,39 @@ public class LogRepository implements CrudRepository<Log, String> {
         fb.field("modifyDate");
         fb.order(SortOrder.Desc);
 
-        SearchRequest searchRequest = SearchRequest.of(s -> s.index(ES_LOG_ARCHIVE_INDEX)
-                .query(WildcardQuery.of(q -> q.field("id").caseInsensitive(true).value(id + "*"))._toQuery())
-                .timeout("60s")
-                .sort(SortOptions.of(so -> so.field(fb.build()))));
+        SearchRequest searchRequest =
+                SearchRequest.of(
+                        s ->
+                                s.index(ES_LOG_ARCHIVE_INDEX)
+                                        .query(
+                                                WildcardQuery.of(q -> q.field("id").caseInsensitive(true).value(id + "*"))
+                                                        ._toQuery())
+                                        .timeout("60s")
+                                        .sort(SortOptions.of(so -> so.field(fb.build()))));
         try {
             final SearchResponse<Log> searchResponse = client.search(searchRequest, Log.class);
-            List<Log> result = searchResponse.hits().hits().stream().map(Hit::source).collect(Collectors.toList());
+            List<Log> result =
+                    searchResponse.hits().hits().stream().map(Hit::source).collect(Collectors.toList());
             SearchResult searchResult = new SearchResult();
             searchResult.setHitCount(searchResponse.hits().total().value());
             searchResult.setLogs(result);
             return searchResult;
         } catch (IOException | IllegalArgumentException e) {
             logger.log(Level.SEVERE, TextUtil.LOGS_SEARCH_NOT_COMPLETED, e);
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, TextUtil.LOGS_SEARCH_NOT_COMPLETED);
+            throw new ResponseStatusException(
+                    HttpStatus.INTERNAL_SERVER_ERROR, TextUtil.LOGS_SEARCH_NOT_COMPLETED);
         }
     }
 
     @Override
     public Optional<Log> findById(String id) {
         try {
-            GetRequest getRequest =
-                    GetRequest.of(g ->
-                            g.index(ES_LOG_INDEX).id(id));
-            GetResponse<Log> resp =
-                    client.get(getRequest, Log.class);
+            GetRequest getRequest = GetRequest.of(g -> g.index(ES_LOG_INDEX).id(id));
+            GetResponse<Log> resp = client.get(getRequest, Log.class);
 
             if (!resp.found()) {
-                throw new ResponseStatusException(HttpStatus.NOT_FOUND, MessageFormat.format(TextUtil.LOG_NOT_FOUND, id));
+                throw new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, MessageFormat.format(TextUtil.LOG_NOT_FOUND, id));
             }
             return Optional.of(resp.source());
         } catch (Exception e) {
@@ -232,15 +233,15 @@ public class LogRepository implements CrudRepository<Log, String> {
 
     @Override
     public Iterable<Log> findAll() {
-        throw new ResponseStatusException(HttpStatus.NOT_FOUND, TextUtil.LOGS_RETRIEVE_ALL_NOT_SUPPORTED);
+        throw new ResponseStatusException(
+                HttpStatus.NOT_FOUND, TextUtil.LOGS_RETRIEVE_ALL_NOT_SUPPORTED);
     }
 
     @Override
     public Iterable<Log> findAllById(Iterable<String> logIds) {
         List<String> ids = new ArrayList<>();
         logIds.forEach(ids::add);
-        MgetRequest mgetRequest =
-                MgetRequest.of(r -> r.index(ES_LOG_INDEX).ids(ids));
+        MgetRequest mgetRequest = MgetRequest.of(r -> r.index(ES_LOG_INDEX).ids(ids));
         try {
             List<Log> foundLogs = new ArrayList<>();
             MgetResponse<Log> resp = client.mget(mgetRequest, Log.class);
@@ -282,11 +283,15 @@ public class LogRepository implements CrudRepository<Log, String> {
         throw new ResponseStatusException(HttpStatus.FORBIDDEN, TextUtil.LOGS_DELETE_NOT_SUPPORTED);
     }
 
+    @Override
+    public void deleteAllById(Iterable ids) {
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN, TextUtil.LOGS_DELETE_NOT_SUPPORTED);
+    }
+
     @Autowired
     LogSearchUtil logSearchUtil;
 
     public SearchResult search(MultiValueMap<String, String> searchParameters) {
-
         SearchRequest searchRequest = logSearchUtil.buildSearchRequest(searchParameters);
         try {
             final SearchResponse<Log> searchResponse = client.search(searchRequest, Log.class);
@@ -298,14 +303,6 @@ public class LogRepository implements CrudRepository<Log, String> {
         } catch (IOException | IllegalArgumentException e) {
             logger.log(Level.SEVERE, TextUtil.SEARCH_NOT_COMPLETED, e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, TextUtil.SEARCH_NOT_COMPLETED);
-        }
-    }
-
-    @Override
-    public void deleteAllById(Iterable ids) {
-        Iterator<String> iterator = ids.iterator();
-        while (iterator.hasNext()) {
-            deleteById(iterator.next());
         }
     }
 }

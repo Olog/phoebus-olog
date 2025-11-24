@@ -18,7 +18,8 @@
         "type": "keyword"
       },
       "owner": {
-        "type": "keyword"
+        "type": "text",
+        "analyzer" : "olog_analyzer"
       },
       "source": {
         "type": "text",
