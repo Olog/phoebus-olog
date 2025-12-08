@@ -6,6 +6,7 @@ import co.elastic.clients.elasticsearch._types.SortOrder;
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery.Builder;
 import co.elastic.clients.elasticsearch._types.query_dsl.ChildScoreMode;
+import co.elastic.clients.elasticsearch._types.query_dsl.DateRangeQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.DisMaxQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.ExistsQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.FuzzyQuery;
@@ -279,6 +280,8 @@ public class LogSearchUtil {
             }
         }
 
+        ZonedDateTime _start = start;
+        ZonedDateTime _end = end;
         // Add the temporal queries
         if (temporalSearch) {
             // check that the start is before the end
@@ -286,15 +289,17 @@ public class LogSearchUtil {
                 DisMaxQuery.Builder temporalQuery = new DisMaxQuery.Builder();
                 RangeQuery.Builder rangeQuery = new RangeQuery.Builder();
                 // Add a query based on the create time
-                rangeQuery.field("createdDate").gte(JsonData.of(start.toEpochSecond()))
-                        .lte(JsonData.of(end.toEpochSecond()))
-                        .format("epoch_second");
+                rangeQuery.date(DateRangeQuery.of(b ->
+                        b.field("createdDate").gte(JsonData.of(_start.toEpochSecond()).toString())
+                                .lte(JsonData.of(_end.toEpochSecond()).toString())
+                                        .format("epoch_second")));
                 if (includeEvents) {
                     RangeQuery.Builder eventsRangeQuery = new RangeQuery.Builder();
                     // Add a query based on the time of the associated events
-                    eventsRangeQuery.field("events.instant").gte(JsonData.of(start.toEpochSecond()))
-                            .lte(JsonData.of(end.toEpochSecond()))
-                            .format("epoch_second");
+                    eventsRangeQuery.date(DateRangeQuery.of(b ->
+                            b.field("createdDate").gte(JsonData.of(_start.toEpochSecond()).toString())
+                                    .lte(JsonData.of(_end.toEpochSecond()).toString())
+                                    .format("epoch_second")));
                     NestedQuery.Builder nestedQuery = new NestedQuery.Builder();
                     nestedQuery.path("events").query(eventsRangeQuery.build()._toQuery());
 

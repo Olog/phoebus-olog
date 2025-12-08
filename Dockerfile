@@ -20,4 +20,4 @@ USER olog
 WORKDIR /olog-target
 EXPOSE 8080
 EXPOSE 8181
-CMD java -jar service-olog-5.1.2-SNAPSHOT.jar
+CMD java -jar service-olog-*.jar

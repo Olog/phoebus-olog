@@ -53,7 +53,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <spring.boot-version>3.5.7</spring.boot-version>
-        <elasticsearch.version>8.2.0</elasticsearch.version>
+        <elasticsearch.version>8.18.0</elasticsearch.version>
         <junit.version>5.8.2</junit.version>
         <springdoc.version>1.7.0</springdoc.version>
         <skipITs>true</skipITs>
