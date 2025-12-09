@@ -724,4 +724,35 @@ public class LogResourceTest extends ResourcesTestBase {
             fail("Failed to make request", ex);
         }
     }
+
+    @Test
+    void testRssFeedCustomRequestParams() {
+        Log log1Rss = Log.LogBuilder.createLog().id(1L).description("log1description").title("log1title").build();
+        Log log2Rss = Log.LogBuilder.createLog().id(2L).description("log2description").title("log2title").build();
+        when(logRepository.search(any())).thenReturn(new SearchResult(2, List.of(log1Rss, log2Rss)));
+
+        MultiValueMap<String, String> allRequestParams = new LinkedMultiValueMap<>();
+        allRequestParams.put("start", List.of("2025-12-01 10:00:00.000"));
+        allRequestParams.put("end", List.of("2025-12-10 10:00:00.000"));
+        allRequestParams.put("from", List.of("100"));
+        allRequestParams.put("size", List.of("777"));
+
+        MockHttpServletRequestBuilder request = get("/" + OlogResourceDescriptors.LOG_RESOURCE_URI + "/rss")
+                .params(allRequestParams)
+                .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION);
+        try {
+            mockMvc.perform(request)
+                    .andExpect(status().isOk())
+                    .andExpect(content().contentType(MediaType.APPLICATION_RSS_XML_VALUE + ";charset=UTF-8"))
+                    .andExpect(content().string(allOf(
+                            containsString("<channel>"),
+                            containsString(log1Rss.getDescription()),
+                            containsString(log2Rss.getDescription()),
+                            containsString(log1Rss.getTitle()),
+                            containsString(log2Rss.getTitle())
+                    )));
+        } catch (Exception ex) {
+            fail("Failed to make request", ex);
+        }
+    }
 }
