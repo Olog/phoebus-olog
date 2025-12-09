@@ -21,6 +21,7 @@ package org.phoebus.olog;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mongodb.client.gridfs.GridFSBucket;
 import org.mockito.Mockito;
+import org.phoebus.olog.security.WebSecurityConfig;
 import org.springframework.boot.autoconfigure.h2.H2ConsoleProperties;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;

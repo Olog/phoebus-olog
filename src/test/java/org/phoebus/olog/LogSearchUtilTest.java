@@ -29,6 +29,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.ZonedDateTime;
 import java.util.AbstractMap;
 import java.util.List;
+import java.util.regex.Pattern;
 import java.util.Map;
 import java.util.TimeZone;
 
@@ -110,6 +111,11 @@ class LogSearchUtilTest {
     }
 
     @Test
+    public void testBCrypt() throws Exception{
+       Pattern  BCRYPT_PATTERN = Pattern.compile("\\A\\$2(a|y|b)?\\$(\\d\\d)\\$[./0-9A-Za-z]{53}");
+
+
+    }
     public void testGetTagsQuery() {
 
         LogSearchUtil logSearchUtil = new LogSearchUtil();

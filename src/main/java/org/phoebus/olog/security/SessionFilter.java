@@ -19,12 +19,15 @@
 package org.phoebus.olog.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import org.phoebus.olog.TextUtil;
-import org.phoebus.olog.WebSecurityConfig;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
@@ -34,12 +37,6 @@ import org.springframework.session.FindByIndexNameSessionRepository;
 import org.springframework.session.Session;
 import org.springframework.web.filter.GenericFilterBean;
 
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
@@ -57,7 +54,7 @@ import java.util.stream.Collectors;
  * This class should not be instantiated as a bean in the application configuration. If it is, the
  * <code>doFilter()</code> method will be called for each endpoint URI, effectively defeating the purpose of the
  * configuration of ignored URI patterns set up in the Spring Security context, see
- * {@link WebSecurityConfig#configure(WebSecurity)}.
+ * {@link WebSecurityConfig)}.
  */
 public class SessionFilter extends GenericFilterBean {
 
@@ -85,10 +82,10 @@ public class SessionFilter extends GenericFilterBean {
      *     to the security context, i.e. request is not authenticated.</li>
      * </ol>
      *
-     * @param request A {@link ServletRequest}
-     * @param response A {@link ServletResponse}
+     * @param request     A {@link ServletRequest}
+     * @param response    A {@link ServletResponse}
      * @param filterChain The {@link FilterChain} to which this implementation contributes.
-     * @throws IOException May be thrown by upstream filters.
+     * @throws IOException      May be thrown by upstream filters.
      * @throws ServletException May be thrown by upstream filters.
      */
     @Override

@@ -58,7 +58,7 @@ public class LevelsResource {
      */
     @SuppressWarnings("unused")
     @GetMapping("/{levelName}")
-    public org.phoebus.olog.entity.Level findById(@PathVariable String levelName) {
+    public org.phoebus.olog.entity.Level findById(@PathVariable(name = "levelName") String levelName) {
         Optional<org.phoebus.olog.entity.Level> foundLevel = levelRepository.findById(levelName);
         if (foundLevel.isPresent()) {
             return foundLevel.get();
@@ -85,7 +85,7 @@ public class LevelsResource {
      */
     @SuppressWarnings("unused")
     @PutMapping("/{levelName}")
-    public org.phoebus.olog.entity.Level createLevel(@PathVariable String levelName, @RequestBody final org.phoebus.olog.entity.Level level) {
+    public org.phoebus.olog.entity.Level createLevel(@PathVariable(name = "levelName") String levelName, @RequestBody final org.phoebus.olog.entity.Level level) {
 
         // Validate request parameters
         validateLevelRequest(level);
@@ -130,7 +130,7 @@ public class LevelsResource {
 
     @SuppressWarnings("unused")
     @DeleteMapping("/{levelName}")
-    public void deleteLevel(@PathVariable String levelName) {
+    public void deleteLevel(@PathVariable(name = "levelName") String levelName) {
 
         // check if present
         Optional<org.phoebus.olog.entity.Level> existingLevel = levelRepository.findById(levelName);

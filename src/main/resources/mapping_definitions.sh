@@ -2,11 +2,11 @@
 
 ###
 # #%L
-# ChannelFinder Directory Service
+# Olog Service
 # %%
-# Copyright (C) 2010 - 2016 Helmholtz-Zentrum Berlin für Materialien und Energie GmbH
+# Copyright (C) 2010 - 2026 Helmholtz-Zentrum Berlin für Materialien und Energie GmbH
 # %%
-# Copyright (C) 2010 - 2012 Brookhaven National Laboratory
+# Copyright (C) 2010 - 2026 Brookhaven National Laboratory
 # All rights reserved. Use is subject to license terms.
 # #L%
 ###

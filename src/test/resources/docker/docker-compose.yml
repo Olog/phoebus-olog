@@ -2,12 +2,15 @@ version: '3'
 services:
 
   elastic:
-    image: elasticsearch:6.8.13
+    image: elasticsearch:8.2.3
     environment:
       cluster.name: elasticsearch
       bootstrap.memory_lock: "true"
       discovery.type: single-node
       ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+      xpack.security.enabled: "false"
+      xpack.security.http.ssl.enabled: "false"
+      xpack.security.transport.ssl.enabled: "false"
     ulimits:
       memlock:
         soft: -1
@@ -16,8 +19,6 @@ services:
       - olog-esdata:/usr/share/elasticsearch/data
     ports:
       - 9200:9200
-    networks:
-      - esnet
 
   mongo:
     image: mongo
@@ -34,6 +35,3 @@ volumes:
     driver: local
   olog-mongodata:
     driver: local
-
-networks:
-  esnet:

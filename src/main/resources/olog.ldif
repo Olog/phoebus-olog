@@ -1,10 +1,4 @@
 dn: dc=olog,dc=local
-objectClass: dcObject
-objectClass: organization
-dc: olog
-o: olog
-
-dn: cn=channelfinder,dc=olog,dc=local
 objectClass: simpleSecurityObject
 objectClass: organizationalRole
 userPassword:: e1NIQX1jUkR0cE5DZUJpcWw1S09Rc0tWeXJBMHNBaUE9
@@ -26,7 +20,8 @@ objectClass: account
 objectClass: posixAccount
 description: User with tag role
 cn: tag
-userPassword: 1234
+# bcrypt encoded string "1234"
+userPassword: $2a$12$.gd4p4gwfNd3S0I1giLWfuEdtBvHCg/B9gi7OmAsyNAF62eWg4xDS
 uidNumber: 23001
 gidNumber: 23001
 homeDirectory: /dev/null
@@ -37,7 +32,8 @@ objectClass: account
 objectClass: posixAccount
 description: User with property role
 cn: property
-userPassword: 1234
+# bcrypt encoded string "1234"
+userPassword: $2a$12$.gd4p4gwfNd3S0I1giLWfuEdtBvHCg/B9gi7OmAsyNAF62eWg4xDS
 uidNumber: 23002
 gidNumber: 23002
 homeDirectory: /dev/null
@@ -48,7 +44,8 @@ objectClass: account
 objectClass: posixAccount
 description: User with logbook role
 cn: logbook
-userPassword: 1234
+# bcrypt encoded string "1234"
+userPassword: $2a$12$.gd4p4gwfNd3S0I1giLWfuEdtBvHCg/B9gi7OmAsyNAF62eWg4xDS
 uidNumber: 23003
 gidNumber: 23003
 homeDirectory: /dev/null
@@ -59,7 +56,8 @@ objectClass: account
 objectClass: posixAccount
 description: User with log role
 cn: log
-userPassword: 1234
+# bcrypt encoded string "1234"
+userPassword: $2a$12$.gd4p4gwfNd3S0I1giLWfuEdtBvHCg/B9gi7OmAsyNAF62eWg4xDS
 uidNumber: 23004
 gidNumber: 23004
 homeDirectory: /dev/null
@@ -70,7 +68,8 @@ objectClass: account
 objectClass: posixAccount
 description: User with admin role
 cn: admin
-userPassword: 1234
+# bcrypt encoded string "1234"
+userPassword: $2a$12$.gd4p4gwfNd3S0I1giLWfuEdtBvHCg/B9gi7OmAsyNAF62eWg4xDS
 uidNumber: 23005
 gidNumber: 23005
 homeDirectory: /dev/null
