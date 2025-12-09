@@ -8,9 +8,12 @@ package org.phoebus.olog.security;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.phoebus.olog.OlogResourceDescriptors;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.h2.H2ConsoleProperties;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
@@ -25,16 +28,20 @@ import org.springframework.jdbc.datasource.embedded.DataSourceFactory;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabase;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.session.FindByIndexNameSessionRepository;
 import org.springframework.session.jdbc.JdbcIndexedSessionRepository;
 import org.springframework.transaction.support.TransactionOperations;
 import org.springframework.transaction.support.TransactionTemplate;
+import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.filter.UrlHandlerFilter;
 
 import javax.sql.DataSource;
 import java.sql.Driver;
@@ -51,11 +58,16 @@ public class WebSecurityConfig {
     @Value("${spring.datasource.url:jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=TRUE}")
     private String h2Url;
 
+    @Autowired
+    private ApplicationContext context;
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        AuthenticationManager authenticationManager = context.getBean(AuthenticationManager.class);
         http.authorizeHttpRequests(a -> a
                         .anyRequest()
                         .authenticated())
+                .addFilterBefore(new SessionFilter(authenticationManager, sessionRepository()), UsernamePasswordAuthenticationFilter.class)
                 .csrf(c -> c.disable())
                 .httpBasic(Customizer.withDefaults());
         return http.build();
@@ -161,5 +173,22 @@ public class WebSecurityConfig {
         public DataSource getDataSource() {
             return this.dataSource;
         }
+    }
+
+    /**
+     * This bean is needed to account for requests with a trailing slash,
+     * e.g. from npm development server when requesting http://localhost:8080/Olog/
+     * @return A {@link FilterRegistrationBean} to handle trailing slash in a request URL
+     */
+    @Bean
+    public FilterRegistrationBean urlHandlerFilterRegistrationBean() {
+        FilterRegistrationBean<OncePerRequestFilter> registrationBean =
+                new FilterRegistrationBean<>();
+        UrlHandlerFilter urlHandlerFilter = UrlHandlerFilter
+                .trailingSlashHandler("/Olog/**").wrapRequest()
+                .build();
+        registrationBean.setFilter(urlHandlerFilter);
+
+        return registrationBean;
     }
 }
