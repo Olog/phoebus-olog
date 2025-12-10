@@ -24,12 +24,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.phoebus.olog.entity.UserData;
 import org.phoebus.olog.security.LoginCredentials;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -46,10 +43,7 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
 import static org.phoebus.olog.OlogResourceDescriptors.OLOG_SERVICE;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestBuilders.formLogin;
@@ -64,10 +58,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @TestPropertySource(locations = "classpath:no_ldap_test_application.properties")
 class AuthenticationResourceTest extends ResourcesTestBase {
 
-
-    @Autowired
-    private AuthenticationManager authenticationManager;
-
     @Value("${spring.session.timeout}")
     private int sessionTimeout;
 
@@ -79,7 +69,6 @@ class AuthenticationResourceTest extends ResourcesTestBase {
         authorities.add(authority);
         when(mockAuthentication.getAuthorities()).thenReturn(authorities);
         Authentication authentication = new UsernamePasswordAuthenticationToken("admin", "adminPass");
-        when(authenticationManager.authenticate(authentication)).thenReturn(mockAuthentication);
         MockHttpServletRequestBuilder request = post("/" + OLOG_SERVICE + "/login")
                 .contentType(JSON).content(objectMapper.writeValueAsString(new LoginCredentials("admin", "adminPass")));
         MvcResult result = mockMvc.perform(request).andExpect(status().isOk())
@@ -96,7 +85,6 @@ class AuthenticationResourceTest extends ResourcesTestBase {
 
         // Log in again and verify that the cookie value is the same, i.e. same session on server.
         when(mockAuthentication.getAuthorities()).thenReturn(authorities);
-        when(authenticationManager.authenticate(authentication)).thenReturn(mockAuthentication);
         request = post("/" + OLOG_SERVICE + "/login")
                 .contentType(JSON)
                 .content(objectMapper.writeValueAsString(new LoginCredentials("admin", "adminPass")));
@@ -114,7 +102,6 @@ class AuthenticationResourceTest extends ResourcesTestBase {
         assertEquals("admin", userData.getUserName());
         assertNotNull(userData.getRoles());
 
-        reset(authenticationManager);
     }
 
     @Test
@@ -131,7 +118,6 @@ class AuthenticationResourceTest extends ResourcesTestBase {
         authorities.add(authority);
         when(mockAuthentication.getAuthorities()).thenReturn(authorities);
         Authentication authentication = new UsernamePasswordAuthenticationToken("admin", "adminPass");
-        when(authenticationManager.authenticate(authentication)).thenReturn(mockAuthentication);
         MockHttpServletRequestBuilder request = post("/" + OLOG_SERVICE + "/login")
                 .contentType("application/json").content(objectMapper.writeValueAsString(new LoginCredentials("admin", "adminPass")));
         mockMvc.perform(request).andExpect(status().isOk());
@@ -139,8 +125,6 @@ class AuthenticationResourceTest extends ResourcesTestBase {
         Cookie cookie = new Cookie("SESSION", "cookieValue");
         request = get("/" + OLOG_SERVICE + "/user").cookie(cookie);
         mockMvc.perform(request).andExpect(status().isNotFound());
-
-        reset(authenticationManager);
     }
 
     @Test
@@ -151,22 +135,18 @@ class AuthenticationResourceTest extends ResourcesTestBase {
         authorities.add(authority);
         when(mockAuthentication.getAuthorities()).thenReturn(authorities);
         Authentication authentication = new UsernamePasswordAuthenticationToken("admin", "adminPass");
-        when(authenticationManager.authenticate(authentication)).thenReturn(mockAuthentication);
         RequestBuilder requestBuilder = formLogin("/" + OLOG_SERVICE + "/login").acceptMediaType(MediaType.APPLICATION_JSON).user("admin").password("adminPass");
         mockMvc.perform(requestBuilder)
                 .andDo(print())
                 .andExpect(status().isBadRequest());
-        reset(authenticationManager);
     }
 
     @Test
     void testFailedLogin() throws Exception {
-        doThrow(new BadCredentialsException("bad")).when(authenticationManager).authenticate(any(Authentication.class));
         MockHttpServletRequestBuilder request = post("/" + OLOG_SERVICE + "/login")
                 .contentType(JSON)
                 .content(objectMapper.writeValueAsString(new LoginCredentials("admin", "badPass")));
         mockMvc.perform(request).andExpect(status().isUnauthorized());
-        reset(authenticationManager);
     }
 
     @Test

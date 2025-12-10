@@ -194,7 +194,7 @@ class LogSearchUtilTest {
         zonedDateTime = logSearchUtil.determineDateAndTime(startParameter, TimeZone.getTimeZone("GMT"));
         assertTrue("2025-10-01T12:00".equals(zonedDateTime.toLocalDateTime().toString()));
 
-        zonedDateTime = logSearchUtil.determineDateAndTime(startParameter, TimeZone.getTimeZone("PST"));
+        zonedDateTime = logSearchUtil.determineDateAndTime(startParameter, TimeZone.getTimeZone("GMT-7"));
         assertTrue("2025-10-01T19:00".equals(zonedDateTime.toLocalDateTime().toString()));
 
         // Date/time outside DST
@@ -206,7 +206,7 @@ class LogSearchUtilTest {
         zonedDateTime = logSearchUtil.determineDateAndTime(startParameter, TimeZone.getTimeZone("GMT"));
         assertTrue("2025-12-01T12:00".equals(zonedDateTime.toLocalDateTime().toString()));
 
-        zonedDateTime = logSearchUtil.determineDateAndTime(startParameter, TimeZone.getTimeZone("PST"));
+        zonedDateTime = logSearchUtil.determineDateAndTime(startParameter, TimeZone.getTimeZone("GMT-8"));
         assertTrue("2025-12-01T20:00".equals(zonedDateTime.toLocalDateTime().toString()));
 
         // Edge case: switch from DST and "ambiguous" time stamp
@@ -220,7 +220,7 @@ class LogSearchUtilTest {
         assertTrue("2025-10-26T02:30".equals(zonedDateTime.toLocalDateTime().toString()));
 
         // US switches 2025-11-02
-        zonedDateTime = logSearchUtil.determineDateAndTime(startParameter, TimeZone.getTimeZone("PST"));
+        zonedDateTime = logSearchUtil.determineDateAndTime(startParameter, TimeZone.getTimeZone("GMT-7"));
         assertTrue("2025-10-26T09:30".equals(zonedDateTime.toLocalDateTime().toString()));
 
         // Edge case: switch to DST and "missing" time stamp
@@ -234,7 +234,7 @@ class LogSearchUtilTest {
         assertTrue("2025-03-30T02:30".equals(zonedDateTime.toLocalDateTime().toString()));
 
         // US switches 2025-03-09
-        zonedDateTime = logSearchUtil.determineDateAndTime(startParameter, TimeZone.getTimeZone("PST"));
+        zonedDateTime = logSearchUtil.determineDateAndTime(startParameter, TimeZone.getTimeZone("GMT-7"));
         assertTrue("2025-03-30T09:30".equals(zonedDateTime.toLocalDateTime().toString())); // Already on DST
 
     }

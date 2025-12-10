@@ -60,12 +60,10 @@ public class SessionFilter extends GenericFilterBean {
 
     private AuthenticationManager authenticationManager;
     private FindByIndexNameSessionRepository sessionRepository;
-    private ObjectMapper objectMapper;
 
     public SessionFilter(AuthenticationManager authenticationManager, FindByIndexNameSessionRepository sessionRepository) {
         this.authenticationManager = authenticationManager;
         this.sessionRepository = sessionRepository;
-        objectMapper = new ObjectMapper();
     }
 
     /**

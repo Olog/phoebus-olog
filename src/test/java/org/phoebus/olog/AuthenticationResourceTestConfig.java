@@ -38,12 +38,6 @@ import javax.sql.DataSource;
 public class AuthenticationResourceTestConfig {
 
     @Bean
-    @SuppressWarnings("unused")
-    public AuthenticationManager authenticationManager() {
-        return Mockito.mock(AuthenticationManager.class);
-    }
-
-    @Bean
     public DataSource dataSource() {
         return new EmbeddedDatabaseBuilder()
                 .setType(EmbeddedDatabaseType.H2)
