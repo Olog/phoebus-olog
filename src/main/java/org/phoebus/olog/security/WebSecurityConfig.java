@@ -36,6 +36,7 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.session.FindByIndexNameSessionRepository;
 import org.springframework.session.jdbc.JdbcIndexedSessionRepository;
 import org.springframework.transaction.support.TransactionOperations;
@@ -89,6 +90,7 @@ public class WebSecurityConfig {
 
 
     @Bean
+    @Scope("singleton")
     public AuthenticationManager authenticationManager() throws Exception {
         return authentication -> {
             for (String providerName : PROVIDER_NAME_LIST) {
@@ -111,6 +113,7 @@ public class WebSecurityConfig {
         http.authorizeHttpRequests(a -> a
                         .anyRequest()
                         .authenticated())
+                .addFilterBefore(new SessionFilter(authenticationManager(), sessionRepository()), UsernamePasswordAuthenticationFilter.class)
                 .csrf(c -> c.disable())
                 .httpBasic(Customizer.withDefaults());
         return http.build();
@@ -154,6 +157,7 @@ public class WebSecurityConfig {
      */
     @Bean
     @Profile("!ITtest")
+    @Scope("singleton")
     public FindByIndexNameSessionRepository sessionRepository() {
         JdbcOperations jdbcOperations = new JdbcTemplate(dataSource());
         TransactionOperations transactionOperations =

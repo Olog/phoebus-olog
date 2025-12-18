@@ -94,6 +94,7 @@ public class AuthenticationResource {
         }
         List<String> roles = authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority).collect(Collectors.toList());
+
         Session session = findOrCreateSession(loginCredentials.username(), roles);
         session.setLastAccessedTime(Instant.now());
         sessionRepository.save(session);
@@ -103,6 +104,8 @@ public class AuthenticationResource {
         } else {
             cookie.setMaxAge(60 * sessionTimeout); // sessionTimeout is in minutes.
         }
+
+
         response.addCookie(cookie);
         return new ResponseEntity<>(
                 new UserData(loginCredentials.username(), roles),
