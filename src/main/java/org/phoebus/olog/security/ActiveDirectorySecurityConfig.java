@@ -6,25 +6,28 @@
 package org.phoebus.olog.security;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Condition;
+import org.springframework.context.annotation.ConditionContext;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
-import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.core.type.AnnotatedTypeMetadata;
+import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.ldap.authentication.ad.ActiveDirectoryLdapAuthenticationProvider;
+
+import java.util.Arrays;
 
 /**
  * Security config for Active Directory authentication/authorization. Instantiated only if runtime property
- * <code>authenticationManager</code> is set to <code>activeDirectory</code>.
+ * <code>authenticationProviders</code> contains <code>activeDirectory</code>.
  */
 @SuppressWarnings("unused")
 @EnableWebSecurity
 @Configuration
-@ConditionalOnProperty(value = "authenticationManager", havingValue = "activeDirectory")
-@PropertySource("${propertySource:classpath:/security/active_directory.properties}")
+@Conditional(value = ActiveDirectorySecurityConfig.ActiveDirectoryCondition.class)
+@PropertySource("${activeDirectoryPropertySource}")
 public class ActiveDirectorySecurityConfig extends WebSecurityConfig {
 
     @Value("${ad.url:ldap://localhost:389/}")
@@ -32,18 +35,24 @@ public class ActiveDirectorySecurityConfig extends WebSecurityConfig {
     @Value("${ad.domain}")
     String ad_domain;
 
-    @Bean
-    public AuthenticationManager activeDirectoryLdapAuthenticationProvider() {
+    @Bean(WebSecurityConfig.ACTIVE_DIRECTORY)
+    public AuthenticationProvider activeDirectoryLdapAuthenticationProvider() {
         ActiveDirectoryLdapAuthenticationProvider adProvider = new ActiveDirectoryLdapAuthenticationProvider(ad_domain, ad_url);
         adProvider.setConvertSubErrorCodesToExceptions(true);
         adProvider.setUseAuthenticationRequestCredentials(true);
 
-        AuthenticationManager authenticationManager = new AuthenticationManager() {
-            @Override
-            public Authentication authenticate(Authentication authentication) throws AuthenticationException {
-                return adProvider.authenticate(authentication);
+        return adProvider;
+    }
+
+    public static class ActiveDirectoryCondition implements Condition {
+        @Override
+        public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
+            String value = context.getEnvironment().getProperty(WebSecurityConfig.PROVIDER_LIST_PROPERTY_NAME);
+            if (value == null || value.isEmpty()) {
+                return false;
             }
-        };
-        return authenticationManager;
+            String[] values = value.split(",");
+            return Arrays.asList(values).contains(WebSecurityConfig.ACTIVE_DIRECTORY);
+        }
     }
 }
