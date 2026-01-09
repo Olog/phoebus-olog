@@ -18,6 +18,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 /**
  * Log object that can be represented as JSON in payload data.
@@ -58,7 +60,8 @@ public class Log implements Serializable {
     private Set<Tag> tags = new HashSet<>();
     private Set<Property> properties = new HashSet<>();
 
-    private Set<Attachment> attachments = new HashSet<>();
+    private SortedSet<Attachment> attachments = new TreeSet<>();
+
 
     protected Log() {
     }
@@ -292,7 +295,7 @@ public class Log implements Serializable {
      *
      * @return the attachments
      */
-    public Set<Attachment> getAttachments() {
+    public SortedSet<Attachment> getAttachments() {
         return attachments;
     }
 
@@ -301,7 +304,7 @@ public class Log implements Serializable {
      *
      * @param attachments - the attachments to set
      */
-    public void setAttachments(Set<Attachment> attachments) {
+    public void setAttachments(SortedSet<Attachment> attachments) {
         this.attachments = attachments;
     }
 
@@ -361,7 +364,7 @@ public class Log implements Serializable {
         private Set<Property> properties = new HashSet<>();
         private Set<Logbook> logbooks = new HashSet<>();
         private Set<Tag> tags = new HashSet<>();
-        private Set<Attachment> attachments = new HashSet<>();
+        private SortedSet<Attachment> attachments = new TreeSet<>();
 
         public LogBuilder() {
         }
@@ -381,8 +384,16 @@ public class Log implements Serializable {
             } else {
                 this.source = new StringBuilder();
             }
-            this.description = new StringBuilder(log.getDescription());
-            this.title = new StringBuilder(log.getTitle());
+            if (log.getDescription() != null) {
+                this.description = new StringBuilder(log.getDescription());
+            } else {
+                this.description = new StringBuilder("No Description");
+            }
+            if (log.getTitle() != null) {
+                this.title = new StringBuilder(log.getTitle());
+            } else {
+                this.title = new StringBuilder("No Title");
+            }
             this.level = log.getLevel();
             this.state = log.getState();
 
@@ -526,7 +537,7 @@ public class Log implements Serializable {
             return this;
         }
 
-        public LogBuilder setAttachments(Set<Attachment> attachments) {
+        public LogBuilder setAttachments(SortedSet<Attachment> attachments) {
             this.attachments = attachments;
             return this;
         }

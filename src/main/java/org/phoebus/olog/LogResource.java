@@ -6,28 +6,52 @@
 package org.phoebus.olog;
 
 import org.apache.commons.collections4.CollectionUtils;
-import org.phoebus.olog.entity.*;
+import org.phoebus.olog.entity.Attachment;
+import org.phoebus.olog.entity.Log;
+import org.phoebus.olog.entity.LogEntryGroupHelper;
+import org.phoebus.olog.entity.Logbook;
+import org.phoebus.olog.entity.Property;
+import org.phoebus.olog.entity.SearchResult;
+import org.phoebus.olog.entity.Tag;
 import org.phoebus.olog.entity.preprocess.LogPropertyProvider;
 import org.phoebus.olog.entity.preprocess.MarkupCleaner;
+import org.phoebus.olog.entity.websocket.MessageType;
+import org.phoebus.olog.entity.websocket.WebSocketMessage;
 import org.phoebus.olog.notification.LogEntryNotifier;
-import org.phoebus.util.time.TimeParser;
+import org.phoebus.olog.websocket.WebSocketService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.task.TaskExecutor;
-import org.springframework.http.*;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.security.Principal;
 import java.text.MessageFormat;
+import java.time.Duration;
 import java.time.Instant;
-import java.time.temporal.TemporalAmount;
-import java.time.temporal.UnsupportedTemporalTypeException;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -37,7 +61,7 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import static org.phoebus.olog.OlogResourceDescriptors.LOG_RESOURCE_URI;
-import static org.phoebus.util.time.TimestampFormats.MILLI_FORMAT;
+import static org.phoebus.util.time.TimestampFormats.MILLI_PATTERN;
 
 /**
  * Resource for handling the requests to ../logs
@@ -81,6 +105,10 @@ public class LogResource {
     @Autowired
     private Long propertyProvidersTimeout;
 
+    @SuppressWarnings("unused")
+    @Autowired
+    private WebSocketService webSocketService;
+
     /**
      * Custom HTTP header that client may send in order to identify itself. This is logged for some of the
      * endpoints in this controller.
@@ -105,8 +133,7 @@ public class LogResource {
     @GetMapping("archived/{logId}")
     @SuppressWarnings("unused")
     public SearchResult getArchivedLog(@PathVariable String logId) {
-        SearchResult searchResult = logRepository.findArchivedById(logId);
-        return searchResult;
+        return logRepository.findArchivedById(logId);
     }
 
     @GetMapping("/attachments/{logId}/{attachmentName}")
@@ -154,45 +181,31 @@ public class LogResource {
      */
     @GetMapping()
     @Deprecated
-    public List<Log> findLogs(@RequestHeader(value = OLOG_CLIENT_INFO_HEADER, required = false, defaultValue = "n/a") String clientInfo, @RequestParam MultiValueMap<String, String> allRequestParams) {
-        logSearchRequest(clientInfo, allRequestParams);
-        for (String key : allRequestParams.keySet()) {
-            if ("start".equalsIgnoreCase(key.toLowerCase()) || "end".equalsIgnoreCase(key.toLowerCase())) {
-                String value = allRequestParams.get(key).get(0);
-                Object time = TimeParser.parseInstantOrTemporalAmount(value);
-                if (time instanceof Instant) {
-                    allRequestParams.get(key).clear();
-                    allRequestParams.get(key).add(MILLI_FORMAT.format((Instant) time));
-                } else if (time instanceof TemporalAmount) {
-                    allRequestParams.get(key).clear();
-                    allRequestParams.get(key).add(MILLI_FORMAT.format(Instant.now().minus((TemporalAmount) time)));
-                }
-            }
+    public ResponseEntity<?> findLogs(@RequestHeader(value = OLOG_CLIENT_INFO_HEADER, required = false, defaultValue = "n/a") String clientInfo, @RequestParam MultiValueMap<String, String> allRequestParams) {
+        ResponseEntity responseEntity = search(clientInfo, allRequestParams);
+        if(responseEntity.getStatusCode().equals(HttpStatus.OK)){
+            return new ResponseEntity<>(((SearchResult)responseEntity.getBody()).getLogs(), HttpStatus.OK);
         }
-        return logRepository.search(allRequestParams).getLogs();
+        return responseEntity;
     }
 
+    /**
+     * Finds matching log entries based on the specified search parameters.
+     *
+     * @param clientInfo       A string sent by client identifying it with respect to version and platform.
+     * @param allRequestParams A map of search query parameters. Note that this method supports date/time expressions
+     *                         like "12 hours" or "2 days" as well as formatted strings like "2021-01-20 12:00:00.123".
+     *                         Search parameters considered invalid may result in an HTTP 400 (bad request) response.
+     * @return A {@link SearchResult} holding matching objects, if any.
+     */
     @GetMapping("/search")
-    public SearchResult search(@RequestHeader(value = OLOG_CLIENT_INFO_HEADER, required = false, defaultValue = "n/a") String clientInfo, @RequestParam MultiValueMap<String, String> allRequestParams) {
+    public ResponseEntity<?> search(@RequestHeader(value = OLOG_CLIENT_INFO_HEADER, required = false, defaultValue = "n/a") String clientInfo, @RequestParam MultiValueMap<String, String> allRequestParams) {
         logSearchRequest(clientInfo, allRequestParams);
-        for (String key : allRequestParams.keySet()) {
-            if ("start".equalsIgnoreCase(key) || "end".equalsIgnoreCase(key)) {
-                String value = allRequestParams.get(key).get(0);
-                Object time = TimeParser.parseInstantOrTemporalAmount(value);
-                if (time instanceof Instant) {
-                    allRequestParams.get(key).clear();
-                    allRequestParams.get(key).add(MILLI_FORMAT.format((Instant) time));
-                } else if (time instanceof TemporalAmount) {
-                    allRequestParams.get(key).clear();
-                    try {
-                        allRequestParams.get(key).add(MILLI_FORMAT.format(Instant.now().minus((TemporalAmount) time)));
-                    } catch (UnsupportedTemporalTypeException e) { // E.g. if client sends "months" or "years"
-                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, MessageFormat.format(TextUtil.UNSUPPORTED_DATE_TIME, value));
-                    }
-                }
-            }
+        try {
+            return new ResponseEntity<>(logRepository.search(allRequestParams), HttpStatus.OK);
+        } catch (IllegalArgumentException exception) {
+            return new ResponseEntity<>(exception.getMessage(), HttpStatus.BAD_REQUEST);
         }
-        return logRepository.search(allRequestParams);
     }
 
     /**
@@ -246,6 +259,8 @@ public class LogResource {
         Log newLogEntry = logRepository.save(log);
         sendToNotifiers(newLogEntry);
 
+        webSocketService.sendMessageToClients(new WebSocketMessage(MessageType.NEW_LOG_ENTRY, null));
+
         logger.log(Level.INFO, () -> "Entry id " + newLogEntry.getId() + " created from " + clientInfo);
 
         return newLogEntry;
@@ -281,6 +296,10 @@ public class LogResource {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, TextUtil.ATTACHMENT_DATA_INVALID);
         }
 
+        if (hasHeicFiles(files)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, TextUtil.ATTACHMENT_HEIC_NOT_SUPPORTED);
+        }
+
         Log newLogEntry = createLog(clientInfo, markup, inReplyTo, logEntry, principal);
 
         if (files != null) {
@@ -309,12 +328,13 @@ public class LogResource {
 
     /**
      * Add an attachment to log entry identified by logId
-     * @param logId log entry ID
-     * @param file the file to be attached
-     * @param filename name of file
-     * @param id UUID for file in mongo
+     *
+     * @param logId                   log entry ID
+     * @param file                    the file to be attached
+     * @param filename                name of file
+     * @param id                      UUID for file in mongo
      * @param fileMetadataDescription file metadata
-     * @return
+     * @return The updated {@link Log}.
      */
     @PostMapping("/attachments/{logId}")
     public Log uploadAttachment(@PathVariable String logId,
@@ -333,7 +353,7 @@ public class LogResource {
             Attachment createdAttachement = attachmentRepository.save(attachment);
             // Update the log entry with the id of the stored attachment
             Log log = foundLog.get();
-            Set<Attachment> existingAttachments = log.getAttachments();
+            SortedSet<Attachment> existingAttachments = log.getAttachments();
             existingAttachments.add(createdAttachement);
             log.setAttachments(existingAttachments);
             return logRepository.update(log);
@@ -352,10 +372,10 @@ public class LogResource {
      * </ul>
      * Notifiers - if such have been registered - are not called.
      *
-     * @param logId  The log id of the entry subject to update. It must exist, i.e. it is not created of not found.
-     * @param markup Markup strategy, if any.
-     * @param log    The log record data as sent by client.
-     * @param principal  The authenticated {@link Principal} of the request.
+     * @param logId     The log id of the entry subject to update. It must exist, i.e. it is not created of not found.
+     * @param markup    Markup strategy, if any.
+     * @param log       The log record data as sent by client.
+     * @param principal The authenticated {@link Principal} of the request.
      * @return The updated log record, or HTTP status 404 if the log record does not exist. If the path
      * variable does not match the id in the log record, HTTP status 400 (bad request) is returned.
      */
@@ -399,7 +419,7 @@ public class LogResource {
             persistedLog = cleanMarkup(markup, persistedLog);
             
             // handle attachments
-            Set<Attachment> existingAttachments = persistedLog.getAttachments();
+            SortedSet<Attachment> existingAttachments = persistedLog.getAttachments();
             Set<Attachment> newAttachments = log.getAttachments();
 
             // Remove attachments that are no longer present
@@ -433,6 +453,8 @@ public class LogResource {
                 }
             }
             persistedLog.setAttachments(existingAttachments);
+
+            webSocketService.sendMessageToClients(new WebSocketMessage(MessageType.LOG_ENTRY_UPDATED, persistedLog.getId().toString()));
 
             return logRepository.update(persistedLog);
         } else {
@@ -488,13 +510,14 @@ public class LogResource {
 
     /**
      * {@link LogEntryNotifier} providers are called for the specified log entry. Since a provider
-     * implementation may need some time to do it's job, calling them is done asynchronously. Any
+     * implementation may need some time to do its job, calling them is done asynchronously. Any
      * error handling or logging has to be done in the {@link LogEntryNotifier}, but exceptions are
      * handled here in order to not abort if any of the providers fails.
      *
      * @param log The log entry
      */
     private void sendToNotifiers(Log log) {
+
         if (logEntryNotifiers.isEmpty()) {
             return;
         }
@@ -622,6 +645,54 @@ public class LogResource {
         } catch (ResponseStatusException exception) {
             // Log entry not found, return HTTP 400
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, MessageFormat.format(TextUtil.LOG_ENTRY_CANNOT_REPLY_NOT_EXISTS, originalLogEntryId));
+        }
+    }
+
+    /**
+     * Checks for heic(s) file extension on the original file name.
+     * If a {@link MultipartFile} file does not specify an original file name,
+     * it cannot be evaluated and is then not considered to be a heic file.
+     *
+     * <p>
+     * Ideally Apache Tika should be used to detect heic content.
+     * </p>
+     *
+     * @param files Array of {@link MultipartFile}s to check.
+     * @return <code>true</code> if heic(s) file is detected, otherwise <code>false</code>.
+     */
+    private boolean hasHeicFiles(MultipartFile[] files) {
+        if (files == null || files.length == 0) {
+            return false;
+        }
+        return Arrays.stream(files).filter(f ->
+                (f.getOriginalFilename() != null &&
+                        (f.getOriginalFilename().toLowerCase().endsWith(".heic") || f.getOriginalFilename().toLowerCase().endsWith(".heics")))).findFirst().isPresent();
+    }
+
+    /**
+     * GET method for retrieving an RSS feed of channels.
+     *
+     * @return the name of the RSS feed view, which will be resolved to render the feed
+     */
+    @GetMapping(path = "/rss", produces = "application/rss+xml")
+    public com.rometools.rome.feed.rss.Channel getRssFeed(HttpServletRequest request) {
+        String baseUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + "/" + request.getContextPath();
+        MultiValueMap<String, String> baseParams = new LinkedMultiValueMap<>();
+
+        Instant now = Instant.now();
+        String endTime = DateTimeFormatter.ofPattern(MILLI_PATTERN).withZone(ZoneId.systemDefault()).format(now);
+        String startTime = DateTimeFormatter.ofPattern(MILLI_PATTERN).withZone(ZoneId.systemDefault()).format(now.minus(Duration.ofDays(7)));
+        logger.log(Level.INFO, "Using start and end time " + startTime + " " + endTime);
+        baseParams.set("end", endTime);
+        baseParams.set("start", startTime);
+        baseParams.set("from", "0");
+        baseParams.set("size", "100");
+
+        SearchResult searchResult = logRepository.search(baseParams);
+        if (searchResult != null) {
+            return RssFeedUtil.fromLogEntries(searchResult.getLogs(), baseUrl);
+        } else {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to find entries");
         }
     }
 }

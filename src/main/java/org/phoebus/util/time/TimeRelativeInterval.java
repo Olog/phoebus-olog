@@ -292,24 +292,4 @@ public class TimeRelativeInterval {
         return toAbsoluteInterval(Instant.now());
     }
 
-    /** @return Human-readable representation */
-    @Override
-    public String toString()
-    {
-        final StringBuilder buf = new StringBuilder();
-
-        if (isStartAbsolute())
-            buf.append(TimestampFormats.SECONDS_FORMAT.format((Instant) start));
-        else
-            buf.append(TimeParser.format((TemporalAmount)start));
-
-        buf.append(" - ");
-
-        if (isEndAbsolute())
-            buf.append(TimestampFormats.SECONDS_FORMAT.format((Instant) end));
-        else
-            buf.append(TimeParser.format((TemporalAmount)end));
-
-        return buf.toString();
-    }
 }

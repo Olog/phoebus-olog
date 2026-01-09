@@ -22,7 +22,6 @@ import java.util.Map;
 import java.util.logging.Level;
 
 import static org.phoebus.olog.OlogResourceDescriptors.OLOG_SERVICE_INFO;
-//import com.mongodb.client.MongoClient;
 
 @RestController
 @RequestMapping(OLOG_SERVICE_INFO)

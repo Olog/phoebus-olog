@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.phoebus</groupId>
     <artifactId>service-olog</artifactId>
-    <version>5.0.5-SNAPSHOT</version>
+    <version>5.1.2-SNAPSHOT</version>
     <name>Phoebus Olog</name>
     <description>An online logbook service that allows for the creation and retrieval of log entries.</description>
     <url>https://github.com/Olog/phoebus-olog</url>
@@ -62,7 +62,7 @@
         <jacoco.skip>true</jacoco.skip>
         <jackson.version>2.14.3</jackson.version>
         <!--suppress UnresolvedMavenProperty -->
-        <project.build.outputTimestamp>2025-04-13T18:03:40Z</project.build.outputTimestamp>
+        <project.build.outputTimestamp>2025-10-02T10:31:30Z</project.build.outputTimestamp>
     </properties>
 
     <dependencyManagement>
@@ -186,6 +186,14 @@
             <artifactId>spring-security-test</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-messaging</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-websocket</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.unboundid</groupId>
             <artifactId>unboundid-ldapsdk</artifactId>
         </dependency>
@@ -271,7 +279,11 @@
             <artifactId>jjwt-jackson</artifactId>
             <version>0.11.5</version>
         </dependency>
-
+        <dependency>
+            <groupId>com.rometools</groupId>
+            <artifactId>rome</artifactId>
+            <version>1.15.0</version>
+        </dependency>
 
     </dependencies>
     <build>
@@ -557,6 +569,7 @@
                     <plugin>
                         <groupId>org.springframework.boot</groupId>
                         <artifactId>spring-boot-maven-plugin</artifactId>
+                        <version>4.0.0-M2</version>
                         <configuration>
                             <executable>true</executable>
                         </configuration>
@@ -607,7 +620,7 @@
                         <configuration>
                             <publishingServerId>phoebus-releases</publishingServerId>
                             <checksums>required</checksums>
-                            <centralBaseUsrl>https://central.sonatype.com</centralBaseUsrl>
+                            <centralBaseUrl>https://central.sonatype.com</centralBaseUrl>
                         </configuration>
                     </plugin>
                     <plugin>

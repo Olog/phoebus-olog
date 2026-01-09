@@ -52,6 +52,8 @@ public class TextUtil {
     public static final String ELASTIC_FAILED_TO_INITIALIZE_PROPERTIES  = "Failed to initialize properties";
     public static final String ELASTIC_FAILED_TO_INITIALIZE_TAG         = "Failed to initialize tag {0}";
     public static final String ELASTIC_FAILED_TO_INITIALIZE_TAGS        = "Failed to initialize tags";
+    public static final String ELASTIC_FAILED_TO_INITIALIZE_LEVEL       = "Failed to initialize level {0}";
+    public static final String ELASTIC_FAILED_TO_INITIALIZE_LEVELS      = "Failed to initialize levels";
 
     // ----------------------------------------------------------------------------------------------------
 
@@ -63,6 +65,7 @@ public class TextUtil {
     public static final String ATTACHMENT_REQUEST                       = "Requesting attachment {0}";
     public static final String ATTACHMENT_REQUEST_DETAILS               = "Requesting attachment {0} : {1}";
     public static final String ATTACHMENT_UNABLE_TO_RETRIEVE_FOR_ID     = "Unable to retrieve attachment {0} for log id {1}";
+    public static final String ATTACHMENT_HEIC_NOT_SUPPORTED            = "HEIC file type attachments not supported";
 
     public static final String ATTACHMENTS_NAMED_FOUND_FOR_ID           = "Found {0} attachments named {1} for log id {2}";
 
