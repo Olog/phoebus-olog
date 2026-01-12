@@ -96,6 +96,7 @@ public class WebSecurityConfig {
             for (String providerName : PROVIDER_NAME_LIST) {
                 if (context.containsBean(providerName)) {
                     AuthenticationProvider authenticationProvider = context.getBean(providerName, AuthenticationProvider.class);
+                    logger.log(Level.INFO, "Authenticating user '" + authentication.getPrincipal() + "' with provider '" + providerName + "'");
                     try {
                         return authenticationProvider.authenticate(authentication);
                     } catch (AuthenticationException e) {
