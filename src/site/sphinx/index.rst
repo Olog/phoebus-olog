@@ -156,28 +156,9 @@ REST API
 #########
 
 Creating a Log Entry
-***********************
+********************
 
-Create a simple log entry 
-
-NOTE: deprecated, will be removed in future commits. Replaced by https://localhost:8181/Olog/logs/multipart
-**PUT** https://localhost:8181/Olog/logs
-
-.. code-block:: json
-
- {
-      "owner":"log",
-      "description":"Beam Dump due to Major power dip Current Alarms Booster transmitter switched back to lower state.",
-      "level":"Info",
-      "title":"Some title",
-      "logbooks":[
-         {
-            "name":"Operations"
-         }
-      ]
- }
-
-Create a log entry, optionally with file attachments
+Create a log entry
 
 **PUT** https://localhost:8181/Olog/logs/multipart
 
@@ -210,14 +191,18 @@ Client must also be prepared to handle a HTTP 413 (payload too large) response i
 file and request size limits configured in the service.
 
 
-Reply to a log entry. This uses the same end point as when creating a log entry, but client must
+Reply to a log entry
+********************
+
+This uses the same end point as when creating a log entry, but client must
 send the unique id of the log entry to which the new one is a reply.
 
 **PUT** https://localhost:8181/Olog/logs?inReplyTo=<id>
 
 If <id> does not identify an existing log entry, a HTTP 400 status is returned.
 
-Adding an attachment 
+Adding a single attachment
+**************************
 
 **POST** https://localhost:8181/Olog/logs/attachments/{logId}
 
@@ -229,15 +214,6 @@ Adding an attachment
  Content-Type: application/json
  {"image1.png"}
  ------formBoundary
- Content-Disposition: form-data; name="fileMetadataDescription"
- Content-Type: application/json
- {"image/png"}
- ------formBoundary
- Content-Disposition: form-data; name="file "; filename="image1.png"
- Content-Type: application/octet-steam
- {…file content…}
- ------formBoundary--
-
 
 
 Searching for Log Entries

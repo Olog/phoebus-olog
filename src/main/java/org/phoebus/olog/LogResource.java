@@ -182,25 +182,6 @@ public class LogResource {
      * @param clientInfo       A string sent by client identifying it with respect to version and platform.
      * @param allRequestParams A map of search query parameters. Note that this method supports date/time expressions
      *                         like "12 hours" or "2 days" as well as formatted strings like "2021-01-20 12:00:00.123".
-     * @return A {@link List} of {@link Log} objects matching the query parameters, or an
-     * empty list if no matching logs are found.
-     */
-    @GetMapping()
-    @Deprecated
-    public ResponseEntity<?> findLogs(@RequestHeader(value = OLOG_CLIENT_INFO_HEADER, required = false, defaultValue = "n/a") String clientInfo, @RequestParam MultiValueMap<String, String> allRequestParams) {
-        ResponseEntity responseEntity = search(clientInfo, allRequestParams);
-        if(responseEntity.getStatusCode().equals(HttpStatus.OK)){
-            return new ResponseEntity<>(((SearchResult)responseEntity.getBody()).getLogs(), HttpStatus.OK);
-        }
-        return responseEntity;
-    }
-
-    /**
-     * Finds matching log entries based on the specified search parameters.
-     *
-     * @param clientInfo       A string sent by client identifying it with respect to version and platform.
-     * @param allRequestParams A map of search query parameters. Note that this method supports date/time expressions
-     *                         like "12 hours" or "2 days" as well as formatted strings like "2021-01-20 12:00:00.123".
      *                         Search parameters considered invalid may result in an HTTP 400 (bad request) response.
      * @return A {@link SearchResult} holding matching objects, if any.
      */
@@ -220,6 +201,10 @@ public class LogResource {
      * <p>
      * This may return a HTTP 400 if for instance <code>inReplyTo</code> does not identify an existing log entry,
      * or if the logbooks listed in the {@link Log} object contains invalid (i.e. non-existing) logbooks.
+     * </p>
+     * <p>
+     *     Primary use case is upload of log entry without attachments as this type of request is easier to
+     *     construct, i.e. client need not create a request with multipart items.
      * </p>
      *
      * @param clientInfo A string sent by client identifying it with respect to version and platform.
@@ -512,29 +497,6 @@ public class LogResource {
         return log;
     }
 
-    /**
-     * Endpoint supporting upload of multiple files, i.e. saving the client from sending one POST request per file.
-     * Calls {@link #uploadAttachment(String, MultipartFile, String, String, String)} internally, using the original file's
-     * name and content type.
-     *
-     * @param logId A (numerical) id of a {@link Log}
-     * @param files The files subject to upload.
-     * @return The persisted {@link Log} object.
-     */
-    @SuppressWarnings("unused")
-    @PostMapping(value = "/attachments-multi/{logId}", consumes = "multipart/form-data")
-    @Deprecated
-    public Log uploadMultipleAttachments(@PathVariable String logId,
-                                         @RequestPart("file") MultipartFile[] files) {
-        if (logRepository.findById(logId).isPresent()) {
-            for (MultipartFile file : files) {
-                uploadAttachment(logId, file, file.getOriginalFilename(), file.getName(), file.getContentType());
-            }
-            return logRepository.findById(logId).get();
-        } else {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, MessageFormat.format(TextUtil.LOG_NOT_RETRIEVED, logId));
-        }
-    }
 
     /**
      * This will retrieve {@link Property}s from {@link LogPropertyProvider}s, if any are registered
