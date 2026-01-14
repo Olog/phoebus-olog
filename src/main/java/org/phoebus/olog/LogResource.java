@@ -196,6 +196,24 @@ public class LogResource {
      * @param clientInfo       A string sent by client identifying it with respect to version and platform.
      * @param allRequestParams A map of search query parameters. Note that this method supports date/time expressions
      *                         like "12 hours" or "2 days" as well as formatted strings like "2021-01-20 12:00:00.123".
+     * @return A {@link List} of {@link Log} objects matching the query parameters, or an
+     * empty list if no matching logs are found.
+     */
+    @GetMapping()
+    public ResponseEntity<?> findLogs(@RequestHeader(value = OLOG_CLIENT_INFO_HEADER, required = false, defaultValue = "n/a") String clientInfo, @RequestParam MultiValueMap<String, String> allRequestParams) {
+        ResponseEntity responseEntity = search(clientInfo, allRequestParams);
+        if(responseEntity.getStatusCode().equals(HttpStatus.OK)){
+            return new ResponseEntity<>(((SearchResult)responseEntity.getBody()).getLogs(), HttpStatus.OK);
+        }
+        return responseEntity;
+    }
+
+    /**
+     * Finds matching log entries based on the specified search parameters.
+     *
+     * @param clientInfo       A string sent by client identifying it with respect to version and platform.
+     * @param allRequestParams A map of search query parameters. Note that this method supports date/time expressions
+     *                         like "12 hours" or "2 days" as well as formatted strings like "2021-01-20 12:00:00.123".
      *                         Search parameters considered invalid may result in an HTTP 400 (bad request) response.
      * @return A {@link SearchResult} holding matching objects, if any.
      */
