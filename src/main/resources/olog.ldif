@@ -1,9 +1,3 @@
-dn: dc=olog,dc=local
-objectClass: simpleSecurityObject
-objectClass: organizationalRole
-userPassword:: e1NIQX1jUkR0cE5DZUJpcWw1S09Rc0tWeXJBMHNBaUE9
-cn: olog
-
 dn: ou=Group,dc=olog,dc=local
 objectClass: organizationalunit
 ou: Group

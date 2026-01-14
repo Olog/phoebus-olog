@@ -598,25 +598,34 @@ public class LogResource {
 
     /**
      * GET method for retrieving an RSS feed of channels.
-     *
+     * @param allRequestParams Client's request parameters, may be <code>null</code>
+     * @param request {@link HttpServletRequest} from which to construct base URL.
      * @return the name of the RSS feed view, which will be resolved to render the feed
      */
     @GetMapping(path = "/rss", produces = "application/rss+xml")
-    public com.rometools.rome.feed.rss.Channel getRssFeed(HttpServletRequest request) {
+    public com.rometools.rome.feed.rss.Channel getRssFeed(@RequestParam MultiValueMap<String, String> allRequestParams, HttpServletRequest request) {
         String baseUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + "/" + request.getContextPath();
-        MultiValueMap<String, String> baseParams = new LinkedMultiValueMap<>();
+        if (allRequestParams == null) {
+            allRequestParams = new LinkedMultiValueMap<>();
+        }
 
         Instant now = Instant.now();
-        String endTime = DateTimeFormatter.ofPattern(MILLI_PATTERN).withZone(ZoneId.systemDefault()).format(now);
-        String startTime = DateTimeFormatter.ofPattern(MILLI_PATTERN).withZone(ZoneId.systemDefault()).format(now.minus(Duration.ofDays(7)));
-        logger.log(Level.INFO, "Using start and end time " + startTime + " " + endTime);
-        baseParams.set("end", endTime);
-        baseParams.set("start", startTime);
-        baseParams.set("from", "0");
-        baseParams.set("size", "100");
+        if (allRequestParams.get("start") == null || allRequestParams.get("start").isEmpty()) {
+            allRequestParams.put("start", List.of(DateTimeFormatter.ofPattern(MILLI_PATTERN).withZone(ZoneId.systemDefault()).format(now.minus(Duration.ofDays(7)))));
+        }
+        if (allRequestParams.get("end") == null || allRequestParams.get("end").isEmpty()) {
+            allRequestParams.put("end", List.of(DateTimeFormatter.ofPattern(MILLI_PATTERN).withZone(ZoneId.systemDefault()).format(now)));
+        }
+        if (allRequestParams.get("from") == null || allRequestParams.get("from").isEmpty()) {
+            allRequestParams.put("from", List.of("0"));
+        }
+        if (allRequestParams.get("size") == null || allRequestParams.get("size").isEmpty()) {
+            allRequestParams.put("size", List.of("100"));
+        }
 
-        SearchResult searchResult = logRepository.search(baseParams);
-        if (searchResult != null) {
+        Object result = search(request.getHeader("User-Agent"), allRequestParams).getBody();
+
+        if (result instanceof SearchResult searchResult) {
             return RssFeedUtil.fromLogEntries(searchResult.getLogs(), baseUrl);
         } else {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to find entries");

@@ -6,27 +6,34 @@
 package org.phoebus.olog.security;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Condition;
+import org.springframework.context.annotation.ConditionContext;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
+import org.springframework.core.type.AnnotatedTypeMetadata;
 import org.springframework.ldap.core.support.DefaultTlsDirContextAuthenticationStrategy;
-import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.ldap.LdapBindAuthenticationManagerFactory;
 import org.springframework.security.ldap.DefaultSpringSecurityContextSource;
+import org.springframework.security.ldap.authentication.BindAuthenticator;
+import org.springframework.security.ldap.authentication.LdapAuthenticationProvider;
+import org.springframework.security.ldap.search.FilterBasedLdapUserSearch;
 import org.springframework.security.ldap.userdetails.DefaultLdapAuthoritiesPopulator;
 import org.springframework.security.ldap.userdetails.LdapAuthoritiesPopulator;
 
+import java.util.Arrays;
+
 /**
  * Security config for LDAP authentication/authorization. Instantiated only if runtime property
- * <code>authenticationManager</code> is set to <code>ldap</code>.
+ * <code>authenticationProviders</code> contains <code>ldap</code>.
  */
 @SuppressWarnings("unused")
 @EnableWebSecurity
 @Configuration
-@ConditionalOnProperty(value = "authenticationManager", havingValue = "ldap")
-@PropertySource("${propertySource:classpath:/security/ldap.properties}")
+@Conditional(value = LdapSecurityConfig.LdapCondition.class)
+@PropertySource("${ldapPropertySource}")
 public class LdapSecurityConfig extends WebSecurityConfig {
 
     @Value("${ldap.enabled:false}")
@@ -52,26 +59,20 @@ public class LdapSecurityConfig extends WebSecurityConfig {
     @Value("${ldap.user.search.filter}")
     String ldap_user_search_filter;
 
-    @Bean
-    public AuthenticationManager authenticationManager(DefaultSpringSecurityContextSource contextSource) {
-        LdapBindAuthenticationManagerFactory factory = new LdapBindAuthenticationManagerFactory(
-                contextSource);
-        if (ldap_user_dn_pattern != null && !ldap_user_dn_pattern.isEmpty()) {
-            factory.setUserDnPatterns(ldap_user_dn_pattern);
-        }
-        if (ldap_user_search_filter != null && !ldap_user_search_filter.isEmpty()) {
-            factory.setUserSearchFilter(ldap_user_search_filter);
-        }
-        if (ldap_user_search_base != null && !ldap_user_search_base.isEmpty()) {
-            factory.setUserSearchBase(ldap_user_search_base);
-        }
-        factory.setLdapAuthoritiesPopulator(ldapAuthoritiesPopulator(contextSource));
+    @Bean(WebSecurityConfig.LDAP)
+    public AuthenticationProvider authenticationProvider() {
+        DefaultSpringSecurityContextSource defaultSpringSecurityContextSource = defaultSpringSecurityContextSource();
+        BindAuthenticator authenticator = new BindAuthenticator(defaultSpringSecurityContextSource);
+        authenticator.setUserDnPatterns(new String[]{ldap_user_dn_pattern});
+        FilterBasedLdapUserSearch filterBasedLdapUserSearch =
+                new FilterBasedLdapUserSearch(ldap_user_search_base, ldap_user_search_filter, defaultSpringSecurityContextSource);
+        authenticator.setUserSearch(filterBasedLdapUserSearch);
 
-        return factory.createAuthenticationManager();
+        return new LdapAuthenticationProvider(authenticator,
+                ldapAuthoritiesPopulator(defaultSpringSecurityContextSource));
     }
 
-    @Bean
-    public LdapAuthoritiesPopulator ldapAuthoritiesPopulator(DefaultSpringSecurityContextSource contextSource) {
+    private LdapAuthoritiesPopulator ldapAuthoritiesPopulator(DefaultSpringSecurityContextSource contextSource) {
         DefaultLdapAuthoritiesPopulator myAuthPopulator =
                 new DefaultLdapAuthoritiesPopulator(contextSource, ldap_groups_search_base);
         myAuthPopulator.setGroupSearchFilter(ldap_groups_search_pattern);
@@ -81,8 +82,7 @@ public class LdapSecurityConfig extends WebSecurityConfig {
         return myAuthPopulator;
     }
 
-    @Bean
-    public DefaultSpringSecurityContextSource defaultSpringSecurityContextSource() {
+    private DefaultSpringSecurityContextSource defaultSpringSecurityContextSource() {
         DefaultSpringSecurityContextSource contextSource = new DefaultSpringSecurityContextSource(ldap_url);
         if (ldap_manager_dn != null && !ldap_manager_dn.isEmpty() && ldap_manager_password != null && !ldap_manager_password.isEmpty()) {
             contextSource.setUserDn(ldap_manager_dn);
@@ -94,5 +94,17 @@ public class LdapSecurityConfig extends WebSecurityConfig {
         contextSource.afterPropertiesSet();
 
         return contextSource;
+    }
+
+    public static class LdapCondition implements Condition {
+        @Override
+        public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
+            String value = context.getEnvironment().getProperty(WebSecurityConfig.PROVIDER_LIST_PROPERTY_NAME);
+            if (value == null || value.isEmpty()) {
+                return false;
+            }
+            String[] values = value.split(",");
+            return Arrays.asList(values).contains(WebSecurityConfig.LDAP);
+        }
     }
 }
