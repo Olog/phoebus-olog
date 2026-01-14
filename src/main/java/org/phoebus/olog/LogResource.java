@@ -7,6 +7,10 @@ package org.phoebus.olog;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.tika.detect.DefaultDetector;
+import org.apache.tika.detect.Detector;
+import org.apache.tika.metadata.Metadata;
+import org.apache.tika.metadata.TikaCoreProperties;
 import org.phoebus.olog.entity.Attachment;
 import org.phoebus.olog.entity.Log;
 import org.phoebus.olog.entity.LogEntryGroupHelper;
@@ -45,7 +49,13 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.security.Principal;
 import java.text.MessageFormat;
 import java.time.Duration;
@@ -54,6 +64,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -114,6 +125,9 @@ public class LogResource {
     @SuppressWarnings("unused")
     @Autowired
     private WebSocketService webSocketService;
+
+    @Autowired
+    private Detector detector;
 
     /**
      * Custom HTTP header that client may send in order to identify itself. This is logged for some of the
@@ -287,7 +301,10 @@ public class LogResource {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, TextUtil.ATTACHMENT_DATA_INVALID);
         }
 
-        if (hasHeicFiles(files)) {
+        try{
+            saveToFileAndCheckHeic(files);
+        }
+        catch (IllegalArgumentException exception) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, TextUtil.ATTACHMENT_HEIC_NOT_SUPPORTED);
         }
 
@@ -580,27 +597,6 @@ public class LogResource {
     }
 
     /**
-     * Checks for heic(s) file extension on the original file name.
-     * If a {@link MultipartFile} file does not specify an original file name,
-     * it cannot be evaluated and is then not considered to be a heic file.
-     *
-     * <p>
-     * Ideally Apache Tika should be used to detect heic content.
-     * </p>
-     *
-     * @param files Array of {@link MultipartFile}s to check.
-     * @return <code>true</code> if heic(s) file is detected, otherwise <code>false</code>.
-     */
-    private boolean hasHeicFiles(MultipartFile[] files) {
-        if (files == null || files.length == 0) {
-            return false;
-        }
-        return Arrays.stream(files).filter(f ->
-                (f.getOriginalFilename() != null &&
-                        (f.getOriginalFilename().toLowerCase().endsWith(".heic") || f.getOriginalFilename().toLowerCase().endsWith(".heics")))).findFirst().isPresent();
-    }
-
-    /**
      * GET method for retrieving an RSS feed of channels.
      *
      * @return the name of the RSS feed view, which will be resolved to render the feed
@@ -626,4 +622,49 @@ public class LogResource {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to find entries");
         }
     }
+
+    /**
+     * For each {@link MultipartFile} in the provided list, this method will first create a temporary file from the
+     * {@link MultipartFile}'s {@link InputStream}. Then
+     * @param multipartFiles
+     * @return
+     */
+    protected List<File> saveToFileAndCheckHeic(MultipartFile[] multipartFiles){
+        if (multipartFiles == null || multipartFiles.length == 0) {
+            return null;
+        }
+
+        List<File> attachmentFiles = new ArrayList<>();
+        for (MultipartFile multipartFile : multipartFiles) {
+            try {
+                //File tempFile = Files.createTempFile(null, null).toFile();
+                //tempFile.deleteOnExit();
+                //attachmentFiles.add(tempFile);
+                //Files.copy(multipartFile.getInputStream(), tempFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                Metadata metadata = new Metadata();
+                metadata.add(TikaCoreProperties.RESOURCE_NAME_KEY, multipartFile.getName());
+                //InputStream fileInputStream = new BufferedInputStream(new FileInputStream(tempFile));
+                org.apache.tika.mime.MediaType mediaType =  detector.detect(multipartFile.getInputStream(), metadata);
+                String type = mediaType.getBaseType().toString().toLowerCase();
+                if(type.contains("heic") || type.contains("heif")){
+                    attachmentFiles.forEach(file -> {
+                        if(file.exists()){
+                            file.delete();
+                        }
+                    });
+                    throw new IllegalArgumentException("Encountered HEIC file in attachments upload");
+                }
+            } catch (IOException e) {
+                logger.log(Level.WARNING, "Failed to save attachment file", e);
+                attachmentFiles.forEach(file -> {
+                    if(file.exists()){
+                        file.delete();
+                    }
+                });
+                throw new RuntimeException(e);
+            }
+        }
+        return attachmentFiles;
+    }
+
 }

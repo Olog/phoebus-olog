@@ -54,8 +54,13 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
@@ -67,6 +72,8 @@ import java.util.TreeSet;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.argThat;
@@ -107,6 +114,9 @@ public class LogResourceTest extends ResourcesTestBase {
 
     @Autowired
     private WebSocketService webSocketService;
+
+    @Autowired
+    private LogResource logResource;
 
     private static Log log1;
     private static Log log2;
@@ -723,5 +733,54 @@ public class LogResourceTest extends ResourcesTestBase {
         } catch (Exception ex) {
             fail("Failed to make request", ex);
         }
+    }
+
+    @Test
+    public void testAnalyzeHeic() throws IOException{
+        MultipartFile multipartFile = new MultipartFile() {
+            @Override
+            public String getName() {
+                return "IMG_1.heic";
+            }
+
+            @Override
+            public String getOriginalFilename() {
+                return "IMG_1.heic";
+            }
+
+            @Override
+            public String getContentType() {
+                return "image/heic";
+            }
+
+            @Override
+            public boolean isEmpty() {
+                return false;
+            }
+
+            @Override
+            public long getSize() {
+                return 0;
+            }
+
+            @Override
+            public byte[] getBytes() throws IOException {
+                return new byte[0];
+            }
+
+            @Override
+            public InputStream getInputStream() throws IOException {
+                return getClass().getResourceAsStream("/IMG_1.heic");
+            }
+
+            @Override
+            public void transferTo(File dest) throws IOException, IllegalStateException {
+
+            }
+        };
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            logResource.saveToFileAndCheckHeic(new MultipartFile[]{multipartFile});
+        });
     }
 }
