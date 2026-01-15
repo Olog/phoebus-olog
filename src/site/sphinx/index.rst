@@ -15,6 +15,10 @@ Key features:
    with support for image size and tables. Clients may request a HTML formatted quick reference (maintained
    in the project) resource using an URL like http(s)://url.to.service/CommonmarkCheatsheet.html.
 
+Limitations:
+ - While attachments can be of any type (images, videos, pdfs...), HEIC/HEIF images cannot be uploaded as this
+   format is not supported in all web browsers, and not supported in the Phoebus Olog client. This format is the default
+   image format used by the default iOS camera app.
 
 A Log Entry:
 ############

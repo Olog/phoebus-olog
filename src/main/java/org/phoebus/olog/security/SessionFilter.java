@@ -18,7 +18,6 @@
 
 package org.phoebus.olog.security;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
@@ -53,8 +52,7 @@ import java.util.stream.Collectors;
  * <p>
  * This class should not be instantiated as a bean in the application configuration. If it is, the
  * <code>doFilter()</code> method will be called for each endpoint URI, effectively defeating the purpose of the
- * configuration of ignored URI patterns set up in the Spring Security context, see
- * {@link WebSecurityConfig)}.
+ * configuration of ignored URI patterns set up in the Spring Security context, see {@link WebSecurityConfig}.
  */
 public class SessionFilter extends GenericFilterBean {
 

@@ -58,7 +58,6 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Instant;
@@ -73,7 +72,6 @@ import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.argThat;
@@ -121,6 +119,9 @@ public class LogResourceTest extends ResourcesTestBase {
     private static Log log1;
     private static Log log2;
 
+    private static MultipartFile multipartFile;
+    private static Attachment attachment;
+
     private static Logbook logbook1;
     private static Logbook logbook2;
 
@@ -138,12 +139,57 @@ public class LogResourceTest extends ResourcesTestBase {
         tag1 = new Tag("tag1");
         tag2 = new Tag("tag2");
 
+        multipartFile = new MultipartFile() {
+            @Override
+            public String getName() {
+                return "Tulips.jpg";
+            }
+
+            @Override
+            public String getOriginalFilename() {
+                return "Tulips.jpg";
+            }
+
+            @Override
+            public String getContentType() {
+                return "image/jpg";
+            }
+
+            @Override
+            public boolean isEmpty() {
+                return false;
+            }
+
+            @Override
+            public long getSize() {
+                return 0;
+            }
+
+            @Override
+            public byte[] getBytes() throws IOException {
+                return new byte[0];
+            }
+
+            @Override
+            public InputStream getInputStream() throws IOException {
+                return getClass().getResourceAsStream("/Tulips.jpg");
+            }
+
+            @Override
+            public void transferTo(File dest) throws IOException, IllegalStateException {
+
+            }
+        };
+
+        attachment = new Attachment("attachment1", multipartFile, "Tulips.jpg", "image");
+
         log1 = LogBuilder.createLog()
                 .id(1L)
                 .owner("owner")
                 .title("title")
                 .withLogbooks(Set.of(logbook1, logbook2))
                 .description("description1")
+                .withAttachment(attachment)
                 .withTags(Set.of(tag1, tag2))
                 .createDate(now)
                 .level("Urgent")
@@ -160,7 +206,7 @@ public class LogResourceTest extends ResourcesTestBase {
     }
 
     @AfterEach
-    public void resetMocks(){
+    public void resetMocks() {
         reset(logRepository, logbookRepository, tagRepository, webSocketService);
     }
 
@@ -174,6 +220,14 @@ public class LogResourceTest extends ResourcesTestBase {
         Log log = objectMapper.readValue(result.getResponse().getContentAsString(), Log.class);
         assertEquals("description1", log.getDescription());
         verify(logRepository, times(1)).findById("1");
+    }
+
+    @Test
+    void testGetLogByInvalidId() throws Exception {
+        when(logRepository.findById("1")).thenAnswer(invocationOnMock -> Optional.empty());
+
+        MockHttpServletRequestBuilder request = get("/" + OlogResourceDescriptors.LOG_RESOURCE_URI + "/1");
+        mockMvc.perform(request).andExpect(status().isNotFound());
     }
 
     @Test
@@ -327,16 +381,30 @@ public class LogResourceTest extends ResourcesTestBase {
         mockMvc.perform(request).andExpect(status().isBadRequest());
     }
 
-    /**
-     * Tests only endpoint URL.
-     *
-     * @throws Exception
-     */
     @Test
     void testGetAttachment() throws Exception {
+        when(logRepository.findById("1")).thenReturn(Optional.of(log1));
+        when(attachmentRepository.findById("attachment1")).thenReturn(Optional.of(attachment));
+        MockHttpServletRequestBuilder request = get("/" + OlogResourceDescriptors.LOG_RESOURCE_URI
+                + "/attachments/1/Tulips.jpg");
+        mockMvc.perform(request).andExpect(status().isOk());
+    }
+
+    @Test
+    void testGetNonExistingAttachment() throws Exception {
+
+        when(logRepository.findById("1")).thenReturn(Optional.of(log1));
+        when(attachmentRepository.findById("attachment1")).thenReturn(Optional.empty());
+        MockHttpServletRequestBuilder request = get("/" + OlogResourceDescriptors.LOG_RESOURCE_URI
+                + "/attachments/1/Tulips.jpg");
+        mockMvc.perform(request).andExpect(status().isNotFound());
+    }
+
+    @Test
+    void testGetAttachmentInvalidLogId() throws Exception {
         MockHttpServletRequestBuilder request = get("/" + OlogResourceDescriptors.LOG_RESOURCE_URI
                 + "/attachments/1/attachmentName");
-        mockMvc.perform(request).andExpect(status().isOk());
+        mockMvc.perform(request).andExpect(status().isNotFound());
     }
 
     @Test
@@ -394,7 +462,7 @@ public class LogResourceTest extends ResourcesTestBase {
         log.setAttachments(attachments);
         MockMultipartFile file1 =
                 new MockMultipartFile("files", "filename1.txt", "text/plain", "some xml".getBytes());
-        MockMultipartFile log1 = new MockMultipartFile("logEntry", "","application/json", objectMapper.writeValueAsString(log).getBytes());
+        MockMultipartFile log1 = new MockMultipartFile("logEntry", "", "application/json", objectMapper.writeValueAsString(log).getBytes());
 
         when(logbookRepository.findAll()).thenReturn(Arrays.asList(logbook1, logbook2));
         when(tagRepository.findAll()).thenReturn(Arrays.asList(tag1, tag2));
@@ -404,11 +472,11 @@ public class LogResourceTest extends ResourcesTestBase {
         MockHttpServletRequestBuilder request =
                 MockMvcRequestBuilders.multipart(HttpMethod.PUT,
                                 "/" + OlogResourceDescriptors.LOG_RESOURCE_URI + "/multipart")
-                .file(file1)
-                .file(log1)
-                .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
-                .header(HttpHeaders.CONTENT_TYPE, "multipart/form-data")
-                .contentType(JSON);
+                        .file(file1)
+                        .file(log1)
+                        .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
+                        .header(HttpHeaders.CONTENT_TYPE, "multipart/form-data")
+                        .contentType(JSON);
         MvcResult result = mockMvc.perform(request).andExpect(status().isOk()).andReturn();
 
         Log savedLog = objectMapper.readValue(result.getResponse().getContentAsString(), Log.class);
@@ -430,7 +498,7 @@ public class LogResourceTest extends ResourcesTestBase {
                 .modifyDate(now)
                 .level("Urgent")
                 .build();
-        MockMultipartFile log1 = new MockMultipartFile("logEntry", "","application/json", objectMapper.writeValueAsString(log).getBytes());
+        MockMultipartFile log1 = new MockMultipartFile("logEntry", "", "application/json", objectMapper.writeValueAsString(log).getBytes());
 
         when(logbookRepository.findAll()).thenReturn(Arrays.asList(logbook1, logbook2));
         when(tagRepository.findAll()).thenReturn(Arrays.asList(tag1, tag2));
@@ -476,7 +544,7 @@ public class LogResourceTest extends ResourcesTestBase {
         log.setAttachments(attachments);
         MockMultipartFile file1 =
                 new MockMultipartFile("files", "filename1.txt", "text/plain", "some xml".getBytes());
-        MockMultipartFile log1 = new MockMultipartFile("logEntry", "","application/json", objectMapper.writeValueAsString(log).getBytes());
+        MockMultipartFile log1 = new MockMultipartFile("logEntry", "", "application/json", objectMapper.writeValueAsString(log).getBytes());
 
         when(logbookRepository.findAll()).thenReturn(Arrays.asList(logbook1, logbook2));
         when(tagRepository.findAll()).thenReturn(Arrays.asList(tag1, tag2));
@@ -492,46 +560,6 @@ public class LogResourceTest extends ResourcesTestBase {
                         .contentType(JSON);
         mockMvc.perform(request).andExpect(status().isBadRequest());
         verify(webSocketService, Mockito.never()).sendMessageToClients(Mockito.any(WebSocketMessage.class));
-    }
-
-    @Test
-    void testCreateLogMultipartFileHeicAndAttachment() throws Exception {
-        Attachment attachment = new Attachment();
-        attachment.setId("attachmentId");
-        attachment.setFilename("filename1.heic");
-        Log log = LogBuilder.createLog()
-                .id(1L)
-                .owner("user")
-                .title("title")
-                .withLogbooks(Set.of(logbook1, logbook2))
-                .withTags(Set.of(tag1, tag2))
-                .source("description1")
-                .description("description1")
-                .createDate(now)
-                .modifyDate(now)
-                .level("Urgent")
-                .build();
-        SortedSet<Attachment> attachments = new TreeSet<>();
-        attachments.add(attachment);
-        log.setAttachments(attachments);
-        MockMultipartFile file1 =
-                new MockMultipartFile("files", "filename1.heic", "text/plain", "some xml".getBytes());
-        MockMultipartFile log1 = new MockMultipartFile("logEntry", "","application/json", objectMapper.writeValueAsString(log).getBytes());
-
-        when(logbookRepository.findAll()).thenReturn(Arrays.asList(logbook1, logbook2));
-        when(tagRepository.findAll()).thenReturn(Arrays.asList(tag1, tag2));
-        when(logRepository.save(argThat(new LogMatcher(log)))).thenReturn(log);
-        when(logRepository.findById("1")).thenReturn(Optional.of(log));
-        MockHttpServletRequestBuilder request =
-                MockMvcRequestBuilders.multipart(HttpMethod.PUT,
-                                "/" + OlogResourceDescriptors.LOG_RESOURCE_URI + "/multipart")
-                        .file(file1)
-                        .file(log1)
-                        .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
-                        .header(HttpHeaders.CONTENT_TYPE, "multipart/form-data")
-                        .contentType(JSON);
-        mockMvc.perform(request).andExpect(status().isBadRequest());
-
     }
 
     @Test
@@ -556,7 +584,7 @@ public class LogResourceTest extends ResourcesTestBase {
         log.setAttachments(attachments);
         MockMultipartFile file1 =
                 new MockMultipartFile("files", null, "text/plain", "some xml".getBytes());
-        MockMultipartFile log1 = new MockMultipartFile("logEntry", "","application/json", objectMapper.writeValueAsString(log).getBytes());
+        MockMultipartFile log1 = new MockMultipartFile("logEntry", "", "application/json", objectMapper.writeValueAsString(log).getBytes());
 
         when(logbookRepository.findAll()).thenReturn(Arrays.asList(logbook1, logbook2));
         when(tagRepository.findAll()).thenReturn(Arrays.asList(tag1, tag2));
@@ -718,18 +746,18 @@ public class LogResourceTest extends ResourcesTestBase {
         when(logRepository.search(any())).thenReturn(new SearchResult(2, List.of(log1Rss, log2Rss)));
 
         MockHttpServletRequestBuilder request = get("/" + OlogResourceDescriptors.LOG_RESOURCE_URI + "/rss")
-            .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION);
+                .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION);
         try {
             mockMvc.perform(request)
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_RSS_XML_VALUE + ";charset=UTF-8"))
-                .andExpect(content().string(allOf(
-                    containsString("<channel>"),
-                    containsString(log1Rss.getDescription()),
-                    containsString(log2Rss.getDescription()),
-                    containsString(log1Rss.getTitle()),
-                    containsString(log2Rss.getTitle())
-                )));
+                    .andExpect(status().isOk())
+                    .andExpect(content().contentType(MediaType.APPLICATION_RSS_XML_VALUE + ";charset=UTF-8"))
+                    .andExpect(content().string(allOf(
+                            containsString("<channel>"),
+                            containsString(log1Rss.getDescription()),
+                            containsString(log2Rss.getDescription()),
+                            containsString(log1Rss.getTitle()),
+                            containsString(log2Rss.getTitle())
+                    )));
         } catch (Exception ex) {
             fail("Failed to make request", ex);
         }
@@ -780,8 +808,15 @@ public class LogResourceTest extends ResourcesTestBase {
         };
 
         assertThrows(IllegalArgumentException.class, () -> {
-            logResource.saveToFileAndCheckHeic(new MultipartFile[]{multipartFile});
+            logResource.checkSupportedAttachmentTypes(new MultipartFile[]{multipartFile});
         });
+    }
+
+    @Test
+    public void testAnalyzeNotHeic() throws IOException {
+        List<MultipartFile> multipartFiles = logResource.checkSupportedAttachmentTypes(new MultipartFile[]{multipartFile});
+        assertEquals(multipartFiles.size(), 1);
+
     }
 
     void testRssFeedCustomRequestParams() {
@@ -813,4 +848,5 @@ public class LogResourceTest extends ResourcesTestBase {
             fail("Failed to make request", ex);
         }
     }
+
 }
