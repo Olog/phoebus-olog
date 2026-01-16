@@ -76,7 +76,7 @@ class LogResourceIT {
             Log createdLog = logRepository.save(log);
 
             String attachmentId = createdLog.getAttachments().iterator().next().getId();
-            Resource a = logResource.findResources(createdLog.getId().toString(), testFile.getName()).getBody();
+            Resource a = logResource.getAttachment(createdLog.getId().toString(), testFile.getName()).getBody();
 
             File foundTestFile = new File("LogResourceIT_attachment_" + testAttachment.getId() + "_" + testAttachment.getFilename());
             Files.copy(a.getInputStream(), foundTestFile.toPath());

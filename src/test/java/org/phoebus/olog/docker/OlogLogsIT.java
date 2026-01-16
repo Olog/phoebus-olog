@@ -77,7 +77,6 @@ class OlogLogsIT {
     //     List Logs / Query by Pattern        .../logs                                             GET
     //     Create a Log                        .../logs                                             PUT
     //     Upload attachment                   .../logs/attachments/{logId}                         POST
-    //     Upload multiple attachments         .../logs/attachments-multi/{logId}                   POST
     //     ------------------------------------------------------------------------------------------------
 
     @Container

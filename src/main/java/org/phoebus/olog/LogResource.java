@@ -7,6 +7,9 @@ package org.phoebus.olog;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.tika.detect.Detector;
+import org.apache.tika.metadata.Metadata;
+import org.apache.tika.metadata.TikaCoreProperties;
 import org.phoebus.olog.entity.Attachment;
 import org.phoebus.olog.entity.Log;
 import org.phoebus.olog.entity.LogEntryGroupHelper;
@@ -45,7 +48,10 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.BufferedInputStream;
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.security.Principal;
 import java.text.MessageFormat;
 import java.time.Duration;
@@ -53,7 +59,6 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -115,6 +120,9 @@ public class LogResource {
     @Autowired
     private WebSocketService webSocketService;
 
+    @Autowired
+    private Detector detector;
+
     /**
      * Custom HTTP header that client may send in order to identify itself. This is logged for some of the
      * endpoints in this controller.
@@ -143,17 +151,20 @@ public class LogResource {
     }
 
     @GetMapping("/attachments/{logId}/{attachmentName}")
-    public ResponseEntity<Resource> findResources(@PathVariable(name = "logId") String logId, @PathVariable(name = "attachmentName") String attachmentName) {
+    public ResponseEntity<Resource> getAttachment(@PathVariable(name = "logId") String logId, @PathVariable(name = "attachmentName") String attachmentName) {
         Optional<Log> log = logRepository.findById(logId);
         if (log.isPresent()) {
             Set<Attachment> attachments = log.get().getAttachments().stream().filter(attachment -> attachment.getFilename().equals(attachmentName)).collect(Collectors.toSet());
             if (attachments.size() == 1) {
                 Attachment attachment = attachments.iterator().next();
                 this.logger.log(Level.INFO, () -> MessageFormat.format(TextUtil.ATTACHMENT_REQUEST_DETAILS, attachment.getId(), attachment.getFilename()));
-                Attachment foundAttachment = attachmentRepository.findById(attachment.getId()).get();
+                Optional<Attachment> attachmentOptional = attachmentRepository.findById(attachment.getId());
+                if (attachmentOptional.isEmpty()) {
+                    throw new ResponseStatusException(HttpStatus.NOT_FOUND, MessageFormat.format(TextUtil.ATTACHMENT_UNABLE_TO_RETRIEVE_FOR_ID, attachmentName, logId));
+                }
                 InputStreamResource resource;
                 try {
-                    resource = new InputStreamResource(foundAttachment.getAttachment().getInputStream());
+                    resource = new InputStreamResource(attachmentOptional.get().getAttachment().getInputStream());
                     ContentDisposition contentDisposition = ContentDisposition.builder("attachment")
                             .filename(attachmentName)
                             .build();
@@ -167,13 +178,16 @@ public class LogResource {
                 } catch (IOException e) {
                     Logger.getLogger(LogResource.class.getName())
                             .log(Level.WARNING, MessageFormat.format(TextUtil.ATTACHMENT_UNABLE_TO_RETRIEVE_FOR_ID, attachmentName, logId), e);
+                    throw new ResponseStatusException(HttpStatus.NOT_FOUND, MessageFormat.format(TextUtil.ATTACHMENT_UNABLE_TO_RETRIEVE_FOR_ID, attachmentName, logId));
+
                 }
             } else {
                 Logger.getLogger(LogResource.class.getName())
                         .log(Level.WARNING, () -> MessageFormat.format(TextUtil.ATTACHMENTS_NAMED_FOUND_FOR_ID, attachments.size(), attachmentName, logId));
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, MessageFormat.format(TextUtil.ATTACHMENT_UNABLE_TO_RETRIEVE_FOR_ID, attachmentName, logId));
             }
         }
-        return null;
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, MessageFormat.format(TextUtil.ATTACHMENT_UNABLE_TO_RETRIEVE_FOR_ID, attachmentName, logId));
     }
 
     /**
@@ -186,11 +200,10 @@ public class LogResource {
      * empty list if no matching logs are found.
      */
     @GetMapping()
-    @Deprecated
     public ResponseEntity<?> findLogs(@RequestHeader(value = OLOG_CLIENT_INFO_HEADER, required = false, defaultValue = "n/a") String clientInfo, @RequestParam MultiValueMap<String, String> allRequestParams) {
         ResponseEntity responseEntity = search(clientInfo, allRequestParams);
-        if(responseEntity.getStatusCode().equals(HttpStatus.OK)){
-            return new ResponseEntity<>(((SearchResult)responseEntity.getBody()).getLogs(), HttpStatus.OK);
+        if (responseEntity.getStatusCode().equals(HttpStatus.OK)) {
+            return new ResponseEntity<>(((SearchResult) responseEntity.getBody()).getLogs(), HttpStatus.OK);
         }
         return responseEntity;
     }
@@ -220,6 +233,10 @@ public class LogResource {
      * <p>
      * This may return a HTTP 400 if for instance <code>inReplyTo</code> does not identify an existing log entry,
      * or if the logbooks listed in the {@link Log} object contains invalid (i.e. non-existing) logbooks.
+     * </p>
+     * <p>
+     * Primary use case is upload of log entry without attachments as this type of request is easier to
+     * construct, i.e. client need not create a request with multipart items.
      * </p>
      *
      * @param clientInfo A string sent by client identifying it with respect to version and platform.
@@ -302,15 +319,19 @@ public class LogResource {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, TextUtil.ATTACHMENT_DATA_INVALID);
         }
 
-        if (hasHeicFiles(files)) {
+        List<MultipartFile> multipartFiles;
+
+        try {
+            multipartFiles = checkSupportedAttachmentTypes(files);
+        } catch (IllegalArgumentException exception) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, TextUtil.ATTACHMENT_HEIC_NOT_SUPPORTED);
         }
 
         Log newLogEntry = createLog(clientInfo, markup, inReplyTo, logEntry, principal);
 
         if (files != null) {
-            for (int i = 0; i < files.length; i++) {
-                String originalFileName = files[i].getOriginalFilename();
+            for (MultipartFile multipartFile : multipartFiles) {
+                String originalFileName = multipartFile.getOriginalFilename();
                 Optional<Attachment> attachment =
                         logEntry.getAttachments().stream()
                                 .filter(a -> a.getFilename() != null && a.getFilename().equals(originalFileName)).findFirst();
@@ -318,8 +339,9 @@ public class LogResource {
                     logger.log(Level.WARNING, () -> MessageFormat.format(TextUtil.ATTACHMENT_FILE_NOT_MATCHED_META_DATA, originalFileName));
                     continue;
                 }
-                uploadAttachment(Long.toString(newLogEntry.getId()),
-                        files[i],
+
+                saveAttachment(Long.toString(newLogEntry.getId()),
+                        multipartFile,
                         originalFileName,
                         attachment.get().getId(),
                         attachment.get().getFileMetadataDescription());
@@ -348,6 +370,36 @@ public class LogResource {
                                 @RequestPart("filename") String filename,
                                 @RequestPart(name = "id", required = false) String id,
                                 @RequestPart(name = "fileMetadataDescription", required = false) String fileMetadataDescription) {
+
+        List<MultipartFile> multipartFiles;
+
+        try {
+            multipartFiles = checkSupportedAttachmentTypes(new MultipartFile[]{file});
+        } catch (IllegalArgumentException exception) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, TextUtil.ATTACHMENT_HEIC_NOT_SUPPORTED);
+        }
+        return saveAttachment(logId,
+                multipartFiles.getFirst(),
+                filename,
+                id,
+                fileMetadataDescription);
+    }
+
+    /**
+     * Saves the content of the {@link MultipartFile} to the database.
+     *
+     * @param logId                   The log id associated with the attachment
+     * @param file                    A {@link MultipartFile} representing the attachment contents
+     * @param filename                The file name as defined by the client, e.g. file name on disk.
+     * @param id                      A unique id for the attachment.
+     * @param fileMetadataDescription Description of the content
+     * @return A {@link Log} where the attachment field has been updated with the saved attachment.
+     */
+    private Log saveAttachment(String logId,
+                               MultipartFile file,
+                               String filename,
+                               String id,
+                               String fileMetadataDescription) {
         Optional<Log> foundLog = logRepository.findById(logId);
         if (logRepository.findById(logId).isPresent()) {
             filename = filename == null || filename.isEmpty() ? file.getName() : filename;
@@ -356,13 +408,11 @@ public class LogResource {
                     : fileMetadataDescription;
             Attachment attachment = new Attachment(id, file, filename, fileMetadataDescription);
             // Store the attachment
-            Attachment createdAttachement = attachmentRepository.save(attachment);
-            // Update the log entry with the id of the stored attachment
-            Log log = foundLog.get();
-            SortedSet<Attachment> existingAttachments = log.getAttachments();
-            existingAttachments.add(createdAttachement);
-            log.setAttachments(existingAttachments);
-            return logRepository.update(log);
+            Attachment createdAttachment = attachmentRepository.save(attachment);
+            SortedSet<Attachment> existingAttachments = foundLog.get().getAttachments();
+            existingAttachments.add(createdAttachment);
+            foundLog.get().setAttachments(existingAttachments);
+            return logRepository.update(foundLog.get());
         } else {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, MessageFormat.format(TextUtil.LOG_NOT_RETRIEVED, logId));
         }
@@ -512,29 +562,6 @@ public class LogResource {
         return log;
     }
 
-    /**
-     * Endpoint supporting upload of multiple files, i.e. saving the client from sending one POST request per file.
-     * Calls {@link #uploadAttachment(String, MultipartFile, String, String, String)} internally, using the original file's
-     * name and content type.
-     *
-     * @param logId A (numerical) id of a {@link Log}
-     * @param files The files subject to upload.
-     * @return The persisted {@link Log} object.
-     */
-    @SuppressWarnings("unused")
-    @PostMapping(value = "/attachments-multi/{logId}", consumes = "multipart/form-data")
-    @Deprecated
-    public Log uploadMultipleAttachments(@PathVariable String logId,
-                                         @RequestPart("file") MultipartFile[] files) {
-        if (logRepository.findById(logId).isPresent()) {
-            for (MultipartFile file : files) {
-                uploadAttachment(logId, file, file.getOriginalFilename(), file.getName(), file.getContentType());
-            }
-            return logRepository.findById(logId).get();
-        } else {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, MessageFormat.format(TextUtil.LOG_NOT_RETRIEVED, logId));
-        }
-    }
 
     /**
      * This will retrieve {@link Property}s from {@link LogPropertyProvider}s, if any are registered
@@ -563,7 +590,7 @@ public class LogResource {
                 completableFutures.stream()
                         .filter(future -> future.isDone() && !future.isCompletedExceptionally())
                         .map(CompletableFuture::join)
-                        .collect(Collectors.toList());
+                        .toList();
 
         providedProperties.forEach(property -> {
             if (property != null && !propertyNames.contains(property.getName())) {
@@ -593,8 +620,8 @@ public class LogResource {
      *
      * @param originalLogEntryId The (Elastic) id of the log entry user wants to reply to.
      * @param log                The contents of the reply entry.
-     * @throws {@link ResponseStatusException} if <code>originalLogEntryId</code> does not identify an
-     *                existing log entry. This will result in the client receiving a HTTP 400 status.
+     * @throws ResponseStatusException if <code>originalLogEntryId</code> does not identify an
+     *                                 existing log entry. This will result in the client receiving a HTTP 400 status.
      */
     private void handleReply(String originalLogEntryId, Log log) {
         try {
@@ -618,50 +645,135 @@ public class LogResource {
     }
 
     /**
-     * Checks for heic(s) file extension on the original file name.
-     * If a {@link MultipartFile} file does not specify an original file name,
-     * it cannot be evaluated and is then not considered to be a heic file.
-     *
-     * <p>
-     * Ideally Apache Tika should be used to detect heic content.
-     * </p>
-     *
-     * @param files Array of {@link MultipartFile}s to check.
-     * @return <code>true</code> if heic(s) file is detected, otherwise <code>false</code>.
-     */
-    private boolean hasHeicFiles(MultipartFile[] files) {
-        if (files == null || files.length == 0) {
-            return false;
-        }
-        return Arrays.stream(files).filter(f ->
-                (f.getOriginalFilename() != null &&
-                        (f.getOriginalFilename().toLowerCase().endsWith(".heic") || f.getOriginalFilename().toLowerCase().endsWith(".heics")))).findFirst().isPresent();
-    }
-
-    /**
      * GET method for retrieving an RSS feed of channels.
      *
+     * @param allRequestParams Client's request parameters, may be <code>null</code>
+     * @param request          {@link HttpServletRequest} from which to construct base URL.
      * @return the name of the RSS feed view, which will be resolved to render the feed
      */
     @GetMapping(path = "/rss", produces = "application/rss+xml")
-    public com.rometools.rome.feed.rss.Channel getRssFeed(HttpServletRequest request) {
+    public com.rometools.rome.feed.rss.Channel getRssFeed(@RequestParam MultiValueMap<String, String> allRequestParams, HttpServletRequest request) {
         String baseUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + "/" + request.getContextPath();
-        MultiValueMap<String, String> baseParams = new LinkedMultiValueMap<>();
+        if (allRequestParams == null) {
+            allRequestParams = new LinkedMultiValueMap<>();
+        }
 
         Instant now = Instant.now();
-        String endTime = DateTimeFormatter.ofPattern(MILLI_PATTERN).withZone(ZoneId.systemDefault()).format(now);
-        String startTime = DateTimeFormatter.ofPattern(MILLI_PATTERN).withZone(ZoneId.systemDefault()).format(now.minus(Duration.ofDays(7)));
-        logger.log(Level.INFO, "Using start and end time " + startTime + " " + endTime);
-        baseParams.set("end", endTime);
-        baseParams.set("start", startTime);
-        baseParams.set("from", "0");
-        baseParams.set("size", "100");
+        if (allRequestParams.get("start") == null || allRequestParams.get("start").isEmpty()) {
+            allRequestParams.put("start", List.of(DateTimeFormatter.ofPattern(MILLI_PATTERN).withZone(ZoneId.systemDefault()).format(now.minus(Duration.ofDays(7)))));
+        }
+        if (allRequestParams.get("end") == null || allRequestParams.get("end").isEmpty()) {
+            allRequestParams.put("end", List.of(DateTimeFormatter.ofPattern(MILLI_PATTERN).withZone(ZoneId.systemDefault()).format(now)));
+        }
+        if (allRequestParams.get("from") == null || allRequestParams.get("from").isEmpty()) {
+            allRequestParams.put("from", List.of("0"));
+        }
+        if (allRequestParams.get("size") == null || allRequestParams.get("size").isEmpty()) {
+            allRequestParams.put("size", List.of("100"));
+        }
 
-        SearchResult searchResult = logRepository.search(baseParams);
-        if (searchResult != null) {
+        Object result = search(request.getHeader("User-Agent"), allRequestParams).getBody();
+
+        if (result instanceof SearchResult searchResult) {
             return RssFeedUtil.fromLogEntries(searchResult.getLogs(), baseUrl);
         } else {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to find entries");
         }
     }
+
+    /**
+     * For each {@link MultipartFile} in the provided list, this method will check the type of attachment in order
+     * to be able to reject unsupported types (e.g. HEIC image files). As it operates on the {@link InputStream} provided
+     * through a {@link MultipartFile}, and in order to be able to consume that stream again when saving to
+     * the attachments database, the original {@link MultipartFile} is cloned to a new one where the {@link InputStream}
+     * is wrapped in a {@link BufferedInputStream}.
+     * <p>
+     * The analysis of content type is delegated to Apache Tika. If an unsupported content type is encountered,
+     * this methid throws an {@link IllegalArgumentException}.
+     * </p>
+     *
+     * @param multipartFiles Array of {@link MultipartFile}s from client as intercepted by the endpoint.
+     * @return A {@link List} of {@link MultipartFile}s where the {@link InputStream} can be consumed again.
+     * @throws IllegalArgumentException if an unsupported content type is encontered.
+     *
+     */
+    protected List<MultipartFile> checkSupportedAttachmentTypes(MultipartFile[] multipartFiles) {
+        if (multipartFiles == null || multipartFiles.length == 0) {
+            return null;
+        }
+
+        List<MultipartFile> attachmentFiles = new ArrayList<>();
+        for (MultipartFile multipartFile : multipartFiles) {
+            try {
+                Metadata metadata = new Metadata();
+                metadata.add(TikaCoreProperties.RESOURCE_NAME_KEY, multipartFile.getName());
+                InputStream inputStream = new BufferedInputStream(multipartFile.getInputStream());
+                org.apache.tika.mime.MediaType mediaType = detector.detect(inputStream, metadata);
+                String type = mediaType.getBaseType().toString().toLowerCase();
+                if (type.contains("heic") || type.contains("heif")) {
+                    throw new IllegalArgumentException("Encountered HEIC file in attachments upload");
+                }
+                attachmentFiles.add(new OlogMultipartFile(multipartFile, inputStream));
+            } catch (IOException e) {
+                logger.log(Level.WARNING, "Failed to read multipart file stream or determine file content", e);
+                throw new RuntimeException(e);
+            }
+        }
+        return attachmentFiles;
+    }
+
+    /**
+     * A {@link MultipartFile} implementation with the purpose of providing a custom {@link InputStream}.
+     */
+    private static final class OlogMultipartFile implements MultipartFile {
+
+        private final MultipartFile originalMultipartFile;
+        private final InputStream inputStream;
+
+        public OlogMultipartFile(MultipartFile originalMultipartFile, InputStream inputStream) {
+            this.originalMultipartFile = originalMultipartFile;
+            this.inputStream = inputStream;
+        }
+
+        @Override
+        public String getName() {
+            return originalMultipartFile.getName();
+        }
+
+        @Override
+        public String getOriginalFilename() {
+            return originalMultipartFile.getOriginalFilename();
+        }
+
+        @Override
+        public String getContentType() {
+            return originalMultipartFile.getContentType();
+        }
+
+        @Override
+        public boolean isEmpty() {
+            return originalMultipartFile.isEmpty();
+        }
+
+        @Override
+        public long getSize() {
+            return originalMultipartFile.getSize();
+        }
+
+        @Override
+        public byte[] getBytes() throws IOException {
+            return originalMultipartFile.getBytes();
+        }
+
+        @Override
+        public InputStream getInputStream() throws IOException {
+            return inputStream;
+        }
+
+        @Override
+        public void transferTo(File dest) throws IOException, IllegalStateException {
+            originalMultipartFile.transferTo(dest);
+        }
+    }
+
 }

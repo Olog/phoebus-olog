@@ -6,27 +6,33 @@
 package org.phoebus.olog.security;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Condition;
+import org.springframework.context.annotation.ConditionContext;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
+import org.springframework.core.type.AnnotatedTypeMetadata;
 import org.springframework.ldap.core.ContextSource;
-import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.ldap.LdapPasswordComparisonAuthenticationManagerFactory;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.ldap.DefaultSpringSecurityContextSource;
+import org.springframework.security.ldap.authentication.LdapAuthenticationProvider;
+import org.springframework.security.ldap.authentication.PasswordComparisonAuthenticator;
 import org.springframework.security.ldap.userdetails.DefaultLdapAuthoritiesPopulator;
+
+import java.util.Arrays;
 
 /**
  * Security config for embedded LDAP authentication/authorization. Instantiated only if runtime property
- * <code>authenticationManager</code> is set to <code>embedded_ldap</code>.
+ * <code>authenticationProviders</code> contains <code>embedded_ldap</code>.
  */
 @SuppressWarnings("unused")
 @EnableWebSecurity
 @Configuration
-@ConditionalOnProperty(value = "authenticationManager", havingValue = "embeddedLdap")
-@PropertySource("${propertySource:classpath:/security/embedded_ldap.properties}")
+@Conditional(value = EmbeddedLdapSecurityConfig.EmbeddedLdapCondition.class)
+@PropertySource("${embeddedLdapPropertySource}")
 public class EmbeddedLdapSecurityConfig extends WebSecurityConfig {
 
     @Value("${embedded_ldap.url:ldap://localhost:8389/dc=olog,dc=local}")
@@ -44,15 +50,17 @@ public class EmbeddedLdapSecurityConfig extends WebSecurityConfig {
     @Value("${embedded_ldap_ldif:classpath:olog.ldif}")
     String embedded_ldap_ldif;
 
-    @Bean
-    public AuthenticationManager authenticationManager(DefaultSpringSecurityContextSource contextSource) {
-        LdapPasswordComparisonAuthenticationManagerFactory factory = new LdapPasswordComparisonAuthenticationManagerFactory(
-                contextSource, new BCryptPasswordEncoder());
-        factory.setUserDnPatterns(embedded_ldap_user_dn_pattern);
-        factory.setLdapAuthoritiesPopulator(defaultLdapAuthoritiesPopulator(contextSource));
+    @Bean(WebSecurityConfig.EMBEDDED_LDAP)
+    public AuthenticationProvider ldapAuthenticationProvider(DefaultSpringSecurityContextSource contextSource) {
 
-        return factory.createAuthenticationManager();
+        PasswordComparisonAuthenticator passwordComparisonAuthenticator = new PasswordComparisonAuthenticator(contextSource);
+        passwordComparisonAuthenticator.setPasswordEncoder(new BCryptPasswordEncoder());
+        passwordComparisonAuthenticator.setUserDnPatterns(new String[]{embedded_ldap_user_dn_pattern});
+
+        return new LdapAuthenticationProvider(passwordComparisonAuthenticator,
+                defaultLdapAuthoritiesPopulator(contextSource));
     }
+
 
     @Bean
     public OlogUnboundIdContainer ldapContainer() {
@@ -66,13 +74,24 @@ public class EmbeddedLdapSecurityConfig extends WebSecurityConfig {
         return new DefaultSpringSecurityContextSource(embedded_ldap_url);
     }
 
-    @Bean
-    public DefaultLdapAuthoritiesPopulator defaultLdapAuthoritiesPopulator(ContextSource contextSource){
+    private DefaultLdapAuthoritiesPopulator defaultLdapAuthoritiesPopulator(ContextSource contextSource) {
         DefaultLdapAuthoritiesPopulator myAuthPopulator = new DefaultLdapAuthoritiesPopulator(contextSource, embedded_ldap_groups_search_base);
         myAuthPopulator.setGroupSearchFilter(embedded_ldap_groups_search_pattern);
         myAuthPopulator.setSearchSubtree(true);
         myAuthPopulator.setIgnorePartialResultException(true);
 
         return myAuthPopulator;
+    }
+
+    public static class EmbeddedLdapCondition implements Condition {
+        @Override
+        public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
+            String value = context.getEnvironment().getProperty(WebSecurityConfig.PROVIDER_LIST_PROPERTY_NAME);
+            if (value == null || value.isEmpty()) {
+                return false;
+            }
+            String[] values = value.split(",");
+            return Arrays.asList(values).contains(WebSecurityConfig.EMBEDDED_LDAP);
+        }
     }
 }

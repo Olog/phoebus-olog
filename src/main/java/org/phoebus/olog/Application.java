@@ -1,5 +1,7 @@
 package org.phoebus.olog;
 
+import org.apache.tika.detect.DefaultDetector;
+import org.apache.tika.detect.Detector;
 import org.phoebus.olog.notification.LogEntryNotifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
@@ -119,5 +121,10 @@ public class Application {
     @Bean
     public LogEntryValidator logEntryValidator() {
         return new LogEntryValidator();
+    }
+
+    @Bean
+    public Detector detector(){
+        return new DefaultDetector();
     }
 }
