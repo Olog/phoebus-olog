@@ -1,0 +1,16 @@
+# Use the default network olog_default.
+version: "3.7"
+services:
+  olog:
+    build: .
+    ports:
+      - "8080:8080"
+      - "8181:8181"
+
+
+# Configure persistent storage for mongo and elastic.
+volumes:
+  olog-esdata:
+    driver: local
+  olog-mongodata:
+    driver: local

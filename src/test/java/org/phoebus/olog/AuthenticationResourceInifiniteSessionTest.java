@@ -18,12 +18,11 @@
 
 package org.phoebus.olog;
 
+import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.phoebus.olog.security.LoginCredentials;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -34,7 +33,6 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
-import javax.servlet.http.Cookie;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -53,18 +51,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class AuthenticationResourceInifiniteSessionTest extends ResourcesTestBase {
 
 
-    @Autowired
-    private AuthenticationManager authenticationManager;
-
     @Test
-    void testSuccessfullLogin() throws Exception {
+    void testSuccessfulLogin() throws Exception {
         SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_ADMIN");
         Authentication mockAuthentication = mock(Authentication.class);
         Set authorities = new HashSet();
         authorities.add(authority);
         when(mockAuthentication.getAuthorities()).thenReturn(authorities);
         Authentication authentication = new UsernamePasswordAuthenticationToken("admin", "adminPass");
-        when(authenticationManager.authenticate(authentication)).thenReturn(mockAuthentication);
         MockHttpServletRequestBuilder request = post("/" + OLOG_SERVICE + "/login")
                 .contentType("application/json")
                 .content(objectMapper.writeValueAsString(new LoginCredentials("admin", "adminPass")));

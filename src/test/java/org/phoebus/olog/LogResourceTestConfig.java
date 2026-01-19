@@ -18,6 +18,8 @@
 
 package org.phoebus.olog;
 
+import org.apache.tika.detect.DefaultDetector;
+import org.apache.tika.detect.Detector;
 import org.mockito.Mockito;
 import org.phoebus.olog.websocket.WebSocketService;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -33,5 +35,10 @@ public class LogResourceTestConfig {
     @Bean
     public WebSocketService webSocketService(){
         return Mockito.mock(WebSocketService.class);
+    }
+
+    @Bean
+    public Detector detector(){
+        return new DefaultDetector();
     }
 }

@@ -18,8 +18,10 @@
 
 package org.phoebus.olog;
 
+import co.elastic.clients.elasticsearch._types.query_dsl.DisMaxQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.NestedQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.server.ResponseStatusException;
@@ -27,6 +29,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.ZonedDateTime;
 import java.util.AbstractMap;
 import java.util.List;
+import java.util.regex.Pattern;
 import java.util.Map;
 import java.util.TimeZone;
 
@@ -36,7 +39,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
-@TestPropertySource(locations = "classpath:no_ldap_test_application.properties")
 class LogSearchUtilTest {
 
     private LogSearchUtil logSearchUtil = new LogSearchUtil();
@@ -109,6 +111,38 @@ class LogSearchUtilTest {
     }
 
     @Test
+    public void testBCrypt() throws Exception{
+       Pattern  BCRYPT_PATTERN = Pattern.compile("\\A\\$2(a|y|b)?\\$(\\d\\d)\\$[./0-9A-Za-z]{53}");
+
+
+    }
+    public void testGetTagsQuery() {
+
+        LogSearchUtil logSearchUtil = new LogSearchUtil();
+
+        Map.Entry<String, List<String>> tagsEntry = new AbstractMap.SimpleEntry<>("tags", List.of("tag1,tag2"));
+
+        Query query = logSearchUtil.getTagsQuery(tagsEntry);
+
+        NestedQuery nestedQuery = (NestedQuery) query._get();
+        DisMaxQuery disMaxQuery = (DisMaxQuery) nestedQuery.query()._get();
+        assertEquals(2, disMaxQuery.queries().size());
+    }
+
+    @Test
+    public void testGetLogbooksQuery() {
+
+        LogSearchUtil logSearchUtil = new LogSearchUtil();
+
+        Map.Entry<String, List<String>> logbooksEntry = new AbstractMap.SimpleEntry<>("logbooks", List.of("logbook1,logbook2"));
+
+        Query query = logSearchUtil.getTagsQuery(logbooksEntry);
+
+        NestedQuery nestedQuery = (NestedQuery) query._get();
+        DisMaxQuery disMaxQuery = (DisMaxQuery) nestedQuery.query()._get();
+        assertEquals(2, disMaxQuery.queries().size());
+    }
+
     public void testGetTimeZone() {
 
         MultiValueMap<String, String> searchParams = new LinkedMultiValueMap<>();
@@ -160,7 +194,7 @@ class LogSearchUtilTest {
         zonedDateTime = logSearchUtil.determineDateAndTime(startParameter, TimeZone.getTimeZone("GMT"));
         assertTrue("2025-10-01T12:00".equals(zonedDateTime.toLocalDateTime().toString()));
 
-        zonedDateTime = logSearchUtil.determineDateAndTime(startParameter, TimeZone.getTimeZone("PST"));
+        zonedDateTime = logSearchUtil.determineDateAndTime(startParameter, TimeZone.getTimeZone("GMT-7"));
         assertTrue("2025-10-01T19:00".equals(zonedDateTime.toLocalDateTime().toString()));
 
         // Date/time outside DST
@@ -172,7 +206,7 @@ class LogSearchUtilTest {
         zonedDateTime = logSearchUtil.determineDateAndTime(startParameter, TimeZone.getTimeZone("GMT"));
         assertTrue("2025-12-01T12:00".equals(zonedDateTime.toLocalDateTime().toString()));
 
-        zonedDateTime = logSearchUtil.determineDateAndTime(startParameter, TimeZone.getTimeZone("PST"));
+        zonedDateTime = logSearchUtil.determineDateAndTime(startParameter, TimeZone.getTimeZone("GMT-8"));
         assertTrue("2025-12-01T20:00".equals(zonedDateTime.toLocalDateTime().toString()));
 
         // Edge case: switch from DST and "ambiguous" time stamp
@@ -186,7 +220,7 @@ class LogSearchUtilTest {
         assertTrue("2025-10-26T02:30".equals(zonedDateTime.toLocalDateTime().toString()));
 
         // US switches 2025-11-02
-        zonedDateTime = logSearchUtil.determineDateAndTime(startParameter, TimeZone.getTimeZone("PST"));
+        zonedDateTime = logSearchUtil.determineDateAndTime(startParameter, TimeZone.getTimeZone("GMT-7"));
         assertTrue("2025-10-26T09:30".equals(zonedDateTime.toLocalDateTime().toString()));
 
         // Edge case: switch to DST and "missing" time stamp
@@ -200,7 +234,7 @@ class LogSearchUtilTest {
         assertTrue("2025-03-30T02:30".equals(zonedDateTime.toLocalDateTime().toString()));
 
         // US switches 2025-03-09
-        zonedDateTime = logSearchUtil.determineDateAndTime(startParameter, TimeZone.getTimeZone("PST"));
+        zonedDateTime = logSearchUtil.determineDateAndTime(startParameter, TimeZone.getTimeZone("GMT-7"));
         assertTrue("2025-03-30T09:30".equals(zonedDateTime.toLocalDateTime().toString())); // Already on DST
 
     }
@@ -219,5 +253,4 @@ class LogSearchUtilTest {
         Map.Entry<String, List<String>> _startParameter = new AbstractMap.SimpleEntry<>("start", List.of("2 months"));
         assertThrows(ResponseStatusException.class, () -> logSearchUtil.determineDateAndTime(_startParameter, TimeZone.getTimeZone("CET")));
     }
-
 }

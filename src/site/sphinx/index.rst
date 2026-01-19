@@ -15,6 +15,10 @@ Key features:
    with support for image size and tables. Clients may request a HTML formatted quick reference (maintained
    in the project) resource using an URL like http(s)://url.to.service/CommonmarkCheatsheet.html.
 
+Limitations:
+ - While attachments can be of any type (images, videos, pdfs...), HEIC/HEIF images cannot be uploaded as this
+   format is not supported in all web browsers, and not supported in the Phoebus Olog client. This format is the default
+   image format used by the default iOS camera app.
 
 A Log Entry:
 ############
@@ -156,28 +160,9 @@ REST API
 #########
 
 Creating a Log Entry
-***********************
+********************
 
-Create a simple log entry 
-
-NOTE: deprecated, will be removed in future commits. Replaced by https://localhost:8181/Olog/logs/multipart
-**PUT** https://localhost:8181/Olog/logs
-
-.. code-block:: json
-
- {
-      "owner":"log",
-      "description":"Beam Dump due to Major power dip Current Alarms Booster transmitter switched back to lower state.",
-      "level":"Info",
-      "title":"Some title",
-      "logbooks":[
-         {
-            "name":"Operations"
-         }
-      ]
- }
-
-Create a log entry, optionally with file attachments
+Create a log entry
 
 **PUT** https://localhost:8181/Olog/logs/multipart
 
@@ -210,14 +195,18 @@ Client must also be prepared to handle a HTTP 413 (payload too large) response i
 file and request size limits configured in the service.
 
 
-Reply to a log entry. This uses the same end point as when creating a log entry, but client must
+Reply to a log entry
+********************
+
+This uses the same end point as when creating a log entry, but client must
 send the unique id of the log entry to which the new one is a reply.
 
 **PUT** https://localhost:8181/Olog/logs?inReplyTo=<id>
 
 If <id> does not identify an existing log entry, a HTTP 400 status is returned.
 
-Adding an attachment 
+Adding a single attachment
+**************************
 
 **POST** https://localhost:8181/Olog/logs/attachments/{logId}
 
@@ -229,15 +218,6 @@ Adding an attachment
  Content-Type: application/json
  {"image1.png"}
  ------formBoundary
- Content-Disposition: form-data; name="fileMetadataDescription"
- Content-Type: application/json
- {"image/png"}
- ------formBoundary
- Content-Disposition: form-data; name="file "; filename="image1.png"
- Content-Type: application/octet-steam
- {…file content…}
- ------formBoundary--
-
 
 
 Searching for Log Entries
@@ -503,13 +483,28 @@ Authentication
 ##############
 
 In general, non-GET methods are protected, i.e. client needs to send a basic authentication header for each request.
-Alternatively, client may use a session cookie returned upon successful authentication with the login endpoint:
 
-**POST** https://localhost:8181/Olog/login
+The service supports four authentication schemes:
 
-.. code-block:: json
+* In-memory with hard coded username/password, see this `Java source code file`_. This scheme should be used only for evaluation
+or demonstration purposes.
+* Embedded LDAP. With a custom ldif file one may use this in cases where authentication with a production user directory
+is not need or even feasible. Settings for the embedded LDAP server must be defined in a file identified by the
+system property ``embeddedLdapPropertySource``, see also file ``embedded_ldap.properties`` maintained in the project source.
+* LDAP. Authentication with a remote LDAP service. Settings needed to interact with the service must be defined in a file identified by the
+system property ``ldapPropertySource``, see also file ``ldap.properties`` maintained in the project source.
+* Active Directory. Authentication with a remote Active Directory service. Settings needed to interact with the service must be defined in a file identified by the
+system property ``activeDirectoryPropertySource``, see also file ``active_directory.properties`` maintained in the project source.
 
-{"username":"johndoe", "password":"undisclosed"}
+By default the authentication scheme is in-memory. To use another scheme, the system property ``authenticationProviders``
+can define a different one, or even multiple schemes. These are identified as ``inMemory``,``embeddedLdap``,``ldap`` and
+``active_directory``.
+Thus when launching the service one needs to add to the Java command line like so:
+``-DauthenticationProviders=ldap``
+To use multiple schemes
+
+
+.. _Java source code file:https://github.com/Olog/phoebus-olog/blob/master/src/main/java/org/phoebus/olog/security/InMemorySecurityConfig.java
 
 Developer Documentation:
 ########################
