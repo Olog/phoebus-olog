@@ -474,9 +474,21 @@ public class LogSearchUtil {
                     String query = parameter.getValue().get(0);
                     MultiMatchQuery multiMatchQuery = MultiMatchQuery.of(m ->
                             m.query(query)
-                                    .fields("title", "description", "owner", "level")
-                                    .type(TextQueryType.CrossFields)
-                                    .operator(Operator.And));
+                                .type(TextQueryType.BoolPrefix)
+                                .fuzziness("1")
+                                .fields(List.of(
+                                    "title",
+                                    "title._2gram",
+                                    "description",
+                                    "description._2gram",
+                                    "owner",
+                                    "owner._2gram",
+                                    "level",
+                                    "level._2gram"
+                            
+                                )
+                                )
+                            );
                     builder.must(multiMatchQuery._toQuery());
                     break;
                 case "tags":
