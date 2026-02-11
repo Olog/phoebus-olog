@@ -29,6 +29,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.session.FindByIndexNameSessionRepository;
 import org.springframework.session.Session;
 import org.springframework.stereotype.Controller;
@@ -126,6 +127,8 @@ public class AuthenticationResource {
     /**
      * Returns a {@link UserData} object populated with username and roles. If the session cookie
      * is missing from the request, the {@link UserData} object fields are set to <code>null</code>.
+     * 
+     * When OAuth2 is enabled, this method also checks the Spring Security context for JWT authentication.
      *
      * @param cookieValue An optional cookie value.
      * @return A {@link ResponseEntity} containing {@link UserData}, if any is found.
@@ -134,16 +137,29 @@ public class AuthenticationResource {
     @GetMapping(value = "user")
     public ResponseEntity<UserData> getCurrentUser(@CookieValue(value = WebSecurityConfig.SESSION_COOKIE_NAME,
             required = false) String cookieValue) {
-        if (cookieValue == null) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        
+        // First, try session-based authentication
+        if (cookieValue != null) {
+            Session session = sessionRepository.findById(cookieValue);
+            if (session != null && !session.isExpired()) {
+                String userName = session.getAttribute(FindByIndexNameSessionRepository.PRINCIPAL_NAME_INDEX_NAME);
+                List<String> roles = session.getAttribute(WebSecurityConfig.ROLES_ATTRIBUTE_NAME);
+                return new ResponseEntity<>(new UserData(userName, roles), HttpStatus.OK);
+            }
         }
-        Session session = sessionRepository.findById(cookieValue);
-        if (session == null || session.isExpired()) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        
+        // If no session, try JWT authentication from SecurityContext
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated() && 
+            !(authentication.getPrincipal() instanceof String && authentication.getPrincipal().equals("anonymousUser"))) {
+            String userName = authentication.getName();
+            List<String> roles = authentication.getAuthorities().stream()
+                    .map(GrantedAuthority::getAuthority)
+                    .collect(Collectors.toList());
+            return new ResponseEntity<>(new UserData(userName, roles), HttpStatus.OK);
         }
-        String userName = session.getAttribute(FindByIndexNameSessionRepository.PRINCIPAL_NAME_INDEX_NAME);
-        List<String> roles = session.getAttribute(WebSecurityConfig.ROLES_ATTRIBUTE_NAME);
-        return new ResponseEntity<>(new UserData(userName, roles), HttpStatus.OK);
+        
+        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
     /**
