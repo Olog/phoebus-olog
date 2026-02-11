@@ -44,8 +44,13 @@ import org.springframework.session.FindByIndexNameSessionRepository;
 import org.springframework.session.jdbc.JdbcIndexedSessionRepository;
 import org.springframework.transaction.support.TransactionOperations;
 import org.springframework.transaction.support.TransactionTemplate;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import javax.sql.DataSource;
 import java.sql.Driver;
+import java.util.Arrays;
+import java.util.List;
 
 @EnableWebSecurity
 @Configuration
@@ -57,9 +62,25 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Value("${spring.datasource.url:jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=TRUE}")
     private String h2Url;
+
+    @Value("#{'${cors.allowed.origins:http://localhost:3000}'.split(',')}")
+    private String[] corsAllowedOrigins;
+
+    @Value("#{'${cors.allowed.methods:GET,POST,PUT,DELETE,OPTIONS,PATCH}'.split(',')}")
+    private String[] corsAllowedMethods;
+
+    @Value("#{'${cors.allowed.headers:*}'.split(',')}")
+    private String[] corsAllowedHeaders;
+
+    @Value("${cors.allow.credentials:true}")
+    private boolean corsAllowCredentials;
+
+    @Value("${cors.max.age:3600}")
+    private long corsMaxAge;
+
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        http.csrf().disable();
+        http.cors().and().csrf().disable();
         http.authorizeRequests().anyRequest().authenticated();
         // enable JWT authentication
         if (oauth2_enabled) {
@@ -69,6 +90,19 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
             http.addFilterBefore(new SessionFilter(authenticationManager(), sessionRepository()), UsernamePasswordAuthenticationFilter.class);
         }
         http.httpBasic();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(Arrays.asList(corsAllowedOrigins));
+        configuration.setAllowedMethods(Arrays.asList(corsAllowedMethods));
+        configuration.setAllowedHeaders(Arrays.asList(corsAllowedHeaders));
+        configuration.setAllowCredentials(corsAllowCredentials);
+        configuration.setMaxAge(corsMaxAge);
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 
     @Override

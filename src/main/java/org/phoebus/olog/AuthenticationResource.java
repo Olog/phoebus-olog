@@ -20,6 +20,8 @@ package org.phoebus.olog;
 
 import org.phoebus.olog.entity.UserData;
 import org.phoebus.olog.security.LoginCredentials;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -40,6 +42,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.time.Duration;
 import java.time.Instant;
@@ -53,6 +56,8 @@ import static org.phoebus.olog.OlogResourceDescriptors.OLOG_SERVICE;
 @Controller
 @RequestMapping(OLOG_SERVICE)
 public class AuthenticationResource {
+
+    private static final Logger log = LoggerFactory.getLogger(AuthenticationResource.class);
 
     @SuppressWarnings("unused")
     @Autowired
@@ -128,15 +133,18 @@ public class AuthenticationResource {
      * Returns a {@link UserData} object populated with username and roles. If the session cookie
      * is missing from the request, the {@link UserData} object fields are set to <code>null</code>.
      * 
-     * When OAuth2 is enabled, this method also checks the Spring Security context for JWT authentication.
+     * When OAuth2 is enabled, this method also validates the JWT token from the Authorization header,
+     * since GET requests bypass the Spring Security filter chain (web.ignoring) and the
+     * JwtAuthenticationFilter does not run.
      *
      * @param cookieValue An optional cookie value.
+     * @param request The HTTP request, used to extract the Authorization header.
      * @return A {@link ResponseEntity} containing {@link UserData}, if any is found.
      */
     @SuppressWarnings("unused")
     @GetMapping(value = "user")
     public ResponseEntity<UserData> getCurrentUser(@CookieValue(value = WebSecurityConfig.SESSION_COOKIE_NAME,
-            required = false) String cookieValue) {
+            required = false) String cookieValue, HttpServletRequest request) {
         
         // First, try session-based authentication
         if (cookieValue != null) {
@@ -148,15 +156,27 @@ public class AuthenticationResource {
             }
         }
         
-        // If no session, try JWT authentication from SecurityContext
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.isAuthenticated() && 
-            !(authentication.getPrincipal() instanceof String && authentication.getPrincipal().equals("anonymousUser"))) {
-            String userName = authentication.getName();
-            List<String> roles = authentication.getAuthorities().stream()
-                    .map(GrantedAuthority::getAuthority)
-                    .collect(Collectors.toList());
-            return new ResponseEntity<>(new UserData(userName, roles), HttpStatus.OK);
+        // If no session, try JWT authentication from the Authorization header.
+        // GET /user bypasses the security filter chain (web.ignoring), so
+        // JwtAuthenticationFilter does not run. We must validate the token manually.
+        String authorizationHeader = request.getHeader("Authorization");
+        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+            try {
+                String jwtToken = authorizationHeader.substring(7);
+                UsernamePasswordAuthenticationToken authToken =
+                        new UsernamePasswordAuthenticationToken(null, jwtToken);
+                Authentication authentication = authenticationManager.authenticate(authToken);
+                if (authentication != null && authentication.isAuthenticated()) {
+                    String userName = authentication.getName();
+                    List<String> roles = authentication.getAuthorities().stream()
+                            .map(GrantedAuthority::getAuthority)
+                            .collect(Collectors.toList());
+                    log.info("JWT authentication successful for user: {}", userName);
+                    return new ResponseEntity<>(new UserData(userName, roles), HttpStatus.OK);
+                }
+            } catch (AuthenticationException e) {
+                log.warn("JWT authentication failed for /user endpoint: {}", e.getMessage());
+            }
         }
         
         return new ResponseEntity<>(HttpStatus.NOT_FOUND);

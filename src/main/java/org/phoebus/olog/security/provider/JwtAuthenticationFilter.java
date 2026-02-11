@@ -28,10 +28,17 @@ public class JwtAuthenticationFilter extends BasicAuthenticationFilter {
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
             String jwtToken = authorizationHeader.substring(7);
 
-            // Passa il token JWT all'AuthenticationManager
-            UsernamePasswordAuthenticationToken authToken =
-                    new UsernamePasswordAuthenticationToken(null, jwtToken);
-            SecurityContextHolder.getContext().setAuthentication(getAuthenticationManager().authenticate(authToken));
+            try {
+                // Pass the JWT token to the AuthenticationManager
+                UsernamePasswordAuthenticationToken authToken =
+                        new UsernamePasswordAuthenticationToken(null, jwtToken);
+                SecurityContextHolder.getContext().setAuthentication(getAuthenticationManager().authenticate(authToken));
+            } catch (Exception e) {
+                logger.error("JWT authentication failed: " + e.getMessage());
+                SecurityContextHolder.clearContext();
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                return;
+            }
         }
 
         chain.doFilter(request, response);
