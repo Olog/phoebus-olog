@@ -58,7 +58,7 @@ public class LogTemplateResource {
 
     @GetMapping("{logTemplateId}")
     @SuppressWarnings("unused")
-    public LogTemplate getLogTemplate(@PathVariable(name = "logTemplateId") String logTemplateId) {
+    public LogTemplate getLogTemplateById(@PathVariable(name = "logTemplateId") String logTemplateId) {
         return logTemplateRepository.findById(logTemplateId).get();
     }
 
@@ -117,53 +117,11 @@ public class LogTemplateResource {
     }
 
     /**
-     * Updates existing {@link LogTemplate}.
-     *
-     * @param logTemplateId The id of the template subject to update. It must exist, i.e. it is not created of not found.
-     * @param markup        Markup strategy, if any.
-     * @param logTemplate   The {@link LogTemplate} as sent by client.
-     * @param principal     The authenticated {@link Principal} of the request.
-     * @return The updated {@link LogTemplate} record, or HTTP status 404 if the log template does not exist. If the path
-     * variable does not match the id in the log record, HTTP status 400 (bad request) is returned.
-     */
-    /*
-    @SuppressWarnings("unused")
-    @PostMapping("/{logTemplateId}")
-    public LogTemplate updateLogTemplate(@PathVariable String logTemplateId,
-                         @RequestParam(value = "markup", required = false) String markup,
-                         @RequestBody LogTemplate logTemplate,
-                         @AuthenticationPrincipal Principal principal) {
-
-        // In case a client sends a log template record where the id does not match the path variable, return HTTP 400 (bad request)
-        if (!logTemplateId.equals(logTemplate.getId())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, TextUtil.LOG_TEMPLATE_NOT_MATCH_PATH);
-        }
-
-        Optional<LogTemplate> foundLogTemplate = logTemplateRepository.findById(logTemplateId);
-
-        LogTemplate persistedLogTemplate = foundLogTemplate.get();
-        persistedLogTemplate.setName(logTemplate.getName());
-        persistedLogTemplate.getLog().setOwner(principal.getName());
-        persistedLogTemplate.getLog().setLevel(logTemplate.getLog().getLevel());
-        persistedLogTemplate.getLog().setProperties(logTemplate.getLog().getProperties());
-        persistedLogTemplate.getLog().setModifyDate(Instant.now());
-        persistedLogTemplate.getLog().setDescription(logTemplate.getLog().getDescription());   // to make it work with old clients where description field is sent instead of source
-        persistedLogTemplate.getLog().setTags(logTemplate.getLog().getTags());
-        persistedLogTemplate.getLog().setLogbooks(logTemplate.getLog().getLogbooks());
-        persistedLogTemplate.getLog().setTitle(logTemplate.getLog().getTitle());
-
-        return logTemplateRepository.update(persistedLogTemplate);
-
-    }
-
-     */
-
-    /**
      * Delete a {@link LogTemplate} based on its unique id.
      * @param logTemplateId Unique id
      */
     @DeleteMapping("/{logTemplateId}")
-    public void deleteLogTemplate(@PathVariable String logTemplateId){
+    public void deleteLogTemplate(@PathVariable(name = "logTemplateId") String logTemplateId){
         logTemplateRepository.deleteById(logTemplateId);
     }
 

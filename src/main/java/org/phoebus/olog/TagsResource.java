@@ -34,7 +34,7 @@ import org.springframework.web.server.ResponseStatusException;
 @RequestMapping(TAG_RESOURCE_URI)
 public class TagsResource {
 
-    private Logger log = Logger.getLogger(TagsResource.class.getName());
+    private final Logger log = Logger.getLogger(TagsResource.class.getName());
 
     @Autowired
     private TagRepository tagRepository;
@@ -60,7 +60,7 @@ public class TagsResource {
      * @return the matching tag, or null
      */
     @GetMapping("/{tagName}")
-    public Tag findByTitle(@PathVariable String tagName) {
+    public Tag findByName(@PathVariable(name = "tagName") String tagName) {
         Optional<Tag> foundTag = tagRepository.findById(tagName);
         if (foundTag.isPresent()) {
             return foundTag.get();
@@ -79,7 +79,7 @@ public class TagsResource {
      * @return the created tag
      */
     @PutMapping("/{tagName}")
-    public Tag createTag(@PathVariable String tagName, @RequestBody final Tag tag) {
+    public Tag createTag(@PathVariable(name = "tagName") String tagName, @RequestBody final Tag tag) {
         // TODO Check permissions
         // Validate
 
@@ -124,7 +124,7 @@ public class TagsResource {
     }
 
     @DeleteMapping("/{tagName}")
-    public void deleteTag(@PathVariable String tagName) {
+    public void deleteTag(@PathVariable(name = "tagName") String tagName) {
         // TODO Check permissions
 
         // check if present
