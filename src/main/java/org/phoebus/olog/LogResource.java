@@ -133,7 +133,7 @@ public class LogResource {
 
     @GetMapping("{logId}")
     @SuppressWarnings("unused")
-    public Log getLog(@PathVariable(name = "logId") String logId) {
+    public Log getLogById(@PathVariable(name = "logId") String logId) {
         Optional<Log> foundLog = logRepository.findById(logId);
         if (foundLog.isPresent()) {
             return foundLog.get();
