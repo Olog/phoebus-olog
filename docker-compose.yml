@@ -1,5 +1,4 @@
 # Use the default network olog_default.
-version: "3.7"
 services:
   olog:
     build: .
@@ -7,21 +6,13 @@ services:
       - "8080:8080"
       - "8181:8181"
     depends_on:
-      - mongo
-      - elastic
+      mongo:
+        condition: service_started
+      elastic: 
+        condition: service_healthy
     environment:
-      mongo.host: mongo
-      elasticsearch.network.host: elastic
-    # Ensure that the elastic server is up before starting olog.
-    command: >
-      /bin/bash -c "
-          while ! curl -s -f elastic:9200/_cluster/health?wait_for_status=yellow;
-        do
-          echo Waiting for Elasticsearch;
-          sleep 1;
-        done;
-        java -jar service-olog-*.jar --spring.config.name=application-docker
-      "
+      MONGO_HOST: mongo
+      ELASTICSEARCH_NETWORK_HOST: elasticsearch
 
   mongo:
     image: mongo
@@ -39,6 +30,8 @@ services:
       ES_JAVA_OPTS: "-Xms512m -Xmx512m"
       xpack.security.enabled: "false"
       xpack.security.http.ssl.enabled: "false"
+    hostname:
+      elasticsearch
     ports:
       - 9200:9200
     volumes:
@@ -47,6 +40,11 @@ services:
       memlock:
         soft: -1
         hard: -1
+    healthcheck:
+      test: curl -f http://elasticsearch:9200/_cluster/health
+      interval: 5s
+      timeout: 60s
+      retries: 10
 
 # Configure persistent storage for mongo and elastic.
 volumes:
