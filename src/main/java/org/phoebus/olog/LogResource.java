@@ -61,6 +61,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
@@ -439,7 +440,8 @@ public class LogResource {
     @PostMapping("/{logId}")
     public Log updateLog(@PathVariable(name = "logId") String logId,
                          @RequestParam(name = "markup", required = false) String markup,
-                         @RequestBody Log log,
+                         @RequestPart("logEntry") Log log,
+                         @RequestPart(value = "files", required = false) MultipartFile[] files,
                          @AuthenticationPrincipal Principal principal) {
 
         // In case a client sends a log record where the id does not match the path variable, return HTTP 400 (bad request)
@@ -472,6 +474,42 @@ public class LogResource {
             persistedLog.setLogbooks(log.getLogbooks());
             persistedLog.setTitle(log.getTitle());
             persistedLog = cleanMarkup(markup, persistedLog);
+            
+            // handle attachments
+            SortedSet<Attachment> existingAttachments = persistedLog.getAttachments();
+            Set<Attachment> newAttachments = log.getAttachments();
+
+            // Remove attachments that are no longer present
+            existingAttachments.removeIf(existing ->
+                    newAttachments.stream().noneMatch(newAtt ->
+                            newAtt.getId() != null && newAtt.getId().equals(existing.getId())));
+
+            // Add or update attachments
+            for (Attachment newAttachment : newAttachments) {
+                Optional<Attachment> existingAttachment = existingAttachments.stream()
+                        .filter(a -> a.getId().equals(newAttachment.getId()))
+                        .findFirst();
+                if (existingAttachment.isPresent()) {
+                    existingAttachment.get().setFilename(newAttachment.getFilename());
+                    existingAttachment.get().setFileMetadataDescription(newAttachment.getFileMetadataDescription());
+                } else {
+                    // New attachment to save
+                    MultipartFile matchingFile = null;
+                    if (files != null) {
+                        for (MultipartFile file : files) {
+                            if (Objects.equals(file.getOriginalFilename(), newAttachment.getFilename())) {
+                                matchingFile = file;
+                                break;
+                            }
+                        }
+                    }
+
+                    Attachment attachment = new Attachment(newAttachment.getId(), matchingFile, newAttachment.getFilename(), newAttachment.getFileMetadataDescription());
+                    Attachment savedAttachment = attachmentRepository.save(attachment);
+                    existingAttachments.add(savedAttachment);
+                }
+            }
+            persistedLog.setAttachments(existingAttachments);
 
             webSocketService.sendMessageToClients(new WebSocketMessage(MessageType.LOG_ENTRY_UPDATED, persistedLog.getId().toString()));
 
