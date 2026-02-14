@@ -8,6 +8,8 @@ package org.phoebus.olog.security;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.phoebus.olog.OlogResourceDescriptors;
+import org.phoebus.olog.security.provider.JwtAuthenticationFilter;
+import org.phoebus.olog.security.provider.JwtAuthenticationProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.h2.H2ConsoleProperties;
@@ -74,16 +76,20 @@ public class WebSecurityConfig {
     public static final String EMBEDDED_LDAP = "embeddedLdap";
     public static final String LDAP = "ldap";
     public static final String ACTIVE_DIRECTORY = "activeDirectory";
+    public static final String JWT = "jwt";
 
     /**
      * List of supported provider implementations.
      */
-    private static final String[] PROVIDER_NAME_LIST = {LDAP, ACTIVE_DIRECTORY, IN_MEMORY, EMBEDDED_LDAP};
+    private static final String[] PROVIDER_NAME_LIST = {LDAP, ACTIVE_DIRECTORY, IN_MEMORY, EMBEDDED_LDAP, JWT};
 
     public static final String PROVIDER_LIST_PROPERTY_NAME = "authenticationProviders";
 
     @Value("${spring.datasource.url:jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=TRUE}")
     private String h2Url;
+
+    @Value("${oauth2.enabled:false}")
+    private boolean oauth2Enabled;
 
     @Autowired
     private ApplicationContext context;
@@ -116,9 +122,15 @@ public class WebSecurityConfig {
         http.authorizeHttpRequests(a -> a
                         .anyRequest()
                         .authenticated())
-                .addFilterBefore(new SessionFilter(authenticationManager(), sessionRepository()), UsernamePasswordAuthenticationFilter.class)
                 .csrf(c -> c.disable())
                 .httpBasic(Customizer.withDefaults());
+
+        if (oauth2Enabled) {
+            http.addFilterBefore(new JwtAuthenticationFilter(authenticationManager()), UsernamePasswordAuthenticationFilter.class);
+        } else {
+            http.addFilterBefore(new SessionFilter(authenticationManager(), sessionRepository()), UsernamePasswordAuthenticationFilter.class);
+        }
+
         return http.build();
     }
 
