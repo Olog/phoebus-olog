@@ -95,13 +95,34 @@ public class LogTemplateResource {
             }
         }
 
-        // Check that template contains valid properties and attributes. Take advantage of Property#equals().
+        // Check that template references only existing properties and attribute names.
+        // Note: we compare only names, not attribute values, because templates may
+        // carry pre-filled attribute values that differ from the property definitions.
         Set<Property> properties = logTemplate.getProperties();
-        if(properties != null && !properties.isEmpty()){
-            Set<Property> persistedProperties = new HashSet<>();
-            propertyRepository.findAll().forEach(p -> persistedProperties.add(p));
-            if (!CollectionUtils.containsAll(persistedProperties, properties)) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, TextUtil.LOG_INVALID_PROPERTIES);
+        if (properties != null && !properties.isEmpty()) {
+            Map<String, Set<String>> persistedPropAttrs = new HashMap<>();
+            propertyRepository.findAll().forEach(p -> {
+                Set<String> attrNames = p.getAttributes() == null
+                        ? Collections.emptySet()
+                        : p.getAttributes().stream()
+                              .map(a -> a.getName())
+                              .collect(Collectors.toSet());
+                persistedPropAttrs.put(p.getName(), attrNames);
+            });
+            for (Property prop : properties) {
+                Set<String> knownAttrs = persistedPropAttrs.get(prop.getName());
+                if (knownAttrs == null) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                            TextUtil.LOG_INVALID_PROPERTIES);
+                }
+                if (prop.getAttributes() != null) {
+                    for (var attr : prop.getAttributes()) {
+                        if (!knownAttrs.contains(attr.getName())) {
+                            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                                    TextUtil.LOG_INVALID_PROPERTIES);
+                        }
+                    }
+                }
             }
         }
 
