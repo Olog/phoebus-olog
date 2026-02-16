@@ -40,12 +40,26 @@ public class WebConfig implements WebMvcConfigurer {
     @Value("#{'${cors.allowed.origins:http://localhost:3000}'.split(',')}")
     private String[] corsAllowedOrigins;
 
+    @Value("#{'${cors.allowed.methods:GET,POST,PUT,DELETE,OPTIONS,PATCH}'.split(',')}")
+    private String[] corsAllowedMethods;
+
+    @Value("#{'${cors.allowed.headers:*}'.split(',')}")
+    private String[] corsAllowedHeaders;
+
+    @Value("${cors.allow.credentials:true}")
+    private boolean corsAllowCredentials;
+
+    @Value("${cors.max.age:3600}")
+    private long corsMaxAge;
+
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowCredentials(true)
-                .allowedMethods("HEAD", "GET", "POST", "PUT", "DELETE", "PATCH")
-                .allowedOriginPatterns(corsAllowedOrigins);
+                .allowedOrigins(corsAllowedOrigins)
+                .allowedMethods(corsAllowedMethods)
+                .allowedHeaders(corsAllowedHeaders)
+                .allowCredentials(corsAllowCredentials)
+                .maxAge(corsMaxAge);
     }
 
     @Override

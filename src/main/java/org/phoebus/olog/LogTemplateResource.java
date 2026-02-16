@@ -11,22 +11,13 @@ import org.phoebus.olog.entity.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.security.Principal;
 import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import java.time.Instant;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -83,12 +74,15 @@ public class LogTemplateResource {
         }
         logTemplate.setOwner(principal.getName());
 
-        // If template specifies tags and properties, check that they actually exist
-        Set<String> logbookNames = logTemplate.getLogbooks().stream().map(Logbook::getName).collect(Collectors.toSet());
-        Set<String> persistedLogbookNames = new HashSet<>();
-        logbookRepository.findAll().forEach(l -> persistedLogbookNames.add(l.getName()));
-        if (!CollectionUtils.containsAll(persistedLogbookNames, logbookNames)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, TextUtil.LOG_INVALID_LOGBOOKS);
+        // If template specifies logbooks, check that they actually exist
+        Set<Logbook> logbooks = logTemplate.getLogbooks();
+        if (logbooks != null && !logbooks.isEmpty()) {
+            Set<String> logbookNames = logbooks.stream().map(Logbook::getName).collect(Collectors.toSet());
+            Set<String> persistedLogbookNames = new HashSet<>();
+            logbookRepository.findAll().forEach(l -> persistedLogbookNames.add(l.getName()));
+            if (!CollectionUtils.containsAll(persistedLogbookNames, logbookNames)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, TextUtil.LOG_INVALID_LOGBOOKS);
+            }
         }
 
         Set<Tag> tags = logTemplate.getTags();
@@ -101,13 +95,34 @@ public class LogTemplateResource {
             }
         }
 
-        // Check that template contains valid properties and attributes. Take advantage of Property#equals().
+        // Check that template references only existing properties and attribute names.
+        // Note: we compare only names, not attribute values, because templates may
+        // carry pre-filled attribute values that differ from the property definitions.
         Set<Property> properties = logTemplate.getProperties();
-        if(properties != null && !properties.isEmpty()){
-            Set<Property> persistedProperties = new HashSet<>();
-            propertyRepository.findAll().forEach(p -> persistedProperties.add(p));
-            if (!CollectionUtils.containsAll(persistedProperties, properties)) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, TextUtil.LOG_INVALID_PROPERTIES);
+        if (properties != null && !properties.isEmpty()) {
+            Map<String, Set<String>> persistedPropAttrs = new HashMap<>();
+            propertyRepository.findAll().forEach(p -> {
+                Set<String> attrNames = p.getAttributes() == null
+                        ? Collections.emptySet()
+                        : p.getAttributes().stream()
+                              .map(a -> a.getName())
+                              .collect(Collectors.toSet());
+                persistedPropAttrs.put(p.getName(), attrNames);
+            });
+            for (Property prop : properties) {
+                Set<String> knownAttrs = persistedPropAttrs.get(prop.getName());
+                if (knownAttrs == null) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                            TextUtil.LOG_INVALID_PROPERTIES);
+                }
+                if (prop.getAttributes() != null) {
+                    for (var attr : prop.getAttributes()) {
+                        if (!knownAttrs.contains(attr.getName())) {
+                            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                                    TextUtil.LOG_INVALID_PROPERTIES);
+                        }
+                    }
+                }
             }
         }
 
@@ -126,44 +141,45 @@ public class LogTemplateResource {
      * @return The updated {@link LogTemplate} record, or HTTP status 404 if the log template does not exist. If the path
      * variable does not match the id in the log record, HTTP status 400 (bad request) is returned.
      */
-    /*
+
     @SuppressWarnings("unused")
     @PostMapping("/{logTemplateId}")
-    public LogTemplate updateLogTemplate(@PathVariable String logTemplateId,
+    public LogTemplate updateLogTemplate(@PathVariable(name = "logTemplateId") String logTemplateId,
                          @RequestParam(value = "markup", required = false) String markup,
                          @RequestBody LogTemplate logTemplate,
                          @AuthenticationPrincipal Principal principal) {
 
         // In case a client sends a log template record where the id does not match the path variable, return HTTP 400 (bad request)
         if (!logTemplateId.equals(logTemplate.getId())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, TextUtil.LOG_TEMPLATE_NOT_MATCH_PATH);
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Template not exists");
         }
 
         Optional<LogTemplate> foundLogTemplate = logTemplateRepository.findById(logTemplateId);
 
         LogTemplate persistedLogTemplate = foundLogTemplate.get();
         persistedLogTemplate.setName(logTemplate.getName());
-        persistedLogTemplate.getLog().setOwner(principal.getName());
-        persistedLogTemplate.getLog().setLevel(logTemplate.getLog().getLevel());
-        persistedLogTemplate.getLog().setProperties(logTemplate.getLog().getProperties());
-        persistedLogTemplate.getLog().setModifyDate(Instant.now());
-        persistedLogTemplate.getLog().setDescription(logTemplate.getLog().getDescription());   // to make it work with old clients where description field is sent instead of source
-        persistedLogTemplate.getLog().setTags(logTemplate.getLog().getTags());
-        persistedLogTemplate.getLog().setLogbooks(logTemplate.getLog().getLogbooks());
-        persistedLogTemplate.getLog().setTitle(logTemplate.getLog().getTitle());
+        persistedLogTemplate.setOwner(principal.getName());
+        persistedLogTemplate.setLevel(logTemplate.getLevel());
+        persistedLogTemplate.setProperties(logTemplate.getProperties());
+        persistedLogTemplate.setModifyDate(Instant.now());
+        persistedLogTemplate.setSource(logTemplate.getSource());   // to make it work with old clients where description field is sent instead of source
+        persistedLogTemplate.setTags(logTemplate.getTags());
+        persistedLogTemplate.setLogbooks(logTemplate.getLogbooks());
+        persistedLogTemplate.setTitle(logTemplate.getTitle());
+        persistedLogTemplate.setId(logTemplateId);
 
         return logTemplateRepository.update(persistedLogTemplate);
 
     }
 
-     */
+
 
     /**
      * Delete a {@link LogTemplate} based on its unique id.
      * @param logTemplateId Unique id
      */
     @DeleteMapping("/{logTemplateId}")
-    public void deleteLogTemplate(@PathVariable String logTemplateId){
+    public void deleteLogTemplate(@PathVariable(name = "logTemplateId") String logTemplateId){
         logTemplateRepository.deleteById(logTemplateId);
     }
 

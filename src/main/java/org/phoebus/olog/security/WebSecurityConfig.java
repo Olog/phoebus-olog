@@ -8,6 +8,8 @@ package org.phoebus.olog.security;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.phoebus.olog.OlogResourceDescriptors;
+import org.phoebus.olog.security.provider.JwtAuthenticationFilter;
+import org.phoebus.olog.security.provider.JwtAuthenticationProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.h2.H2ConsoleProperties;
@@ -34,6 +36,7 @@ import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.SecurityFilterChain;
@@ -74,16 +77,20 @@ public class WebSecurityConfig {
     public static final String EMBEDDED_LDAP = "embeddedLdap";
     public static final String LDAP = "ldap";
     public static final String ACTIVE_DIRECTORY = "activeDirectory";
+    public static final String JWT = "jwt";
 
     /**
      * List of supported provider implementations.
      */
-    private static final String[] PROVIDER_NAME_LIST = {LDAP, ACTIVE_DIRECTORY, IN_MEMORY, EMBEDDED_LDAP};
+    private static final String[] PROVIDER_NAME_LIST = {LDAP, ACTIVE_DIRECTORY, IN_MEMORY, EMBEDDED_LDAP, JWT};
 
     public static final String PROVIDER_LIST_PROPERTY_NAME = "authenticationProviders";
 
     @Value("${spring.datasource.url:jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=TRUE}")
     private String h2Url;
+
+    @Value("${oauth2.enabled:false}")
+    private boolean oauth2Enabled;
 
     @Autowired
     private ApplicationContext context;
@@ -114,11 +121,21 @@ public class WebSecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
         http.authorizeHttpRequests(a -> a
+                        .requestMatchers("/error").permitAll()
                         .anyRequest()
                         .authenticated())
-                .addFilterBefore(new SessionFilter(authenticationManager(), sessionRepository()), UsernamePasswordAuthenticationFilter.class)
-                .csrf(c -> c.disable())
-                .httpBasic(Customizer.withDefaults());
+                .csrf(c -> c.disable());
+
+        if (oauth2Enabled) {
+            // JWT: stateless sessions, no httpBasic (which would add a competing BasicAuthenticationFilter)
+            http.sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+            http.addFilterBefore(new JwtAuthenticationFilter(authenticationManager()), UsernamePasswordAuthenticationFilter.class);
+            logger.log(Level.INFO, "OAuth2/JWT authentication enabled — stateless session, JwtAuthenticationFilter active");
+        } else {
+            http.httpBasic(Customizer.withDefaults());
+            http.addFilterBefore(new SessionFilter(authenticationManager(), sessionRepository()), UsernamePasswordAuthenticationFilter.class);
+        }
+
         return http.build();
     }
 
