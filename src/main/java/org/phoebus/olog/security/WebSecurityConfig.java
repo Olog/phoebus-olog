@@ -36,6 +36,7 @@ import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.SecurityFilterChain;
@@ -120,14 +121,18 @@ public class WebSecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
         http.authorizeHttpRequests(a -> a
+                        .requestMatchers("/error").permitAll()
                         .anyRequest()
                         .authenticated())
-                .csrf(c -> c.disable())
-                .httpBasic(Customizer.withDefaults());
+                .csrf(c -> c.disable());
 
         if (oauth2Enabled) {
+            // JWT: stateless sessions, no httpBasic (which would add a competing BasicAuthenticationFilter)
+            http.sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
             http.addFilterBefore(new JwtAuthenticationFilter(authenticationManager()), UsernamePasswordAuthenticationFilter.class);
+            logger.log(Level.INFO, "OAuth2/JWT authentication enabled — stateless session, JwtAuthenticationFilter active");
         } else {
+            http.httpBasic(Customizer.withDefaults());
             http.addFilterBefore(new SessionFilter(authenticationManager(), sessionRepository()), UsernamePasswordAuthenticationFilter.class);
         }
 

@@ -74,12 +74,15 @@ public class LogTemplateResource {
         }
         logTemplate.setOwner(principal.getName());
 
-        // If template specifies tags and properties, check that they actually exist
-        Set<String> logbookNames = logTemplate.getLogbooks().stream().map(Logbook::getName).collect(Collectors.toSet());
-        Set<String> persistedLogbookNames = new HashSet<>();
-        logbookRepository.findAll().forEach(l -> persistedLogbookNames.add(l.getName()));
-        if (!CollectionUtils.containsAll(persistedLogbookNames, logbookNames)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, TextUtil.LOG_INVALID_LOGBOOKS);
+        // If template specifies logbooks, check that they actually exist
+        Set<Logbook> logbooks = logTemplate.getLogbooks();
+        if (logbooks != null && !logbooks.isEmpty()) {
+            Set<String> logbookNames = logbooks.stream().map(Logbook::getName).collect(Collectors.toSet());
+            Set<String> persistedLogbookNames = new HashSet<>();
+            logbookRepository.findAll().forEach(l -> persistedLogbookNames.add(l.getName()));
+            if (!CollectionUtils.containsAll(persistedLogbookNames, logbookNames)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, TextUtil.LOG_INVALID_LOGBOOKS);
+            }
         }
 
         Set<Tag> tags = logTemplate.getTags();
@@ -120,7 +123,7 @@ public class LogTemplateResource {
 
     @SuppressWarnings("unused")
     @PostMapping("/{logTemplateId}")
-    public LogTemplate updateLogTemplate(@PathVariable String logTemplateId,
+    public LogTemplate updateLogTemplate(@PathVariable(name = "logTemplateId") String logTemplateId,
                          @RequestParam(value = "markup", required = false) String markup,
                          @RequestBody LogTemplate logTemplate,
                          @AuthenticationPrincipal Principal principal) {
@@ -155,7 +158,7 @@ public class LogTemplateResource {
      * @param logTemplateId Unique id
      */
     @DeleteMapping("/{logTemplateId}")
-    public void deleteLogTemplate(@PathVariable String logTemplateId){
+    public void deleteLogTemplate(@PathVariable(name = "logTemplateId") String logTemplateId){
         logTemplateRepository.deleteById(logTemplateId);
     }
 
