@@ -3,6 +3,7 @@ package org.phoebus.olog.security.provider;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
+import org.phoebus.olog.security.WebSecurityConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,7 +28,7 @@ import java.util.Map;
 /**
  * Custom authentication provider that verifies JWT tokens issued by an OIDC server.
  */
-@Component
+@Component(WebSecurityConfig.JWT)
 public class JwtAuthenticationProvider implements AuthenticationProvider {
 
     private static final Logger log = LoggerFactory.getLogger(JwtAuthenticationProvider.class);
