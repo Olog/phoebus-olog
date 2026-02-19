@@ -37,7 +37,7 @@ import static org.phoebus.olog.OlogResourceDescriptors.LOGBOOK_RESOURCE_URI;
 @RequestMapping(LOGBOOK_RESOURCE_URI)
 public class LogbooksResource {
 
-    private Logger log = Logger.getLogger(LogbooksResource.class.getName());
+    private final Logger log = Logger.getLogger(LogbooksResource.class.getName());
 
     @Autowired
     private LogbookRepository logbookRepository;
@@ -55,7 +55,7 @@ public class LogbooksResource {
 
     @SuppressWarnings("unused")
     @GetMapping("/{logbookName}")
-    public Logbook findByTitle(@PathVariable(name = "logbookName") String logbookName) {
+    public Logbook findByName(@PathVariable(name = "logbookName") String logbookName) {
         Optional<Logbook> foundLogbook = logbookRepository.findById(logbookName);
         if (foundLogbook.isPresent()) {
             return foundLogbook.get();

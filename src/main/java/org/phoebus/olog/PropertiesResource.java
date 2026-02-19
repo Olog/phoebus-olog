@@ -37,7 +37,7 @@ import org.springframework.web.server.ResponseStatusException;
 @RequestMapping(PROPERTY_RESOURCE_URI)
 public class PropertiesResource {
 
-    private Logger log = Logger.getLogger(PropertiesResource.class.getName());
+    private final Logger log = Logger.getLogger(PropertiesResource.class.getName());
 
     @Autowired
     private PropertyRepository propertyRepository;
@@ -60,7 +60,7 @@ public class PropertiesResource {
     }
 
     @GetMapping("/{propertyName}")
-    public Property findByTitle(@PathVariable(name = "propertyName") String propertyName) {
+    public Property findByName(@PathVariable(name = "propertyName") String propertyName) {
         Optional<Property> foundProperty = propertyRepository.findById(propertyName);
         if (foundProperty.isPresent()) {
             return foundProperty.get();
