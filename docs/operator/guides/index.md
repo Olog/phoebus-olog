@@ -4,4 +4,5 @@
 :maxdepth: 2
 
 commonmark-cheatsheet
+search-help
 ```
