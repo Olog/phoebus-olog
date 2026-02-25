@@ -26,6 +26,7 @@ Limitations:
 :maxdepth: 3
 :glob:
 
+operator/guides/index
 operator/explanations/index
 ```
 
