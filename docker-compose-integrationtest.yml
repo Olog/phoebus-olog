@@ -1,5 +1,4 @@
 # Use the default network olog_default.
-version: "3.7"
 services:
   olog:
     build:
@@ -9,24 +8,18 @@ services:
       - "8080:8080"
       - "8181:8181"
     depends_on:
-      - mongo
-      - elastic
-    # Ensure that the elastic server is up before starting olog.
+      mongo:
+        condition: service_started
+      elastic:
+        condition: service_healthy
     environment:
-      ldap.enabled: "false"
-      embedded_ldap.enabled: "false"
-      demo_auth.enabled: "true"
-      skipITCoverage: "true"
-      mongo.host: mongo
-      elasticsearch.network.host: elastic
+      AUTHENTICATIONPROVIDERS: embeddedLdap
+      SKIPITCOVERAGE: "true"
+      MONGO_HOST: mongo
+      ELASTICSEARCH_NETWORK_HOST: elasticsearch
     command: >
       /bin/bash -c "
-          while ! curl -s -f elastic:9200/_cluster/health?wait_for_status=yellow;
-        do
-          echo Waiting for Elasticsearch;
-          sleep 1;
-        done;
-        if [ ${skipITCoverage} == false ]; then
+        if [ ${SKIPITCOVERAGE} == false ]; then
           export JAVA_TOOL_OPTIONS=-javaagent:/olog-target/jacocoagent.jar=destfile=/olog-target/jacoco.exec,output=file,append=false
         fi
         java -jar /olog-target/service-olog*.jar --spring.config.name=application-docker
@@ -48,6 +41,8 @@ services:
       ES_JAVA_OPTS: "-Xms512m -Xmx512m"
       xpack.security.enabled: "false"
       xpack.security.http.ssl.enabled: "false"
+    hostname:
+      elasticsearch
     ports:
       - 9200:9200
     volumes:
@@ -56,6 +51,11 @@ services:
       memlock:
         soft: -1
         hard: -1
+    healthcheck:
+      test: curl -f http://elasticsearch:9200/_cluster/health
+      interval: 5s
+      timeout: 60s
+      retries: 10
 
 # Configure persistent storage for mongo and elastic.
 volumes:
