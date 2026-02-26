@@ -26,7 +26,10 @@ can define a different one, or even multiple schemes. These are identified as `i
 `active_directory`.
 Thus when launching the service one needs to add to the Java command line like so:
 `-DauthenticationProviders=ldap`
-To use multiple schemes
+To use multiple authentication providers, specify comma separated list, e.g.;
+`-DauthenticationProviders=ldap,activeDirectory`. Authentication will
+be attempted in the listed order, i.e. if the LDAP provider failes to 
+authenticate, the authentication process proceeds to attempt Active Directory
 
   [Java source code file]: https://github.com/Olog/phoebus-olog/blob/master/src/main/java/org/phoebus/olog/security/InMemorySecurityConfig.java
 
