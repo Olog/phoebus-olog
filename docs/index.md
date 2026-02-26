@@ -36,6 +36,7 @@ operator/explanations/index
 :glob:
 
 sysadmin/guides/index
+sysadmin/references/index
 ```
 
 ```{toctree}

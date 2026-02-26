@@ -3,6 +3,8 @@
 ```{toctree}
 :maxdepth: 2
 
-quickstart
+building
+configuring/index
+deployment/index
 authentication
 ```

@@ -1,0 +1,12 @@
+[Unit]
+Description=Phoebus Olog service
+After=elasticsearch.service mongodb.service
+
+[Service]
+Environment=OLOG_DEPLOYABLE_JAR=/opt/service-olog-[version].jar
+Environment=OLOG_CONFIG=/etc/phoebus-olog.properties
+DynamicUser=true
+ExecStart=[/path/to/your/jdk25]/bin/java -jar $OLOG_DEPLOYABLE_JAR --spring.config.location=file://${OLOG_CONFIG}
+
+[Install]
+WantedBy=multi-user.target

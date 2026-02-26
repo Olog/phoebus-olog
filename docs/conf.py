@@ -46,6 +46,8 @@ myst_enable_extensions = [
     "tasklist",
 ]
 
+myst_heading_anchors = 2
+
 # -- Options for Sphinx Rediraffe --------------------------------------------
 # https://github.com/sphinx-doc/sphinxext-rediraffe
 
