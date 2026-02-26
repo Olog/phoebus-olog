@@ -1,0 +1,31 @@
+[project]
+name = "phoebus-olog-docs"
+version = "0.1.0"
+description = "Phoebus Olog documentation build environment"
+requires-python = ">=3.11"
+dependencies = [
+	"myst-parser>=5.0",
+	"sphinx>=8.2",
+	"sphinx-copybutton>=0.5.2",
+	"sphinx_rtd_theme>=3.0",
+	"sphinxcontrib-openapi>=0.9.0",
+	"sphinxext-opengraph>=0.13.0",
+	"sphinxext-rediraffe>=0.3.0",
+]
+
+[project.optional-dependencies]
+dev = ["sphinx-autobuild"]
+
+[tool.pixi.workspace]
+channels = ["conda-forge"]
+platforms = ["win-64", "linux-64", "osx-64", "osx-arm64"]
+
+[tool.pixi.tasks]
+clean = "sphinx-build -M clean . _build"
+html = "sphinx-build -M html . _build"
+build = { depends-on = ["html"] }
+serve = "python -m http.server 8000 --directory _build/html"
+
+# This is a environment only pyproject
+[tool.setuptools.packages.find]
+exclude = ["*"]
