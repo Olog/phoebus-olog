@@ -1,4 +1,4 @@
-# Logbook Search Help Reference
+# Searching Logbook Entries
 
 This document details the search capabilities supported by the Olog
 logbook service. Users are encouraged to familiarize themselves with
