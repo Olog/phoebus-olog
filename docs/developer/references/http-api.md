@@ -302,3 +302,8 @@ To add a new template, use:
 
 In the client UI (currently only CS Studio/Phoebus) users may select from a list of templates, if available. Upon
 selection of a template, the client will populate the editor's input controls based on the template content.
+
+```{eval-rst}
+.. openapi:: ../../../target/spec-open-api.json
+   :format: markdown
+```
