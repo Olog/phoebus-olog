@@ -20,3 +20,6 @@ pom.xml.releaseBackup
 # Locally-generated CI/CD debugging files
 PROJECT_INFO.txt
 THE_GITHUB_ENV_FILE.txt
+
+# Local OS files
+.DS_Store

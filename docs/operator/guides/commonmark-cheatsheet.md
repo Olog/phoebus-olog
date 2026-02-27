@@ -1,4 +1,4 @@
-# Olog Markup Quick Reference
+# Olog Markup Guide
 
 Markup support in Olog is based on the [Commonmark
 specification](https://commonmark.org/). Olog supports additional markup
