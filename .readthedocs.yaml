@@ -9,7 +9,7 @@ build:
     - openjdk-25-jdk
   jobs:
     pre_build:
-      - mvn openapi:documentation -Dmaven.test.skip=true
+      - mvn clean install
 python:
   install:
     - method: pip
