@@ -4,7 +4,12 @@ build:
   os: "ubuntu-24.04"
   tools:
     python: "3.12"
-
+  apt_packages:
+    - maven
+    - openjdk-25-jdk
+  jobs:
+    pre_build:
+      - mvn clean install
 python:
   install:
     - method: pip
