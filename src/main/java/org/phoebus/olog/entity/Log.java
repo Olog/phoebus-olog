@@ -379,12 +379,8 @@ public class Log implements Serializable {
             this.createDate = log.getCreatedDate();
             this.modifyDate = log.getModifyDate();
             this.owner = log.getOwner();
-            if (log.getSource() != null) {
-                this.source = new StringBuilder(log.getSource());
-            } else {
-                this.source = new StringBuilder();
-            }
-            this.description = new StringBuilder(log.getDescription());
+            this.source = new StringBuilder(log.getSource() == null ? "" : log.getSource());
+            this.description = new StringBuilder(log.getDescription() == null ? "" : log.getDescription());
             this.title = new StringBuilder(log.getTitle());
             this.level = log.getLevel();
             this.state = log.getState();
@@ -415,10 +411,7 @@ public class Log implements Serializable {
         }
 
         public LogBuilder owner(String owner) {
-            if (owner != null)
-                this.owner = owner;
-            else if (owner == null)
-                this.owner = "";
+            this.owner = owner == null ? "" : owner;
             return this;
         }
 
@@ -438,9 +431,10 @@ public class Log implements Serializable {
         }
 
         public LogBuilder description(String description) {
-            if (description != null) {
-                this.description = new StringBuilder(description);
-            }
+            this.description = description == null ? new StringBuilder("") : new StringBuilder(description);
+//            if (description != null) {
+//                this.description = new StringBuilder(description);
+//            }
             return this;
         }
 
@@ -460,9 +454,10 @@ public class Log implements Serializable {
         }
 
         public LogBuilder source(String source) {
-            if (source != null) {
-                this.source = new StringBuilder(source);
-            }
+            this.source = source == null ? new StringBuilder("") : new StringBuilder(source);
+//            if (source != null) {
+//                this.source = new StringBuilder(source);
+//            }
             return this;
         }
 
