@@ -122,7 +122,7 @@ class LogSearchUtilTest {
 
         Map.Entry<String, List<String>> tagsEntry = new AbstractMap.SimpleEntry<>("tags", List.of("tag1,tag2"));
 
-        Query query = logSearchUtil.getTagsQuery(tagsEntry);
+        Query query = logSearchUtil.buildNestedWildcardQuery("tags", "tags.name", tagsEntry);
 
         NestedQuery nestedQuery = (NestedQuery) query._get();
         DisMaxQuery disMaxQuery = (DisMaxQuery) nestedQuery.query()._get();
@@ -136,7 +136,7 @@ class LogSearchUtilTest {
 
         Map.Entry<String, List<String>> logbooksEntry = new AbstractMap.SimpleEntry<>("logbooks", List.of("logbook1,logbook2"));
 
-        Query query = logSearchUtil.getTagsQuery(logbooksEntry);
+        Query query = logSearchUtil.buildNestedWildcardQuery("logbooks", "logbooks.name", logbooksEntry);
 
         NestedQuery nestedQuery = (NestedQuery) query._get();
         DisMaxQuery disMaxQuery = (DisMaxQuery) nestedQuery.query()._get();

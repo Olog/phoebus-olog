@@ -25,14 +25,31 @@ public class Attachment implements Comparable<Attachment>
 
     private String checksum;
 
-
-
     /**
      * Creates a new instance of Attachment.
      */
     public Attachment()
     {
 
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if(other == null || !other.getClass().isAssignableFrom(Attachment.class)){
+            return false;
+        }
+        if(id != null && ((Attachment)other).id != null){
+            return id.equals(((Attachment)other).id);
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode(){
+        if(id != null){
+            return id.hashCode();
+        }
+        return 0;
     }
 
      @Override
@@ -164,5 +181,10 @@ public class Attachment implements Comparable<Attachment>
 
     public void setChecksum(String checksum) {
         this.checksum = checksum;
+    }
+
+    @Override
+    public String toString(){
+        return "id=" + id + ", filename=" + filename + ", fileMetadataDescription=" + fileMetadataDescription;
     }
 }

@@ -100,8 +100,8 @@ public class AttachmentRepository implements CrudRepository<Attachment, String> 
 
     @Override
     public boolean existsById(String id) {
-        // TODO Auto-generated method stub
-        return false;
+        GridFSFile gridFsFile = gridFsTemplate.find(new Query(where("_id").is(id))).first();
+        return gridFsFile != null;
     }
 
     @Override

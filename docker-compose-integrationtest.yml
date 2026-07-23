@@ -33,7 +33,7 @@ services:
       - olog-mongodata:/etc/mongo
 
   elastic:
-    image: elasticsearch:8.2.3
+    image: elasticsearch:8.5.3
     environment:
       cluster.name: elasticsearch
       bootstrap.memory_lock: "true"
@@ -41,8 +41,7 @@ services:
       ES_JAVA_OPTS: "-Xms512m -Xmx512m"
       xpack.security.enabled: "false"
       xpack.security.http.ssl.enabled: "false"
-    hostname:
-      elasticsearch
+    hostname: elasticsearch
     ports:
       - 9200:9200
     volumes:

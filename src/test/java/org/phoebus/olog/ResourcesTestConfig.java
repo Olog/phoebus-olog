@@ -124,4 +124,9 @@ public class ResourcesTestConfig {
     public LevelRepository levelRepository(){
         return Mockito.mock(LevelRepository.class);
     }
+
+    @Bean
+    public AttachmentsUploadUtil attachmentsUploadUtil() {
+        return new AttachmentsUploadUtil();
+    }
 }

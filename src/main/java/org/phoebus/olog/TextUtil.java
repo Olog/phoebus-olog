@@ -57,7 +57,7 @@ public class TextUtil {
 
     // ----------------------------------------------------------------------------------------------------
 
-    public static final String ATTACHMENT_DATA_INVALID                  = "Attachment data invalid: file count does not match attachment count";
+    public static final String ATTACHMENT_DATA_INVALID                  = "Attachment data invalid, check server log for details.";
     public static final String ATTACHMENT_FILE_NOT_MATCHED_META_DATA    = "File {0} not matched with attachment meta-data";
     public static final String ATTACHMENT_NOT_FOUND                     = "Attachment with id {0} not found";
     public static final String ATTACHMENT_NOT_PERSISTED                 = "Unable to persist attachment {0}";
@@ -114,6 +114,7 @@ public class TextUtil {
     public static final String LOG_TEMPLATE_DELETED                     = "Log template {0} deleted";
     public static final String LOG_TEMPLATE_NOT_DELETED                 = "Log template {0} not deleted";
     public static final String LOG_TEMPLATE_DELETE_ALL_NOT_SUPPORTED    = "Delete all templates not supported";
+    public static final String LOG_ENTRY_ID_MISSING                     = "Missing or invalid log entry id";
 
     public static final String LOGS_DELETE_NOT_SUPPORTED                = "Deleting log entries is not supported";
     public static final String LOGS_NOT_FOUND                           = "Failed to find logs {0}";
@@ -156,7 +157,6 @@ public class TextUtil {
     public static final String LEVELS_NOT_FOUND                         = "Failed to find levels";
     public static final String LEVEL_DELETED                            = "Level {0} deleted";
     public static final String LEVEL_NOT_DELETED                        = "Failed to delete level {0}";
-    public static final String LEVELS_DELETE_ALL_NOT_ALLOWED            = "Deleting all levels not allowed";
     public static final String LEVEL_NAME_CANNOT_BE_NULL_OR_EMPTY       = "The level name cannot be null or empty";
     public static final String DEFAULT_LEVEL_ALREADY_EXISTS             = "Level {0} already defined as default";
     /**

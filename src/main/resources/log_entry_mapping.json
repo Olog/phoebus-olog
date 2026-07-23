@@ -1,13 +1,11 @@
 {
-  "settings":{
+  "settings": {
     "analysis": {
       "analyzer": {
         "olog_analyzer": {
           "type": "custom",
           "tokenizer": "whitespace",
-          "filter":[
-            "lowercase"
-          ]
+          "filter": ["lowercase"]
         }
       }
     }
@@ -19,23 +17,35 @@
       },
       "owner": {
         "type": "text",
-        "analyzer" : "olog_analyzer"
+        "analyzer": "olog_analyzer"
       },
       "source": {
         "type": "text",
-        "analyzer" : "olog_analyzer"
+        "analyzer": "olog_analyzer"
       },
       "description": {
         "type": "text",
-        "analyzer" : "olog_analyzer"
+        "analyzer": "olog_analyzer",
+        "fields": {
+          "stemmed": {
+            "type": "text",
+            "analyzer": "english"
+          }
+        }
       },
       "level": {
         "type": "text",
-        "analyzer" : "olog_analyzer"
+        "analyzer": "olog_analyzer"
       },
       "title": {
         "type": "text",
-        "analyzer" : "olog_analyzer"
+        "analyzer": "olog_analyzer",
+        "fields": {
+          "stemmed": {
+            "type": "text",
+            "analyzer": "english"
+          }
+        }
       },
       "state": {
         "type": "keyword"

@@ -129,4 +129,9 @@ public class Application {
     public Detector detector(){
         return new DefaultDetector();
     }
+
+    @Bean
+    public AttachmentsUploadUtil attachmentsUploadUtil() {
+        return new AttachmentsUploadUtil();
+    }
 }

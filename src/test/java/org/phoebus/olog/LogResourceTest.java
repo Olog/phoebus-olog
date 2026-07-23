@@ -1,19 +1,5 @@
 /*
- * Copyright (C) 2020 European Spallation Source ERIC.
- *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License
- *  as published by the Free Software Foundation; either version 2
- *  of the License, or (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ * Copyright (C) 2026 European Spallation Source ERIC.
  */
 
 package org.phoebus.olog;
@@ -58,7 +44,6 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.time.Instant;
 import java.util.Arrays;
@@ -71,7 +56,6 @@ import java.util.TreeSet;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.argThat;
@@ -315,8 +299,6 @@ public class LogResourceTest extends ResourcesTestBase {
 
     /**
      * Basically only test the endpoint...
-     *
-     * @throws Exception
      */
     @Test
     void testUpdateExisting() throws Exception {
@@ -433,6 +415,7 @@ public class LogResourceTest extends ResourcesTestBase {
         when(logRepository.save(argThat(new LogMatcher(log)))).thenReturn(log);
         when(logRepository.findById("1")).thenReturn(Optional.of(log));
         when(attachmentRepository.save(argThat(attachment1 -> true))).thenReturn(attachment);
+        when(logRepository.update(argThat(attachment1 -> true))).thenReturn(log);
         MockHttpServletRequestBuilder request =
                 MockMvcRequestBuilders.multipart(HttpMethod.PUT,
                                 "/" + OlogResourceDescriptors.LOG_RESOURCE_URI + "/multipart")
@@ -562,19 +545,14 @@ public class LogResourceTest extends ResourcesTestBase {
                         .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
                         .header(HttpHeaders.CONTENT_TYPE, "multipart/form-data")
                         .contentType(JSON);
-        mockMvc.perform(request).andExpect(status().isOk());
+        mockMvc.perform(request).andExpect(status().isBadRequest());
 
     }
 
     /**
      * A matcher used to work around issues with {@link Log#equals(Object)} when using the mocks.
      */
-    private static class LogMatcher implements ArgumentMatcher<Log> {
-        private final Log expected;
-
-        public LogMatcher(Log expected) {
-            this.expected = expected;
-        }
+    private record LogMatcher(Log expected) implements ArgumentMatcher<Log> {
 
         @Override
         public boolean matches(Log obj) {
@@ -586,6 +564,18 @@ public class LogResourceTest extends ResourcesTestBase {
                     && obj.getDescription().equals(expected.getDescription());
         }
     }
+
+    private record AttachmentMatcher(Attachment expected) implements ArgumentMatcher<Attachment> {
+
+        @Override
+        public boolean matches(Attachment obj) {
+            if (!(obj instanceof Attachment)) {
+                return false;
+            }
+            return obj.getFilename().equals(expected.getFilename());
+        }
+    }
+
 
     @Test
     void testReplyInvalidLogEntryId() throws Exception {
@@ -725,58 +715,108 @@ public class LogResourceTest extends ResourcesTestBase {
     }
 
     @Test
-    public void testAnalyzeHeic() throws IOException {
-        MultipartFile multipartFile = new MultipartFile() {
-            @Override
-            public String getName() {
-                return "IMG_1.heic";
-            }
+    public void testSaveAttachments() throws Exception {
+        MockMultipartFile file1 =
+                new MockMultipartFile("files", "filename1.txt", "text/plain", "some xml".getBytes());
+        MockMultipartFile file2 =
+                new MockMultipartFile("files", "filename2.txt", "text/plain", "some xml".getBytes());
+        Log log = LogBuilder.createLog().build();
+        Attachment attachment1 = new Attachment();
+        attachment1.setFilename("filename1.txt");
+        Attachment attachment2 = new Attachment();
+        attachment2.setFilename("filename2.txt");
+        log.getAttachments().add(attachment1);
+        log.getAttachments().add(attachment2);
 
-            @Override
-            public String getOriginalFilename() {
-                return "IMG_1.heic";
-            }
+        when(attachmentRepository.save(argThat(new AttachmentMatcher(attachment1)))).thenReturn(attachment1);
+        when(attachmentRepository.save(argThat(new AttachmentMatcher(attachment2)))).thenReturn(attachment2);
 
-            @Override
-            public String getContentType() {
-                return "image/heic";
-            }
+        List<Attachment> savedAttachments = logResource.saveAttachments(log, List.of(file1, file2));
 
-            @Override
-            public boolean isEmpty() {
-                return false;
-            }
-
-            @Override
-            public long getSize() {
-                return 0;
-            }
-
-            @Override
-            public byte[] getBytes() throws IOException {
-                return new byte[0];
-            }
-
-            @Override
-            public InputStream getInputStream() throws IOException {
-                return getClass().getResourceAsStream("/IMG_1.heic");
-            }
-
-            @Override
-            public void transferTo(File dest) throws IllegalStateException {
-
-            }
-        };
-
-        assertThrows(IllegalArgumentException.class, () -> {
-            logResource.checkSupportedAttachmentTypes(new MultipartFile[]{multipartFile});
-        });
+        assertEquals(2, savedAttachments.size());
+        assertEquals(attachment1.getId(), savedAttachments.get(0).getId());
+        assertEquals(attachment2.getId(), savedAttachments.get(1).getId());
     }
 
     @Test
-    public void testAnalyzeNotHeic() {
-        List<MultipartFile> multipartFiles = logResource.checkSupportedAttachmentTypes(new MultipartFile[]{multipartFile});
-        assertEquals(1, multipartFiles.size());
+    void testUpdateExistingWithNewAttachments() throws Exception {
+        Property property1 = new Property();
+        property1.setName("prop1");
+        property1.addAttributes(new Attribute("name1", "value1"));
 
+        Log log = LogBuilder.createLog()
+                .id(1L)
+                .owner("user")
+                .title("title")
+                .withLogbooks(Set.of(logbook1, logbook2))
+                .withTags(Set.of(tag1, tag2))
+                .description("description1")
+                .createDate(now)
+                .level("Urgent")
+                .setProperties(Sets.newSet(property1))
+                .build();
+
+        Attachment attachment1 = new Attachment();
+        attachment1.setFilename("filename1.txt");
+        SortedSet<Attachment> attachments = new TreeSet<>();
+        attachments.add(attachment1);
+        log.setAttachments(attachments);
+
+        MockMultipartFile file1 =
+                new MockMultipartFile("files", "filename1.txt", "text/plain", "some xml".getBytes());
+        MockMultipartFile log1 = new MockMultipartFile("logEntry", "", "application/json", objectMapper.writeValueAsString(log).getBytes());
+
+        when(logRepository.findById("1")).thenReturn(Optional.of(log));
+        when(logRepository.update(log)).thenReturn(log);
+        when(attachmentRepository.save(argThat(a -> true))).thenReturn(attachment);
+
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders.multipart(HttpMethod.POST,
+                        "/" + OlogResourceDescriptors.LOG_RESOURCE_URI + "/multipart")
+                .file(file1)
+                .file(log1)
+                .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
+                .header(HttpHeaders.CONTENT_TYPE, "multipart/form-data")
+                .contentType(JSON);
+        MvcResult result = mockMvc.perform(request).andExpect(status().isOk()).andReturn();
+        Log savedLog = objectMapper.readValue(result.getResponse().getContentAsString(), Log.class);
+        assertEquals(Long.valueOf(1L), savedLog.getId());
+
+        verify(webSocketService, times(1)).sendMessageToClients(new WebSocketMessage(MessageType.LOG_ENTRY_UPDATED, "1"));
+    }
+
+    @Test
+    public void testUpdateExistingWithNewAttachmentsNoLogId() throws Exception {
+        Log log = LogBuilder.createLog().build();
+        MockMultipartFile file1 =
+                new MockMultipartFile("files", "filename1.txt", "text/plain", "some xml".getBytes());
+        MockMultipartFile log1 = new MockMultipartFile("logEntry", "", "application/json", objectMapper.writeValueAsString(log).getBytes());
+
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders.multipart(HttpMethod.POST,
+                        "/" + OlogResourceDescriptors.LOG_RESOURCE_URI + "/multipart")
+                .file(file1)
+                .file(log1)
+                .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
+                .header(HttpHeaders.CONTENT_TYPE, "multipart/form-data")
+                .contentType(JSON);
+        mockMvc.perform(request).andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void testUpdateExistingWithNewAttachmentsBadLogId() throws Exception {
+        Log log = LogBuilder.createLog().id(Long.valueOf(1)).build();
+        MockMultipartFile file1 =
+                new MockMultipartFile("files", "filename1.txt", "text/plain", "some xml".getBytes());
+        MockMultipartFile log1 = new MockMultipartFile("logEntry", "", "application/json", objectMapper.writeValueAsString(log).getBytes());
+
+        when(logRepository.findById("1")).thenReturn(Optional.empty());
+
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders.multipart(HttpMethod.POST,
+                        "/" + OlogResourceDescriptors.LOG_RESOURCE_URI + "/multipart")
+                .file(file1)
+                .file(log1)
+                .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
+                .header(HttpHeaders.CONTENT_TYPE, "multipart/form-data")
+                .contentType(JSON);
+        mockMvc.perform(request).andExpect(status().isBadRequest());
     }
 }
