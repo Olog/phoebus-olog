@@ -1,4 +1,4 @@
-package org.phoebus.olog;
+package org.phoebus.olog.ai;
 
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
