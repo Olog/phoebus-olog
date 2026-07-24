@@ -5,8 +5,6 @@
  * All rights reserved. Use is subject to license terms and conditions.
  */
 package org.phoebus.olog;
-import org.phoebus.olog.ai.LogEntryCreatedEvent;
-import org.springframework.context.ApplicationEventPublisher;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.collections4.CollectionUtils;
@@ -75,6 +73,8 @@ import java.util.stream.Collectors;
 
 import static org.phoebus.olog.OlogResourceDescriptors.LOG_RESOURCE_URI;
 import static org.phoebus.util.time.TimestampFormats.MILLI_PATTERN;
+import org.phoebus.olog.ai.LogEntryCreatedEvent;
+import org.springframework.context.ApplicationEventPublisher;
 
 /**
  * Resource for handling the requests to ../logs
@@ -124,7 +124,11 @@ public class LogResource {
     private WebSocketService webSocketService;
 
     @Autowired
-    private Detector detector;
+    private AttachmentsUploadUtil attachmentsUploadUtil;
+
+    @SuppressWarnings("unused")
+    @Autowired
+    private ApplicationEventPublisher eventPublisher;
 
     /**
      * Custom HTTP header that client may send in order to identify itself. This is logged for some of the
@@ -562,6 +566,7 @@ public class LogResource {
             persistedLog = cleanMarkup(markup, persistedLog);
 
             Log updatedLog = logRepository.update(persistedLog);
+            eventPublisher.publishEvent(new LogEntryCreatedEvent(this, updatedLog));
             if (notifyWsClients) {
                 webSocketService.sendMessageToClients(new WebSocketMessage(MessageType.LOG_ENTRY_UPDATED, persistedLog.getId().toString()));
             }

@@ -5,7 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/search")
+@RequestMapping("/Olog/ai/search")
 public class SemanticSearchController {
 
     private static final Logger logger = LoggerFactory.getLogger(SemanticSearchController.class);

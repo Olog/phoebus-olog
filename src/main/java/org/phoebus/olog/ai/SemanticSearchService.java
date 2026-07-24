@@ -1,8 +1,14 @@
 package org.phoebus.olog.ai;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.Collections;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.document.Document;
@@ -10,6 +16,11 @@ import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.elasticsearch.ElasticsearchVectorStore;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import org.springframework.ai.vectorstore.filter.Filter;
+import org.springframework.ai.vectorstore.filter.FilterExpressionBuilder;
+import org.springframework.ai.vectorstore.filter.FilterExpressionTextParser;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class SemanticSearchService {
@@ -17,6 +28,7 @@ public class SemanticSearchService {
     private final QueryPlannerService plannerService;
     private final ElasticsearchVectorStore vectorStore;
     private final ChatClient chatClient;
+    private static final Logger logger = LoggerFactory.getLogger(SemanticSearchService.class);
 
     public SemanticSearchService(QueryPlannerService plannerService,
                                 ElasticsearchVectorStore vectorStore,
@@ -27,128 +39,162 @@ public class SemanticSearchService {
     }
 
     public SimpleSearchResponse search(SearchQueryRequest request) {
-        
+
+        if (!StringUtils.hasText(request.getQuery())) {
+            throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST, "query must not be empty");
+        }
+
         QueryPlan plan = plannerService.plan(request.getQuery());
+        String semanticQuery = StringUtils.hasText(plan.getSemanticQuery())
+                ? plan.getSemanticQuery()
+                : request.getQuery();
 
-        String semanticQuery = plan.getSemanticQuery();
-        String llmFilter = plan.getFilterExpression();   // can be null
-        String dateFilter = buildDateFilter(
+        Filter.Expression llmFilter = parseLlmFilter(plan.getFilterExpression());
+        Filter.Expression dateFilter = buildDateFilter(
                 request.getCreatedDateFrom(),
-                request.getCreatedDateTo()
-        );
-        String logbookTagFilter = buildlogbookTagFilter(request.getLogbooks(), request.getTags());
+                request.getCreatedDateTo());
+        Filter.Expression uiFilter = buildUiFilter(request);
 
-        String finalFilterExpression = combineFilters(llmFilter, dateFilter, logbookTagFilter);
+        Filter.Expression finalFilter = combineFilters(llmFilter, dateFilter, uiFilter);
+
+        // title/desc drawer inputs aren't exact-filterable in the vector store;
+        // fold them into the semantic query as extra relevance signal
+        StringBuilder sq = new StringBuilder(semanticQuery);
+        if (StringUtils.hasText(request.getTitle())) {
+            sq.append(" ").append(request.getTitle().trim());
+        }
+        if (StringUtils.hasText(request.getDesc())) {
+            sq.append(" ").append(request.getDesc().trim());
+        }
+        semanticQuery = sq.toString();
 
         SearchRequest searchRequest = SearchRequest.builder()
                 .query(semanticQuery)
                 .topK(20)
-                .filterExpression(finalFilterExpression)  // can be null
+                .filterExpression(finalFilter)   // may be null
                 .build();
+
         List<Document> docs = vectorStore.similaritySearch(searchRequest);
 
         List<SearchHitDto> hits = docs.stream()
                 .map(d -> new SearchHitDto(d.getText(), d.getMetadata()))
                 .collect(Collectors.toList());
 
-        // LLM analyze 
-        //String analysis = analyzeWithLlm(request.getQuery(), hits);
-
         return new SimpleSearchResponse(hits);
     }
     
     public AnalysisResponse analyze(AnalysisRequest request) {
-    SearchQueryRequest searchReq = new SearchQueryRequest();
-    searchReq.setQuery(request.getQuery());
-    SimpleSearchResponse searchResult = search(searchReq);
-    String analysis = analyzeWithLlm(request.getQuery(), searchResult.getHits());
-    return new AnalysisResponse(analysis, searchResult.getHits());
+        List<SearchHitDto> hits = request.getHits();
+        if (hits == null || hits.isEmpty()) {
+            return new AnalysisResponse(
+                "No matching log entries were found for this query.",
+                Collections.emptyList());
+        }
+        String analysis = analyzeWithLlm(request.getQuery(), hits);
+        return new AnalysisResponse(analysis, hits);
     }
     
     /**
      * Build a filter expression that checks either createdDate OR eventStart
      * falls inside the given date range (yyyy-MM-dd).
      */
-    private String buildDateFilter(String fromDate, String toDate) {
-        boolean hasFrom = StringUtils.hasText(fromDate);
-        boolean hasTo = StringUtils.hasText(toDate);
+    private static final DateTimeFormatter UI_DATE_FORMAT =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
-        if (!hasFrom && !hasTo) {
+    private Long toEpochMillis(String uiDate) {
+        if (!StringUtils.hasText(uiDate)) {
+            return null;
+        }
+        try {
+            return LocalDateTime.parse(uiDate.trim(), UI_DATE_FORMAT)
+                    .atZone(ZoneId.systemDefault())
+                    .toInstant()
+                    .toEpochMilli();
+        } catch (DateTimeParseException e) {
+            logger.warn("Unparseable date filter value '{}', ignoring", uiDate);
+            return null;
+        }
+    }
+
+    private Filter.Expression parseLlmFilter(String llmFilter) {
+        if (!StringUtils.hasText(llmFilter)) {
+            return null;
+        }
+        try {
+            return new FilterExpressionTextParser().parse(llmFilter);
+        } catch (Exception e) {
+            logger.warn("Ignoring unparseable LLM filter '{}': {}", llmFilter, e.getMessage());
+            return null;
+        }
+    }
+
+    private Filter.Expression buildDateFilter(String fromDate, String toDate) {
+        Long fromMs = toEpochMillis(fromDate);
+        Long toMs = toEpochMillis(toDate);
+
+        if (fromMs == null && toMs == null) {
             return null;
         }
 
-        List<String> fieldFilters = new ArrayList<>();
-
-        // Build for createdDate
-        List<String> createdParts = new ArrayList<>();
-        if (hasFrom) {
-            createdParts.add("createdDate >= '" + fromDate + "'");
-        }
-        if (hasTo) {
-            createdParts.add("createdDate < '" + toDate + "'");
-        }
-        if (!createdParts.isEmpty()) {
-            fieldFilters.add("(" + String.join(" && ", createdParts) + ")");
-        }
-
-        // Build for modifyDate
-       List<String> modifyParts = new ArrayList<>();
-        if (hasFrom) modifyParts.add("modifyDate >= '" + fromDate + "'");
-        if (hasTo)   modifyParts.add("modifyDate < '"  + toDate   + "'");
-        if (!modifyParts.isEmpty()) {
-            fieldFilters.add("(" + String.join(" && ", modifyParts) + ")");
-        }
-
-        if (fieldFilters.isEmpty()) return null;
-
-        // Entry falls in range if either createdDate OR modifyDate matches
-        return "(" + String.join(" || ", fieldFilters) + ")";
+        FilterExpressionBuilder b = new FilterExpressionBuilder();
+        // entry matches if createdDate OR modifyDate falls in range
+        return b.or(
+                rangeOp(b, "createdDate", fromMs, toMs),
+                rangeOp(b, "modifyDate", fromMs, toMs)
+        ).build();
     }
 
-    
-    private String buildlogbookTagFilter(List<String> logbooks, List<String> tags) {
-        List<String> parts = new ArrayList<>();
-        if (logbooks != null && !logbooks.isEmpty()) {
-            if (logbooks.size() == 1) {
-            parts.add("logbooks_name == '" + logbooks.get(0) + "'");
-            } else {
-                String logbookOr = logbooks.stream()
-                .map(lb -> "logbooks_name == '" + lb + "'")
-                .collect(Collectors.joining(" || "));
-                parts.add("(" + logbookOr + ")");
+    private FilterExpressionBuilder.Op rangeOp(FilterExpressionBuilder b,
+                                               String field, Long fromMs, Long toMs) {
+        if (fromMs != null && toMs != null) {
+            return b.and(b.gte(field, fromMs), b.lt(field, toMs));
+        }
+        if (fromMs != null) {
+            return b.gte(field, fromMs);
+        }
+        return b.lt(field, toMs);
+    }
+
+    private Filter.Expression buildUiFilter(SearchQueryRequest request) {
+        FilterExpressionBuilder b = new FilterExpressionBuilder();
+        List<FilterExpressionBuilder.Op> ops = new ArrayList<>();
+
+        if (request.getLogbooks() != null && !request.getLogbooks().isEmpty()) {
+            ops.add(b.in("logbooks_name", request.getLogbooks().toArray()));
+        }
+        if (request.getTags() != null && !request.getTags().isEmpty()) {
+            ops.add(b.in("tags_name", request.getTags().toArray()));
+        }
+        if (request.getLevels() != null && !request.getLevels().isEmpty()) {
+            ops.add(b.in("level", request.getLevels().toArray()));
+        }
+        if (StringUtils.hasText(request.getOwner())) {
+            ops.add(b.eq("owner", request.getOwner().trim()));
+        }
+
+        if (ops.isEmpty()) {
+            return null;
+        }
+
+        FilterExpressionBuilder.Op combined = ops.get(0);
+        for (int i = 1; i < ops.size(); i++) {
+            combined = b.and(combined, ops.get(i));
+        }
+        return combined.build();
+    }
+
+    private Filter.Expression combineFilters(Filter.Expression... expressions) {
+        Filter.Expression result = null;
+        for (Filter.Expression e : expressions) {
+            if (e == null) {
+                continue;
             }
-    }
-    
-    if (tags != null && !tags.isEmpty()) {
-        String tagsList = tags.stream()
-            .map(t -> "'" + t + "'")
-            .collect(Collectors.joining(", "));
-            parts.add("tags_name in [" + tagsList + "]");
-    }
-    
-    if (parts.isEmpty()) {
-        return null;
-    }
-    
-    return String.join(" && ", parts);
-    }
-
-    private String combineFilters(String llmFilter, String dateFilter, String uiFilter) {
-        List<String> nonNullFilters = new ArrayList<>();
-        
-        if (StringUtils.hasText(llmFilter)) {
-            nonNullFilters.add(llmFilter);}
-
-        if (StringUtils.hasText(dateFilter)) {
-            nonNullFilters.add(dateFilter);}
-
-        if (StringUtils.hasText(uiFilter)) {
-            nonNullFilters.add(uiFilter);}
-        
-        if (nonNullFilters.isEmpty()) {
-            return null; }
-    
-    return String.join(" && ", nonNullFilters);
+            result = (result == null)
+                    ? e
+                    : new Filter.Expression(Filter.ExpressionType.AND, result, e);
+        }
+        return result;
     }
 
     private String analyzeWithLlm(String originalQuestion, List<SearchHitDto> hits) {

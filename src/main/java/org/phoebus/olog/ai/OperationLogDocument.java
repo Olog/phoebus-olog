@@ -11,8 +11,8 @@ public class OperationLogDocument {
     private String source;
     private String level;
     private String state;
-    private String createdDate;
-    private String modifyDate;
+    private Long createdDate;
+    private Long modifyDate;
    
     private List<String> logbooksName; 
     private List<String> tagsName;
@@ -40,11 +40,11 @@ public class OperationLogDocument {
     public String getState() { return state; }
     public void setState(String state) { this.state = state; }
 
-    public String getCreatedDate() { return createdDate; }
-    public void setCreatedDate(String createdDate) { this.createdDate = createdDate; }
+    public Long getCreatedDate() { return createdDate; }
+    public void setCreatedDate(Long createdDate) { this.createdDate = createdDate; }
 
-    public String getModifyDate() { return modifyDate; }
-    public void setModifyDate(String modifyDate) { this.modifyDate = modifyDate; }
+    public Long getModifyDate() { return modifyDate; }
+    public void setModifyDate(Long modifyDate) { this.modifyDate = modifyDate; }
 
     public List<String> getLogbooksName() { return logbooksName; }
     public void setLogbooksName(List<String> logbooksName) { this.logbooksName = logbooksName; }

@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.io.IOException;
 
 @RestController
-@RequestMapping("/api/ingest")
+@RequestMapping("/Olog/ai/ingest")
 public class IngestController {
 
     private final IngestService ingestService;
@@ -18,7 +18,7 @@ public class IngestController {
         this.ingestService = ingestService;
     }
 
-    // curl -X POST "http://localhost:8080/api/ingest/logs"
+    // curl -X POST "http://localhost:8080/Olog/ai/ingest/logs"
     @PostMapping("/logs")
     public ResponseEntity<String> ingestOperationLogs() {
         try {

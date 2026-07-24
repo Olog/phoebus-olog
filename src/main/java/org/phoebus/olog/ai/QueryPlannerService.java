@@ -68,8 +68,8 @@ public class QueryPlannerService {
             level options: "Info", "Urgent", "Warning", "Error"
             state options: "Active", "Inactive"
 
-            METADATA FILTERING STRATEGY:
-            Tags are optional on entries, so be inclusive. Follow these rules IN ORDER:
+            METADATA FILTERING STRATEGY — be conservative. A wrong filter silently
+            hides results; a missing filter only ranks them lower. When unsure, DO NOT filter.
             
             1. EXPLICIT TAG REQUEST (highest priority):
             - If query contains "tagged", "tag", or "with [tag name] tag"
@@ -79,17 +79,15 @@ public class QueryPlannerService {
                 * "Operations entries with Alarm tag" → filter by BOTH
             
             2. LOGBOOK + TAG CONCEPT (without explicit "tagged"):
+            TOPIC WORDS ARE NOT FILTERS
             - Filter by logbook only
             - Put tag concept in semanticQuery
             - Examples:
                 * "controls commissioning interlock testing" → logbook filter only
                 * "Operations alarm events" → logbook filter only
             
-            3. TAG ONLY (no logbook mentioned):
-            - Use tag filter
-            - Examples:
-                * "show me alarm entries" → tag filter only
-                * "maintenance logs" → tag filter only
+            3. NEVER add a filter for a value the user did not clearly intend as a
+            category, and NEVER filter on more than what was explicitly requested.
             
             4. LOGBOOK ONLY:
             - Use logbook filter
@@ -105,6 +103,10 @@ public class QueryPlannerService {
               }
 
             - If there are no metadata filters, set "filterExpression" to null.
+
+            - "semanticQuery" must NEVER be an empty string. If the entire
+              question was converted into filters, set "semanticQuery" to the
+              original question verbatim.
             """;
 
         return executeWithRetry(() -> {

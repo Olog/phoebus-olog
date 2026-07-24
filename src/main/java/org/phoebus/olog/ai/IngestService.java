@@ -70,7 +70,7 @@ public class IngestService {
     }
 
     // BULK-INGEST
-    // Called manually via POST /api/ingest to backfill existing entries.
+    // Called manually via POST /ai/ingest to backfill existing entries.
 
     public void ingestAll() throws IOException {
     int totalIngested = 0;
@@ -100,7 +100,8 @@ public class IngestService {
         totalIngested += hits.size();
         logger.info("Current ingest total: {}", totalIngested);
 
-        lastId = (String) hits.get(hits.size() - 1).source().get("id");
+        //lastId = (String) hits.get(hits.size() - 1).source().get("id");
+        lastId = toString(hits.get(hits.size() - 1).source().get("id"));
         if (hits.size() < PAGE_SIZE) break;
     }
 
@@ -175,8 +176,8 @@ private OperationLogDocument flattenLog(Log log) {
     doc.setSource(log.getSource());
     doc.setLevel(log.getLevel());
     doc.setState(log.getState() != null ? log.getState().toString() : null);
-    doc.setCreatedDate(toString(log.getCreatedDate()));
-    doc.setModifyDate(toString(log.getModifyDate()));
+    doc.setCreatedDate(log.getCreatedDate() != null ? log.getCreatedDate().toEpochMilli() : null);
+    doc.setModifyDate(log.getModifyDate() != null ? log.getModifyDate().toEpochMilli() : null); 
     doc.setLogbooksName(log.getLogbooks() != null
         ? log.getLogbooks().stream().map(lb -> lb.getName()).filter(n -> n != null).collect(Collectors.toList())
         : Collections.emptyList());
@@ -200,6 +201,8 @@ private OperationLogDocument flattenLog(Log log) {
         doc.setSource(toString(src.get("source")));
         doc.setLevel(toString(src.get("level")));
         doc.setState(toString(src.get("state")));
+        doc.setCreatedDate(toLong(src.get("createdDate")));
+        doc.setModifyDate(toLong(src.get("modifyDate")));
 
         doc.setLogbooksName(extractNestedNames(src, "logbooks", "name"));
         doc.setTagsName(extractNestedNames(src, "tags", "name"));
@@ -238,6 +241,16 @@ private OperationLogDocument flattenLog(Log log) {
 
     private String toString(Object value) {
         return value != null ? value.toString() : null;
+    }
+    
+    private Long toLong(Object value) {
+        if (value == null) return null;
+        if (value instanceof Number n) return n.longValue();
+        try {
+            return Long.parseLong(value.toString());
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 }
 
