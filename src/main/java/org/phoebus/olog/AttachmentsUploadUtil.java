@@ -57,6 +57,9 @@ public class AttachmentsUploadUtil {
      */
     protected boolean isAttachmentUploadConsistent(Log logEntry, MultipartFile[] multipartFiles) {
 
+        if (logEntry.getAttachments() == null) {
+             logEntry.setAttachments(new TreeSet<>());
+         }
         Set<Attachment> attachmentsWithFileCounterpart = getAttachmentsWithFileCounterpart(logEntry, multipartFiles);
         Collection<Attachment> attachmentsWithoutFileCounterpart =
                 CollectionUtils.removeAll(logEntry.getAttachments(), attachmentsWithFileCounterpart);
@@ -78,11 +81,14 @@ public class AttachmentsUploadUtil {
                     logger.log(Level.WARNING, () -> MessageFormat.format(TextUtil.ATTACHMENT_FILE_NOT_MATCHED_META_DATA, originalFileName));
                     return false;
                 }
+                 String id = attachment.get(0).getId();
+                 if (id == null || id.isBlank()) {
+                     logger.log(Level.WARNING, "Attachment id missing for uploaded file: " + originalFileName);
+                     return false;
+                 }
             }
             return true;
         }
-        return true;
-    }
 
     /**
      * Checks if all the {@link Attachment}s provided exist in the {@link Attachment}s storage.

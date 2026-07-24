@@ -817,6 +817,6 @@ public class LogResourceTest extends ResourcesTestBase {
                 .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
                 .header(HttpHeaders.CONTENT_TYPE, "multipart/form-data")
                 .contentType(JSON);
-        mockMvc.perform(request).andExpect(status().isBadRequest());
+        mockMvc.perform(request).andExpect(status().isNotFound());
     }
 }

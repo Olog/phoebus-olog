@@ -121,6 +121,12 @@ public class SemanticSearchService {
         if (!StringUtils.hasText(llmFilter)) {
             return null;
         }
+                 // Date constraints must come only from UI filters, never from the LLM.
+         String normalized = llmFilter.toLowerCase();
+         if (normalized.contains("createddate") || normalized.contains("modifydate")) {
+             logger.warn("Ignoring LLM filter that attempts to constrain dates: {}", llmFilter);
+             return null;
+         }
         try {
             return new FilterExpressionTextParser().parse(llmFilter);
         } catch (Exception e) {

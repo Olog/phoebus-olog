@@ -19,15 +19,15 @@ public class SemanticSearchController {
     @PostMapping("/semantic")
     public SimpleSearchResponse semanticSearch(@RequestBody SearchQueryRequest request) {
         long start = System.currentTimeMillis();
-        logger.info("[SEARCH] Query: {}", request.getQuery());
-        logger.info("[SEARCH] UI Filters: logbooks={}, tags={}, dateRange={} to {}",
+        logger.debug("[SEARCH] Query: {}", request.getQuery());
+        logger.debug("[SEARCH] UI Filters: logbooks={}, tags={}, dateRange={} to {}",
             request.getLogbooks(), request.getTags(),
             request.getCreatedDateFrom() != null ? request.getCreatedDateFrom() : "any",
             request.getCreatedDateTo() != null ? request.getCreatedDateTo() : "any");
 
         SimpleSearchResponse response = searchService.search(request);
 
-        logger.info("[SEARCH] Completed in {}s, found {} results",
+        logger.debug("[SEARCH] Completed in {}s, found {} results",
             (System.currentTimeMillis() - start) / 1000.0,
             response.getHits() != null ? response.getHits().size() : 0);
 
@@ -37,11 +37,11 @@ public class SemanticSearchController {
     @PostMapping("/analyze")
     public AnalysisResponse analyzeResults(@RequestBody AnalysisRequest request) {
         long start = System.currentTimeMillis();
-        logger.info("[ANALYSIS] Starting analysis for query: {}", request.getQuery());
+        logger.debug("[ANALYSIS] Starting analysis for query: {}", request.getQuery());
 
         AnalysisResponse response = searchService.analyze(request);
 
-        logger.info("[ANALYSIS] Completed in {}s",
+        logger.debug("[ANALYSIS] Completed in {}s",
             (System.currentTimeMillis() - start) / 1000.0);
 
         return response;

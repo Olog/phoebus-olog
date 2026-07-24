@@ -48,7 +48,7 @@ public class QueryPlannerService {
             IS: 'IS' | 'is'; NULL: 'NULL' | 'null'; NOT NULL: 'NOT NULL' | 'not null';
             -If a term sounds like it could be metadata but is NOT in the allowed lists, treat 
             it as semantic search content and do NOT include it in the filter expression and DO NOT 
-            deviant from the approved list.
+            deviate from the approved list.
 
             The backend has:
             - A semantic search over the `description` text using embeddings.
@@ -107,7 +107,7 @@ public class QueryPlannerService {
             - "semanticQuery" must NEVER be an empty string. If the entire
               question was converted into filters, set "semanticQuery" to the
               original question verbatim.
-            """;
+            """.formatted(logbookOptions, tagOptions);
 
         return executeWithRetry(() -> {
             String rawResponse = this.chatClient
@@ -138,30 +138,28 @@ public class QueryPlannerService {
      private QueryPlan executeWithRetry(java.util.function.Supplier<QueryPlan> operation, String userQuery) {
         Exception lastException = null;
         
+        long backoffMs = INITIAL_BACKOFF_MS;
+        
         for (int attempt = 1; attempt <= MAX_RETRIES; attempt++) {
             try {
                 return operation.get();
             } catch (Exception e) {
                 lastException = e;
                 logger.warn("Attempt {}/{} failed: {}", attempt, MAX_RETRIES, e.getMessage());
-                
-                if (attempt < MAX_RETRIES) {
-                    long backoffTime = INITIAL_BACKOFF_MS * (long) Math.pow(2, attempt - 1);
-                    logger.info("Retrying in {}ms...", backoffTime);
-                    try {
-                        Thread.sleep(backoffTime);
-                    } catch (InterruptedException ie) {
-                        Thread.currentThread().interrupt();
-                        logger.error("Retry interrupted", ie);
-                        break;
-                    }
-                }
-            }
-        }
-        
+                 if (attempt < MAX_RETRIES) {
+                     try {
+                         Thread.sleep(backoffMs);
+                     } catch (InterruptedException ie) {
+                         Thread.currentThread().interrupt();
+                         break;
+                     }
+                     backoffMs *= 2;
+                 }
+             }
+         }
         // All retries failed - return fallback
-        logger.error("All {} retry attempts failed. Returning fallback for query: {}", 
-                    MAX_RETRIES, userQuery, lastException);
+       logger.error("All {} retry attempts failed. Returning fallback for query: {}",
+                 MAX_RETRIES, userQuery, lastException);
         QueryPlan fallback = new QueryPlan();
         fallback.setSemanticQuery(userQuery);
         fallback.setFilterExpression(null);
