@@ -23,7 +23,7 @@ public class IngestController {
     public ResponseEntity<String> ingestOperationLogs() {
         try {
             ingestService.ingestAll();
-            return ResponseEntity.ok("Successfully ingested.");
+            return ResponseEntity.ok("Successfully ingest.");
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Ingest failed: " + e.getMessage());

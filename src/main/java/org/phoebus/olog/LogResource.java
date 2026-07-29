@@ -455,8 +455,7 @@ public class LogResource {
                 newLogEntry.setAttachments(new TreeSet<>(savedAttachments));
                 newLogEntry = logRepository.update(newLogEntry);
             } catch (Exception e) {
-                logger.log(Level.WARNING, "Failed to persist attachments for log entry " + newLogEntry.getId(), e);
-                 throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to persist attachments", e);
+                throw new RuntimeException(e);
             }
         }
 
@@ -538,7 +537,12 @@ public class LogResource {
             Log persistedLog = foundLog.get();
             logRepository.archive(persistedLog);
 
-            // Attachments are not updated via this endpoint; use /logs/multipart for attachment changes.
+            // If persisted log has attachments not listed in the log submitted by client,
+            // remove those as it indicates user wants to remove attachments from the updated entry.
+            // However, such removed attachments are not deleted from persistence layer as they
+            // are still referenced in the archived log entry.
+            Collection<Attachment> retained = CollectionUtils.retainAll(persistedLog.getAttachments(), log.getAttachments());
+            persistedLog.setAttachments(new TreeSet<>(retained));
 
             // log entry group property should not be editable but remain if it exists
             Property logEntryGroupProperty = LogEntryGroupHelper.getLogEntryGroupProperty(log);
@@ -588,7 +592,7 @@ public class LogResource {
 
         Optional<Log> exitingLogEntryOptional = logRepository.findById(Long.toString(logEntry.getId()));
         if (exitingLogEntryOptional.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     MessageFormat.format(TextUtil.LOG_NOT_FOUND, logEntry.getId()));
         }
 
@@ -609,13 +613,12 @@ public class LogResource {
                 logEntry,
                 principal);
 
-         // Save uploaded files first (if any) so we don't persist attachment refs that don't exist yet.
+        //And then save the new attachments
         if (files != null) {
-            saveAttachments(logEntry, multipartFiles);
-         }
-         // Persist the attachment list exactly as provided by the client (supports removal as well).
-         updatedLog.setAttachments(logEntry.getAttachments() != null ? new TreeSet<>(logEntry.getAttachments()) : new TreeSet<>());
-         updatedLog = logRepository.update(updatedLog);
+            List<Attachment> savedAttachments = saveAttachments(logEntry, multipartFiles);
+            updatedLog.getAttachments().addAll(new TreeSet<>(savedAttachments));
+            updatedLog = logRepository.update(updatedLog);
+        }
 
         webSocketService.sendMessageToClients(new WebSocketMessage(MessageType.LOG_ENTRY_UPDATED, updatedLog.getId().toString()));
 
@@ -847,8 +850,8 @@ public class LogResource {
      * checked for consistency.
      * </p>
      *
-     * @param logEntry       A log entry including {@link Attachment}s
-     * @param multipartFiles The file uploaded by client
+     * @param logEntry       A log entry inlcuding {@link Attachment}s
+     * @param multipartFiles The fils uploaded by client
      * @return A {@link List} of {@link Attachment}s representing the persisted attachment files.
      */
     protected List<Attachment> saveAttachments(Log logEntry, List<MultipartFile> multipartFiles) {

@@ -495,18 +495,9 @@ public class LogSearchUtil {
         ZonedDateTime start = ZonedDateTime.ofInstant(Instant.EPOCH, ZoneId.systemDefault());
         ZonedDateTime end = ZonedDateTime.now();
 
-        int size = defaultSearchSize;
-         int from = 0;
-         try {
-             if (sizeParam != null) {
-                 size = Integer.parseInt(sizeParam);
-             }
-             if (searchParameters.containsKey(FROM)) {
-                 from = Integer.parseInt(searchParameters.getFirst(FROM));
-             }
-         } catch (NumberFormatException e) {
-             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid 'size' or 'from' parameter", e);
-         }
+        String sizeParam = searchParameters.containsKey(SIZE) ? searchParameters.getFirst(SIZE) : searchParameters.getFirst(LIMIT);
+        int size = sizeParam != null ? Integer.parseInt(sizeParam) : defaultSearchSize;
+        int from = searchParameters.containsKey(FROM) ? Integer.parseInt(searchParameters.getFirst(FROM)) : 0;
 
         for (Entry<String, List<String>> parameter : searchParameters.entrySet()) {
             switch (parameter.getKey().strip().toLowerCase()) {
@@ -567,7 +558,7 @@ public class LogSearchUtil {
 
         BoolQuery _hybridQuery = builder.build();
 
-        // Adds createdDate to the relevancy score of the query
+        // Adds createdDate to the relavancy score of the query
         FunctionScoreQuery functionScoreQuery = FunctionScoreQuery.of(fs -> fs
                 .query(_hybridQuery._toQuery())
                 .functions(f -> f
