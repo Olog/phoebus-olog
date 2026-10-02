@@ -63,6 +63,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -328,6 +329,16 @@ public class LogResource {
                          @RequestParam(name = "inReplyTo", required = false, defaultValue = "-1") String inReplyTo,
                          @RequestBody Log log,
                          @AuthenticationPrincipal Principal principal) {
+        return createLog(clientInfo, markup, notifyWsClients, inReplyTo, log, principal, true);
+    }
+
+    private Log createLog(String clientInfo,
+                          String markup,
+                          boolean notifyWsClients,
+                          String inReplyTo,
+                          Log log,
+                          Principal principal,
+                          boolean notifyLogEntryNotifiers) {
         if (log.getLogbooks().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, TextUtil.LOG_MUST_HAVE_LOGBOOK);
         }
@@ -356,7 +367,9 @@ public class LogResource {
         log = cleanMarkup(markup, log);
         addPropertiesFromProviders(log);
         Log newLogEntry = logRepository.save(log);
-        sendToNotifiers(newLogEntry);
+        if (notifyLogEntryNotifiers) {
+            sendToNotifiers(newLogEntry);
+        }
 
         if (notifyWsClients) {
             webSocketService.sendMessageToClients(new WebSocketMessage(MessageType.NEW_LOG_ENTRY, null));
@@ -440,17 +453,25 @@ public class LogResource {
         }
 
         // Attachments consistency checked, safe to create log entry
-        Log newLogEntry = createLog(clientInfo, markup, false, inReplyTo, logEntry, principal);
+        Log newLogEntry = createLog(clientInfo, markup, false, inReplyTo, logEntry, principal, false);
 
         if (files != null) {
             try {
                 List<Attachment> savedAttachments = saveAttachments(logEntry, multipartFiles);
                 newLogEntry.setAttachments(new TreeSet<>(savedAttachments));
                 newLogEntry = logRepository.update(newLogEntry);
+                SortedSet<Attachment> persistedAttachments = savedAttachments.stream()
+                        .map(attachment -> attachmentRepository.findById(attachment.getId())
+                                .orElseThrow(() -> new IllegalStateException(
+                                        "Attachment not found after save: " + attachment.getId())))
+                        .collect(Collectors.toCollection(TreeSet::new));
+                newLogEntry.setAttachments(persistedAttachments);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         }
+
+        sendToNotifiers(newLogEntry);
 
         Long id = newLogEntry.getId();
         webSocketService.sendMessageToClients(new WebSocketMessage(MessageType.NEW_LOG_ENTRY, null));

@@ -7,6 +7,7 @@ package org.phoebus.olog;
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentMatcher;
@@ -23,6 +24,7 @@ import org.phoebus.olog.entity.SearchResult;
 import org.phoebus.olog.entity.Tag;
 import org.phoebus.olog.entity.websocket.MessageType;
 import org.phoebus.olog.entity.websocket.WebSocketMessage;
+import org.phoebus.olog.notification.LogEntryNotifier;
 import org.phoebus.olog.websocket.WebSocketService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -31,6 +33,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.core.task.SyncTaskExecutor;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.ContextHierarchy;
 import org.springframework.test.context.TestPropertySource;
@@ -38,6 +41,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.multipart.MultipartFile;
@@ -59,6 +63,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.argThat;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -97,6 +102,8 @@ public class LogResourceTest extends ResourcesTestBase {
     @Autowired
     private LogResource logResource;
 
+    private LogEntryNotifier logEntryNotifier;
+
     private static Log log1;
     private static Log log2;
 
@@ -111,6 +118,13 @@ public class LogResourceTest extends ResourcesTestBase {
     private static Tag tag2;
 
     private static final Instant now = Instant.now();
+
+    @BeforeEach
+    void configureNotifier() {
+        logEntryNotifier = mock(LogEntryNotifier.class);
+        ReflectionTestUtils.setField(logResource, "logEntryNotifiers", List.of(logEntryNotifier));
+        ReflectionTestUtils.setField(logResource, "taskExecutor", new SyncTaskExecutor());
+    }
 
     @BeforeAll
     public static void init() {
@@ -408,6 +422,7 @@ public class LogResourceTest extends ResourcesTestBase {
         log.setAttachments(attachments);
         MockMultipartFile file1 =
                 new MockMultipartFile("files", "filename1.txt", "text/plain", "some xml".getBytes());
+        attachment.setAttachment(file1);
         MockMultipartFile log1 = new MockMultipartFile("logEntry", "", "application/json", objectMapper.writeValueAsString(log).getBytes());
 
         when(logbookRepository.findAll()).thenReturn(Arrays.asList(logbook1, logbook2));
@@ -415,6 +430,7 @@ public class LogResourceTest extends ResourcesTestBase {
         when(logRepository.save(argThat(new LogMatcher(log)))).thenReturn(log);
         when(logRepository.findById("1")).thenReturn(Optional.of(log));
         when(attachmentRepository.save(argThat(attachment1 -> true))).thenReturn(attachment);
+        when(attachmentRepository.findById("attachmentId")).thenReturn(Optional.of(attachment));
         when(logRepository.update(argThat(attachment1 -> true))).thenReturn(log);
         MockHttpServletRequestBuilder request =
                 MockMvcRequestBuilders.multipart(HttpMethod.PUT,
@@ -428,6 +444,9 @@ public class LogResourceTest extends ResourcesTestBase {
 
         Log savedLog = objectMapper.readValue(result.getResponse().getContentAsString(), Log.class);
         assertEquals(Long.valueOf(1L), savedLog.getId());
+        verify(logEntryNotifier, times(1)).notify(argThat(notifiedLog ->
+                notifiedLog.getAttachments().size() == 1
+                        && notifiedLog.getAttachments().first().getAttachment() != null));
         verify(webSocketService, times(1)).sendMessageToClients(new WebSocketMessage(MessageType.NEW_LOG_ENTRY, null));
     }
 
