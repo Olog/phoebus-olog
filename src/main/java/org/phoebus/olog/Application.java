@@ -4,6 +4,7 @@ import org.apache.tika.detect.DefaultDetector;
 import org.apache.tika.detect.Detector;
 import org.phoebus.olog.notification.LogEntryNotifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -73,13 +74,11 @@ public class Application {
      * @return A list of {@link LogEntryNotifier}s, if any have been registered over SPI.
      */
     @Bean
-    public List<LogEntryNotifier> logEntryNotifiers() {
+    public List<LogEntryNotifier> logEntryNotifiers(AutowireCapableBeanFactory beanFactory) {
         List<LogEntryNotifier> notifiers = new ArrayList<>();
-        ServiceLoader<LogEntryNotifier> loader = ServiceLoader.load(LogEntryNotifier.class);
-        loader.stream().forEach(p -> {
-            LogEntryNotifier notifier = p.get();
-            notifiers.add(notifier);
-        });
+        ServiceLoader.load(LogEntryNotifier.class)
+            .stream()
+            .forEach(provider -> notifiers.add(beanFactory.createBean(provider.type())));
         return notifiers;
     }
 
