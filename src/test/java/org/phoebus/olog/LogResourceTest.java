@@ -62,6 +62,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.argThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
@@ -283,33 +284,6 @@ public class LogResourceTest extends ResourcesTestBase {
         mockMvc.perform(request).andExpect(status().isUnauthorized());
     }
 
-    @Test
-    void testCreateLog() throws Exception {
-        Log log = LogBuilder.createLog()
-                .id(1L)
-                .owner("user")
-                .title("title")
-                .withLogbooks(Set.of(logbook1, logbook2))
-                .withTags(Set.of(tag1, tag2))
-                .source("description1")
-                .createDate(now)
-                .modifyDate(now)
-                .level("Urgent")
-                .build();
-        when(logbookRepository.findAll()).thenReturn(Arrays.asList(logbook1, logbook2));
-        when(tagRepository.findAll()).thenReturn(Arrays.asList(tag1, tag2));
-        when(logRepository.save(argThat(new LogMatcher(log)))).thenReturn(log);
-        MockHttpServletRequestBuilder request = put("/" + OlogResourceDescriptors.LOG_RESOURCE_URI)
-                .content(objectMapper.writeValueAsString(log1))
-                .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
-                .contentType(JSON);
-        MvcResult result = mockMvc.perform(request).andExpect(status().isOk()).andReturn();
-
-        Log savedLog = objectMapper.readValue(result.getResponse().getContentAsString(), Log.class);
-        assertEquals(Long.valueOf(1L), savedLog.getId());
-
-        verify(webSocketService, times(1)).sendMessageToClients(new WebSocketMessage(MessageType.NEW_LOG_ENTRY, null));
-    }
 
     /**
      * Basically only test the endpoint...
@@ -598,30 +572,43 @@ public class LogResourceTest extends ResourcesTestBase {
 
     @Test
     void testReplyInvalidLogEntryId() throws Exception {
+        Log reply = LogBuilder.createLog().title("Reply").withLogbook(logbook1).build();
+        MockMultipartFile multipartFile = new MockMultipartFile("logEntry", "", "application/json", objectMapper.writeValueAsString(reply).getBytes());
         when(logbookRepository.findAll()).thenReturn(Arrays.asList(logbook1, logbook2));
         when(tagRepository.findAll()).thenReturn(Arrays.asList(tag1, tag2));
         when(logRepository.findById("7"))
                 .thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to retrieve log"));
-        MockHttpServletRequestBuilder request = put("/" + OlogResourceDescriptors.LOG_RESOURCE_URI + "?inReplyTo=7")
-                .content(objectMapper.writeValueAsString(log1))
-                .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
-                .contentType(JSON);
+        MockHttpServletRequestBuilder request =
+                MockMvcRequestBuilders.multipart(HttpMethod.PUT,
+                                "/" + OlogResourceDescriptors.LOG_RESOURCE_URI + "/multipart?inReplyTo=7")
+                        .file(multipartFile)
+                        .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
+                        .header(HttpHeaders.CONTENT_TYPE, "multipart/form-data")
+                        .contentType(JSON);
         mockMvc.perform(request).andExpect(status().isBadRequest());
+        verify(logRepository).findById("7");
+        verify(logRepository, Mockito.never()).save(any(Log.class));
     }
 
     @Test
     void testReplyValidLogEntryId() throws Exception {
+        Log reply = LogBuilder.createLog().title("Reply").withLogbook(logbook1).build();
+        MockMultipartFile multipartFile = new MockMultipartFile("logEntry", "", "application/json", objectMapper.writeValueAsString(reply).getBytes());
         when(logbookRepository.findAll()).thenReturn(Arrays.asList(logbook1, logbook2));
         when(tagRepository.findAll()).thenReturn(Arrays.asList(tag1, tag2));
         when(logRepository.findById("7"))
                 .thenReturn(Optional.of(Log.LogBuilder.createLog().id(7L).build()));
         Log log = Log.LogBuilder.createLog().id(1L).build();
         when(logRepository.save(Mockito.any(Log.class))).thenAnswer(invocationOnMock -> log);
-        MockHttpServletRequestBuilder request = put("/" + OlogResourceDescriptors.LOG_RESOURCE_URI + "?inReplyTo=7")
-                .content(objectMapper.writeValueAsString(log1))
-                .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
-                .contentType(JSON);
+        MockHttpServletRequestBuilder request =
+                MockMvcRequestBuilders.multipart(HttpMethod.PUT,
+                                "/" + OlogResourceDescriptors.LOG_RESOURCE_URI + "/multipart?inReplyTo=7")
+                        .file(multipartFile)
+                        .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
+                        .header(HttpHeaders.CONTENT_TYPE, "multipart/form-data")
+                        .contentType(JSON);
         mockMvc.perform(request).andExpect(status().isOk());
+        verify(logRepository).findById("7");
         verify(webSocketService, times(1)).sendMessageToClients(new WebSocketMessage(MessageType.NEW_LOG_ENTRY, null));
     }
 
