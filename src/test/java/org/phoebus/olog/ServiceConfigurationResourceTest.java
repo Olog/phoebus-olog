@@ -78,6 +78,9 @@ public class ServiceConfigurationResourceTest extends ResourcesTestBase {
         MvcResult result = mockMvc.perform(request).andExpect(status().isOk())
                 .andReturn();
         ServiceConfiguration serviceConfiguration = objectMapper.readValue(result.getResponse().getContentAsString(), ServiceConfiguration.class);
+        // OIDC is not enabled in this context: password login only
+        assertTrue(serviceConfiguration.getAuthentication().passwordLogin());
+        assertTrue(serviceConfiguration.getAuthentication().oidcProviders().isEmpty());
         assertTrue(serviceConfiguration.getLogbooks().iterator().hasNext());
         assertTrue(serviceConfiguration.getTags().iterator().hasNext());
         assertTrue(serviceConfiguration.getLevels().size() > 0);

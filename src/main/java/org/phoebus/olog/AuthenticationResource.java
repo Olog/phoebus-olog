@@ -159,7 +159,7 @@ public class AuthenticationResource {
      * @param roles    List of user roles
      * @return A {@link Session} object.
      */
-    protected synchronized Session findOrCreateSession(String userName, List<String> roles) {
+    public synchronized Session findOrCreateSession(String userName, List<String> roles) {
         Session session;
         Map<String, Session> sessions = sessionRepository.findByPrincipalName(userName);
         if (!sessions.isEmpty()) {

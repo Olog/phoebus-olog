@@ -38,6 +38,10 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
+import org.springframework.security.web.util.matcher.AndRequestMatcher;
+import org.springframework.security.web.util.matcher.NegatedRequestMatcher;
+import org.springframework.security.web.util.matcher.OrRequestMatcher;
 import org.springframework.session.FindByIndexNameSessionRepository;
 import org.springframework.session.jdbc.JdbcIndexedSessionRepository;
 import org.springframework.transaction.support.TransactionOperations;
@@ -127,7 +131,11 @@ public class WebSecurityConfig {
         PathRequest.H2ConsoleRequestMatcher s = PathRequest.toH2Console();
         return (web) -> web
                 .ignoring()
-                .requestMatchers(HttpMethod.GET, "/" + OlogResourceDescriptors.OLOG_SERVICE + "/**")
+                .requestMatchers(new AndRequestMatcher(
+                        PathPatternRequestMatcher.withDefaults().matcher(HttpMethod.GET, "/" + OlogResourceDescriptors.OLOG_SERVICE + "/**"),
+                        new NegatedRequestMatcher(new OrRequestMatcher(
+                                PathPatternRequestMatcher.withDefaults().matcher("/" + OlogResourceDescriptors.OLOG_SERVICE + "/oauth2/**"),
+                                PathPatternRequestMatcher.withDefaults().matcher("/" + OlogResourceDescriptors.OLOG_SERVICE + "/login/oauth2/**")))))
                 .requestMatchers(HttpMethod.OPTIONS, "/" + OlogResourceDescriptors.OLOG_SERVICE + "/**")
                 .requestMatchers(HttpMethod.POST, "/" + OlogResourceDescriptors.OLOG_SERVICE + "/login")
                 .requestMatchers(HttpMethod.GET, "/" + OlogResourceDescriptors.OLOG_SERVICE + "/logout")

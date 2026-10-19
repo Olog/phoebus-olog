@@ -18,6 +18,8 @@
 
 package org.phoebus.olog;
 
+import org.phoebus.olog.entity.AuthenticationOptions;
+import org.phoebus.olog.security.OidcSecurityConfig;
 import org.phoebus.olog.entity.ServiceConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -45,13 +47,20 @@ public class ServiceConfigurationResource {
     @Value("#{'${levels:Urgent,Suggestion,Info,Request,Problem}'.split(',')}")
     private List<String> levels;
 
+    /** Only present if "oidc" is listed in property authenticationProviders. */
+    @Autowired(required = false)
+    private OidcSecurityConfig oidcSecurityConfig;
+
     @GetMapping
-    @Operation(summary = "Get configuration", description = "Get levels, logbooks and tags configuration")
+    @Operation(summary = "Get configuration", description = "Get levels, logbooks, tags and authentication options")
     public ServiceConfiguration serviceConfiguration(){
         ServiceConfiguration serviceConfiguration = new ServiceConfiguration();
         serviceConfiguration.setLevels(levels);
         serviceConfiguration.setLogbooks(logbookRepository.findAll());
         serviceConfiguration.setTags(tagRepository.findAll());
+        serviceConfiguration.setAuthentication(oidcSecurityConfig != null
+                ? oidcSecurityConfig.authenticationOptions()
+                : AuthenticationOptions.passwordOnly());
         return serviceConfiguration;
     }
 }

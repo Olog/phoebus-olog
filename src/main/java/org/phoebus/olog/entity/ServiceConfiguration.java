@@ -25,6 +25,7 @@ public class ServiceConfiguration {
     private Iterable<Logbook> logbooks;
     private Iterable<Tag> tags;
     private List<String> levels;
+    private AuthenticationOptions authentication = AuthenticationOptions.passwordOnly();
 
     public Iterable<Logbook> getLogbooks() {
         return logbooks;
@@ -48,5 +49,13 @@ public class ServiceConfiguration {
 
     public void setLevels(List<String> levels) {
         this.levels = levels;
+    }
+
+    public AuthenticationOptions getAuthentication() {
+        return authentication;
+    }
+
+    public void setAuthentication(AuthenticationOptions authentication) {
+        this.authentication = authentication;
     }
 }
