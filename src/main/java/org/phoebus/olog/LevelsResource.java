@@ -5,6 +5,7 @@ package org.phoebus.olog;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -23,7 +24,7 @@ import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static org.phoebus.olog.OlogResourceDescriptors.LEVEL_RESOURCE_RUI;
+import static org.phoebus.olog.OlogResourceDescriptors.LEVEL_RESOURCE_URI;
 
 /**
  * Resource for handling the requests to ../levels
@@ -32,7 +33,7 @@ import static org.phoebus.olog.OlogResourceDescriptors.LEVEL_RESOURCE_RUI;
  */
 @SuppressWarnings("unused")
 @RestController
-@RequestMapping(LEVEL_RESOURCE_RUI)
+@RequestMapping(LEVEL_RESOURCE_URI)
 @io.swagger.v3.oas.annotations.tags.Tag(name = "Levels")
 public class LevelsResource {
 
@@ -90,6 +91,7 @@ public class LevelsResource {
      */
     @SuppressWarnings("unused")
     @PutMapping("/{levelName}")
+    @PreAuthorize("@authorizationHelper.mayManageMetadata(#root)")
     @Operation(summary = "Create a level",
 				description = "If the specified level is marked as default,\n"
 						+ "checks are made to make sure no existing level\n"
@@ -122,6 +124,7 @@ public class LevelsResource {
     @SuppressWarnings("unused")
     @PutMapping
     @Operation(summary = "Create a list of levels", operationId = "createLevels")
+    @PreAuthorize("@authorizationHelper.mayManageMetadata(#root)")
     public Iterable<org.phoebus.olog.entity.Level> createLevels(@RequestBody final List<org.phoebus.olog.entity.Level> levels) {
 
         // Validate request parameters
@@ -142,6 +145,7 @@ public class LevelsResource {
     @SuppressWarnings("unused")
     @DeleteMapping("/{levelName}")
     @Operation(summary = "Delete a level by name")
+    @PreAuthorize("@authorizationHelper.mayManageMetadata(#root)")
     public void deleteLevel(@PathVariable(name = "levelName") String levelName) {
 
         // check if present
@@ -159,7 +163,7 @@ public class LevelsResource {
     /**
      * @param levels List of {@link org.phoebus.olog.entity.Level}s
      */
-    public void validateLevelsRequest(List<org.phoebus.olog.entity.Level> levels) {
+    private void validateLevelsRequest(List<org.phoebus.olog.entity.Level> levels) {
         levels.forEach(this::validateLevelRequest);
     }
 
@@ -170,7 +174,7 @@ public class LevelsResource {
      *
      * @param level {@link org.phoebus.olog.entity.Level} to add.
      */
-    public void validateLevelRequest(org.phoebus.olog.entity.Level level) {
+    private void validateLevelRequest(org.phoebus.olog.entity.Level level) {
         if (level.name() == null || level.name().isEmpty()) {
             String message = TextUtil.LEVEL_NAME_CANNOT_BE_NULL_OR_EMPTY;
             log.log(Level.SEVERE, message, new ResponseStatusException(HttpStatus.BAD_REQUEST));

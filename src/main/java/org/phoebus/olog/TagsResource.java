@@ -16,6 +16,7 @@ import java.util.logging.Logger;
 import org.phoebus.olog.entity.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -41,10 +42,6 @@ public class TagsResource {
 
     @Autowired
     private TagRepository tagRepository;
-
-    /** Creates a new instance of TagsResource */
-    public TagsResource() {
-    }
 
     /**
      * GET method for retrieving the list of tags in the database.
@@ -85,9 +82,8 @@ public class TagsResource {
      */
     @PutMapping("/{tagName}")
     @Operation(summary = "Create a tag")
+    @PreAuthorize("@authorizationHelper.mayManageMetadata(#root)")
     public Tag createTag(@PathVariable(name = "tagName") String tagName, @RequestBody final Tag tag) {
-        // TODO Check permissions
-        // Validate
 
         // Validate request parameters
         validateTagRequest(tag);
@@ -111,9 +107,8 @@ public class TagsResource {
      */
     @PutMapping
     @Operation(summary = "Create a list of tags", operationId = "createTags")
+    @PreAuthorize("@authorizationHelper.mayManageMetadata(#root)")
     public Iterable<Tag> updateTag(@RequestBody final List<Tag> tags) {
-        // TODO Check permissions
-        // Validate
 
         // Validate request parameters
         validateTagRequest(tags);
@@ -132,8 +127,8 @@ public class TagsResource {
 
     @DeleteMapping("/{tagName}")
     @Operation(summary = "Delete a tag by name")
+    @PreAuthorize("@authorizationHelper.mayManageMetadata(#root)")
     public void deleteTag(@PathVariable(name = "tagName") String tagName) {
-        // TODO Check permissions
 
         // check if present
         Optional<Tag> existingTag = tagRepository.findById(tagName);
@@ -157,7 +152,7 @@ public class TagsResource {
      *
      * @param tags the tags to be validated
      */
-    public void validateTagRequest(Iterable<Tag> tags) {
+    private void validateTagRequest(Iterable<Tag> tags) {
         for (Tag tag : tags) {
             validateTagRequest(tag);
         }
@@ -173,7 +168,7 @@ public class TagsResource {
      *
      * @param tag the tag to be validated
      */
-    public void validateTagRequest(Tag tag) {
+    private void validateTagRequest(Tag tag) {
         if (tag.getName() == null || tag.getName().isEmpty()) {
             String message = MessageFormat.format(TextUtil.TAG_NAME_CANNOT_BE_NULL_OR_EMPTY, tag.toString());
             log.log(Level.SEVERE, message, new ResponseStatusException(HttpStatus.BAD_REQUEST));

@@ -28,7 +28,6 @@ import org.phoebus.olog.entity.Property;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.HttpHeaders;
-import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.ContextHierarchy;
 import org.springframework.test.context.TestPropertySource;
@@ -77,7 +76,7 @@ public class LevelsResourceTest extends ResourcesTestBase {
     void testFindAll() throws Exception {
         when(levelRepository.findAll()).thenReturn(Arrays.asList(level1, level2));
 
-        MockHttpServletRequestBuilder request = get("/" + OlogResourceDescriptors.LEVEL_RESOURCE_RUI);
+        MockHttpServletRequestBuilder request = get("/" + OlogResourceDescriptors.LEVEL_RESOURCE_URI);
         MvcResult result = mockMvc.perform(request).andExpect(status().isOk())
                 .andReturn();
         Iterable<Level> levels = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {
@@ -91,7 +90,7 @@ public class LevelsResourceTest extends ResourcesTestBase {
     void testFindById() throws Exception {
         when(levelRepository.findById("level1")).thenReturn(Optional.of(level1));
         MockHttpServletRequestBuilder request = get("/" +
-                OlogResourceDescriptors.LEVEL_RESOURCE_RUI +
+                OlogResourceDescriptors.LEVEL_RESOURCE_URI +
                 "/level1");
         MvcResult result = mockMvc.perform(request).andExpect(status().isOk())
                 .andReturn();
@@ -105,7 +104,7 @@ public class LevelsResourceTest extends ResourcesTestBase {
     void testFindByIdDoesNotExist() throws Exception {
         when(levelRepository.findById("level1")).thenReturn(Optional.empty());
         MockHttpServletRequestBuilder request = get("/" +
-                OlogResourceDescriptors.LEVEL_RESOURCE_RUI +
+                OlogResourceDescriptors.LEVEL_RESOURCE_URI +
                 "/level1");
         mockMvc.perform(request).andExpect(status().isNotFound())
                 .andReturn();
@@ -116,7 +115,7 @@ public class LevelsResourceTest extends ResourcesTestBase {
     @Test
     void testCreateLevelUnauthorized() throws Exception {
         MockHttpServletRequestBuilder request = put("/" +
-                OlogResourceDescriptors.LEVEL_RESOURCE_RUI +
+                OlogResourceDescriptors.LEVEL_RESOURCE_URI +
                 "/level1");
         mockMvc.perform(request).andExpect(status().isUnauthorized());
     }
@@ -127,7 +126,7 @@ public class LevelsResourceTest extends ResourcesTestBase {
         when(levelRepository.save(argThat(new LevelMatcher(level1)))).thenReturn(level1);
 
         MockHttpServletRequestBuilder request = put("/" +
-                OlogResourceDescriptors.LEVEL_RESOURCE_RUI +
+                OlogResourceDescriptors.LEVEL_RESOURCE_URI +
                 "/level1")
                 .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
                 .contentType(JSON)
@@ -139,10 +138,9 @@ public class LevelsResourceTest extends ResourcesTestBase {
     }
 
     @Test
-    void testUpdateLevelUnauthoroized() throws Exception {
+    void testUpdateLevelUnauthorized() throws Exception {
         MockHttpServletRequestBuilder request = put("/" +
-                OlogResourceDescriptors.LEVEL_RESOURCE_RUI)
-                .session(new MockHttpSession());
+                OlogResourceDescriptors.LEVEL_RESOURCE_URI + "/level1");
         mockMvc.perform(request).andExpect(status().isUnauthorized());
     }
 
@@ -153,7 +151,7 @@ public class LevelsResourceTest extends ResourcesTestBase {
                 .thenReturn(List.of(level1));
 
         MockHttpServletRequestBuilder request = put("/" +
-                OlogResourceDescriptors.LEVEL_RESOURCE_RUI)
+                OlogResourceDescriptors.LEVEL_RESOURCE_URI)
                 .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
                 .contentType(JSON)
                 .content(objectMapper.writeValueAsString(Collections.singletonList(level1)));
@@ -167,7 +165,7 @@ public class LevelsResourceTest extends ResourcesTestBase {
     @Test
     void testDeleteUnauthorized() throws Exception {
         MockHttpServletRequestBuilder request = delete("/" +
-                OlogResourceDescriptors.LEVEL_RESOURCE_RUI +
+                OlogResourceDescriptors.LEVEL_RESOURCE_URI +
                 "/level1");
         mockMvc.perform(request).andExpect(status().isUnauthorized());
     }
@@ -175,7 +173,7 @@ public class LevelsResourceTest extends ResourcesTestBase {
     @Test
     void testDeleteNot() throws Exception {
         MockHttpServletRequestBuilder request = delete("/" +
-                OlogResourceDescriptors.LEVEL_RESOURCE_RUI +
+                OlogResourceDescriptors.LEVEL_RESOURCE_URI +
                 "/level1")
                 .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION);
         mockMvc.perform(request).andExpect(status().isNotFound());
@@ -187,7 +185,7 @@ public class LevelsResourceTest extends ResourcesTestBase {
         when(levelRepository.findById("level1")).thenReturn(Optional.of(level1));
 
         MockHttpServletRequestBuilder request = delete("/" +
-                OlogResourceDescriptors.LEVEL_RESOURCE_RUI +
+                OlogResourceDescriptors.LEVEL_RESOURCE_URI +
                 "/level1")
                 .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION);
         mockMvc.perform(request).andExpect(status().isOk());
@@ -201,7 +199,7 @@ public class LevelsResourceTest extends ResourcesTestBase {
     void testCrateFailOnDuplicateDefaults() throws Exception{
         when(levelRepository.findAll()).thenReturn(List.of(level1, level2));
         MockHttpServletRequestBuilder request = put("/" +
-                OlogResourceDescriptors.LEVEL_RESOURCE_RUI +
+                OlogResourceDescriptors.LEVEL_RESOURCE_URI +
                 "/level3")
                 .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
                 .contentType(JSON)
@@ -215,7 +213,7 @@ public class LevelsResourceTest extends ResourcesTestBase {
     void testCrateFailOnNullName() throws Exception{
         Level level = new Level(null, false);
         MockHttpServletRequestBuilder request = put("/" +
-                OlogResourceDescriptors.LEVEL_RESOURCE_RUI +
+                OlogResourceDescriptors.LEVEL_RESOURCE_URI +
                 "/someLevel")
                 .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
                 .contentType(JSON)
@@ -227,7 +225,7 @@ public class LevelsResourceTest extends ResourcesTestBase {
     void testCrateFailOnEmptyName() throws Exception{
         Level level = new Level("", false);
         MockHttpServletRequestBuilder request = put("/" +
-                OlogResourceDescriptors.LEVEL_RESOURCE_RUI +
+                OlogResourceDescriptors.LEVEL_RESOURCE_URI +
                 "/someLevel")
                 .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
                 .contentType(JSON)
@@ -250,9 +248,7 @@ public class LevelsResourceTest extends ResourcesTestBase {
             if (!(obj instanceof Level)) {
                 return false;
             }
-            Level actual = obj;
-
-            return actual.name().equals(expected.name());
+            return obj.name().equals(expected.name());
         }
     }
 }

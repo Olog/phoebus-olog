@@ -10,6 +10,7 @@ import org.phoebus.olog.entity.Property;
 import org.phoebus.olog.entity.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -81,6 +82,7 @@ public class LogTemplateResource {
 						+ "In the client UI (currently only CS Studio/Phoebus) users may select from a list of templates, if available. Upon\n"
 						+ "selection of a template, the client will populate the editor's input controls based on the template content.",
 				operationId = "createTemplate")
+    @PreAuthorize("@authorizationHelper.mayManageMetadata(#root)")
     public LogTemplate createLogTemplate(@RequestBody LogTemplate logTemplate,
                                          @AuthenticationPrincipal Principal principal) {
 
@@ -132,6 +134,7 @@ public class LogTemplateResource {
      */
     @DeleteMapping("/{logTemplateId}")
     @Operation(summary = "Delete a template", description = "Delete a template based on its unique id", operationId = "deleteTemplate")
+    @PreAuthorize("@authorizationHelper.mayManageMetadata(#root)")
     public void deleteLogTemplate(@PathVariable(name = "logTemplateId") String logTemplateId){
         logTemplateRepository.deleteById(logTemplateId);
     }

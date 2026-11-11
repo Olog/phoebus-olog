@@ -32,6 +32,7 @@ import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.core.AuthenticationException;
@@ -65,6 +66,7 @@ import java.util.logging.Logger;
  */
 @SuppressWarnings("unused")
 @Configuration
+@EnableMethodSecurity(prePostEnabled = true)
 public class WebSecurityConfig {
 
     public static final String SESSION_COOKIE_NAME = "SESSION";
@@ -87,6 +89,19 @@ public class WebSecurityConfig {
 
     @Autowired
     private ApplicationContext context;
+
+    @Value("${role.admin:sar-admin}")
+    private String roleAdmin;
+
+    /**
+     *
+     * @return name of admin user role
+     */
+    @Bean
+    public String roleAdmin() {
+        return roleAdmin.toUpperCase();
+    }
+
 
     private final Logger logger = Logger.getLogger(WebSecurityConfig.class.getName());
 
@@ -124,14 +139,11 @@ public class WebSecurityConfig {
 
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
-        PathRequest.H2ConsoleRequestMatcher s = PathRequest.toH2Console();
         return (web) -> web
                 .ignoring()
                 .requestMatchers(HttpMethod.GET, "/" + OlogResourceDescriptors.OLOG_SERVICE + "/**")
                 .requestMatchers(HttpMethod.OPTIONS, "/" + OlogResourceDescriptors.OLOG_SERVICE + "/**")
                 .requestMatchers(HttpMethod.POST, "/" + OlogResourceDescriptors.OLOG_SERVICE + "/login")
-                .requestMatchers(HttpMethod.GET, "/" + OlogResourceDescriptors.OLOG_SERVICE + "/logout")
-                .requestMatchers(HttpMethod.GET, "/" + OlogResourceDescriptors.OLOG_SERVICE + "/user")
                 .requestMatchers(HttpMethod.GET, "/" + OlogResourceDescriptors.OLOG_SERVICE + "/h2-console/**");
     }
 
