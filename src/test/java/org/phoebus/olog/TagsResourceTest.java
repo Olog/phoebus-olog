@@ -146,9 +146,9 @@ public class TagsResourceTest extends ResourcesTestBase {
     }
 
     @Test
-    void testUpdateLogbooksUnauthorized() throws Exception {
+    void testUpdateTagsUnauthorized() throws Exception {
         MockHttpServletRequestBuilder request = put("/" +
-                OlogResourceDescriptors.LOGBOOK_RESOURCE_URI)
+                OlogResourceDescriptors.TAG_RESOURCE_URI)
                 .content(objectMapper.writeValueAsString(new ArrayList<>()))
                 .contentType(JSON);
         mockMvc.perform(request).andExpect(status().isUnauthorized());

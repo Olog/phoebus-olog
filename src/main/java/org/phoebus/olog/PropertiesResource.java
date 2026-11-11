@@ -18,6 +18,7 @@ import org.phoebus.olog.entity.Attribute;
 import org.phoebus.olog.entity.Property;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -44,10 +45,6 @@ public class PropertiesResource {
 
     @Autowired
     private PropertyRepository propertyRepository;
-
-    /** Creates a new instance of LogbooksResource */
-    public PropertiesResource() {
-    }
 
     /**
      * GET method to retrieve the list of all active properties. If the inactive flag is set true
@@ -78,13 +75,10 @@ public class PropertiesResource {
 
     @PutMapping("/{propertyName}")
     @Operation(summary = "Create a property")
+    @PreAuthorize("@authorizationHelper.mayManageMetadata(#root)")
     public Property createProperty(@PathVariable(name = "propertyName") String propertyName,
                                    @RequestBody final Property property,
                                    @AuthenticationPrincipal Principal principal) {
-        // TODO Check permissions
-        // Validate
-        // Create a property
-
         // Validate request parameters
         validatePropertyRequest(property);
 
@@ -107,10 +101,8 @@ public class PropertiesResource {
      */
     @PutMapping
     @Operation(summary = "Create a list of properties", operationId = "createProperties")
+    @PreAuthorize("@authorizationHelper.mayManageMetadata(#root)")
     public Iterable<Property> updateProperty(@RequestBody final List<Property> properties) {
-        // TODO Check permissions
-        // Validate
-        // Create a property
 
         // Validate request parameters
         validatePropertyRequest(properties);
@@ -129,8 +121,8 @@ public class PropertiesResource {
 
     @DeleteMapping("/{propertyName}")
     @Operation(summary = "Delete a property by name")
+    @PreAuthorize("@authorizationHelper.mayManageMetadata(#root)")
     public void deleteProperty (@PathVariable(name = "propertyName") String propertyName) {
-        // TODO Check permissions
 
         // check if present
         Optional<Property> existingProperty = propertyRepository.findById(propertyName);
@@ -155,7 +147,7 @@ public class PropertiesResource {
      *
      * @param properties the properties to be validated
      */
-    public void validatePropertyRequest(Iterable<Property> properties) {
+    private void validatePropertyRequest(Iterable<Property> properties) {
         for (Property property : properties) {
             validatePropertyRequest(property);
         }
@@ -172,7 +164,7 @@ public class PropertiesResource {
      *
      * @param property the property to be validated
      */
-    public void validatePropertyRequest(Property property) {
+    private void validatePropertyRequest(Property property) {
         if (property.getName() == null || property.getName().isEmpty()) {
             String message = MessageFormat.format(TextUtil.PROPERTY_NAME_CANNOT_BE_NULL_OR_EMPTY, property.toString());
             log.log(Level.SEVERE, message, new ResponseStatusException(HttpStatus.BAD_REQUEST));
@@ -193,7 +185,7 @@ public class PropertiesResource {
      *
      * @param attributes the attributes to be validated
      */
-    public void validateAttributeRequest(Iterable<Attribute> attributes) {
+    private void validateAttributeRequest(Iterable<Attribute> attributes) {
         for (Attribute attribute : attributes) {
             validateAttributeRequest(attribute);
         }
@@ -210,7 +202,7 @@ public class PropertiesResource {
      *
      * @param attribute the attribute to be validated
      */
-    public void validateAttributeRequest(Attribute attribute) {
+    private void validateAttributeRequest(Attribute attribute) {
         if (attribute.getName() == null || attribute.getName().isEmpty()) {
             String message = MessageFormat.format(TextUtil.ATTRIBUTE_NAME_CANNOT_BE_NULL_OR_EMPTY, attribute.toString());
             log.log(Level.SEVERE, message, new ResponseStatusException(HttpStatus.BAD_REQUEST));

@@ -8,7 +8,7 @@ package org.phoebus.olog;
 import org.phoebus.olog.entity.Logbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,7 +20,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import io.swagger.v3.oas.annotations.Operation;
 
-import java.security.Principal;
 import java.text.MessageFormat;
 import java.util.List;
 import java.util.Optional;
@@ -45,12 +44,6 @@ public class LogbooksResource {
     @Autowired
     private LogbookRepository logbookRepository;
 
-    /**
-     * Creates a new instance of LogbooksResource
-     */
-    public LogbooksResource() {
-    }
-
     @GetMapping
     @Operation(summary = "Get all logbooks", operationId = "getAllLogbooks")
     public Iterable<Logbook> findAll() {
@@ -74,11 +67,9 @@ public class LogbooksResource {
     @SuppressWarnings("unused")
     @PutMapping("/{logbookName}")
     @Operation(summary = "Create a logbook")
+    @PreAuthorize("@authorizationHelper.mayManageMetadata(#root)")
     public Logbook createLogbook(@PathVariable(name = "logbookName") String logbookName,
-                                 @RequestBody final Logbook logbook,
-                                 @AuthenticationPrincipal Principal principal) {
-        // TODO Check permissions
-        // Validate
+                                 @RequestBody final Logbook logbook) {
 
         // Validate request parameters
         validateLogbookRequest(logbook);
@@ -97,9 +88,8 @@ public class LogbooksResource {
     @SuppressWarnings("unused")
     @PutMapping
     @Operation(summary = "Create a list of logbooks", operationId = "createLogbooks")
+    @PreAuthorize("@authorizationHelper.mayManageMetadata(#root)")
     public Iterable<Logbook> updateLogbooks(@RequestBody final List<Logbook> logbooks) {
-        // TODO Check permissions
-        // Validate
 
         // Validate request parameters
         validateLogbookRequest(logbooks);
@@ -119,8 +109,8 @@ public class LogbooksResource {
     @SuppressWarnings("unused")
     @DeleteMapping("/{logbookName}")
     @Operation(summary = "Delete a logbook by name")
+    @PreAuthorize("@authorizationHelper.mayManageMetadata(#root)")
     public void deleteLogbook(@PathVariable(name = "logbookName") String logbookName) {
-        // TODO Check permissions
 
         // check if present
         Optional<Logbook> existingLogbook = logbookRepository.findById(logbookName);
@@ -145,7 +135,7 @@ public class LogbooksResource {
      *
      * @param logbooks the logbooks to be validated
      */
-    public void validateLogbookRequest(Iterable<Logbook> logbooks) {
+    private void validateLogbookRequest(Iterable<Logbook> logbooks) {
         for (Logbook logbook : logbooks) {
             validateLogbookRequest(logbook);
         }
@@ -162,7 +152,7 @@ public class LogbooksResource {
      *
      * @param logbook the logbook to be validated
      */
-    public void validateLogbookRequest(Logbook logbook) {
+    private void validateLogbookRequest(Logbook logbook) {
         if (logbook.getName() == null || logbook.getName().isEmpty()) {
             String message = MessageFormat.format(TextUtil.LOGBOOK_NAME_CANNOT_BE_NULL_OR_EMPTY, logbook.toString());
             log.log(Level.SEVERE, message, new ResponseStatusException(HttpStatus.BAD_REQUEST));

@@ -20,7 +20,6 @@ package org.phoebus.olog;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentMatcher;
@@ -36,7 +35,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.parameters.P;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.ContextHierarchy;
 import org.springframework.test.context.TestPropertySource;
@@ -44,7 +42,6 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.web.server.ResponseStatusException;
-import org.testcontainers.shaded.org.checkerframework.checker.units.qual.A;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -61,9 +58,7 @@ import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -96,6 +91,10 @@ public class LogTemplateResourceTest extends ResourcesTestBase {
     private static Tag tag1;
     private static Tag tag2;
 
+    private static LogTemplate logTemplate1;
+
+    private static final String logTemplate1Id = UUID.randomUUID().toString();
+
     @BeforeAll
     public static void init() {
         logbook1 = new Logbook("name1", "user");
@@ -103,6 +102,16 @@ public class LogTemplateResourceTest extends ResourcesTestBase {
 
         tag1 = new Tag("tag1");
         tag2 = new Tag("tag2");
+
+        logTemplate1 = new LogTemplate();
+        logTemplate1.setName("name");
+        logTemplate1.setId(logTemplate1Id);
+        logTemplate1.setOwner("user");
+        logTemplate1.setTitle("title");
+        logTemplate1.setSource("source");
+        logTemplate1.setLevel("Urgent");
+        logTemplate1.setLogbooks(Set.of(logbook1, logbook2));
+        logTemplate1.setTags(Set.of(tag1, tag2));
     }
 
     @Test
@@ -158,28 +167,18 @@ public class LogTemplateResourceTest extends ResourcesTestBase {
 
     @Test
     void testCreateLogTemplate() throws Exception {
-        LogTemplate logTemplate = new LogTemplate();
-        logTemplate.setName("name");
-        String id = UUID.randomUUID().toString();
-        logTemplate.setId(id);
-        logTemplate.setOwner("user");
-        logTemplate.setTitle("title");
-        logTemplate.setSource("source");
-        logTemplate.setLevel("Urgent");
-        logTemplate.setLogbooks(Set.of(logbook1, logbook2));
-        logTemplate.setTags(Set.of(tag1, tag2));
 
         when(logbookRepository.findAll()).thenReturn(Arrays.asList(logbook1, logbook2));
         when(tagRepository.findAll()).thenReturn(Arrays.asList(tag1, tag2));
-        when(logTemplateRepository.save(argThat(new LogTemplateMatcher(logTemplate)))).thenReturn(logTemplate);
+        when(logTemplateRepository.save(argThat(new LogTemplateMatcher(logTemplate1)))).thenReturn(logTemplate1);
         MockHttpServletRequestBuilder request = put("/" + OlogResourceDescriptors.LOG_TEMPLATE_RESOURCE_URI)
-                .content(objectMapper.writeValueAsString(logTemplate))
+                .content(objectMapper.writeValueAsString(logTemplate1))
                 .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
                 .contentType(JSON);
         MvcResult result = mockMvc.perform(request).andExpect(status().isOk()).andReturn();
 
         LogTemplate savedLogTemplate = objectMapper.readValue(result.getResponse().getContentAsString(), LogTemplate.class);
-        assertEquals(id, savedLogTemplate.getId());
+        assertEquals(logTemplate1Id, savedLogTemplate.getId());
         reset(logbookRepository);
         reset(tagRepository);
         reset(logTemplateRepository);
@@ -282,12 +281,8 @@ public class LogTemplateResourceTest extends ResourcesTestBase {
         reset(logTemplateRepository);
     }
 
-    /**
-     * Test with fewer attributes than persisted property
-     * @throws Exception
-     */
     @Test
-    void testCreateLogTemplateBadPropertyAttributes2() throws Exception {
+    void testCreateLogTemplateBadPropertyAttributesFewerAttributes() throws Exception {
         LogTemplate logTemplate = new LogTemplate();
         logTemplate.setName("name");
         logTemplate.setId(UUID.randomUUID().toString());
@@ -303,7 +298,6 @@ public class LogTemplateResourceTest extends ResourcesTestBase {
         Attribute attribute3 = new Attribute("validAttribute2");
         Property persistedProperty = new Property("validPropName");
         persistedProperty.setAttributes(Set.of(attribute1, attribute3));
-
 
         when(propertyRepository.findAll()).thenReturn(Collections.singletonList(persistedProperty));
         when(logTemplateRepository.save(argThat(new LogTemplateMatcher(logTemplate)))).thenReturn(logTemplate);
@@ -364,68 +358,21 @@ public class LogTemplateResourceTest extends ResourcesTestBase {
     }
 
     @Test
-    @Disabled
-    void testUpdateExisting() throws Exception {
-        Property property1 = new Property();
-        property1.setName("prop1");
-        property1.addAttributes(new Attribute("name1", "value1"));
-
-        LogTemplate logTemplate = new LogTemplate();
-        logTemplate.setName("name");
-        String id = UUID.randomUUID().toString();
-        logTemplate.setId(id);
-        logTemplate.setOwner("user");
-        logTemplate.setTitle("title");
-        logTemplate.setSource("description");
-        logTemplate.setLevel("Urgent");
-        logTemplate.setLogbooks(Set.of(logbook1, logbook2));
-        logTemplate.setTags(Set.of(tag1, tag2));
-
-        when(logTemplateRepository.findById(id)).thenReturn(Optional.of(logTemplate));
-        when(logTemplateRepository.update(logTemplate)).thenReturn(logTemplate);
-
-        MockHttpServletRequestBuilder request = post("/" + OlogResourceDescriptors.LOG_TEMPLATE_RESOURCE_URI + "/" + id)
-                .content(objectMapper.writeValueAsString(logTemplate))
-                .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
-                .contentType(JSON);
-        MvcResult result = mockMvc.perform(request).andExpect(status().isOk()).andReturn();
-        LogTemplate savedLogTemplate = objectMapper.readValue(result.getResponse().getContentAsString(), LogTemplate.class);
-        assertEquals(id, savedLogTemplate.getId());
-
-        reset(logTemplateRepository);
+    public void testDeleteUnauthorized() throws Exception{
+        MockHttpServletRequestBuilder request = delete("/" +
+                OlogResourceDescriptors.LOG_TEMPLATE_RESOURCE_URI + "/id");
+        mockMvc.perform(request).andExpect(status().isUnauthorized());
     }
 
     @Test
-    @Disabled
-    void testUpdateExistingBadId() throws Exception {
-
-        LogTemplate logTemplate = new LogTemplate();
-        logTemplate.setName("name");
-        logTemplate.setId(UUID.randomUUID().toString());
-
-        when(logTemplateRepository.findById("1")).thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND));
-
-        MockHttpServletRequestBuilder request = post("/" + OlogResourceDescriptors.LOG_TEMPLATE_RESOURCE_URI + "/1")
-                .content(objectMapper.writeValueAsString(logTemplate))
-                .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
-                .contentType(JSON);
-        mockMvc.perform(request).andExpect(status().isNotFound());
+    public void testDelete() throws Exception{
+        when(logTemplateRepository.findById(logTemplate1Id)).thenReturn(Optional.of(logTemplate1));
+        MockHttpServletRequestBuilder request = delete("/" +
+                OlogResourceDescriptors.LOG_TEMPLATE_RESOURCE_URI + "/" + logTemplate1Id)
+                .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION);
+        mockMvc.perform(request).andExpect(status().isOk());
+        verify(logTemplateRepository, times(1)).deleteById(logTemplate1Id);
         reset(logTemplateRepository);
-    }
-
-    @Test
-    @Disabled
-    void testUpdateNonExisting() throws Exception {
-
-        LogTemplate logTemplate = new LogTemplate();
-        logTemplate.setName("name");
-        logTemplate.setId(UUID.randomUUID().toString());
-
-        MockHttpServletRequestBuilder request = post("/" + OlogResourceDescriptors.LOG_TEMPLATE_RESOURCE_URI + "/2")
-                .content(objectMapper.writeValueAsString(logTemplate))
-                .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
-                .contentType(JSON);
-        mockMvc.perform(request).andExpect(status().isBadRequest());
     }
 
     /**
