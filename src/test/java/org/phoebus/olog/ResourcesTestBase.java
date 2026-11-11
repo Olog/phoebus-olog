@@ -38,8 +38,8 @@ public abstract class ResourcesTestBase {
             "Basic " + Base64.getEncoder().encodeToString("user:userPass".getBytes());
 
     protected static final String EMBEDDED_LDAP_ADMIN_AUTHORIZATION =
-            "Basic " + Base64.getEncoder().encodeToString("admin:1234".getBytes());
+            "Basic " + Base64.getEncoder().encodeToString("admin:adminPass".getBytes());
 
     protected static final String EMBEDDED_LDAP_USER_AUTHORIZATION =
-            "Basic " + Base64.getEncoder().encodeToString("user:1234".getBytes());
+            "Basic " + Base64.getEncoder().encodeToString("user:userPass".getBytes());
 }
