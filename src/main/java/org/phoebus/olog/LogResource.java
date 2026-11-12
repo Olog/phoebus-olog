@@ -810,7 +810,9 @@ public class LogResource {
             return;
         }
         for (Attachment attachment : log.getAttachments()) {
-            if (attachment.getId() != null && attachmentRepository.findById(attachment.getId()).isPresent()) {
+            // existsById, not findById: findById throws 404 for unknown ids, and attachments of a
+            // new entry (multipart create) are not stored yet when the entry is validated.
+            if (attachment.getId() != null && attachmentRepository.existsById(attachment.getId())) {
                 logRepository.requireReadableAttachment(attachment.getId());
             }
         }
