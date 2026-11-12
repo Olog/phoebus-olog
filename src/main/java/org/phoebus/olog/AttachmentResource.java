@@ -41,6 +41,8 @@ public class AttachmentResource
 {
     @Autowired
     AttachmentRepository attachmentRepository;
+    @Autowired
+    LogRepository logRepository;
 
     private Logger log = Logger.getLogger(AttachmentResource.class.getName());
 
@@ -54,6 +56,7 @@ public class AttachmentResource
     @GetMapping("{attachmentId}")
     @Operation(summary = "Get an attachment by Id", operationId = "getAttachment")
     public ResponseEntity<Resource> getAttachment(@PathVariable(name = "attachmentId") String attachmentId) {
+        logRepository.requireReadableAttachment(attachmentId);
         log.log(Level.INFO, () -> MessageFormat.format(TextUtil.ATTACHMENT_REQUEST, attachmentId));
         Optional<Attachment> attachment = attachmentRepository.findById(attachmentId);
         if (attachment.isPresent()) {

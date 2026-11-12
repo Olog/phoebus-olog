@@ -103,8 +103,15 @@ public class LogSearchUtil {
      * @return A {@link SearchRequest} based on the provided search parameters
      */
     public SearchRequest buildSearchRequest(MultiValueMap<String, String> searchParameters) {
+        return buildSearchRequest(searchParameters, null);
+    }
+
+    public SearchRequest buildSearchRequest(MultiValueMap<String, String> searchParameters, Query accessFilter) {
         TimeZone timeZone = getTimezone(searchParameters);
         BoolQuery.Builder boolQueryBuilder = new Builder();
+        if (accessFilter != null) {
+            boolQueryBuilder.filter(accessFilter);
+        }
         boolean fuzzySearch = false;
         List<String> searchTerms = new ArrayList<>();
         List<String> descriptionPhraseSearchTerms = new ArrayList<>();

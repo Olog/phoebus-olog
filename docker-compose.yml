@@ -22,7 +22,7 @@ services:
       - olog-mongodata:/etc/mongo
 
   elastic:
-    image: elasticsearch:8.5.3
+    image: elasticsearch:8.17.3
     environment:
       cluster.name: elasticsearch
       bootstrap.memory_lock: "true"
@@ -45,9 +45,25 @@ services:
       timeout: 60s
       retries: 10
 
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    command: start-dev
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_HOSTNAME_STRICT: "false"
+      KC_HTTP_PORT: 8180
+      KC_HOSTNAME_URL: "http://keycloak:8180"
+    ports:
+      - "8180:8180"
+    volumes:
+      - olog-keycloakdata:/opt/keycloak/data
+
 # Configure persistent storage for mongo and elastic.
 volumes:
   olog-esdata:
     driver: local
   olog-mongodata:
+    driver: local
+  olog-keycloakdata:
     driver: local

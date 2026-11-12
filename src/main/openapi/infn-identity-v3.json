@@ -1,0 +1,3925 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "INFN Application API",
+    "description": "INFN Application Description",
+    "version": "1.0"
+  },
+  "servers": [
+    {
+      "url": "https://api.app.infn.it",
+      "description": "Generated server url"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Echo Controller",
+      "description": "Service testing api"
+    },
+    {
+      "name": "Identity Verification APIs",
+      "description": "APIs to manage Verification requests"
+    },
+    {
+      "name": "Sync",
+      "description": "Sync Identity from godiva"
+    },
+    {
+      "name": "It Resources APIs",
+      "description": "APIs to manage It Resources requests"
+    },
+    {
+      "name": "identity",
+      "description": "Identity APIs"
+    }
+  ],
+  "paths": {
+    "/update/anagrafica": {
+      "post": {
+        "tags": [
+          "identity"
+        ],
+        "summary": "Update the data",
+        "operationId": "updateAnagrafica",
+        "requestBody": {
+          "description": "Update personal data",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Anagrafica"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "default response",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResultResponseAnagrafica"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/get": {
+      "get": {
+        "tags": [
+          "identity"
+        ],
+        "summary": "Identity",
+        "operationId": "getAnagrafica",
+        "responses": {
+          "200": {
+            "description": "default response",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResultResponseAnagrafica"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/get/{uuid}": {
+      "get": {
+        "tags": [
+          "identity"
+        ],
+        "summary": "Identity",
+        "operationId": "getAnagraficaByUUID",
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "default response",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResultResponseAnagrafica"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/get/details/{uuid}": {
+      "get": {
+        "tags": [
+          "identity"
+        ],
+        "summary": "Get detail by infnUuid",
+        "operationId": "getDetailsForUUID",
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "default response",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResultResponseListAnagraficaDettaglio"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/details/{infnUuid}/{idType}": {
+      "get": {
+        "tags": [
+          "identity"
+        ],
+        "summary": "Get detail by type",
+        "operationId": "getDetailsByTypeForInfnUuid",
+        "parameters": [
+          {
+            "name": "infnUuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "idType",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "default response",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResultResponseListAnagraficaDettaglio"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/get/employmentStatus/{uuid}": {
+      "get": {
+        "tags": [
+          "identity"
+        ],
+        "summary": "Ottieni lo stato lavorativo dell'identita'",
+        "operationId": "getEmploymentStatusByUUID",
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "default response",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResultResponseRuoloAnagrafica"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/all/dt": {
+      "post": {
+        "tags": [
+          "identity"
+        ],
+        "summary": "Query to get paged identities: anagrafica, role and details",
+        "operationId": "allIdentitiesDT",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DataTablesInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "default response",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataTablesOutputIdentityCache"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/search/identities/paginated": {
+      "post": {
+        "tags": [
+          "identity"
+        ],
+        "summary": "List of identities",
+        "operationId": "getIdentities",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DataTablesInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "default response",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResultResponseDataTablesOutputIdentityCache"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/all/siteAccessReferent/paginated/{ldapEntry}": {
+      "post": {
+        "tags": [
+          "identity"
+        ],
+        "summary": "List of anagrafica that have a role of dip,osp,ass, on specified domain",
+        "operationId": "getAnagraficheReferentPaginatedByLdapEntryPaged",
+        "parameters": [
+          {
+            "name": "ldapEntry",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DataTablesInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "default response",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResultResponseDataTablesOutputIdentityCache"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/all/siteAccessReferentCral/paginated/{ldapEntry}": {
+      "post": {
+        "tags": [
+          "identity"
+        ],
+        "summary": "List of anagrafica that have a referent cral role of dip,osp,ass, on specified domain",
+        "operationId": "getAnagraficheReferentCralPaginatedByLdapEntryPaged",
+        "parameters": [
+          {
+            "name": "ldapEntry",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DataTablesInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "default response",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResultResponseDataTablesOutputIdentityCache"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/search/identities/": {
+      "post": {
+        "tags": [
+          "identity"
+        ],
+        "summary": "List of identities",
+        "operationId": "getAnagraficheByLdapEntryPaged",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DataTablesInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "default response",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResultResponseDataTablesOutputAnagrafica"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/all/siteAccessReferentCral/{ldapEntry}": {
+      "post": {
+        "tags": [
+          "identity"
+        ],
+        "summary": "Ritorna tutte le anagrafiche dip,osp,ass, che hanno un ruolo di referente cral nel dominio passato in input",
+        "operationId": "getAnagraficheReferenCralByLdapEntryPaged",
+        "parameters": [
+          {
+            "name": "ldapEntry",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DataTablesInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "default response",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResultResponseDataTablesOutputAnagrafica"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/all/siteAccessReferent/{ldapEntry}": {
+      "post": {
+        "tags": [
+          "identity"
+        ],
+        "summary": "Ritorna tutte le anagrafiche dip,osp,ass, che hanno un ruolo di referente nel dominio passato in input",
+        "operationId": "getAnagraficheReferentByLdapEntryPaged",
+        "parameters": [
+          {
+            "name": "ldapEntry",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DataTablesInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "default response",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResultResponseDataTablesOutputAnagrafica"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/all/{idTipo}/{idNodo}": {
+      "post": {
+        "tags": [
+          "identity"
+        ],
+        "summary": "List of anagrafica",
+        "operationId": "getAnagraficheByNodoDominioPaged",
+        "parameters": [
+          {
+            "name": "idTipo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "idNodo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DataTablesInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "default response",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResultResponseDataTablesOutputAnagrafica"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/create": {
+      "post": {
+        "tags": [
+          "identity"
+        ],
+        "summary": "Create a new identity - reserved to administrative personnel",
+        "operationId": "createIdentity",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Anagrafica"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "default response",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResultResponseAnagrafica"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/sediDiVerifica": {
+      "get": {
+        "tags": [
+          "identity"
+        ],
+        "summary": "Obtains verification sites",
+        "operationId": "getSediDiVerifica",
+        "responses": {
+          "200": {
+            "description": "default response",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResultResponseListNodoDominio"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/anagrafiche/dettaglio/{idTipoDettaglio}/{valore}": {
+      "get": {
+        "tags": [
+          "identity"
+        ],
+        "summary": "List of anagrafica",
+        "operationId": "getAnagraficheByDettaglio",
+        "parameters": [
+          {
+            "name": "idTipoDettaglio",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "valore",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "default response",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResultResponseListAnagrafica"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/uuid/by/imo": {
+      "post": {
+        "tags": [
+          "identity"
+        ],
+        "summary": "Return all the identity that belong to the isMemberOf list",
+        "operationId": "getIdentityThatBelongToIMOF",
+        "parameters": [
+          {
+            "name": "allOption",
+            "in": "path",
+            "description": "Specify the search type true: the identity returned need to belong to all valued false: the identity need to belong to any of the values",
+            "required": true,
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "The list of isMemberOf to search",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "default response",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResultResponseListString"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/uuid/by/imo/{allOption}": {
+      "post": {
+        "tags": [
+          "identity"
+        ],
+        "summary": "Return all the identity that belong to the isMemberOf list",
+        "operationId": "getIdentityThatBelongToIMOF_1",
+        "parameters": [
+          {
+            "name": "allOption",
+            "in": "path",
+            "description": "Specify the search type true: the identity returned need to belong to all valued false: the identity need to belong to any of the values",
+            "required": true,
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "The list of isMemberOf to search",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "default response",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResultResponseListString"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/uuid/by/isMemberOf": {
+      "post": {
+        "tags": [
+          "identity"
+        ],
+        "summary": "Return all the identity that belong to the isMemberOf (regex also)",
+        "operationId": "getIdentityByIsMemberOf",
+        "requestBody": {
+          "description": "The isMemberOf to search",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "string"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "default response",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResultResponseListString"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/details/list/{detailsID}": {
+      "post": {
+        "tags": [
+          "identity"
+        ],
+        "summary": "Return the detail values for the input detailID that belong to infnUUID list, if an infn uid doesn't have that detail and empty value sis returned. The value sare in the same index that his infnUUID has in the input list",
+        "operationId": "getDetailsForIdentities",
+        "parameters": [
+          {
+            "name": "detailsID",
+            "in": "path",
+            "description": "is the id of the detail for wich the values is needed",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "The list of isMemberOf to search",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "default response",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResultResponseListListString"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/details/removeBadge": {
+      "post": {
+        "tags": [
+          "identity"
+        ],
+        "summary": "Remove a badge detail from the identity",
+        "operationId": "removeBadgeDetail",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeleteBadgeDetailDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "default response",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResultResponseBoolean"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/details/findBadge": {
+      "post": {
+        "tags": [
+          "identity"
+        ],
+        "summary": "Search if a badge is already present in the system by the badge value and the period. Return the number of badge found",
+        "operationId": "findBadgeByValoreAndPeriod",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FindBadgeParamsDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "default response",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResultResponseInteger"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/byFiscalNumber/{fiscalNumber}/anagrafica": {
+      "get": {
+        "tags": [
+          "identity"
+        ],
+        "summary": "Get anagrafica by fiscal number",
+        "operationId": "getAnagraficaByFiscalNumber",
+        "parameters": [
+          {
+            "name": "fiscalNumber",
+            "in": "path",
+            "description": "Identity's fiscal number",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "default response",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResultResponseAnagrafica"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/bySpidCode/{spidCode}/anagrafica": {
+      "get": {
+        "tags": [
+          "identity"
+        ],
+        "summary": "Get anagrafica by SPID code",
+        "operationId": "getAnagraficaBySpidCode",
+        "parameters": [
+          {
+            "name": "spidCode",
+            "in": "path",
+            "description": "Identity's SPID code",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "default response",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResultResponseAnagrafica"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/bySpidCode/anagrafica": {
+      "get": {
+        "tags": [
+          "identity"
+        ],
+        "summary": "Get anagrafica by SPID code",
+        "operationId": "getAnagraficaBySpidCodeParam",
+        "parameters": [
+          {
+            "name": "spidCode",
+            "in": "query",
+            "description": "Identity's SPID code",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "default response",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResultResponseAnagrafica"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/byIdentityHash/{identityHash}/anagrafica": {
+      "get": {
+        "tags": [
+          "identity"
+        ],
+        "summary": "Get anagrafica by SPID code",
+        "operationId": "getAnagraficaByIdentityHash",
+        "parameters": [
+          {
+            "name": "identityHash",
+            "in": "path",
+            "description": "Identity's hash",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "default response",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResultResponseListIdentityCache"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/hash": {
+      "post": {
+        "tags": [
+          "identity"
+        ],
+        "summary": "Generate identity hash",
+        "operationId": "generateIdentityHash",
+        "requestBody": {
+          "description": "Generate Identity hash",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Anagrafica"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "default response",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResultResponseString"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/byEmail/{email}/anagrafica": {
+      "get": {
+        "tags": [
+          "identity"
+        ],
+        "summary": "Get anagrafica by email",
+        "operationId": "getAnagraficaByEmail",
+        "parameters": [
+          {
+            "name": "email",
+            "in": "path",
+            "description": "Identity's email",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "default response",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResultResponseAnagrafica"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/spid/ensure": {
+      "post": {
+        "tags": [
+          "identity"
+        ],
+        "summary": "Ensure identity from SPID",
+        "operationId": "spidEnsureIdentity",
+        "requestBody": {
+          "description": "The SPID information",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SpidAttrs"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "default response",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResultResponseString"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/cie/ensure": {
+      "post": {
+        "tags": [
+          "identity"
+        ],
+        "summary": "Ensure identity from CIE",
+        "operationId": "cieEnsureIdentity",
+        "requestBody": {
+          "description": "The CIE information",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CieAttrs"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "default response",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResultResponseString"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/isSyncing/{infnUuid}": {
+      "get": {
+        "tags": [
+          "identity"
+        ],
+        "summary": "check if the identity exists on ldap",
+        "operationId": "checkLdapSpidCodeExists",
+        "parameters": [
+          {
+            "name": "infnUuid",
+            "in": "path",
+            "description": "The InfnUuid",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "default response",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResultResponseBoolean"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/nationalLocation/{fiscalNumber}": {
+      "get": {
+        "tags": [
+          "identity"
+        ],
+        "summary": "get national location by fiscal number",
+        "operationId": "getNationalLocationByFiscalNumber",
+        "parameters": [
+          {
+            "name": "fiscalNumber",
+            "in": "path",
+            "description": "SPID info",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "default response",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResultResponseNationalLocation"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/details/createBadgeDetail": {
+      "post": {
+        "tags": [
+          "identity"
+        ],
+        "summary": "Create a new badge details",
+        "operationId": "createBadgeDetail",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewBadgeDetailDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "default response",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResultResponseInteger"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/details/createRFIDBadgeDetail": {
+      "post": {
+        "tags": [
+          "identity"
+        ],
+        "summary": "Create a new badge rfid details",
+        "operationId": "createRFIDBadgeDetail",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewBadgeDetailDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "default response",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResultResponseInteger"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/details/createQRCodeDetail": {
+      "post": {
+        "tags": [
+          "identity"
+        ],
+        "summary": "Create a new qrcode details",
+        "operationId": "createQRCodeDetail",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewQRCodeDetailDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "default response",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResultResponseBoolean"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/get/roles/{uuid}": {
+      "get": {
+        "tags": [
+          "identity"
+        ],
+        "summary": "Identity",
+        "operationId": "getRolesForUUID",
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "default response",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResultResponseListRuoloAnagrafica"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/get/auth/{uuid}": {
+      "get": {
+        "tags": [
+          "identity"
+        ],
+        "summary": "Identity",
+        "operationId": "getAuthorizationForUUID",
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "default response",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResultResponseAuthorization"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/itResources/grant/reject": {
+      "post": {
+        "tags": [
+          "It Resources APIs"
+        ],
+        "summary": "API to reject an IT resources access request by referee",
+        "operationId": "grantReject",
+        "requestBody": {
+          "description": "Anagrafica to reject",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Anagrafica"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "default response",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResultResponseAnagrafica"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/itResources/grant/accept": {
+      "post": {
+        "tags": [
+          "It Resources APIs"
+        ],
+        "summary": "API to accept an IT resources access request by referee",
+        "operationId": "grantAccept",
+        "requestBody": {
+          "description": "Anagrafica to accept",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Anagrafica"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "default response",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResultResponseAnagrafica"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/itResources/contactPeople/{idTipo}/{idNodo}": {
+      "get": {
+        "tags": [
+          "It Resources APIs"
+        ],
+        "summary": "List of contact people for IT resource requests",
+        "operationId": "getApprovatoriByNodoDominio",
+        "parameters": [
+          {
+            "name": "idTipo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "idNodo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "default response",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResultResponseListAnagrafica"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/itResources/request": {
+      "post": {
+        "tags": [
+          "It Resources APIs"
+        ],
+        "summary": "API to request IT resources access",
+        "operationId": "itResourcesRequest",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ITResourcesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "default response",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResultResponseITResourcesResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/itResources/anagraficheByReferente": {
+      "post": {
+        "tags": [
+          "It Resources APIs"
+        ],
+        "summary": "List of anagrafica",
+        "operationId": "getAnagraficheByReferente",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DataTablesInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "default response",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResultResponseDataTablesOutputIdentityDTO"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/itResources/anagraficheByReferente/history": {
+      "post": {
+        "tags": [
+          "It Resources APIs"
+        ],
+        "summary": "List of anagrafica",
+        "operationId": "getAnagraficheByReferenteHistory",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DataTablesInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "default response",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResultResponseDataTablesOutputIdentityDTO"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/sync/id/pending/last": {
+      "delete": {
+        "tags": [
+          "Sync"
+        ],
+        "summary": "Remove last pending request for id",
+        "operationId": "removeLastPendingIDSubmition",
+        "responses": {
+          "200": {
+            "description": "default response",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResultResponseSyncStatus"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/sync/state/{uuid}": {
+      "get": {
+        "tags": [
+          "Sync"
+        ],
+        "summary": "Return the sync state information for a specifyc UUID",
+        "operationId": "getSyncState",
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "default response",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResultResponseIdentityCache"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/sync/state": {
+      "get": {
+        "tags": [
+          "Sync"
+        ],
+        "summary": "Return the sync state information",
+        "operationId": "getGlobalSyncState",
+        "responses": {
+          "200": {
+            "description": "default response",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResultResponseSyncStatus"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/sync/id/pending": {
+      "delete": {
+        "tags": [
+          "Sync"
+        ],
+        "summary": "Remove last pending request for id",
+        "operationId": "purgeIDQueue",
+        "responses": {
+          "200": {
+            "description": "default response",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResultResponseSyncStatus"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/sync/id/from/{idMin}/to/{idMax}": {
+      "post": {
+        "tags": [
+          "Sync"
+        ],
+        "summary": "Start synchronization of the identity identified by uuid",
+        "operationId": "syncByID",
+        "parameters": [
+          {
+            "name": "idMin",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "idMax",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "default response",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResultResponseSyncStatus"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/sync/uuid/{uuid}": {
+      "post": {
+        "tags": [
+          "Sync"
+        ],
+        "summary": "Start synchronization of the identity identified by uuid",
+        "operationId": "syncUUID",
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "default response",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResultResponseBoolean"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/verification/site-access/verify/accept": {
+      "post": {
+        "tags": [
+          "Identity Verification APIs"
+        ],
+        "summary": "API to verify an identity at site access",
+        "operationId": "siteAccessVerifyAccept",
+        "requestBody": {
+          "description": "Identity to verify",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SiteAccessVerificationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "default response",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResultResponseAnagrafica"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/verification/verify/reject": {
+      "post": {
+        "tags": [
+          "Identity Verification APIs"
+        ],
+        "summary": "API to reject an identity verification request",
+        "operationId": "verifyReject",
+        "requestBody": {
+          "description": "Anagrafica to reject",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "string"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "default response",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResultResponseString"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/verification/verify/takeCharge": {
+      "post": {
+        "tags": [
+          "Identity Verification APIs"
+        ],
+        "summary": "API to take charge a identity verification",
+        "operationId": "verifyTakeCharge",
+        "requestBody": {
+          "description": "Identity to verify",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "string"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "default response",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResultResponseAnagraficaDettaglio"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/verification/verification": {
+      "post": {
+        "tags": [
+          "Identity Verification APIs"
+        ],
+        "summary": "API to trigger the identity verification process",
+        "operationId": "verification",
+        "parameters": [
+          {
+            "name": "X-Language",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "The verification site",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerificationDemandRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "default response",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResultResponseListAnagraficaDettaglio"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/verification/anagraficheByVerificatore": {
+      "post": {
+        "tags": [
+          "Identity Verification APIs"
+        ],
+        "summary": "List of anagrafica",
+        "operationId": "getAnagraficheByVerificatore",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DataTablesInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "default response",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResultResponseDataTablesOutputIdentityDTO"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/verification/verify/accept": {
+      "post": {
+        "tags": [
+          "Identity Verification APIs"
+        ],
+        "summary": "API to verify an identity",
+        "operationId": "verifyAccept",
+        "requestBody": {
+          "description": "Identity to verify",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerificationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "default response",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResultResponseAnagrafica"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/echo/test/{value}": {
+      "get": {
+        "tags": [
+          "Echo Controller"
+        ],
+        "summary": "Example api that realize an ECHO operation",
+        "description": "The result of the echo is the input value of the api",
+        "operationId": "echo",
+        "parameters": [
+          {
+            "name": "value",
+            "in": "path",
+            "description": "Is the value that will be returned in post operation",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Echo response with entitlement in case request is authenticated",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResultResponseString"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Anagrafica": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sisPersonID": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "cognome": {
+            "maxLength": 32,
+            "minLength": 0,
+            "type": "string"
+          },
+          "nome": {
+            "maxLength": 32,
+            "minLength": 0,
+            "type": "string"
+          },
+          "sesso": {
+            "maxLength": 1,
+            "minLength": 0,
+            "type": "string"
+          },
+          "codiceFiscale": {
+            "maxLength": 20,
+            "minLength": 0,
+            "pattern": "^(?:(?:[B-DF-HJ-NP-TV-Z]|[AEIOU])[AEIOU][AEIOUX]|[B-DF-HJ-NP-TV-Z]{2}[A-Z]){2}[\\dLMNP-V]{2}(?:[A-EHLMPR-T](?:[04LQ][1-9MNP-V]|[1256LMRS][\\dLMNP-V])|[DHPS][37PT][0L]|[ACELMRT][37PT][01LM])(?:[A-MZ][1-9MNP-V][\\dLMNP-V]{2}|[A-M][0L](?:[1-9MNP-V][\\dLMNP-V]|[0L][1-9MNP-V]))[A-Z]$",
+            "type": "string"
+          },
+          "partitaIva": {
+            "type": "string"
+          },
+          "tipoAnagrafica": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "titolo": {
+            "type": "string"
+          },
+          "dataDiNascita": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "luogoDiNascita": {
+            "type": "string"
+          },
+          "idLuogoDiNascitaUfficiale": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "luogoDiNascitaUfficiale": {
+            "$ref": "#/components/schemas/NationalLocation"
+          },
+          "nazionalita": {
+            "maxLength": 128,
+            "minLength": 0,
+            "type": "string"
+          },
+          "docTipo": {
+            "type": "string"
+          },
+          "docRilasciatoDa": {
+            "type": "string"
+          },
+          "docNumero": {
+            "type": "string"
+          },
+          "docScadenza": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "docRilascio": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "note": {
+            "type": "string"
+          },
+          "anagraficaModificatore": {
+            "$ref": "#/components/schemas/Anagrafica"
+          },
+          "dataCreazione": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "dataModifica": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "stato": {
+            "type": "boolean"
+          },
+          "toPurge": {
+            "type": "boolean"
+          },
+          "hasPreview": {
+            "type": "boolean"
+          },
+          "hasDocmentImage": {
+            "type": "boolean"
+          },
+          "documentoScaduto": {
+            "type": "boolean"
+          },
+          "daVerificare": {
+            "type": "boolean"
+          },
+          "docFoto": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "byte"
+            }
+          },
+          "docAnteprima": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "byte"
+            }
+          },
+          "uuid": {
+            "type": "string"
+          }
+        }
+      },
+      "NationalLocation": {
+        "type": "object",
+        "properties": {
+          "idLocation": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "idParent": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "location": {
+            "type": "string"
+          },
+          "locationEng": {
+            "type": "string"
+          },
+          "locationParent": {
+            "type": "string"
+          },
+          "enable": {
+            "type": "boolean"
+          },
+          "variationDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "attribute": {
+            "type": "string"
+          },
+          "nationalLocationCodes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NationalLocationCode"
+            }
+          },
+          "path": {
+            "type": "string"
+          }
+        }
+      },
+      "NationalLocationCode": {
+        "type": "object",
+        "properties": {
+          "idLoation": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "code1": {
+            "type": "string"
+          },
+          "code2": {
+            "type": "string"
+          },
+          "startDate": {
+            "type": "string"
+          }
+        }
+      },
+      "ApiResultResponseAnagrafica": {
+        "required": [
+          "errorCode"
+        ],
+        "type": "object",
+        "properties": {
+          "errorCode": {
+            "type": "integer",
+            "description": "Is the error code returned from api",
+            "format": "int32"
+          },
+          "errorMessage": {
+            "type": "string",
+            "description": "In case of error not equal to 0, an error message can be reported by api, indicating what problem is occured"
+          },
+          "errorDomain": {
+            "type": "string",
+            "description": "In case of error not equal to 0, an error domain can be reported by api, indicating where the problem is occured"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/Anagrafica"
+          }
+        }
+      },
+      "AnagraficaDettaglio": {
+        "type": "object",
+        "properties": {
+          "idAnagrafica": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "idDettaglio": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "tipoDettaglio": {
+            "$ref": "#/components/schemas/TipoAnagraficaDettaglio"
+          },
+          "valore": {
+            "type": "string"
+          },
+          "valoreBinario": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "byte"
+            }
+          },
+          "dominioValidita": {
+            "$ref": "#/components/schemas/NodoDominio"
+          },
+          "descrizioneNodoAlbero": {
+            "type": "string"
+          },
+          "dataDal": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "dataAl": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "idAnaCreatore": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "idAnaModificatore": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "dataCreazione": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "dataModifica": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "ldapProtoservRamo": {
+            "type": "string"
+          },
+          "ldapProtoservDettaglio": {
+            "type": "string"
+          },
+          "important": {
+            "type": "boolean"
+          },
+          "priority": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "noSync": {
+            "type": "boolean"
+          }
+        },
+        "description": "Is the value returned by api"
+      },
+      "ApiResultResponseListAnagraficaDettaglio": {
+        "required": [
+          "errorCode"
+        ],
+        "type": "object",
+        "properties": {
+          "errorCode": {
+            "type": "integer",
+            "description": "Is the error code returned from api",
+            "format": "int32"
+          },
+          "errorMessage": {
+            "type": "string",
+            "description": "In case of error not equal to 0, an error message can be reported by api, indicating what problem is occured"
+          },
+          "errorDomain": {
+            "type": "string",
+            "description": "In case of error not equal to 0, an error domain can be reported by api, indicating where the problem is occured"
+          },
+          "payload": {
+            "type": "array",
+            "description": "Is the value returned by api",
+            "items": {
+              "$ref": "#/components/schemas/AnagraficaDettaglio"
+            }
+          }
+        }
+      },
+      "DescrizioneNodo": {
+        "type": "object",
+        "properties": {
+          "idAnagrafica": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "idDettaglio": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "tipoDettaglio": {
+            "$ref": "#/components/schemas/TipoAnagraficaDettaglio"
+          },
+          "valore": {
+            "type": "string"
+          },
+          "valoreBinario": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "byte"
+            }
+          },
+          "dominioValidita": {
+            "$ref": "#/components/schemas/NodoDominio"
+          },
+          "descrizioneNodoAlbero": {
+            "type": "string"
+          },
+          "dataDal": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "dataAl": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "idAnaCreatore": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "idAnaModificatore": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "dataCreazione": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "dataModifica": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "ldapProtoservRamo": {
+            "type": "string"
+          },
+          "ldapProtoservDettaglio": {
+            "type": "string"
+          },
+          "important": {
+            "type": "boolean"
+          },
+          "priority": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "noSync": {
+            "type": "boolean"
+          },
+          "codice": {
+            "type": "string"
+          }
+        }
+      },
+      "NodoDominio": {
+        "type": "object",
+        "properties": {
+          "dataMod": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "descPath": {
+            "type": "string"
+          },
+          "descFullPath": {
+            "type": "string"
+          },
+          "descrizione": {
+            "type": "string"
+          },
+          "descrizioneNodo": {
+            "$ref": "#/components/schemas/DescrizioneNodo"
+          },
+          "idNanagraficaMod": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "idNodo": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "idNodoPadre": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "idTipo": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "idDescrizioneNodo": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "ldapEntry": {
+            "type": "string"
+          },
+          "idNStatoOwner": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "idTStatoOwner": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "nodoStatoOwner": {
+            "$ref": "#/components/schemas/NodoDominio"
+          },
+          "path": {
+            "type": "string"
+          },
+          "periodiValidita": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PeriodoValiditaDominio"
+            }
+          },
+          "stato": {
+            "type": "boolean"
+          },
+          "statoOwner": {
+            "type": "boolean"
+          },
+          "active": {
+            "type": "boolean"
+          },
+          "leaf": {
+            "type": "boolean"
+          },
+          "link": {
+            "type": "boolean"
+          }
+        }
+      },
+      "PeriodoValiditaDominio": {
+        "type": "object",
+        "properties": {
+          "al": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "anagraficaModificatore": {
+            "$ref": "#/components/schemas/Anagrafica"
+          },
+          "dal": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "dataModifica": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "idAnaMod": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "idNodoAlbero": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "idNodoOwner": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "idPeriodo": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "idPeriodoOwner": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "idTipoAlbero": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "idTipoOwner": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "nodoDominio": {
+            "$ref": "#/components/schemas/NodoDominio"
+          },
+          "nodoOwner": {
+            "$ref": "#/components/schemas/NodoDominio"
+          },
+          "pathOwner": {
+            "type": "string"
+          }
+        }
+      },
+      "TipoAnagraficaDettaglio": {
+        "type": "object",
+        "properties": {
+          "idTipoDettaglio": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "descrizione": {
+            "type": "string"
+          },
+          "attributoLdap": {
+            "type": "string"
+          },
+          "attributoPrefix": {
+            "type": "string"
+          },
+          "checkReg": {
+            "type": "string"
+          },
+          "visible": {
+            "type": "boolean"
+          },
+          "globalUnique": {
+            "type": "boolean"
+          },
+          "readOnly": {
+            "type": "boolean"
+          },
+          "onlyOneActive": {
+            "type": "boolean"
+          },
+          "binary": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ApiResultResponseRuoloAnagrafica": {
+        "required": [
+          "errorCode"
+        ],
+        "type": "object",
+        "properties": {
+          "errorCode": {
+            "type": "integer",
+            "description": "Is the error code returned from api",
+            "format": "int32"
+          },
+          "errorMessage": {
+            "type": "string",
+            "description": "In case of error not equal to 0, an error message can be reported by api, indicating what problem is occured"
+          },
+          "errorDomain": {
+            "type": "string",
+            "description": "In case of error not equal to 0, an error domain can be reported by api, indicating where the problem is occured"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/RuoloAnagrafica"
+          }
+        }
+      },
+      "Qualifica": {
+        "type": "object",
+        "properties": {
+          "idQualifica": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "idRuolo": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "descrizione": {
+            "type": "string"
+          },
+          "ruolo": {
+            "$ref": "#/components/schemas/Ruolo"
+          },
+          "codice": {
+            "type": "string"
+          }
+        }
+      },
+      "Ruolo": {
+        "type": "object",
+        "properties": {
+          "idRuolo": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "descrizione": {
+            "type": "string"
+          },
+          "codice": {
+            "type": "string"
+          },
+          "idTipoAlbero": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "RuoloAnagrafica": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "idAnagrafica": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "idNodoAlbero": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "idTipoAlbero": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "idQualifica": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "idRuolo": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "al": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "dal": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "dataFirma": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "dataCreazione": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "dataModifica": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "descrizioneRuoloDominio": {
+            "type": "string"
+          },
+          "occupazione": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "note": {
+            "type": "string"
+          },
+          "pathNodoDominio": {
+            "type": "string"
+          },
+          "pressoGruppo": {
+            "type": "string"
+          },
+          "nonAppartenente": {
+            "type": "boolean"
+          },
+          "qualifica": {
+            "$ref": "#/components/schemas/Qualifica"
+          },
+          "ruolo": {
+            "$ref": "#/components/schemas/Ruolo"
+          },
+          "stato": {
+            "type": "boolean"
+          },
+          "tipoAttivita": {
+            "type": "string"
+          },
+          "descrizione_attivita": {
+            "type": "string"
+          },
+          "anagraficaModificatore": {
+            "$ref": "#/components/schemas/Anagrafica"
+          },
+          "outdated": {
+            "type": "boolean"
+          },
+          "validDomain": {
+            "type": "boolean"
+          },
+          "projection": {
+            "type": "boolean"
+          }
+        },
+        "description": "Is the value returned by api"
+      },
+      "Column": {
+        "required": [
+          "data",
+          "search"
+        ],
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "searchable": {
+            "type": "boolean"
+          },
+          "orderable": {
+            "type": "boolean"
+          },
+          "search": {
+            "$ref": "#/components/schemas/Search"
+          }
+        }
+      },
+      "DataTablesInput": {
+        "required": [
+          "columns",
+          "draw",
+          "length",
+          "order",
+          "search",
+          "start"
+        ],
+        "type": "object",
+        "properties": {
+          "draw": {
+            "minimum": 0,
+            "type": "integer",
+            "format": "int32"
+          },
+          "start": {
+            "minimum": 0,
+            "type": "integer",
+            "format": "int32"
+          },
+          "length": {
+            "minimum": -1,
+            "type": "integer",
+            "format": "int32"
+          },
+          "search": {
+            "$ref": "#/components/schemas/Search"
+          },
+          "order": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Order"
+            }
+          },
+          "columns": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Column"
+            }
+          }
+        }
+      },
+      "Order": {
+        "required": [
+          "dir"
+        ],
+        "type": "object",
+        "properties": {
+          "column": {
+            "minimum": 0,
+            "type": "integer",
+            "format": "int32"
+          },
+          "dir": {
+            "type": "string",
+            "enum": [
+              "desc",
+              "asc"
+            ]
+          }
+        }
+      },
+      "Search": {
+        "required": [
+          "value"
+        ],
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "string"
+          },
+          "regex": {
+            "type": "boolean"
+          }
+        }
+      },
+      "Authorization": {
+        "type": "object",
+        "properties": {
+          "isMemberOf": {
+            "type": "array",
+            "description": "The list 'isMemberOf' entitlement",
+            "items": {
+              "type": "string",
+              "description": "The list 'isMemberOf' entitlement"
+            }
+          },
+          "schacUserStatus": {
+            "type": "array",
+            "description": "The list 'schacUserStatus' entitlement",
+            "items": {
+              "type": "string",
+              "description": "The list 'schacUserStatus' entitlement"
+            }
+          },
+          "eduPersonEntitlement": {
+            "type": "array",
+            "description": "The list 'eduPersonEntitlement' entitlement",
+            "items": {
+              "type": "string",
+              "description": "The list 'eduPersonEntitlement' entitlement"
+            }
+          },
+          "edupersonassurance": {
+            "type": "array",
+            "description": "The list 'edupersonassurance' edupersonassurance",
+            "items": {
+              "type": "string",
+              "description": "The list 'edupersonassurance' edupersonassurance"
+            }
+          }
+        }
+      },
+      "DataTablesOutputIdentityCache": {
+        "type": "object",
+        "properties": {
+          "draw": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "recordsTotal": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "recordsFiltered": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IdentityCache"
+            }
+          },
+          "error": {
+            "type": "string"
+          }
+        }
+      },
+      "IdentityCache": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "infnUUID": {
+            "type": "string"
+          },
+          "identity": {
+            "$ref": "#/components/schemas/Anagrafica"
+          },
+          "role": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RuoloAnagrafica"
+            }
+          },
+          "details": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnagraficaDettaglio"
+            }
+          },
+          "isMemberOf": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "schacUserStatus": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "eduPersonEntitlement": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "edupersonassurance": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "identityTextSearchField": {
+            "type": "string"
+          },
+          "requestSyncState": {
+            "type": "string",
+            "enum": [
+              "NONE",
+              "TO_PROCESS"
+            ]
+          },
+          "processingSyncState": {
+            "type": "string",
+            "enum": [
+              "NONE",
+              "PROCESSING",
+              "FAILED"
+            ]
+          },
+          "startSyncTS": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endSyncTS": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "faultError": {
+            "type": "string"
+          },
+          "authorization": {
+            "$ref": "#/components/schemas/Authorization"
+          }
+        }
+      },
+      "ApiResultResponseDataTablesOutputIdentityCache": {
+        "required": [
+          "errorCode"
+        ],
+        "type": "object",
+        "properties": {
+          "errorCode": {
+            "type": "integer",
+            "description": "Is the error code returned from api",
+            "format": "int32"
+          },
+          "errorMessage": {
+            "type": "string",
+            "description": "In case of error not equal to 0, an error message can be reported by api, indicating what problem is occured"
+          },
+          "errorDomain": {
+            "type": "string",
+            "description": "In case of error not equal to 0, an error domain can be reported by api, indicating where the problem is occured"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/DataTablesOutputIdentityCache"
+          }
+        }
+      },
+      "ApiResultResponseDataTablesOutputAnagrafica": {
+        "required": [
+          "errorCode"
+        ],
+        "type": "object",
+        "properties": {
+          "errorCode": {
+            "type": "integer",
+            "description": "Is the error code returned from api",
+            "format": "int32"
+          },
+          "errorMessage": {
+            "type": "string",
+            "description": "In case of error not equal to 0, an error message can be reported by api, indicating what problem is occured"
+          },
+          "errorDomain": {
+            "type": "string",
+            "description": "In case of error not equal to 0, an error domain can be reported by api, indicating where the problem is occured"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/DataTablesOutputAnagrafica"
+          }
+        }
+      },
+      "DataTablesOutputAnagrafica": {
+        "type": "object",
+        "properties": {
+          "draw": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "recordsTotal": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "recordsFiltered": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Anagrafica"
+            }
+          },
+          "error": {
+            "type": "string"
+          }
+        },
+        "description": "Is the value returned by api"
+      },
+      "ApiResultResponseListNodoDominio": {
+        "required": [
+          "errorCode"
+        ],
+        "type": "object",
+        "properties": {
+          "errorCode": {
+            "type": "integer",
+            "description": "Is the error code returned from api",
+            "format": "int32"
+          },
+          "errorMessage": {
+            "type": "string",
+            "description": "In case of error not equal to 0, an error message can be reported by api, indicating what problem is occured"
+          },
+          "errorDomain": {
+            "type": "string",
+            "description": "In case of error not equal to 0, an error domain can be reported by api, indicating where the problem is occured"
+          },
+          "payload": {
+            "type": "array",
+            "description": "Is the value returned by api",
+            "items": {
+              "$ref": "#/components/schemas/NodoDominio"
+            }
+          }
+        }
+      },
+      "ApiResultResponseListAnagrafica": {
+        "required": [
+          "errorCode"
+        ],
+        "type": "object",
+        "properties": {
+          "errorCode": {
+            "type": "integer",
+            "description": "Is the error code returned from api",
+            "format": "int32"
+          },
+          "errorMessage": {
+            "type": "string",
+            "description": "In case of error not equal to 0, an error message can be reported by api, indicating what problem is occured"
+          },
+          "errorDomain": {
+            "type": "string",
+            "description": "In case of error not equal to 0, an error domain can be reported by api, indicating where the problem is occured"
+          },
+          "payload": {
+            "type": "array",
+            "description": "Is the value returned by api",
+            "items": {
+              "$ref": "#/components/schemas/Anagrafica"
+            }
+          }
+        }
+      },
+      "ApiResultResponseListString": {
+        "required": [
+          "errorCode"
+        ],
+        "type": "object",
+        "properties": {
+          "errorCode": {
+            "type": "integer",
+            "description": "Is the error code returned from api",
+            "format": "int32"
+          },
+          "errorMessage": {
+            "type": "string",
+            "description": "In case of error not equal to 0, an error message can be reported by api, indicating what problem is occured"
+          },
+          "errorDomain": {
+            "type": "string",
+            "description": "In case of error not equal to 0, an error domain can be reported by api, indicating where the problem is occured"
+          },
+          "payload": {
+            "type": "array",
+            "description": "Is the value returned by api",
+            "items": {
+              "type": "string",
+              "description": "Is the value returned by api"
+            }
+          }
+        }
+      },
+      "ApiResultResponseListListString": {
+        "required": [
+          "errorCode"
+        ],
+        "type": "object",
+        "properties": {
+          "errorCode": {
+            "type": "integer",
+            "description": "Is the error code returned from api",
+            "format": "int32"
+          },
+          "errorMessage": {
+            "type": "string",
+            "description": "In case of error not equal to 0, an error message can be reported by api, indicating what problem is occured"
+          },
+          "errorDomain": {
+            "type": "string",
+            "description": "In case of error not equal to 0, an error domain can be reported by api, indicating where the problem is occured"
+          },
+          "payload": {
+            "type": "array",
+            "description": "Is the value returned by api",
+            "items": {
+              "type": "array",
+              "description": "Is the value returned by api",
+              "items": {
+                "type": "string",
+                "description": "Is the value returned by api"
+              }
+            }
+          }
+        }
+      },
+      "DeleteBadgeDetailDTO": {
+        "type": "object",
+        "properties": {
+          "infnUUID": {
+            "type": "string"
+          },
+          "detailID": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "ApiResultResponseBoolean": {
+        "required": [
+          "errorCode"
+        ],
+        "type": "object",
+        "properties": {
+          "errorCode": {
+            "type": "integer",
+            "description": "Is the error code returned from api",
+            "format": "int32"
+          },
+          "errorMessage": {
+            "type": "string",
+            "description": "In case of error not equal to 0, an error message can be reported by api, indicating what problem is occured"
+          },
+          "errorDomain": {
+            "type": "string",
+            "description": "In case of error not equal to 0, an error domain can be reported by api, indicating where the problem is occured"
+          },
+          "payload": {
+            "type": "boolean",
+            "description": "Is the value returned by api"
+          }
+        }
+      },
+      "FindBadgeParamsDTO": {
+        "required": [
+          "from",
+          "rfidValue",
+          "to"
+        ],
+        "type": "object",
+        "properties": {
+          "rfidValue": {
+            "type": "string",
+            "description": "The rfid value"
+          },
+          "from": {
+            "type": "string",
+            "description": "from format yyyy-MM-dd",
+            "format": "date-time"
+          },
+          "to": {
+            "type": "string",
+            "description": "to format yyyy-MM-dd",
+            "format": "date-time"
+          }
+        }
+      },
+      "ApiResultResponseInteger": {
+        "required": [
+          "errorCode"
+        ],
+        "type": "object",
+        "properties": {
+          "errorCode": {
+            "type": "integer",
+            "description": "Is the error code returned from api",
+            "format": "int32"
+          },
+          "errorMessage": {
+            "type": "string",
+            "description": "In case of error not equal to 0, an error message can be reported by api, indicating what problem is occured"
+          },
+          "errorDomain": {
+            "type": "string",
+            "description": "In case of error not equal to 0, an error domain can be reported by api, indicating where the problem is occured"
+          },
+          "payload": {
+            "type": "integer",
+            "description": "Is the value returned by api",
+            "format": "int32"
+          }
+        }
+      },
+      "ApiResultResponseListIdentityCache": {
+        "required": [
+          "errorCode"
+        ],
+        "type": "object",
+        "properties": {
+          "errorCode": {
+            "type": "integer",
+            "description": "Is the error code returned from api",
+            "format": "int32"
+          },
+          "errorMessage": {
+            "type": "string",
+            "description": "In case of error not equal to 0, an error message can be reported by api, indicating what problem is occured"
+          },
+          "errorDomain": {
+            "type": "string",
+            "description": "In case of error not equal to 0, an error domain can be reported by api, indicating where the problem is occured"
+          },
+          "payload": {
+            "type": "array",
+            "description": "Is the value returned by api",
+            "items": {
+              "$ref": "#/components/schemas/IdentityCache"
+            }
+          }
+        }
+      },
+      "ApiResultResponseString": {
+        "required": [
+          "errorCode"
+        ],
+        "type": "object",
+        "properties": {
+          "errorCode": {
+            "type": "integer",
+            "description": "Is the error code returned from api",
+            "format": "int32"
+          },
+          "errorMessage": {
+            "type": "string",
+            "description": "In case of error not equal to 0, an error message can be reported by api, indicating what problem is occured"
+          },
+          "errorDomain": {
+            "type": "string",
+            "description": "In case of error not equal to 0, an error domain can be reported by api, indicating where the problem is occured"
+          },
+          "payload": {
+            "type": "string",
+            "description": "Is the value returned by api"
+          }
+        }
+      },
+      "SpidAttrs": {
+        "type": "object",
+        "properties": {
+          "spidCode": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "familyName": {
+            "type": "string"
+          },
+          "placeOfBirth": {
+            "type": "string"
+          },
+          "dateOfBirth": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "gender": {
+            "type": "string"
+          },
+          "fiscalNumber": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          }
+        }
+      },
+      "CieAttrs": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "familyName": {
+            "type": "string"
+          },
+          "dateOfBirth": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "fiscalNumber": {
+            "type": "string"
+          }
+        }
+      },
+      "ApiResultResponseNationalLocation": {
+        "required": [
+          "errorCode"
+        ],
+        "type": "object",
+        "properties": {
+          "errorCode": {
+            "type": "integer",
+            "description": "Is the error code returned from api",
+            "format": "int32"
+          },
+          "errorMessage": {
+            "type": "string",
+            "description": "In case of error not equal to 0, an error message can be reported by api, indicating what problem is occured"
+          },
+          "errorDomain": {
+            "type": "string",
+            "description": "In case of error not equal to 0, an error domain can be reported by api, indicating where the problem is occured"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/NationalLocation"
+          }
+        }
+      },
+      "NewBadgeDetailDTO": {
+        "type": "object",
+        "properties": {
+          "infnUUID": {
+            "type": "string"
+          },
+          "valore": {
+            "type": "string"
+          },
+          "from": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "to": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "NewQRCodeDetailDTO": {
+        "type": "object",
+        "properties": {
+          "infnUUID": {
+            "type": "string"
+          },
+          "valore": {
+            "type": "string"
+          },
+          "from": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "to": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ApiResultResponseListRuoloAnagrafica": {
+        "required": [
+          "errorCode"
+        ],
+        "type": "object",
+        "properties": {
+          "errorCode": {
+            "type": "integer",
+            "description": "Is the error code returned from api",
+            "format": "int32"
+          },
+          "errorMessage": {
+            "type": "string",
+            "description": "In case of error not equal to 0, an error message can be reported by api, indicating what problem is occured"
+          },
+          "errorDomain": {
+            "type": "string",
+            "description": "In case of error not equal to 0, an error domain can be reported by api, indicating where the problem is occured"
+          },
+          "payload": {
+            "type": "array",
+            "description": "Is the value returned by api",
+            "items": {
+              "$ref": "#/components/schemas/RuoloAnagrafica"
+            }
+          }
+        }
+      },
+      "ApiResultResponseAuthorization": {
+        "required": [
+          "errorCode"
+        ],
+        "type": "object",
+        "properties": {
+          "errorCode": {
+            "type": "integer",
+            "description": "Is the error code returned from api",
+            "format": "int32"
+          },
+          "errorMessage": {
+            "type": "string",
+            "description": "In case of error not equal to 0, an error message can be reported by api, indicating what problem is occured"
+          },
+          "errorDomain": {
+            "type": "string",
+            "description": "In case of error not equal to 0, an error domain can be reported by api, indicating where the problem is occured"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/Authorization"
+          }
+        }
+      },
+      "ITResourcesRequest": {
+        "type": "object",
+        "properties": {
+          "contactPerson": {
+            "$ref": "#/components/schemas/Anagrafica"
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      },
+      "ApiResultResponseITResourcesResponse": {
+        "required": [
+          "errorCode"
+        ],
+        "type": "object",
+        "properties": {
+          "errorCode": {
+            "type": "integer",
+            "description": "Is the error code returned from api",
+            "format": "int32"
+          },
+          "errorMessage": {
+            "type": "string",
+            "description": "In case of error not equal to 0, an error message can be reported by api, indicating what problem is occured"
+          },
+          "errorDomain": {
+            "type": "string",
+            "description": "In case of error not equal to 0, an error domain can be reported by api, indicating where the problem is occured"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/ITResourcesResponse"
+          }
+        }
+      },
+      "ITResourcesResponse": {
+        "type": "object",
+        "properties": {
+          "details": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnagraficaDettaglio"
+            }
+          }
+        },
+        "description": "Is the value returned by api"
+      },
+      "ApiResultResponseDataTablesOutputIdentityDTO": {
+        "required": [
+          "errorCode"
+        ],
+        "type": "object",
+        "properties": {
+          "errorCode": {
+            "type": "integer",
+            "description": "Is the error code returned from api",
+            "format": "int32"
+          },
+          "errorMessage": {
+            "type": "string",
+            "description": "In case of error not equal to 0, an error message can be reported by api, indicating what problem is occured"
+          },
+          "errorDomain": {
+            "type": "string",
+            "description": "In case of error not equal to 0, an error domain can be reported by api, indicating where the problem is occured"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/DataTablesOutputIdentityDTO"
+          }
+        }
+      },
+      "DataTablesOutputIdentityDTO": {
+        "type": "object",
+        "properties": {
+          "draw": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "recordsTotal": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "recordsFiltered": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IdentityDTO"
+            }
+          },
+          "error": {
+            "type": "string"
+          }
+        },
+        "description": "Is the value returned by api"
+      },
+      "IdentityDTO": {
+        "type": "object",
+        "properties": {
+          "anagrafica": {
+            "$ref": "#/components/schemas/Anagrafica"
+          },
+          "details": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnagraficaDettaglio"
+            }
+          },
+          "identityFullName": {
+            "type": "string"
+          }
+        }
+      },
+      "ApiResultResponseSyncStatus": {
+        "required": [
+          "errorCode"
+        ],
+        "type": "object",
+        "properties": {
+          "errorCode": {
+            "type": "integer",
+            "description": "Is the error code returned from api",
+            "format": "int32"
+          },
+          "errorMessage": {
+            "type": "string",
+            "description": "In case of error not equal to 0, an error message can be reported by api, indicating what problem is occured"
+          },
+          "errorDomain": {
+            "type": "string",
+            "description": "In case of error not equal to 0, an error domain can be reported by api, indicating where the problem is occured"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/SyncStatus"
+          }
+        }
+      },
+      "SyncStatus": {
+        "type": "object",
+        "properties": {
+          "idWaiting": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "idProcessed": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "entryWaiting": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "entryInProcess": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "entryFailed": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "entrySuccessfull": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "description": "Is the value returned by api"
+      },
+      "ApiResultResponseIdentityCache": {
+        "required": [
+          "errorCode"
+        ],
+        "type": "object",
+        "properties": {
+          "errorCode": {
+            "type": "integer",
+            "description": "Is the error code returned from api",
+            "format": "int32"
+          },
+          "errorMessage": {
+            "type": "string",
+            "description": "In case of error not equal to 0, an error message can be reported by api, indicating what problem is occured"
+          },
+          "errorDomain": {
+            "type": "string",
+            "description": "In case of error not equal to 0, an error domain can be reported by api, indicating where the problem is occured"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/IdentityCache"
+          }
+        }
+      },
+      "SiteAccessVerificationRequest": {
+        "type": "object",
+        "properties": {
+          "anagrafica": {
+            "$ref": "#/components/schemas/Anagrafica"
+          },
+          "metodoVerificaId": {
+            "type": "string"
+          },
+          "sedeDiVerifica": {
+            "type": "string"
+          }
+        }
+      },
+      "ApiResultResponseAnagraficaDettaglio": {
+        "required": [
+          "errorCode"
+        ],
+        "type": "object",
+        "properties": {
+          "errorCode": {
+            "type": "integer",
+            "description": "Is the error code returned from api",
+            "format": "int32"
+          },
+          "errorMessage": {
+            "type": "string",
+            "description": "In case of error not equal to 0, an error message can be reported by api, indicating what problem is occured"
+          },
+          "errorDomain": {
+            "type": "string",
+            "description": "In case of error not equal to 0, an error domain can be reported by api, indicating where the problem is occured"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/AnagraficaDettaglio"
+          }
+        }
+      },
+      "VerificationDemandRequest": {
+        "type": "object",
+        "properties": {
+          "site": {
+            "$ref": "#/components/schemas/NodoDominio"
+          },
+          "itResources": {
+            "type": "string"
+          },
+          "economicTies": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "VerificationRequest": {
+        "type": "object",
+        "properties": {
+          "anagrafica": {
+            "$ref": "#/components/schemas/Anagrafica"
+          },
+          "metodoVerificaId": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "in": "header",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  }
+}

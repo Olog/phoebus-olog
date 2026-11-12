@@ -61,8 +61,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -120,6 +122,8 @@ public class LogResource {
     @SuppressWarnings("unused")
     @Autowired
     private WebSocketService webSocketService;
+    @Autowired
+    private LogbookAccessService logbookAccessService;
 
     @Autowired
     private AttachmentsUploadUtil attachmentsUploadUtil;
@@ -138,6 +142,7 @@ public class LogResource {
     public Log getLogById(@PathVariable(name = "logId") String logId) {
         Optional<Log> foundLog = logRepository.findById(logId);
         if (foundLog.isPresent()) {
+            logbookAccessService.requireReadable(foundLog.get());
             return foundLog.get();
         } else {
             String message = MessageFormat.format(TextUtil.LOG_NOT_FOUND, logId);
@@ -150,6 +155,7 @@ public class LogResource {
     @SuppressWarnings("unused")
     @Operation(summary = "Get an archived log by Id")
     public SearchResult getArchivedLog(@PathVariable(name = "logId") String logId) {
+        getLogById(logId);
         return logRepository.findArchivedById(logId);
     }
 
@@ -158,6 +164,7 @@ public class LogResource {
     public ResponseEntity<Resource> getAttachment(@PathVariable(name = "logId") String logId, @PathVariable(name = "attachmentName") String attachmentName) {
         Optional<Log> log = logRepository.findById(logId);
         if (log.isPresent()) {
+            logbookAccessService.requireReadable(log.get());
             Set<Attachment> attachments = log.get().getAttachments().stream().filter(attachment -> attachment.getFilename().equals(attachmentName)).collect(Collectors.toSet());
             if (attachments.size() == 1) {
                 Attachment attachment = attachments.iterator().next();
@@ -344,6 +351,9 @@ public class LogResource {
         if (!CollectionUtils.containsAll(persistedLogbookNames, logbookNames)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, TextUtil.LOG_INVALID_LOGBOOKS);
         }
+        logbookAccessService.requirePermission(logbookNames,
+                org.phoebus.olog.entity.LogbookPermission.WRITE, principal);
+        validateExistingAttachments(log);
         Set<Tag> tags = log.getTags();
         if (tags != null && !tags.isEmpty()) {
             Set<String> tagNames = tags.stream().map(Tag::getName).collect(Collectors.toSet());
@@ -528,6 +538,13 @@ public class LogResource {
         Optional<Log> foundLog = logRepository.findById(logId);
         if (foundLog.isPresent()) {
             Log persistedLog = foundLog.get();
+            logbookAccessService.requireReadable(persistedLog);
+            Set<String> affectedLogbooks = new HashSet<>();
+            persistedLog.getLogbooks().forEach(item -> affectedLogbooks.add(item.getName()));
+            log.getLogbooks().forEach(item -> affectedLogbooks.add(item.getName()));
+            logbookAccessService.requirePermission(affectedLogbooks,
+                    org.phoebus.olog.entity.LogbookPermission.WRITE, principal);
+            validateExistingAttachments(log);
             logRepository.archive(persistedLog);
 
             // If persisted log has attachments not listed in the log submitted by client,
@@ -567,6 +584,105 @@ public class LogResource {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, MessageFormat.format(TextUtil.LOG_NOT_RETRIEVED, logId));
         }
     
+    }
+
+    /**
+     * Multipart variant of {@link #updateLog(String, String, boolean, Log, Principal)} used by the INFN web client:
+     * attachments of the submitted entry are kept/updated by id, and new ones are stored from the uploaded
+     * <code>files</code> matched by filename.
+     */
+    @SuppressWarnings("unused")
+    @PostMapping(value = "/{logId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Update a log entry, adding attachments (multipart)",
+            description = "Multipart variant of updateLog: the log entry is sent as part \"logEntry\" and new\n"
+                    + "attachments as part(s) \"files\", matched to log entry attachments by filename.",
+            operationId = "updateLogMultipartById")
+    public Log updateLogMultipart(@PathVariable(name = "logId") String logId,
+                         @RequestParam(name = "markup", required = false) String markup,
+                         @RequestPart("logEntry") Log log,
+                         @RequestPart(value = "files", required = false) MultipartFile[] files,
+                         @AuthenticationPrincipal Principal principal) {
+
+        // In case a client sends a log record where the id does not match the path variable, return HTTP 400 (bad request)
+        if (!logId.equals(Long.toString(log.getId()))) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, TextUtil.LOG_ENTRY_NOT_MATCH_PATH);
+        }
+
+        Optional<Log> foundLog = logRepository.findById(logId);
+        if (foundLog.isPresent()) {
+            Log persistedLog = foundLog.get();
+            logbookAccessService.requireReadable(persistedLog);
+            Set<String> affectedLogbooks = new HashSet<>();
+            persistedLog.getLogbooks().forEach(item -> affectedLogbooks.add(item.getName()));
+            log.getLogbooks().forEach(item -> affectedLogbooks.add(item.getName()));
+            logbookAccessService.requirePermission(affectedLogbooks,
+                    org.phoebus.olog.entity.LogbookPermission.WRITE, principal);
+            validateExistingAttachments(log);
+            logRepository.archive(persistedLog);
+
+            // log entry group property should not be editable but remain if it exists
+            Property logEntryGroupProperty = LogEntryGroupHelper.getLogEntryGroupProperty(log);
+            if (logEntryGroupProperty != null) {
+                log.getProperties().remove(logEntryGroupProperty);
+            }
+            logEntryGroupProperty = LogEntryGroupHelper.getLogEntryGroupProperty(persistedLog);
+            if (logEntryGroupProperty != null) {
+                log.getProperties().add(logEntryGroupProperty);
+            }
+
+            persistedLog.setOwner(principal.getName());
+            persistedLog.setLevel(log.getLevel());
+            persistedLog.setProperties(log.getProperties());
+            persistedLog.setModifyDate(Instant.now());
+            persistedLog.setDescription(log.getDescription());   // to make it work with old clients where description field is sent instead of source
+            persistedLog.setSource(log.getSource());
+            persistedLog.setTags(log.getTags());
+            persistedLog.setLogbooks(log.getLogbooks());
+            persistedLog.setTitle(log.getTitle());
+            persistedLog = cleanMarkup(markup, persistedLog);
+            
+            // handle attachments
+            SortedSet<Attachment> existingAttachments = persistedLog.getAttachments();
+            Set<Attachment> newAttachments = log.getAttachments();
+
+            // Remove attachments that are no longer present
+            existingAttachments.removeIf(existing ->
+                    newAttachments.stream().noneMatch(newAtt ->
+                            newAtt.getId() != null && newAtt.getId().equals(existing.getId())));
+
+            // Add or update attachments
+            for (Attachment newAttachment : newAttachments) {
+                Optional<Attachment> existingAttachment = existingAttachments.stream()
+                        .filter(a -> a.getId().equals(newAttachment.getId()))
+                        .findFirst();
+                if (existingAttachment.isPresent()) {
+                    existingAttachment.get().setFilename(newAttachment.getFilename());
+                    existingAttachment.get().setFileMetadataDescription(newAttachment.getFileMetadataDescription());
+                } else {
+                    // New attachment to save
+                    MultipartFile matchingFile = null;
+                    if (files != null) {
+                        for (MultipartFile file : files) {
+                            if (Objects.equals(file.getOriginalFilename(), newAttachment.getFilename())) {
+                                matchingFile = file;
+                                break;
+                            }
+                        }
+                    }
+
+                    Attachment attachment = new Attachment(newAttachment.getId(), matchingFile, newAttachment.getFilename(), newAttachment.getFileMetadataDescription());
+                    Attachment savedAttachment = attachmentRepository.save(attachment);
+                    existingAttachments.add(savedAttachment);
+                }
+            }
+            persistedLog.setAttachments(existingAttachments);
+
+            webSocketService.sendMessageToClients(new WebSocketMessage(MessageType.LOG_ENTRY_UPDATED, persistedLog.getId().toString()));
+
+            return logRepository.update(persistedLog);
+        } else {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, MessageFormat.format(TextUtil.LOG_NOT_RETRIEVED, logId));
+        }
     }
 
     @PostMapping("/multipart")
@@ -635,6 +751,7 @@ public class LogResource {
                 } catch (ResponseStatusException exception) {
                     throw new ResponseStatusException(HttpStatus.BAD_REQUEST, MessageFormat.format(TextUtil.LOG_ID_NOT_FOUND, id));
                 }
+                logbookAccessService.requireReadable(log.get());
                 Property logEntryGroupProperty = LogEntryGroupHelper.getLogEntryGroupProperty(log.get());
                 if (logEntryGroupProperty != null && existingLogEntryGroupProperty != null &&
                         !logEntryGroupProperty.getAttribute(LogEntryGroupHelper.ATTRIBUTE_ID).equals(existingLogEntryGroupProperty.getAttribute(LogEntryGroupHelper.ATTRIBUTE_ID))) {
@@ -686,6 +803,19 @@ public class LogResource {
                         .log(Level.WARNING, MessageFormat.format(TextUtil.LOG_ENTRY_NOTIFIER, n.getClass().getName()), e);
             }
         }));
+    }
+
+    private void validateExistingAttachments(Log log) {
+        if (log.getAttachments() == null) {
+            return;
+        }
+        for (Attachment attachment : log.getAttachments()) {
+            // existsById, not findById: findById throws 404 for unknown ids, and attachments of a
+            // new entry (multipart create) are not stored yet when the entry is validated.
+            if (attachment.getId() != null && attachmentRepository.existsById(attachment.getId())) {
+                logRepository.requireReadableAttachment(attachment.getId());
+            }
+        }
     }
 
     private Log cleanMarkup(String markup, Log log) {
@@ -765,6 +895,7 @@ public class LogResource {
         try {
             synchronized (logGroupSyncObject) {
                 Log originalLogEntry = logRepository.findById(originalLogEntryId).get();
+                logbookAccessService.requireReadable(originalLogEntry);
                 // Check if the original entry already contains the log entry group property
                 Property logEntryGroupProperty = LogEntryGroupHelper.getLogEntryGroupProperty(originalLogEntry);
                 if (logEntryGroupProperty == null) {
@@ -778,6 +909,9 @@ public class LogResource {
             }
         } catch (ResponseStatusException exception) {
             // Log entry not found, return HTTP 400
+            if (exception.getStatusCode() == HttpStatus.FORBIDDEN || exception.getStatusCode() == HttpStatus.UNAUTHORIZED) {
+                throw exception;
+            }
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, MessageFormat.format(TextUtil.LOG_ENTRY_CANNOT_REPLY_NOT_EXISTS, originalLogEntryId));
         }
     }

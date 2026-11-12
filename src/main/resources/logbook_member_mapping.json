@@ -1,0 +1,15 @@
+{
+  "mappings": {
+    "properties": {
+      "id": { "type": "keyword" },
+      "logbook": { "type": "keyword" },
+      "infnUuid": { "type": "keyword" },
+      "permissions": { "type": "keyword" },
+      "visibleFrom": { "type": "date", "format": "strict_date" },
+      "visibleTo": { "type": "date", "format": "strict_date" },
+      "createdBy": { "type": "keyword" },
+      "createdAt": { "type": "date" },
+      "updatedAt": { "type": "date" }
+    }
+  }
+}

@@ -63,7 +63,7 @@ class AttachmentResourceTest extends ResourcesTestBase {
         when(attachment.getAttachment()).thenReturn(inputStreamSource);
         when(attachment.getFilename()).thenReturn("file.jpg");
         when(attachmentRepository.findById("valid")).thenReturn(Optional.of(attachment));
-        MockHttpServletRequestBuilder request = get("/" + OlogResourceDescriptors.ATTACHMENT_URI + "/valid");
+        MockHttpServletRequestBuilder request = get("/" + OlogResourceDescriptors.ATTACHMENT_URI + "/valid").header("Authorization", AUTHORIZATION);
         MvcResult result = mockMvc.perform(request).andExpect(status().isOk())
                 .andReturn();
         String responseData = result.getResponse().getContentAsString();
@@ -78,14 +78,14 @@ class AttachmentResourceTest extends ResourcesTestBase {
         when(attachment.getAttachment()).thenReturn(inputStreamSource);
         when(attachment.getFilename()).thenReturn("file.jpg");
         when(attachmentRepository.findById("valid")).thenReturn(Optional.of(attachment));
-        MockHttpServletRequestBuilder request = get("/" + OlogResourceDescriptors.ATTACHMENT_URI + "/valid");
+        MockHttpServletRequestBuilder request = get("/" + OlogResourceDescriptors.ATTACHMENT_URI + "/valid").header("Authorization", AUTHORIZATION);
         mockMvc.perform(request).andExpect(status().isInternalServerError());
     }
 
     @Test
     void testGetAttachmentInvalidId() throws Exception {
         when(attachmentRepository.findById("invalid")).thenReturn(Optional.empty());
-        MockHttpServletRequestBuilder request = get("/" + OlogResourceDescriptors.ATTACHMENT_URI + "/invalid");
+        MockHttpServletRequestBuilder request = get("/" + OlogResourceDescriptors.ATTACHMENT_URI + "/invalid").header("Authorization", AUTHORIZATION);
         mockMvc.perform(request).andExpect(status().isNotFound());
     }
 }

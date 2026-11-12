@@ -22,6 +22,9 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.phoebus.olog.entity.Logbook;
+import org.phoebus.olog.entity.LogbookMember;
+import org.phoebus.olog.entity.LogbookPermission;
+import org.phoebus.olog.entity.LogbookPermissions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.HttpHeaders;
@@ -35,6 +38,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 
@@ -44,8 +48,11 @@ import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.any;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -63,6 +70,9 @@ public class LogbookResourceTest extends ResourcesTestBase {
 
     @Autowired
     private LogbookRepository logbookRepository;
+
+    @Autowired
+    private LogbookAccessService logbookAccessService;
 
     private static Logbook logbook1;
     private static Logbook logbook2;
@@ -189,5 +199,62 @@ public class LogbookResourceTest extends ResourcesTestBase {
                 .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION);
         mockMvc.perform(request).andExpect(status().isNotFound());
         reset(logbookRepository);
+    }
+
+    @Test
+    void testAddMemberUnauthorized() throws Exception {
+        MockHttpServletRequestBuilder request = post("/" +
+                OlogResourceDescriptors.LOGBOOK_RESOURCE_URI +
+                "/name1/members")
+                .content("{\"infnUuid\":\"member-uuid\",\"permissions\":[\"READ\"]}")
+                .contentType(JSON);
+
+        mockMvc.perform(request).andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void testAddMember() throws Exception {
+        LogbookMember member = new LogbookMember("name1", "member-uuid",
+                EnumSet.of(LogbookPermission.READ), "user", "now", "now");
+        when(logbookAccessService.addMember(eq("name1"), eq("member-uuid"),
+                eq(EnumSet.of(LogbookPermission.READ)), org.mockito.ArgumentMatchers.isNull(),
+                org.mockito.ArgumentMatchers.isNull(), any())).thenReturn(member);
+
+        MockHttpServletRequestBuilder request = post("/" +
+                OlogResourceDescriptors.LOGBOOK_RESOURCE_URI +
+                "/name1/members")
+                .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
+                .content("{\"infnUuid\":\"member-uuid\",\"permissions\":[\"READ\"]}")
+                .contentType(JSON);
+
+        mockMvc.perform(request).andExpect(status().isCreated());
+    }
+
+    @Test
+    void testListMembersRequiresAuthentication() throws Exception {
+        MockHttpServletRequestBuilder request = get("/" +
+                OlogResourceDescriptors.LOGBOOK_RESOURCE_URI +
+                "/name1/members");
+
+        mockMvc.perform(request).andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void testGetMyLogbookPermissions() throws Exception {
+        when(logbookAccessService.permissionsFor(eq("name1"), any()))
+                .thenReturn(new LogbookPermissions("name1", "user",
+                        EnumSet.of(LogbookPermission.READ, LogbookPermission.WRITE), false));
+
+        mockMvc.perform(get("/" + OlogResourceDescriptors.LOGBOOK_RESOURCE_URI
+                        + "/name1/permissions/me")
+                        .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void testGetMyLogbookPermissionsRequiresAuthentication() throws Exception {
+        mockMvc.perform(get("/" + OlogResourceDescriptors.LOGBOOK_RESOURCE_URI
+                        + "/name1/permissions/me"))
+                .andExpect(status().isUnauthorized());
     }
 }

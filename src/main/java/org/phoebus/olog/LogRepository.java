@@ -172,19 +172,16 @@ public class LogRepository implements CrudRepository<Log, String> {
     }
 
     public SearchResult findArchivedById(String id) {
+        co.elastic.clients.elasticsearch._types.query_dsl.Query accessFilter = logbookAccessService.readFilter();
         FieldSort.Builder fb = new FieldSort.Builder();
         fb.field("modifyDate");
         fb.order(SortOrder.Desc);
 
-        SearchRequest searchRequest =
-                SearchRequest.of(
-                        s ->
-                                s.index(ES_LOG_ARCHIVE_INDEX)
-                                        .query(
-                                                WildcardQuery.of(q -> q.field("id").caseInsensitive(true).value(id + "*"))
-                                                        ._toQuery())
-                                        .timeout("60s")
-                                        .sort(SortOptions.of(so -> so.field(fb.build()))));
+        SearchRequest searchRequest = SearchRequest.of(s -> s.index(ES_LOG_ARCHIVE_INDEX)
+                .query(q -> q.bool(b -> b.filter(accessFilter)
+                        .must(WildcardQuery.of(w -> w.field("id").caseInsensitive(true).value(id + "*"))._toQuery())))
+                .timeout("60s")
+                .sort(SortOptions.of(so -> so.field(fb.build()))));
         try {
             final SearchResponse<Log> searchResponse = client.search(searchRequest, Log.class);
             List<Log> result =
@@ -290,9 +287,11 @@ public class LogRepository implements CrudRepository<Log, String> {
 
     @Autowired
     LogSearchUtil logSearchUtil;
+    @Autowired
+    LogbookAccessService logbookAccessService;
 
     public SearchResult search(MultiValueMap<String, String> searchParameters) {
-        SearchRequest searchRequest = logSearchUtil.buildSearchRequest(searchParameters);
+        SearchRequest searchRequest = logSearchUtil.buildSearchRequest(searchParameters, logbookAccessService.readFilter());
         try {
             final SearchResponse<Log> searchResponse = client.search(searchRequest, Log.class);
             List<Log> result = searchResponse.hits().hits().stream().map(Hit::source).collect(Collectors.toList());
@@ -303,6 +302,20 @@ public class LogRepository implements CrudRepository<Log, String> {
         } catch (IOException | IllegalArgumentException e) {
             logger.log(Level.SEVERE, TextUtil.SEARCH_NOT_COMPLETED, e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, TextUtil.SEARCH_NOT_COMPLETED);
+        }
+    }
+
+    public void requireReadableAttachment(String attachmentId) {
+        co.elastic.clients.elasticsearch._types.query_dsl.Query accessFilter = logbookAccessService.readFilter();
+        try {
+            long count = client.count(c -> c.index(ES_LOG_INDEX)
+                    .query(q -> q.bool(b -> b.filter(accessFilter)
+                            .must(m -> m.term(t -> t.field("attachments.id.keyword").value(attachmentId)))))).count();
+            if (count == 0) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No permission to view this attachment");
+            }
+        } catch (IOException exception) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unable to check attachment access", exception);
         }
     }
 }

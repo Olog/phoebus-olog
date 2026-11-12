@@ -384,8 +384,16 @@ public class Log implements Serializable {
             } else {
                 this.source = new StringBuilder();
             }
-            this.description = new StringBuilder(log.getDescription());
-            this.title = new StringBuilder(log.getTitle());
+            if (log.getDescription() != null) {
+                this.description = new StringBuilder(log.getDescription());
+            } else {
+                this.description = new StringBuilder("No Description");
+            }
+            if (log.getTitle() != null) {
+                this.title = new StringBuilder(log.getTitle());
+            } else {
+                this.title = new StringBuilder("No Title");
+            }
             this.level = log.getLevel();
             this.state = log.getState();
 
