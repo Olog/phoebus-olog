@@ -63,6 +63,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -290,44 +291,7 @@ public class LogResource {
         }
     }
 
-    /**
-     * Creates a new log entry. If the <code>inReplyTo</code> parameters identifies an existing log entry,
-     * this method will treat the new log entry as a reply.
-     * <p>
-     * This may return a HTTP 400 if for instance <code>inReplyTo</code> does not identify an existing log entry,
-     * or if the logbooks listed in the {@link Log} object contains invalid (i.e. non-existing) logbooks.
-     * </p>
-     * <p>
-     * Primary use case is upload of log entry without attachments as this type of request is easier to
-     * construct, i.e. client need not create a request with multipart items.
-     * </p>
-     *
-     * @param clientInfo A string sent by client identifying it with respect to version and platform.
-     * @param log        A {@link Log} object to be persisted.
-     * @param markup     Optional string identifying the wanted markup scheme.
-     * @param inReplyTo  Optional log entry id specifying to which log entry the new log entry is a reply.
-     * @param principal  The authenticated {@link Principal} of the request.
-     * @return The persisted {@link Log} object.
-     */
-    @PutMapping()
-    @Operation(summary = "Create a new log entry",
-	description = "Creates a new log entry. If the <code>inReplyTo</code> parameters identifies an existing log entry,\n"
-			+ " this method will treat the new log entry as a reply.\n"
-			+ " <p>\n"
-			+ " This may return a HTTP 400 if for instance <code>inReplyTo</code> does not identify an existing log entry,\n"
-			+ " or if the logbooks listed in the {@link Log} object contains invalid (i.e. non-existing) logbooks.\n"
-			+ " </p>\n"
-			+ " <p>\n"
-			+ " Primary use case is upload of log entry without attachments as this type of request is easier to\n"
-			+ " construct, i.e. client need not create a request with multipart items.\n"
-			+ " </p>",
-	operationId = "createLog")
-    public Log createLog(@RequestHeader(value = OLOG_CLIENT_INFO_HEADER, required = false, defaultValue = "n/a") String clientInfo,
-                         @RequestParam(name = "markup", required = false) String markup,
-                         @RequestParam(name = "notifyWsClients", required = false, defaultValue = "true") boolean notifyWsClients,
-                         @RequestParam(name = "inReplyTo", required = false, defaultValue = "-1") String inReplyTo,
-                         @RequestBody Log log,
-                         @AuthenticationPrincipal Principal principal) {
+    private Log createLog(String clientInfo, String markup, String inReplyTo, Log log, Principal principal) {
         if (log.getLogbooks().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, TextUtil.LOG_MUST_HAVE_LOGBOOK);
         }
@@ -356,11 +320,6 @@ public class LogResource {
         log = cleanMarkup(markup, log);
         addPropertiesFromProviders(log);
         Log newLogEntry = logRepository.save(log);
-        sendToNotifiers(newLogEntry);
-
-        if (notifyWsClients) {
-            webSocketService.sendMessageToClients(new WebSocketMessage(MessageType.NEW_LOG_ENTRY, null));
-        }
 
         logger.log(Level.INFO, () -> "Entry id " + newLogEntry.getId() + " created from " + clientInfo);
 
@@ -440,17 +399,25 @@ public class LogResource {
         }
 
         // Attachments consistency checked, safe to create log entry
-        Log newLogEntry = createLog(clientInfo, markup, false, inReplyTo, logEntry, principal);
+        Log newLogEntry = createLog(clientInfo, markup, inReplyTo, logEntry, principal);
 
         if (files != null) {
             try {
                 List<Attachment> savedAttachments = saveAttachments(logEntry, multipartFiles);
                 newLogEntry.setAttachments(new TreeSet<>(savedAttachments));
                 newLogEntry = logRepository.update(newLogEntry);
+                SortedSet<Attachment> persistedAttachments = savedAttachments.stream()
+                        .map(attachment -> attachmentRepository.findById(attachment.getId())
+                                .orElseThrow(() -> new IllegalStateException(
+                                        "Attachment not found after save: " + attachment.getId())))
+                        .collect(Collectors.toCollection(TreeSet::new));
+                newLogEntry.setAttachments(persistedAttachments);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         }
+
+        sendToNotifiers(newLogEntry);
 
         Long id = newLogEntry.getId();
         webSocketService.sendMessageToClients(new WebSocketMessage(MessageType.NEW_LOG_ENTRY, null));
