@@ -23,7 +23,7 @@ Active Directory
 
 By default the authentication scheme is in-memory. To use another scheme, the system property `authenticationProviders`
 can define a different one, or even multiple schemes. These are identified as `inMemory`, `embeddedLdap`, `ldap` and
-`active_directory`.
+`activeDirectory`.
 Thus when launching the service one needs to add to the Java command line like so:
 `-DauthenticationProviders=ldap`
 To use multiple authentication providers, specify comma separated list, e.g.;
